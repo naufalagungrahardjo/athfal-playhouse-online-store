@@ -81,6 +81,8 @@ const MOCK_RELATED_PRODUCTS = [
     price: 300000,
     image: 'https://images.unsplash.com/photo-1543087903-1ac2ec7aa8c5',
     category: 'pop-up-class',
+    tax: 11,
+    stock: 8,
   },
   {
     id: 'kit1',
@@ -89,6 +91,8 @@ const MOCK_RELATED_PRODUCTS = [
     price: 199000,
     image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b',
     category: 'play-kit',
+    tax: 11,
+    stock: 20,
   },
   {
     id: 'merch1',
@@ -97,6 +101,8 @@ const MOCK_RELATED_PRODUCTS = [
     price: 120000,
     image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c',
     category: 'merchandise',
+    tax: 11,
+    stock: 30,
   },
 ];
 
@@ -252,7 +258,7 @@ const ProductDetailPage = () => {
                 </span>
                 <span className={`${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {product.stock > 0 
-                    ? (language === 'id' ? `${product.stock} tersedia` : `${product.stock} available`) 
+                    ? (language === 'id' ? `${product.stock} tersedia`  : `${product.stock} available`) 
                     : (language === 'id' ? 'Habis' : 'Out of stock')}
                 </span>
               </div>
