@@ -31,6 +31,10 @@ interface Banner {
   order: number;
 }
 
+// Define field types for better type safety
+type BannerField = "title" | "subtitle" | "buttonText" | "buttonLink" | "image" | "mobileImage" | "active" | "order";
+type LanguageField = "id" | "en";
+
 // Mock banner data
 const MOCK_BANNERS: Banner[] = [
   {
@@ -113,32 +117,30 @@ const AdminBanners = () => {
 
   const handleUpdateBanner = (
     id: string, 
-    field: string, 
-    subField: string | null, 
-    language: string | null, 
-    value: string | boolean
+    field: BannerField, 
+    language?: LanguageField | null, 
+    value?: string | boolean
   ) => {
     setBanners(prev => 
       prev.map(banner => {
         if (banner.id !== id) return banner;
         
-        // For simple fields like buttonLink, active, image, etc.
-        if (!subField && !language) {
-          return { ...banner, [field]: value };
+        const updatedBanner = { ...banner };
+        
+        // Handle simple fields like buttonLink, active, image, etc.
+        if (!language && typeof value !== 'undefined' && 
+            (field === 'buttonLink' || field === 'image' || field === 'mobileImage' || field === 'active' || field === 'order')) {
+          updatedBanner[field] = value as any;
+          return updatedBanner;
         }
         
-        // For nested fields like title, subtitle, buttonText
-        if (subField && language && typeof field === 'string') {
-          const updatedBanner = { ...banner };
-          const nestedField = updatedBanner[field as keyof Banner] as Record<string, Record<string, string>>;
-          
-          if (nestedField && typeof nestedField === 'object') {
-            nestedField[subField] = {
-              ...nestedField[subField],
-              [language]: value as string
-            };
+        // Handle nested fields like title, subtitle, buttonText
+        if (language && typeof value === 'string' && 
+            (field === 'title' || field === 'subtitle' || field === 'buttonText')) {
+          const nestedField = updatedBanner[field];
+          if (nestedField) {
+            (nestedField as any)[language] = value;
           }
-          
           return updatedBanner;
         }
         
@@ -240,7 +242,7 @@ const AdminBanners = () => {
                       id={`active-${banner.id}`}
                       checked={banner.active}
                       onCheckedChange={(value) => 
-                        handleUpdateBanner(banner.id, "active", null, null, value)
+                        handleUpdateBanner(banner.id, "active", null, value)
                       }
                     />
                     <Label htmlFor={`active-${banner.id}`}>
@@ -268,7 +270,7 @@ const AdminBanners = () => {
                     <Input
                       id={`title-id-${banner.id}`}
                       value={banner.title.id}
-                      onChange={(e) => handleUpdateBanner(banner.id, "title", "id", "id", e.target.value)}
+                      onChange={(e) => handleUpdateBanner(banner.id, "title", "id", e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
@@ -276,7 +278,7 @@ const AdminBanners = () => {
                     <Input
                       id={`title-en-${banner.id}`}
                       value={banner.title.en}
-                      onChange={(e) => handleUpdateBanner(banner.id, "title", "en", "en", e.target.value)}
+                      onChange={(e) => handleUpdateBanner(banner.id, "title", "en", e.target.value)}
                     />
                   </div>
                 </div>
@@ -292,7 +294,7 @@ const AdminBanners = () => {
                       id={`subtitle-id-${banner.id}`}
                       rows={2}
                       value={banner.subtitle.id}
-                      onChange={(e) => handleUpdateBanner(banner.id, "subtitle", "id", "id", e.target.value)}
+                      onChange={(e) => handleUpdateBanner(banner.id, "subtitle", "id", e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
@@ -301,7 +303,7 @@ const AdminBanners = () => {
                       id={`subtitle-en-${banner.id}`}
                       rows={2}
                       value={banner.subtitle.en}
-                      onChange={(e) => handleUpdateBanner(banner.id, "subtitle", "en", "en", e.target.value)}
+                      onChange={(e) => handleUpdateBanner(banner.id, "subtitle", "en", e.target.value)}
                     />
                   </div>
                 </div>
@@ -314,7 +316,7 @@ const AdminBanners = () => {
                   <Input
                     id={`button-id-${banner.id}`}
                     value={banner.buttonText.id}
-                    onChange={(e) => handleUpdateBanner(banner.id, "buttonText", "id", "id", e.target.value)}
+                    onChange={(e) => handleUpdateBanner(banner.id, "buttonText", "id", e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -322,7 +324,7 @@ const AdminBanners = () => {
                   <Input
                     id={`button-en-${banner.id}`}
                     value={banner.buttonText.en}
-                    onChange={(e) => handleUpdateBanner(banner.id, "buttonText", "en", "en", e.target.value)}
+                    onChange={(e) => handleUpdateBanner(banner.id, "buttonText", "en", e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -330,7 +332,7 @@ const AdminBanners = () => {
                   <Input
                     id={`button-link-${banner.id}`}
                     value={banner.buttonLink}
-                    onChange={(e) => handleUpdateBanner(banner.id, "buttonLink", null, null, e.target.value)}
+                    onChange={(e) => handleUpdateBanner(banner.id, "buttonLink", undefined, e.target.value)}
                   />
                 </div>
               </div>
@@ -343,7 +345,7 @@ const AdminBanners = () => {
                     <Input
                       id={`image-${banner.id}`}
                       value={banner.image}
-                      onChange={(e) => handleUpdateBanner(banner.id, "image", null, null, e.target.value)}
+                      onChange={(e) => handleUpdateBanner(banner.id, "image", undefined, e.target.value)}
                     />
                     <Button variant="outline" size="icon">
                       <ImageIcon className="h-4 w-4" />
@@ -365,7 +367,7 @@ const AdminBanners = () => {
                     <Input
                       id={`mobile-image-${banner.id}`}
                       value={banner.mobileImage}
-                      onChange={(e) => handleUpdateBanner(banner.id, "mobileImage", null, null, e.target.value)}
+                      onChange={(e) => handleUpdateBanner(banner.id, "mobileImage", undefined, e.target.value)}
                     />
                     <Button variant="outline" size="icon">
                       <ImageIcon className="h-4 w-4" />

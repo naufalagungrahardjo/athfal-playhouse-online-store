@@ -109,7 +109,7 @@ const AdminFAQ = () => {
     });
   };
 
-  const handleUpdateFaq = (id: string, field: string, language: string | null, value: string) => {
+  const handleUpdateFaq = (id: string, field: keyof FAQ, language: string | null, value: string) => {
     setFaqs(prev => 
       prev.map(faq => {
         if (faq.id !== id) return faq;
@@ -120,10 +120,10 @@ const AdminFAQ = () => {
         
         if (language && (field === "question" || field === "answer")) {
           const updatedFaq = { ...faq };
-          const fieldToUpdate = updatedFaq[field as keyof Pick<FAQ, "question" | "answer">] as Record<string, string>;
+          const fieldObj = updatedFaq[field];
           
-          if (fieldToUpdate) {
-            fieldToUpdate[language] = value;
+          if (fieldObj && typeof fieldObj === 'object' && 'id' in fieldObj && 'en' in fieldObj) {
+            (fieldObj as Record<string, string>)[language] = value;
           }
           
           return updatedFaq;
