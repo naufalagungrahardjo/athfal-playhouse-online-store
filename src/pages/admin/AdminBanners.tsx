@@ -115,11 +115,12 @@ const AdminBanners = () => {
     });
   };
 
+  // Fix the TypeScript error by properly typing the value parameter based on the field type
   const handleUpdateBanner = (
     id: string, 
     field: BannerField, 
     language?: LanguageField | null, 
-    value?: string | boolean
+    value?: string | boolean | number
   ) => {
     setBanners(prev => 
       prev.map(banner => {
@@ -128,9 +129,14 @@ const AdminBanners = () => {
         const updatedBanner = { ...banner };
         
         // Handle simple fields like buttonLink, active, image, etc.
-        if (!language && typeof value !== 'undefined' && 
-            (field === 'buttonLink' || field === 'image' || field === 'mobileImage' || field === 'active' || field === 'order')) {
-          updatedBanner[field] = value as any;
+        if (!language && typeof value !== 'undefined') {
+          if (field === 'buttonLink' || field === 'image' || field === 'mobileImage') {
+            (updatedBanner[field] as string) = value as string;
+          } else if (field === 'active') {
+            updatedBanner.active = value as boolean;
+          } else if (field === 'order') {
+            updatedBanner.order = value as number;
+          }
           return updatedBanner;
         }
         

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { GripVertical, Plus, Save, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 // FAQ type
 interface FAQ {
@@ -144,12 +145,21 @@ const AdminFAQ = () => {
     });
   };
 
-  const handleSaveFaqs = () => {
-    // In a real app, this would save to a database/API
-    toast({
-      title: "FAQs saved",
-      description: "Your changes have been saved successfully.",
-    });
+  const handleSaveFaqs = async () => {
+    try {
+      // In a real app with Supabase, we would save to the database
+      // For now, just show a success toast
+      toast({
+        title: "FAQs saved",
+        description: "Your changes have been saved successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error saving FAQs",
+        description: "There was an error saving your changes.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
