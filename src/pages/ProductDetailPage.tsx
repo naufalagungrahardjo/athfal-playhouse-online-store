@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useCart, Product } from '@/contexts/CartContext';
+import { useCart, Product, ProductCategory } from '@/contexts/CartContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShoppingCart, Clock, Calendar, ArrowLeft, Plus, Minus } from 'lucide-react';
@@ -16,7 +15,7 @@ const MOCK_PRODUCTS: Record<string, Product> = {
     description: 'Kelas untuk anak usia 2-3 tahun yang menyenangkan dan edukatif',
     price: 250000,
     image: 'https://images.unsplash.com/photo-1588075592405-d68745302891',
-    category: 'pop-up-class',
+    category: 'pop-up-class' as ProductCategory,
     tax: 11,
     stock: 10,
   },
@@ -26,7 +25,7 @@ const MOCK_PRODUCTS: Record<string, Product> = {
     description: 'Kelas untuk anak usia 4-5 tahun dengan aktivitas yang lebih kompleks',
     price: 300000,
     image: 'https://images.unsplash.com/photo-1543087903-1ac2ec7aa8c5',
-    category: 'pop-up-class',
+    category: 'pop-up-class' as ProductCategory,
     tax: 11,
     stock: 8,
   },
@@ -36,7 +35,7 @@ const MOCK_PRODUCTS: Record<string, Product> = {
     description: 'Kelas belajar mengenal alam untuk anak-anak',
     price: 300000,
     image: 'https://images.unsplash.com/photo-1590592006475-d0264ad1ee92',
-    category: 'bumi-class',
+    category: 'bumi-class' as ProductCategory,
     tax: 11,
     stock: 10,
   },
@@ -46,7 +45,7 @@ const MOCK_PRODUCTS: Record<string, Product> = {
     description: 'Kit bermain sambil belajar alfabet untuk anak',
     price: 199000,
     image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b',
-    category: 'play-kit',
+    category: 'play-kit' as ProductCategory,
     tax: 11,
     stock: 20,
   },
@@ -56,7 +55,7 @@ const MOCK_PRODUCTS: Record<string, Product> = {
     description: 'Sesi konsultasi psikologi anak dengan ahli',
     price: 350000,
     image: 'https://images.unsplash.com/photo-1516733968668-dbdce39c4651',
-    category: 'consultation',
+    category: 'consultation' as ProductCategory,
     tax: 11,
     stock: 5,
   },
@@ -66,21 +65,21 @@ const MOCK_PRODUCTS: Record<string, Product> = {
     description: 'Kaos anak dengan gambar karakter Athfal Playhouse',
     price: 120000,
     image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c',
-    category: 'merchandise',
+    category: 'merchandise' as ProductCategory,
     tax: 11,
     stock: 30,
   },
 };
 
-// Mock related products
-const MOCK_RELATED_PRODUCTS = [
+// Mock related products with proper typing
+const MOCK_RELATED_PRODUCTS: Product[] = [
   {
     id: 'pop2',
     name: 'Pop Up Class - Usia 4-5 Tahun',
     description: 'Kelas untuk anak usia 4-5 tahun dengan aktivitas yang lebih kompleks',
     price: 300000,
     image: 'https://images.unsplash.com/photo-1543087903-1ac2ec7aa8c5',
-    category: 'pop-up-class',
+    category: 'pop-up-class' as ProductCategory,
     tax: 11,
     stock: 8,
   },
@@ -90,7 +89,7 @@ const MOCK_RELATED_PRODUCTS = [
     description: 'Kit bermain sambil belajar alfabet untuk anak',
     price: 199000,
     image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b',
-    category: 'play-kit',
+    category: 'play-kit' as ProductCategory,
     tax: 11,
     stock: 20,
   },
@@ -100,7 +99,7 @@ const MOCK_RELATED_PRODUCTS = [
     description: 'Kaos anak dengan gambar karakter Athfal Playhouse',
     price: 120000,
     image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c',
-    category: 'merchandise',
+    category: 'merchandise' as ProductCategory,
     tax: 11,
     stock: 30,
   },

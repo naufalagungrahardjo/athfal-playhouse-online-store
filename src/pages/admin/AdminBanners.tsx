@@ -128,17 +128,18 @@ const AdminBanners = () => {
         }
         
         // For nested fields like title, subtitle, buttonText
-        if (subField && language) {
-          return {
-            ...banner,
-            [field]: {
-              ...banner[field as keyof Banner],
-              [subField]: {
-                ...banner[field as keyof Banner][subField as keyof typeof banner[keyof Banner]],
-                [language]: value,
-              },
-            },
-          };
+        if (subField && language && typeof field === 'string') {
+          const updatedBanner = { ...banner };
+          const nestedField = updatedBanner[field as keyof Banner] as Record<string, Record<string, string>>;
+          
+          if (nestedField && typeof nestedField === 'object') {
+            nestedField[subField] = {
+              ...nestedField[subField],
+              [language]: value as string
+            };
+          }
+          
+          return updatedBanner;
         }
         
         return banner;

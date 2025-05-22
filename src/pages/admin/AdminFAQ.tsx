@@ -118,14 +118,15 @@ const AdminFAQ = () => {
           return { ...faq, category: value };
         }
         
-        if (language) {
-          return {
-            ...faq,
-            [field]: {
-              ...faq[field as keyof FAQ],
-              [language]: value,
-            },
-          };
+        if (language && (field === "question" || field === "answer")) {
+          const updatedFaq = { ...faq };
+          const fieldToUpdate = updatedFaq[field as keyof Pick<FAQ, "question" | "answer">] as Record<string, string>;
+          
+          if (fieldToUpdate) {
+            fieldToUpdate[language] = value;
+          }
+          
+          return updatedFaq;
         }
         
         return faq;
