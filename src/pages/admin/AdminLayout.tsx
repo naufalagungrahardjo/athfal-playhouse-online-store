@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 const AdminLayout = () => {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -42,6 +42,16 @@ const AdminLayout = () => {
   const isActiveLink = (path: string) => {
     return location.pathname === path;
   };
+  
+  // Handle logout
+  const handleLogout = () => {
+    logout();
+  };
+
+  // If not logged in as admin, don't render the admin layout
+  if (!user || !isAdmin()) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex">
@@ -79,10 +89,13 @@ const AdminLayout = () => {
             <span>Back to Site</span>
           </Link>
           
-          <Link to="/" className="flex items-center px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors mt-4">
+          <button 
+            onClick={handleLogout} 
+            className="flex items-center w-full text-left px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors mt-4"
+          >
             <LogOut className="h-5 w-5 mr-3" />
             <span>Logout</span>
-          </Link>
+          </button>
         </nav>
       </aside>
 

@@ -41,13 +41,13 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <LanguageProvider>
-        <CartProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
+        <LanguageProvider>
+          <CartProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
               <div className="min-h-screen flex flex-col">
                 <Header />
                 <main className="flex-grow">
@@ -83,11 +83,11 @@ const App = () => (
                 <Footer />
                 <WhatsAppFloatButton />
               </div>
-            </BrowserRouter>
-          </TooltipProvider>
-        </CartProvider>
-      </LanguageProvider>
-    </AuthProvider>
+            </TooltipProvider>
+          </CartProvider>
+        </LanguageProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 
