@@ -2,11 +2,13 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Linkedin } from "lucide-react";
+import { ManagementSlider } from "@/components/ManagementSlider";
 
 const AboutPage = () => {
   const { language } = useLanguage();
 
-  const team = [
+  // Expanded team data for slider
+  const teamMembers = [
     {
       name: "Fadhilah Ramadhannisa",
       title: language === "id" ? "Pendiri & CEO" : "Founder & CEO",
@@ -29,6 +31,72 @@ const AboutPage = () => {
       name: "Budi Santoso",
       title: language === "id" ? "Manajer Operasional" : "Operations Manager",
       image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e",
+      linkedin: "https://linkedin.com",
+    },
+    {
+      name: "Dian Pertiwi",
+      title: language === "id" ? "Spesialis Pendidikan Anak Usia Dini" : "Early Childhood Education Specialist",
+      image: "https://images.unsplash.com/photo-1580489944761-15a19d654956",
+      linkedin: "https://linkedin.com",
+    },
+    {
+      name: "Arif Wicaksono",
+      title: language === "id" ? "Pengembangan Bisnis" : "Business Development",
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
+      linkedin: "https://linkedin.com",
+    },
+    {
+      name: "Ratna Dewi",
+      title: language === "id" ? "Manajer Keuangan" : "Finance Manager",
+      image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2",
+      linkedin: "https://linkedin.com",
+    },
+    {
+      name: "Andika Pratama",
+      title: language === "id" ? "Desainer Pengalaman Bermain" : "Play Experience Designer",
+      image: "https://images.unsplash.com/photo-1531891437562-4301cf35b7e4",
+      linkedin: "https://linkedin.com",
+    },
+    {
+      name: "Maya Safira",
+      title: language === "id" ? "Guru Senior" : "Senior Teacher",
+      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2",
+      linkedin: "https://linkedin.com",
+    },
+    {
+      name: "Taufik Rahman",
+      title: language === "id" ? "Pengembang Kurikulum" : "Curriculum Developer",
+      image: "https://images.unsplash.com/photo-1560250097-0b93528c311a",
+      linkedin: "https://linkedin.com",
+    },
+    {
+      name: "Indah Permata",
+      title: language === "id" ? "Psikolog Anak" : "Child Psychologist",
+      image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f",
+      linkedin: "https://linkedin.com",
+    },
+    {
+      name: "Gunawan Setiadi",
+      title: language === "id" ? "Manajer Pemasaran" : "Marketing Manager",
+      image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d",
+      linkedin: "https://linkedin.com",
+    },
+    {
+      name: "Putri Handayani",
+      title: language === "id" ? "Spesialis Media Sosial" : "Social Media Specialist",
+      image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb",
+      linkedin: "https://linkedin.com",
+    },
+    {
+      name: "Rizky Pratama",
+      title: language === "id" ? "Manajer Pengembangan Produk" : "Product Development Manager",
+      image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7",
+      linkedin: "https://linkedin.com",
+    },
+    {
+      name: "Anisa Wijaya",
+      title: language === "id" ? "Koordinator Program" : "Program Coordinator",
+      image: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04",
       linkedin: "https://linkedin.com",
     },
   ];
@@ -63,35 +131,9 @@ const AboutPage = () => {
         <h2 className="text-2xl font-bold text-athfal-pink mb-6">
           {language === "id" ? "Tim Manajemen Kami" : "Our Management Team"}
         </h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-          {team.map((member) => (
-            <div key={member.name} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="h-64 overflow-hidden">
-                <img
-                  src={member.image}
-                  alt={member.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-lg text-athfal-pink">
-                  {member.name}
-                </h3>
-                <p className="text-gray-600 mb-2">{member.title}</p>
-                <a
-                  href={member.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center text-athfal-green hover:text-athfal-green/80"
-                >
-                  <Linkedin className="h-4 w-4 mr-1" />
-                  <span>{language === "id" ? "Profil LinkedIn" : "LinkedIn Profile"}</span>
-                </a>
-              </div>
-            </div>
-          ))}
-        </div>
+        
+        {/* Management Team Slider */}
+        <ManagementSlider members={teamMembers} />
       </div>
     </div>
   );

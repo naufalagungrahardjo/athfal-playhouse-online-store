@@ -127,8 +127,10 @@ const Footer = () => {
               </li>
               <li>
                 <a 
-                  href="https://wa.me/082120614748" 
+                  href="https://wa.me/6282120614748" 
                   className="flex items-center text-gray-700 hover:text-athfal-pink"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   <Phone className="w-5 h-5 text-athfal-pink mr-2" />
                   082120614748

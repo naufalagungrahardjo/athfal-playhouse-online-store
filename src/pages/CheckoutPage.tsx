@@ -50,7 +50,7 @@ const formatCurrency = (amount: number) => {
 
 const CheckoutPage = () => {
   const { user } = useAuth();
-  const { items, getSubtotal, getTaxAmount, getTotal, clearCart } = useCart();
+  const { items, getSubtotal, getTaxAmount, getTotal } = useCart();
   const { language } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -96,7 +96,7 @@ const CheckoutPage = () => {
     }
   };
 
-  const handleConfirmPayment = async () => {
+  const handleProceedOrder = async () => {
     if (!name || !email || !phone) {
       toast({
         variant: "destructive",
@@ -110,59 +110,12 @@ const CheckoutPage = () => {
 
     setIsLoading(true);
 
-    // Get selected payment method
-    const paymentMethod = PAYMENT_METHODS.find(method => method.id === selectedPayment);
-
     try {
-      // Format items for WhatsApp message
-      const itemsList = items.map(item => 
-        `${item.product.name} (${item.quantity}x) - ${formatCurrency(item.product.price * item.quantity)}`
-      ).join('\n');
-
-      // Construct WhatsApp message
-      const message = `
-*${language === 'id' ? 'ORDER ATHFAL PLAYHOUSE' : 'ATHFAL PLAYHOUSE ORDER'}*
-
-*${language === 'id' ? 'Detail Pelanggan' : 'Customer Details'}:*
-${language === 'id' ? 'Nama' : 'Name'}: ${name}
-Email: ${email}
-${language === 'id' ? 'Telepon' : 'Phone'}: ${phone}
-${address ? `${language === 'id' ? 'Alamat' : 'Address'}: ${address}` : ''}
-
-*${language === 'id' ? 'Detail Pesanan' : 'Order Details'}:*
-${itemsList}
-
-*${language === 'id' ? 'Subtotal' : 'Subtotal'}: ${formatCurrency(getSubtotal())}*
-*${language === 'id' ? 'Pajak' : 'Tax'}: ${formatCurrency(getTaxAmount())}*
-*${language === 'id' ? 'Total' : 'Total'}: ${formatCurrency(getTotal())}*
-
-*${language === 'id' ? 'Metode Pembayaran' : 'Payment Method'}:*
-${paymentMethod?.name} - ${paymentMethod?.number} (${paymentMethod?.accountName})
-
-${notes ? `*${language === 'id' ? 'Catatan' : 'Notes'}:*\n${notes}` : ''}
-
-${language === 'id' ? 'Terima kasih telah berbelanja di Athfal Playhouse!' : 'Thank you for shopping at Athfal Playhouse!'}
-      `;
-
-      // Encode the message for WhatsApp
-      const encodedMessage = encodeURIComponent(message.trim());
-      const whatsappNumber = '082120614748'; // Use the contact details from your context
-      const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/^0/, '62')}?text=${encodedMessage}`;
-
-      // Clear cart and redirect to WhatsApp
-      clearCart();
-      window.open(whatsappUrl, '_blank');
-
-      // Show success message
-      toast({
-        title: language === 'id' ? 'Pesanan Berhasil' : 'Order Successful',
-        description: language === 'id' 
-          ? 'Silakan selesaikan pembayaran melalui WhatsApp.' 
-          : 'Please complete your payment via WhatsApp.',
-      });
-
-      // Navigate back to home page
-      navigate('/');
+      // Save selected payment method to localStorage for the order details page
+      localStorage.setItem('selectedPayment', selectedPayment);
+      
+      // Redirect to order details page
+      navigate('/order-details');
     } catch (error) {
       console.error('Error processing order:', error);
       toast({
@@ -323,8 +276,8 @@ ${language === 'id' ? 'Terima kasih telah berbelanja di Athfal Playhouse!' : 'Th
                 <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
                   <p className="text-yellow-800 text-sm">
                     {language === 'id' 
-                      ? 'Setelah melakukan pembayaran, silakan konfirmasi melalui WhatsApp dengan menekan tombol "Konfirmasi Pembayaran".'
-                      : 'After making the payment, please confirm via WhatsApp by clicking the "Confirm Payment" button.'}
+                      ? 'Setelah menekan tombol "Lanjutkan Pesanan", Anda akan diarahkan ke halaman detail pesanan untuk melakukan pembayaran.'
+                      : 'After pressing the "Proceed Order" button, you will be directed to the order details page to make payment.'}
                   </p>
                 </div>
               </CardContent>
@@ -382,20 +335,20 @@ ${language === 'id' ? 'Terima kasih telah berbelanja di Athfal Playhouse!' : 'Th
                   </div>
                 </div>
 
-                {/* Confirm payment button */}
+                {/* Proceed order button */}
                 <Button 
-                  onClick={handleConfirmPayment}
+                  onClick={handleProceedOrder}
                   disabled={isLoading}
                   className="w-full bg-athfal-pink hover:bg-athfal-pink/80 text-white text-lg py-6"
                 >
                   {isLoading
                     ? (language === 'id' ? 'Memproses...' : 'Processing...')
-                    : (language === 'id' ? 'Konfirmasi Pembayaran' : 'Confirm Payment')}
+                    : (language === 'id' ? 'Lanjutkan Pesanan' : 'Proceed Order')}
                 </Button>
                 <p className="text-center text-sm text-gray-500 mt-4">
                   {language === 'id' 
-                    ? 'Anda akan diarahkan ke WhatsApp untuk konfirmasi pembayaran'
-                    : 'You will be redirected to WhatsApp for payment confirmation'}
+                    ? 'Anda akan diarahkan ke halaman detail pesanan'
+                    : 'You will be redirected to the order details page'}
                 </p>
               </CardContent>
             </Card>

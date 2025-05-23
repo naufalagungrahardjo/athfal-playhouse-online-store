@@ -12,18 +12,20 @@ const GalleryPage = () => {
           {language === "id" ? "Galeri" : "Gallery"}
         </h1>
         
-        {/* Embedded video section */}
+        {/* Embedded video section with improved aspect ratio */}
         <div className="mb-12">
           <h2 className="text-2xl font-semibold text-athfal-green mb-4">
             {language === "id" ? "Video Terbaru" : "Latest Video"}
           </h2>
-          <div className="aspect-w-16 aspect-h-9 bg-gray-100 rounded-xl overflow-hidden">
+          <div className="relative w-full" style={{ paddingBottom: "56.25%" }}> {/* 16:9 aspect ratio */}
             <iframe 
               src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
               title="Athfal Playhouse Video"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
               allowFullScreen
-              className="w-full h-full"
+              className="absolute top-0 left-0 w-full h-full rounded-xl"
+              width="560" 
+              height="315"
             ></iframe>
           </div>
         </div>

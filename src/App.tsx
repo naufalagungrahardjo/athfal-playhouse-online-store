@@ -17,6 +17,7 @@ import ProductListPage from "@/pages/ProductListPage";
 import ProductDetailPage from "@/pages/ProductDetailPage";
 import CartPage from "@/pages/CartPage";
 import CheckoutPage from "@/pages/CheckoutPage";
+import OrderDetailsPage from "@/pages/OrderDetailsPage"; // Add the new page
 import GalleryPage from "@/pages/GalleryPage";
 import AboutPage from "@/pages/AboutPage";
 import BlogPage from "@/pages/BlogPage";
@@ -57,6 +58,7 @@ const App = () => (
                     <Route path="/product/:id" element={<ProductDetailPage />} />
                     <Route path="/cart" element={<CartPage />} />
                     <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/order-details" element={<OrderDetailsPage />} /> {/* Add new route */}
                     <Route path="/gallery" element={<GalleryPage />} />
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="/blog" element={<BlogPage />} />

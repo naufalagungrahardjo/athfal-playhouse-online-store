@@ -4,7 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Calendar, ArrowLeft, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// Mock blog data
+// Expanded mock blog data
 const MOCK_BLOGS = [
   {
     id: "blog1",
@@ -44,7 +44,120 @@ const MOCK_BLOGS = [
     date: "2023-04-22",
     category: "Tips & Trik",
   },
-  // ... other blog entries
+  {
+    id: "blog3",
+    title: "Pentingnya Bermain dalam Proses Belajar Anak",
+    content: `
+      <p>Vivamus lacinia metus quis velit tincidunt, non suscipit risus pretium. Praesent ut metus a odio dictum varius eget eget magna. Integer vitae tempor purus. Nulla a nunc in orci vestibulum vulputate.</p>
+      
+      <h2>Belajar Melalui Bermain</h2>
+      <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam sit amet finibus nulla, et ultricies ex. Duis tempus diam eu tortor semper, in pretium libero tristique. Etiam hendrerit nisi nec magna tincidunt vestibulum.</p>
+      
+      <p>Cras euismod ipsum nec nunc vestibulum, vel ullamcorper urna aliquet. Nam luctus pulvinar magna, vel fermentum elit mollis vel. Mauris vel leo ac orci iaculis gravida. Fusce pharetra fermentum libero, a tempus nisi auctor quis. Donec ut eleifend mauris.</p>
+      
+      <h2>Manfaat Bermain untuk Perkembangan</h2>
+      <p>Maecenas sit amet nisl id nisl tincidunt eleifend. Aliquam erat volutpat. Sed vel orci id neque viverra varius. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. In a magna vel sapien posuere gravida eget quis magna.</p>
+    `,
+    image: "https://images.unsplash.com/photo-1484820540004-14229fe36ca4",
+    author: "Siti Fatimah",
+    date: "2023-03-18",
+    category: "Metode Pembelajaran",
+  },
+  {
+    id: "blog4",
+    title: "Mengenalkan Al-Quran pada Anak Sejak Dini",
+    content: `
+      <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam sit amet finibus nulla, et ultricies ex. Duis tempus diam eu tortor semper, in pretium libero tristique. Etiam hendrerit nisi nec magna tincidunt vestibulum.</p>
+      
+      <h2>Pentingnya Mengenalkan Al-Quran Sejak Dini</h2>
+      <p>Fusce commodo lacus sit amet libero elementum, quis pulvinar mi varius. Etiam id magna vel felis semper tristique. Vestibulum nec turpis tortor. Suspendisse vestibulum mi eget lectus sollicitudin convallis. Nullam tristique sapien velit, et posuere justo tincidunt nec.</p>
+      
+      <p>Morbi at mi vel velit tempus dignissim. Fusce eleifend mi nec quam consequat, id dignissim magna commodo. Nullam tristique sapien velit, et posuere justo tincidunt nec. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.</p>
+      
+      <h2>Metode Pengenalan yang Menyenangkan</h2>
+      <p>Nulla feugiat ex id mauris elementum, ac pulvinar urna molestie. Sed vitae sem magna. Nulla facilisi. Nulla feugiat ex id mauris elementum, ac pulvinar urna molestie. Sed vitae sem magna. Nulla facilisi.</p>
+    `,
+    image: "https://images.unsplash.com/photo-1507838153414-b4b713384a76",
+    author: "Budi Santoso",
+    date: "2023-02-10",
+    category: "Pendidikan Islam",
+  },
+  {
+    id: "blog5",
+    title: "Cara Mengatasi Tantrum pada Balita",
+    content: `
+      <p>Donec vehicula tortor quis odio elementum, eget tincidunt nisl consequat. Sed auctor nisi quis urna finibus, vel tincidunt massa feugiat. Nulla facilisi. In auctor nisi non magna cursus, vel aliquam nunc tempor.</p>
+      
+      <h2>Memahami Penyebab Tantrum</h2>
+      <p>Integer lacus magna, posuere vel est ut, vestibulum porta nulla. Nullam auctor sem vitae nisi commodo, nec congue velit tincidunt. Cras rhoncus magna sit amet mauris placerat, vel varius urna fringilla. Sed eleifend tortor a justo interdum varius.</p>
+      
+      <p>Cras sodales turpis nec mauris finibus, non rutrum nisi lacinia. Praesent eu risus sed lacus volutpat finibus ut nec felis. Curabitur facilisis nibh eget nunc dictum, at feugiat magna accumsan. Suspendisse potenti.</p>
+      
+      <h2>Strategi Menangani Tantrum</h2>
+      <p>Praesent lectus arcu, pellentesque vitae tempor id, fringilla eu tellus. Aliquam porttitor dui vel metus varius, id suscipit eros eleifend. Suspendisse in tortor sit amet neque fringilla tristique sed id enim. Nullam auctor sem vitae nisi commodo, nec congue velit tincidunt.</p>
+    `,
+    image: "https://images.unsplash.com/photo-1615572359976-1fe39507ed7b",
+    author: "Fadhilah Ramadhannisa",
+    date: "2023-01-05",
+    category: "Psikologi Anak",
+  },
+  {
+    id: "blog6",
+    title: "Makanan Sehat untuk Mendukung Kecerdasan Anak",
+    content: `
+      <p>Fusce commodo lacus sit amet libero elementum, quis pulvinar mi varius. Etiam id magna vel felis semper tristique. Vestibulum nec turpis tortor. Suspendisse vestibulum mi eget lectus sollicitudin convallis.</p>
+      
+      <h2>Nutrisi Penting untuk Perkembangan Otak</h2>
+      <p>Cras sodales turpis nec mauris finibus, non rutrum nisi lacinia. Praesent eu risus sed lacus volutpat finibus ut nec felis. Curabitur facilisis nibh eget nunc dictum, at feugiat magna accumsan. Suspendisse potenti.</p>
+      
+      <p>Praesent lectus arcu, pellentesque vitae tempor id, fringilla eu tellus. Aliquam porttitor dui vel metus varius, id suscipit eros eleifend. Suspendisse in tortor sit amet neque fringilla tristique sed id enim.</p>
+      
+      <h2>Menu Sehat untuk Anak</h2>
+      <p>Integer lacus magna, posuere vel est ut, vestibulum porta nulla. Nullam auctor sem vitae nisi commodo, nec congue velit tincidunt. Cras rhoncus magna sit amet mauris placerat, vel varius urna fringilla. Sed eleifend tortor a justo interdum varius.</p>
+    `,
+    image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352",
+    author: "Siti Fatimah",
+    date: "2022-12-10",
+    category: "Nutrisi Anak",
+  },
+  {
+    id: "blog7",
+    title: "Mengenalkan Konsep Waktu pada Anak Prasekolah",
+    content: `
+      <p>Integer lacus magna, posuere vel est ut, vestibulum porta nulla. Nullam auctor sem vitae nisi commodo, nec congue velit tincidunt. Cras rhoncus magna sit amet mauris placerat, vel varius urna fringilla.</p>
+      
+      <h2>Pentingnya Memahami Konsep Waktu</h2>
+      <p>Praesent lectus arcu, pellentesque vitae tempor id, fringilla eu tellus. Aliquam porttitor dui vel metus varius, id suscipit eros eleifend. Suspendisse in tortor sit amet neque fringilla tristique sed id enim.</p>
+      
+      <p>Cras sodales turpis nec mauris finibus, non rutrum nisi lacinia. Praesent eu risus sed lacus volutpat finibus ut nec felis. Curabitur facilisis nibh eget nunc dictum, at feugiat magna accumsan.</p>
+      
+      <h2>Aktivitas Belajar Konsep Waktu</h2>
+      <p>Fusce commodo lacus sit amet libero elementum, quis pulvinar mi varius. Etiam id magna vel felis semper tristique. Vestibulum nec turpis tortor. Suspendisse vestibulum mi eget lectus sollicitudin convallis.</p>
+    `,
+    image: "https://images.unsplash.com/photo-1472162072942-cd5147eb3902",
+    author: "Ahmad Rifqi",
+    date: "2022-11-15",
+    category: "Pendidikan Anak",
+  },
+  {
+    id: "blog8",
+    title: "Menanamkan Kemandirian pada Anak Sejak Dini",
+    content: `
+      <p>Praesent lectus arcu, pellentesque vitae tempor id, fringilla eu tellus. Aliquam porttitor dui vel metus varius, id suscipit eros eleifend. Suspendisse in tortor sit amet neque fringilla tristique sed id enim.</p>
+      
+      <h2>Pentingnya Kemandirian</h2>
+      <p>Cras sodales turpis nec mauris finibus, non rutrum nisi lacinia. Praesent eu risus sed lacus volutpat finibus ut nec felis. Curabitur facilisis nibh eget nunc dictum, at feugiat magna accumsan. Suspendisse potenti.</p>
+      
+      <p>Integer lacus magna, posuere vel est ut, vestibulum porta nulla. Nullam auctor sem vitae nisi commodo, nec congue velit tincidunt. Cras rhoncus magna sit amet mauris placerat, vel varius urna fringilla.</p>
+      
+      <h2>Langkah-langkah Menumbuhkan Kemandirian</h2>
+      <p>Fusce commodo lacus sit amet libero elementum, quis pulvinar mi varius. Etiam id magna vel felis semper tristique. Vestibulum nec turpis tortor. Suspendisse vestibulum mi eget lectus sollicitudin convallis.</p>
+    `,
+    image: "https://images.unsplash.com/photo-1542810634-71277d95dcbb",
+    author: "Budi Santoso",
+    date: "2022-10-20",
+    category: "Parenting",
+  }
 ];
 
 // Related blog type
