@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,7 @@ type PromoCode = {
   discount_percentage: number;
   description: string | null;
   is_active: boolean;
-  valid_from: string;
+  valid_from: string | null;
   valid_until: string | null;
 };
 
@@ -59,7 +58,7 @@ const AdminPromoCodes = () => {
         
       if (error) throw error;
       
-      setPromoCodes(data || []);
+      setPromoCodes(data as PromoCode[] || []);
     } catch (error) {
       console.error('Error fetching promo codes:', error);
       toast({

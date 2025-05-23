@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,8 +20,13 @@ const formatCurrency = (amount: number) => {
 };
 
 type PromoCode = {
+  id: string;
   code: string;
   discount_percentage: number;
+  description: string | null;
+  is_active: boolean;
+  valid_from: string | null;
+  valid_until: string | null;
 };
 
 const CartPage = () => {
@@ -107,10 +111,7 @@ const CartPage = () => {
       }
       
       // Apply the promo code
-      setAppliedPromo({
-        code: data.code,
-        discount_percentage: data.discount_percentage
-      });
+      setAppliedPromo(data as PromoCode);
       
       toast({
         title: language === 'id' ? "Kode promo diterapkan" : "Promo code applied",
@@ -245,11 +246,11 @@ const CartPage = () => {
                             
                             <p className="text-gray-600 text-sm mt-1 mb-3">
                               {item.product.category === 'pop-up-class' ? 'Pop Up Class' :
-                               item.product.category === 'bumi-class' ? 'Bumi Class' :
-                               item.product.category === 'tahsin-class' ? 'Tahsin Class' :
-                               item.product.category === 'play-kit' ? 'Play Kit' :
-                               item.product.category === 'consultation' ? 'Psychological Consultation' :
-                               'Merchandise & Others'}
+                              item.product.category === 'bumi-class' ? 'Bumi Class' :
+                              item.product.category === 'tahsin-class' ? 'Tahsin Class' :
+                              item.product.category === 'play-kit' ? 'Play Kit' :
+                              item.product.category === 'consultation' ? 'Psychological Consultation' :
+                              'Merchandise & Others'}
                             </p>
                             
                             <div className="flex justify-between items-center">

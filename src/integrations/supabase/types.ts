@@ -24,6 +24,69 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          description: string | null
+          discount_percentage: number
+          id: string
+          is_active: boolean | null
+          updated_at: string | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          description?: string | null
+          discount_percentage: number
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          discount_percentage?: number
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+          password: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          name: string
+          password: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+          password?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

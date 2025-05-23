@@ -73,22 +73,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       // For regular users, check against registered users
-      const { data, error } = await supabase
+      const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('email', email)
         .single();
       
-      if (error || !data) {
+      if (userError || !userData) {
         throw new Error('Email tidak terdaftar');
       }
       
-      // In a real app, we would use supabase.auth.signInWithPassword
-      // For this mock implementation, we'll just check if the email exists
+      // In a real app, we would use proper password hashing
+      // This is just a simplified version for demo purposes
+      if (userData.password !== 'hashed_' + password) {
+        throw new Error('Password salah');
+      }
+      
       const regularUser = {
-        id: data.id || '2',
-        email,
-        name: data.name || email.split('@')[0],
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
         role: 'user' as UserRole,
       };
       
