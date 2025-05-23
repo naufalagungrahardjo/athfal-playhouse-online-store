@@ -17,7 +17,7 @@ import ProductListPage from "@/pages/ProductListPage";
 import ProductDetailPage from "@/pages/ProductDetailPage";
 import CartPage from "@/pages/CartPage";
 import CheckoutPage from "@/pages/CheckoutPage";
-import OrderDetailsPage from "@/pages/OrderDetailsPage"; // Add the new page
+import OrderDetailsPage from "@/pages/OrderDetailsPage"; 
 import GalleryPage from "@/pages/GalleryPage";
 import AboutPage from "@/pages/AboutPage";
 import BlogPage from "@/pages/BlogPage";
@@ -37,6 +37,7 @@ import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminFAQ from "@/pages/admin/AdminFAQ";
 import AdminBanners from "@/pages/admin/AdminBanners";
 import AdminPayments from "@/pages/admin/AdminPayments";
+import AdminPromoCodes from "@/pages/admin/AdminPromoCodes";
 
 const queryClient = new QueryClient();
 
@@ -58,7 +59,7 @@ const App = () => (
                     <Route path="/product/:id" element={<ProductDetailPage />} />
                     <Route path="/cart" element={<CartPage />} />
                     <Route path="/checkout" element={<CheckoutPage />} />
-                    <Route path="/order-details" element={<OrderDetailsPage />} /> {/* Add new route */}
+                    <Route path="/order-details" element={<OrderDetailsPage />} />
                     <Route path="/gallery" element={<GalleryPage />} />
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="/blog" element={<BlogPage />} />
@@ -77,6 +78,7 @@ const App = () => (
                       <Route path="banners" element={<AdminBanners />} />
                       <Route path="payments" element={<AdminPayments />} />
                       <Route path="settings" element={<AdminSettings />} />
+                      <Route path="promo-codes" element={<AdminPromoCodes />} />
                     </Route>
 
                     <Route path="*" element={<NotFound />} />

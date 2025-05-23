@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,7 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/contexts/CartContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Trash2, Plus, Minus, ShoppingCart } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingCart, Check } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from "@/integrations/supabase/client";
 
 // Format currency
 const formatCurrency = (amount: number) => {
@@ -18,11 +20,19 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
+type PromoCode = {
+  code: string;
+  discount_percentage: number;
+};
+
 const CartPage = () => {
   const { items, removeItem, updateQuantity, clearCart, getSubtotal, getTaxAmount, getTotal } = useCart();
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [couponCode, setCouponCode] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
+  const [isCheckingPromo, setIsCheckingPromo] = useState(false);
 
   const handleIncreaseQuantity = (productId: string, currentQuantity: number, maxStock: number) => {
     if (currentQuantity < maxStock) {
@@ -42,21 +52,135 @@ const CartPage = () => {
 
   const handleClearCart = () => {
     clearCart();
+    setAppliedPromo(null);
   };
 
   const handleCheckout = () => {
     if (items.length > 0) {
+      // Store the applied promo in localStorage to use in checkout
+      if (appliedPromo) {
+        localStorage.setItem('appliedPromo', JSON.stringify(appliedPromo));
+      } else {
+        localStorage.removeItem('appliedPromo');
+      }
       navigate('/checkout');
     }
   };
 
-  const applyCoupon = () => {
-    if (couponCode.trim() !== '') {
-      // In a real app, this would call an API to validate the coupon
-      alert(language === 'id' ? 'Kode kupon tidak valid' : 'Invalid coupon code');
+  const applyCoupon = async () => {
+    if (couponCode.trim() === '') {
+      return;
+    }
+    
+    setIsCheckingPromo(true);
+    
+    try {
+      // Check if promo code exists and is active
+      const { data, error } = await supabase
+        .from('promo_codes')
+        .select('*')
+        .eq('code', couponCode.trim())
+        .eq('is_active', true)
+        .single();
+      
+      if (error || !data) {
+        toast({
+          variant: "destructive",
+          title: language === 'id' ? "Kode promo tidak valid" : "Invalid promo code",
+          description: language === 'id' 
+            ? "Silakan masukkan kode promo yang valid" 
+            : "Please enter a valid promo code"
+        });
+        return;
+      }
+      
+      // Check if promo is still valid (not expired)
+      if (data.valid_until && new Date(data.valid_until) < new Date()) {
+        toast({
+          variant: "destructive",
+          title: language === 'id' ? "Kode promo kadaluarsa" : "Expired promo code",
+          description: language === 'id'
+            ? "Kode promo ini sudah tidak berlaku"
+            : "This promo code has expired"
+        });
+        return;
+      }
+      
+      // Apply the promo code
+      setAppliedPromo({
+        code: data.code,
+        discount_percentage: data.discount_percentage
+      });
+      
+      toast({
+        title: language === 'id' ? "Kode promo diterapkan" : "Promo code applied",
+        description: `${data.discount_percentage}% ${language === 'id' ? 'diskon diterapkan' : 'discount applied'}`,
+      });
+      
       setCouponCode('');
+    } catch (error) {
+      console.error('Error applying promo code:', error);
+      toast({
+        variant: "destructive",
+        title: language === 'id' ? "Error" : "Error",
+        description: language === 'id'
+          ? "Terjadi kesalahan saat menerapkan kode promo"
+          : "An error occurred while applying the promo code"
+      });
+    } finally {
+      setIsCheckingPromo(false);
     }
   };
+
+  // Calculate discount amount
+  const getDiscountAmount = () => {
+    if (!appliedPromo) return 0;
+    
+    const subtotal = getSubtotal();
+    return subtotal * (appliedPromo.discount_percentage / 100);
+  };
+  
+  // Get discounted subtotal
+  const getDiscountedSubtotal = () => {
+    return getSubtotal() - getDiscountAmount();
+  };
+  
+  // Get tax on discounted amount
+  const getDiscountedTax = () => {
+    if (!appliedPromo) return getTaxAmount();
+    
+    return items.reduce((total, item) => {
+      const discountedPrice = item.product.price * (1 - (appliedPromo.discount_percentage / 100));
+      const itemTax = (discountedPrice * item.quantity) * (item.product.tax / 100);
+      return total + itemTax;
+    }, 0);
+  };
+  
+  // Get total after discount
+  const getDiscountedTotal = () => {
+    return getDiscountedSubtotal() + getDiscountedTax();
+  };
+  
+  // Handle removing applied promo
+  const removeAppliedPromo = () => {
+    setAppliedPromo(null);
+    toast({
+      title: language === 'id' ? "Kode promo dihapus" : "Promo code removed",
+    });
+  };
+  
+  // Load applied promo from localStorage on mount
+  useEffect(() => {
+    const storedPromo = localStorage.getItem('appliedPromo');
+    if (storedPromo) {
+      try {
+        setAppliedPromo(JSON.parse(storedPromo));
+      } catch (error) {
+        console.error('Failed to parse stored promo', error);
+        localStorage.removeItem('appliedPromo');
+      }
+    }
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -200,21 +324,47 @@ const CartPage = () => {
 
                   {/* Coupon code */}
                   <div className="mb-6">
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder={language === 'id' ? 'Kode kupon' : 'Coupon code'}
-                        value={couponCode}
-                        onChange={(e) => setCouponCode(e.target.value)}
-                        className="athfal-input"
-                      />
-                      <Button 
-                        onClick={applyCoupon}
-                        disabled={!couponCode.trim()}
-                        className="bg-athfal-yellow text-black hover:bg-athfal-yellow/80"
-                      >
-                        {language === 'id' ? 'Terapkan' : 'Apply'}
-                      </Button>
-                    </div>
+                    {appliedPromo ? (
+                      <div className="bg-green-50 border border-green-200 rounded-md p-3 flex justify-between items-center">
+                        <div>
+                          <div className="flex items-center">
+                            <Check size={16} className="text-green-500 mr-2" />
+                            <span className="font-medium">{appliedPromo.code}</span>
+                          </div>
+                          <p className="text-sm text-green-700">
+                            {appliedPromo.discount_percentage}% {language === 'id' ? 'diskon diterapkan' : 'discount applied'}
+                          </p>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={removeAppliedPromo}
+                          className="text-gray-500 hover:text-red-500"
+                        >
+                          {language === 'id' ? 'Hapus' : 'Remove'}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder={language === 'id' ? 'Kode promo' : 'Promo code'}
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value)}
+                          className="athfal-input"
+                        />
+                        <Button 
+                          onClick={applyCoupon}
+                          disabled={!couponCode.trim() || isCheckingPromo}
+                          className="bg-athfal-yellow text-black hover:bg-athfal-yellow/80"
+                        >
+                          {isCheckingPromo ? (
+                            language === 'id' ? 'Memeriksa...' : 'Checking...'
+                          ) : (
+                            language === 'id' ? 'Terapkan' : 'Apply'
+                          )}
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Price summary */}
@@ -223,14 +373,29 @@ const CartPage = () => {
                       <span className="text-gray-600">{language === 'id' ? 'Subtotal' : 'Subtotal'}</span>
                       <span>{formatCurrency(getSubtotal())}</span>
                     </div>
+                    
+                    {appliedPromo && (
+                      <div className="flex justify-between text-green-600">
+                        <span>
+                          {language === 'id' ? 'Diskon' : 'Discount'} ({appliedPromo.discount_percentage}%)
+                        </span>
+                        <span>-{formatCurrency(getDiscountAmount())}</span>
+                      </div>
+                    )}
+                    
                     <div className="flex justify-between">
                       <span className="text-gray-600">{language === 'id' ? 'Pajak' : 'Tax'}</span>
-                      <span>{formatCurrency(getTaxAmount())}</span>
+                      <span>
+                        {appliedPromo ? formatCurrency(getDiscountedTax()) : formatCurrency(getTaxAmount())}
+                      </span>
                     </div>
+                    
                     <Separator className="my-3" />
                     <div className="flex justify-between font-bold">
                       <span>{language === 'id' ? 'Total' : 'Total'}</span>
-                      <span className="text-athfal-green">{formatCurrency(getTotal())}</span>
+                      <span className="text-athfal-green">
+                        {appliedPromo ? formatCurrency(getDiscountedTotal()) : formatCurrency(getTotal())}
+                      </span>
                     </div>
                   </div>
 

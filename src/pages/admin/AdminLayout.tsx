@@ -11,7 +11,8 @@ import {
   Home, 
   CreditCard, 
   HelpCircle, 
-  LogOut
+  LogOut,
+  Ticket
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -35,6 +36,7 @@ const AdminLayout = () => {
     { icon: FileText, label: 'Content', path: '/admin/content' },
     { icon: HelpCircle, label: 'FAQ', path: '/admin/faq' },
     { icon: CreditCard, label: 'Payment Options', path: '/admin/payments' },
+    { icon: Ticket, label: 'Promo Codes', path: '/admin/promo-codes' },
     { icon: Settings, label: 'Settings', path: '/admin/settings' },
   ];
 

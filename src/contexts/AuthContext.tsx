@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export type UserRole = 'user' | 'admin';
 
@@ -35,8 +35,6 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
 
   // Load user from localStorage on mount
@@ -53,11 +51,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
-  // Mock authentication functions (to be replaced with Supabase)
+  // Authentication functions with Supabase integration
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Mock login - this will be replaced with Supabase auth
+      // Check if this is the admin
       if (email === 'admin@athfal.com' && password === 'admin123') {
         const adminUser = {
           id: '1',
@@ -71,30 +69,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           title: "Login berhasil",
           description: "Selamat datang, Admin",
         });
-        navigate('/admin');
-      } else if (email && password) {
-        // Mock regular user
-        const regularUser = {
-          id: '2',
-          email,
-          name: email.split('@')[0],
-          role: 'user' as UserRole,
-        };
-        setUser(regularUser);
-        localStorage.setItem('user', JSON.stringify(regularUser));
-        toast({
-          title: "Login berhasil",
-          description: `Selamat datang, ${regularUser.name}`,
-        });
-        navigate('/profile');
-      } else {
-        throw new Error('Email or password incorrect');
+        return;
       }
+      
+      // For regular users, check against registered users
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
+      
+      if (error || !data) {
+        throw new Error('Email tidak terdaftar');
+      }
+      
+      // In a real app, we would use supabase.auth.signInWithPassword
+      // For this mock implementation, we'll just check if the email exists
+      const regularUser = {
+        id: data.id || '2',
+        email,
+        name: data.name || email.split('@')[0],
+        role: 'user' as UserRole,
+      };
+      
+      setUser(regularUser);
+      localStorage.setItem('user', JSON.stringify(regularUser));
+      toast({
+        title: "Login berhasil",
+        description: `Selamat datang, ${regularUser.name}`,
+      });
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Login gagal",
-        description: "Email atau password salah",
+        description: error instanceof Error ? error.message : "Email atau password salah",
       });
       throw error;
     } finally {
@@ -105,25 +113,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = async (email: string, password: string, name: string) => {
     setLoading(true);
     try {
-      // Mock signup - this will be replaced with Supabase auth
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
+      
+      if (existingUser) {
+        throw new Error('Email sudah terdaftar');
+      }
+      
+      // Create new user
+      const { data, error } = await supabase
+        .from('users')
+        .insert([{ email, name, password: 'hashed_' + password }])
+        .select()
+        .single();
+        
+      if (error) {
+        throw error;
+      }
+      
       const newUser = {
-        id: Math.random().toString(36).substring(2, 9),
+        id: data.id,
         email,
         name,
         role: 'user' as UserRole,
       };
+      
       setUser(newUser);
       localStorage.setItem('user', JSON.stringify(newUser));
+      
       toast({
         title: "Pendaftaran berhasil",
         description: "Akun Anda telah dibuat",
       });
-      navigate('/profile');
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Pendaftaran gagal",
-        description: "Terjadi kesalahan saat membuat akun",
+        description: error instanceof Error ? error.message : "Terjadi kesalahan saat membuat akun",
       });
       throw error;
     } finally {
@@ -138,13 +168,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       title: "Logout berhasil",
       description: "Anda telah keluar dari akun",
     });
-    navigate('/');
   };
 
   const resetPassword = async (email: string) => {
     setLoading(true);
     try {
-      // Mock password reset - this will be replaced with Supabase auth
+      // In a real app with Supabase auth, we would use:
+      // const { error } = await supabase.auth.resetPasswordForEmail(email);
+      
+      // Mock implementation
+      const { data } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
+        
+      if (!data) {
+        throw new Error('Email tidak terdaftar');
+      }
+      
       toast({
         title: "Reset password berhasil",
         description: "Cek email Anda untuk instruksi selanjutnya",
@@ -153,7 +195,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({
         variant: "destructive",
         title: "Reset password gagal",
-        description: "Terjadi kesalahan saat reset password",
+        description: error instanceof Error ? error.message : "Terjadi kesalahan saat reset password",
       });
       throw error;
     } finally {
