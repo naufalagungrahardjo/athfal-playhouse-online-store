@@ -7,61 +7,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
 import { CalendarIcon, FileEdit, FilePlus, Search, Trash2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-
-// Mock blog data
-const MOCK_BLOGS = [
-  {
-    id: "blog1",
-    title: "Memahami Tahapan Perkembangan Anak Usia 2-5 Tahun",
-    content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac diam vulputate, volutpat libero at, efficitur nisl...",
-    image: "https://images.unsplash.com/photo-1571210862729-78a52d3779a2",
-    author: "Fadhilah Ramadhannisa",
-    date: "2023-05-15",
-    category: "Perkembangan Anak",
-    published: true
-  },
-  {
-    id: "blog2",
-    title: "Tips Memilih Mainan Edukasi untuk Balita",
-    content: "Curabitur at est justo. Donec convallis libero felis, eu vulputate mi pharetra eget. Sed sit amet felis tellus...",
-    image: "https://images.unsplash.com/photo-1596464716127-f2a82984de30",
-    author: "Ahmad Rifqi",
-    date: "2023-04-22",
-    category: "Tips & Trik",
-    published: true
-  },
-  {
-    id: "blog3",
-    title: "Pentingnya Bermain dalam Proses Belajar Anak",
-    content: "Vivamus lacinia metus quis velit tincidunt, non suscipit risus pretium. Praesent ut metus a odio dictum varius eget eget magna...",
-    image: "https://images.unsplash.com/photo-1484820540004-14229fe36ca4",
-    author: "Siti Fatimah",
-    date: "2023-03-18",
-    category: "Metode Pembelajaran",
-    published: true
-  },
-  {
-    id: "draft1",
-    title: "[Draft] Mengenalkan Huruf Hijaiyah dengan Cara Menyenangkan",
-    content: "Draft content about teaching Hijaiyah letters...",
-    image: "https://images.unsplash.com/photo-1579847188804-2d539cd91fb3",
-    author: "Fadhilah Ramadhannisa",
-    date: "2023-06-10",
-    category: "Pendidikan Islam",
-    published: false
-  },
-];
+import { useBlogs, Blog } from "@/hooks/useBlogs";
 
 // Blog category options
 const BLOG_CATEGORIES = [
   "Perkembangan Anak",
-  "Tips & Trik",
+  "Tips & Trik", 
   "Metode Pembelajaran",
   "Pendidikan Islam",
   "Psikologi Anak",
@@ -69,11 +25,8 @@ const BLOG_CATEGORIES = [
   "Review Produk"
 ];
 
-type Blog = typeof MOCK_BLOGS[0];
-
 const AdminBlogs = () => {
-  const { toast } = useToast();
-  const [blogs, setBlogs] = useState<Blog[]>(MOCK_BLOGS);
+  const { blogs, loading, saveBlog, deleteBlog } = useBlogs();
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
@@ -98,7 +51,7 @@ const AdminBlogs = () => {
 
   const handleCreateNewBlog = () => {
     const newBlog: Blog = {
-      id: `blog${blogs.length + 1}`,
+      id: `blog_${Date.now()}`,
       title: "New Blog Post",
       content: "Start writing your content here...",
       image: "https://images.unsplash.com/photo-1516733968668-dbdce39c4651",
@@ -108,12 +61,7 @@ const AdminBlogs = () => {
       published: false
     };
     
-    setBlogs([...blogs, newBlog]);
     setEditingBlog(newBlog);
-    toast({
-      title: "New blog post created",
-      description: "You can now edit your new blog post.",
-    });
   };
 
   const handleEditBlog = (blog: Blog) => {
@@ -121,53 +69,31 @@ const AdminBlogs = () => {
     setDate(new Date(blog.date));
   };
 
-  const handleSaveBlog = () => {
+  const handleSaveBlog = async () => {
     if (!editingBlog) return;
     
-    const updatedBlogs = blogs.map(blog => 
-      blog.id === editingBlog.id ? editingBlog : blog
-    );
-    
-    setBlogs(updatedBlogs);
+    await saveBlog(editingBlog);
     setEditingBlog(null);
-    
-    toast({
-      title: "Blog post saved",
-      description: "Your changes have been saved successfully.",
-    });
   };
 
-  const handleDeleteBlog = (id: string) => {
-    const updatedBlogs = blogs.filter(blog => blog.id !== id);
-    setBlogs(updatedBlogs);
+  const handleDeleteBlog = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this blog?')) return;
+    
+    await deleteBlog(id);
     
     if (editingBlog && editingBlog.id === id) {
       setEditingBlog(null);
     }
-    
-    toast({
-      title: "Blog post deleted",
-      description: "The blog post has been deleted.",
-      variant: "destructive"
-    });
   };
 
-  const handleTogglePublish = (id: string) => {
-    const updatedBlogs = blogs.map(blog => 
-      blog.id === id ? {...blog, published: !blog.published} : blog
-    );
-    
-    setBlogs(updatedBlogs);
-    
-    const blog = blogs.find(b => b.id === id);
-    
-    toast({
-      title: blog?.published ? "Blog unpublished" : "Blog published",
-      description: blog?.published 
-        ? "The blog post is now hidden from the public." 
-        : "The blog post is now visible to the public.",
-    });
+  const handleTogglePublish = async (blog: Blog) => {
+    const updatedBlog = { ...blog, published: !blog.published };
+    await saveBlog(updatedBlog);
   };
+
+  if (loading) {
+    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -230,7 +156,7 @@ const AdminBlogs = () => {
                           className="h-8 w-8 p-0" 
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleTogglePublish(blog.id);
+                            handleTogglePublish(blog);
                           }}
                         >
                           <span className={`h-2 w-2 rounded-full ${
@@ -378,9 +304,11 @@ const AdminBlogs = () => {
                 <div className="flex gap-2">
                   <Button 
                     variant="secondary"
-                    onClick={() => {
-                      setEditingBlog({...editingBlog, published: !editingBlog.published});
-                      handleSaveBlog();
+                    onClick={async () => {
+                      const updatedBlog = {...editingBlog, published: !editingBlog.published};
+                      setEditingBlog(updatedBlog);
+                      await saveBlog(updatedBlog);
+                      setEditingBlog(null);
                     }}
                   >
                     {editingBlog.published ? 'Unpublish' : 'Publish'}
