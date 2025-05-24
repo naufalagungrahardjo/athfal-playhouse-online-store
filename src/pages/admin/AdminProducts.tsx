@@ -20,8 +20,20 @@ interface ProductFormData {
   stock: number;
 }
 
+interface ProductListData {
+  id: string;
+  product_id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  category: ProductCategory;
+  tax: number;
+  stock: number;
+}
+
 const AdminProducts = () => {
-  const [products, setProducts] = useState<ProductFormData[]>([]);
+  const [products, setProducts] = useState<ProductListData[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductFormData | null>(null);
   const { toast } = useToast();
@@ -39,9 +51,9 @@ const AdminProducts = () => {
 
       if (error) throw error;
 
-      // Transform database products to match our interface
-      const transformedProducts: ProductFormData[] = (data || []).map(product => ({
-        id: product.id,
+      // Transform database products to match our interface - ensure id is always present
+      const transformedProducts: ProductListData[] = (data || []).map(product => ({
+        id: product.id, // This will always be present from the database
         product_id: product.product_id,
         name: product.name,
         description: product.description,
@@ -63,8 +75,20 @@ const AdminProducts = () => {
     }
   };
 
-  const handleEdit = (product: ProductFormData) => {
-    setEditingProduct(product);
+  const handleEdit = (product: ProductListData) => {
+    // Convert ProductListData to ProductFormData for editing
+    const editProduct: ProductFormData = {
+      id: product.id,
+      product_id: product.product_id,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      image: product.image,
+      category: product.category,
+      tax: product.tax,
+      stock: product.stock,
+    };
+    setEditingProduct(editProduct);
     setIsDialogOpen(true);
   };
 
