@@ -12,6 +12,7 @@ export interface Product {
   image: string;
   category: ProductCategory;
   tax: number;
+  stock: number;
 }
 
 export interface CartItem {
@@ -22,10 +23,13 @@ export interface CartItem {
 interface CartContextType {
   items: CartItem[];
   addToCart: (product: Product, quantity?: number) => void;
+  addItem: (product: Product, quantity?: number) => void;
   removeFromCart: (productId: string) => void;
+  removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   getItemQuantity: (productId: string) => number;
+  getTotalItems: () => number;
   getSubtotal: () => number;
   getTaxAmount: () => number;
   getTotal: () => number;
@@ -84,7 +88,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         price: product.price,
         image: product.image,
         category: product.category as ProductCategory,
-        tax: product.tax
+        tax: product.tax,
+        stock: product.stock
       }));
 
       setProducts(formattedProducts);
@@ -109,9 +114,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  // Alias for addToCart
+  const addItem = addToCart;
+
   const removeFromCart = (productId: string) => {
     setItems(prev => prev.filter(item => item.product.id !== productId));
   };
+
+  // Alias for removeFromCart
+  const removeItem = removeFromCart;
 
   const updateQuantity = (productId: string, quantity: number) => {
     if (quantity <= 0) {
@@ -137,6 +148,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     return item ? item.quantity : 0;
   };
 
+  const getTotalItems = (): number => {
+    return items.reduce((total, item) => total + item.quantity, 0);
+  };
+
   const getSubtotal = (): number => {
     return items.reduce((total, item) => total + (item.product.price * item.quantity), 0);
   };
@@ -158,10 +173,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       value={{
         items,
         addToCart,
+        addItem,
         removeFromCart,
+        removeItem,
         updateQuantity,
         clearCart,
         getItemQuantity,
+        getTotalItems,
         getSubtotal,
         getTaxAmount,
         getTotal,
