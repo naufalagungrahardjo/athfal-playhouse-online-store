@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, Copy, Check } from 'lucide-react';
 
 // Mock payment methods - in a real app, this would come from an API
@@ -21,21 +21,21 @@ const PAYMENT_METHODS = [
     name: 'Bank Hijra',
     number: '7800110100142022',
     accountName: 'Fadhilah Ramadhannisa',
-    logo: 'https://logosmarcas.net/wp-content/uploads/2021/03/BCA-Logo.png', // Replace with actual logo
+    logo: 'https://logosmarcas.net/wp-content/uploads/2021/03/BCA-Logo.png',
   },
   {
     id: 'bca',
     name: 'BCA',
     number: '0123456789',
     accountName: 'Athfal Playhouse',
-    logo: 'https://logosmarcas.net/wp-content/uploads/2021/03/BCA-Logo.png', // Replace with actual logo
+    logo: 'https://logosmarcas.net/wp-content/uploads/2021/03/BCA-Logo.png',
   },
   {
     id: 'jago',
     name: 'Bank Jago',
     number: '9876543210',
     accountName: 'Athfal Playhouse',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Bank_Jago_logo.svg', // Replace with actual logo
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Bank_Jago_logo.svg',
   }
 ];
 
@@ -60,7 +60,7 @@ const CheckoutPage = () => {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
-  const [selectedPayment, setSelectedPayment] = useState('hijra'); // Default to Bank Hijra
+  const [selectedPayment, setSelectedPayment] = useState('hijra');
   const [isLoading, setIsLoading] = useState(false);
   const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
 
@@ -89,7 +89,6 @@ const CheckoutPage = () => {
         description: language === 'id' ? 'Nomor rekening telah disalin' : 'Account number has been copied',
       });
       
-      // Reset copy icon after 2 seconds
       setTimeout(() => {
         setCopiedAccountNumber(false);
       }, 2000);
@@ -111,13 +110,57 @@ const CheckoutPage = () => {
     setIsLoading(true);
 
     try {
-      // Save selected payment method to localStorage for the order details page
+      // Create order in database
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert([{
+          user_id: user?.id || null,
+          customer_name: name,
+          customer_email: email,
+          customer_phone: phone,
+          customer_address: address || null,
+          notes: notes || null,
+          payment_method: selectedPayment,
+          subtotal: getSubtotal(),
+          tax_amount: getTaxAmount(),
+          total_amount: getTotal(),
+          status: 'pending'
+        }])
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Create order items
+      const orderItems = items.map(item => ({
+        order_id: orderData.id,
+        product_id: item.product.id,
+        product_name: item.product.name,
+        product_price: item.product.price,
+        quantity: item.quantity
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Save order ID and selected payment method to localStorage for the order details page
+      localStorage.setItem('orderId', orderData.id);
       localStorage.setItem('selectedPayment', selectedPayment);
       
+      toast({
+        title: language === 'id' ? 'Pesanan berhasil dibuat' : 'Order created successfully',
+        description: language === 'id' 
+          ? 'Anda akan diarahkan ke halaman detail pesanan' 
+          : 'You will be redirected to the order details page',
+      });
+
       // Redirect to order details page
       navigate('/order-details');
     } catch (error) {
-      console.error('Error processing order:', error);
+      console.error('Error creating order:', error);
       toast({
         variant: "destructive",
         title: language === 'id' ? 'Gagal memproses pesanan' : 'Failed to process order',

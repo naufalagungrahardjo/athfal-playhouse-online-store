@@ -1,42 +1,37 @@
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
-export type ProductCategory = 
-  | 'pop-up-class'
-  | 'bumi-class'
-  | 'tahsin-class'
-  | 'play-kit'
-  | 'consultation'
-  | 'merchandise';
+export type ProductCategory = 'pop-up-class' | 'bumi-class' | 'tahsin-class' | 'play-kit' | 'consultation' | 'merchandise';
 
-export type Product = {
+export interface Product {
   id: string;
   name: string;
-  price: number;
   description: string;
+  price: number;
   image: string;
   category: ProductCategory;
-  tax: number; // Tax percentage
-  stock: number;
-};
+  tax: number;
+}
 
-export type CartItem = {
+export interface CartItem {
   product: Product;
   quantity: number;
-};
+}
 
-type CartContextType = {
+interface CartContextType {
   items: CartItem[];
-  addItem: (product: Product, quantity: number) => void;
-  removeItem: (productId: string) => void;
+  addToCart: (product: Product, quantity?: number) => void;
+  removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  getTotalItems: () => number;
+  getItemQuantity: (productId: string) => number;
   getSubtotal: () => number;
   getTaxAmount: () => number;
   getTotal: () => number;
-};
+  products: Product[];
+  fetchProducts: () => Promise<void>;
+}
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
@@ -50,112 +45,111 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
-  const { toast } = useToast();
+  const [products, setProducts] = useState<Product[]>([]);
 
   // Load cart from localStorage on mount
   useEffect(() => {
-    const storedCart = localStorage.getItem('cart');
-    if (storedCart) {
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
       try {
-        setItems(JSON.parse(storedCart));
+        setItems(JSON.parse(savedCart));
       } catch (error) {
-        console.error('Failed to parse stored cart', error);
+        console.error('Failed to parse cart from localStorage:', error);
         localStorage.removeItem('cart');
       }
     }
+    fetchProducts();
   }, []);
 
-  // Save cart to localStorage when it changes
+  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(items));
   }, [items]);
 
-  const addItem = (product: Product, quantity: number) => {
-    setItems(currentItems => {
-      // Check if the item is already in the cart
-      const existingItemIndex = currentItems.findIndex(item => item.product.id === product.id);
+  // Fetch products from database
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      if (existingItemIndex >= 0) {
-        // Update quantity of existing item
-        const updatedItems = [...currentItems];
-        updatedItems[existingItemIndex] = {
-          ...updatedItems[existingItemIndex],
-          quantity: updatedItems[existingItemIndex].quantity + quantity
-        };
+      if (error) throw error;
 
-        toast({
-          title: "Produk diperbarui",
-          description: `${product.name} jumlahnya diperbarui di keranjang`,
-        });
+      // Convert database products to our Product interface
+      const formattedProducts: Product[] = (data || []).map(product => ({
+        id: product.product_id,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        image: product.image,
+        category: product.category as ProductCategory,
+        tax: product.tax
+      }));
 
-        return updatedItems;
+      setProducts(formattedProducts);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  const addToCart = (product: Product, quantity: number = 1) => {
+    setItems(prev => {
+      const existingItem = prev.find(item => item.product.id === product.id);
+      
+      if (existingItem) {
+        return prev.map(item =>
+          item.product.id === product.id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        );
       } else {
-        // Add new item
-        toast({
-          title: "Produk ditambahkan",
-          description: `${product.name} ditambahkan ke keranjang`,
-        });
-
-        return [...currentItems, { product, quantity }];
+        return [...prev, { product, quantity }];
       }
     });
   };
 
-  const removeItem = (productId: string) => {
-    setItems(currentItems => {
-      const itemToRemove = currentItems.find(item => item.product.id === productId);
-      
-      if (itemToRemove) {
-        toast({
-          title: "Produk dihapus",
-          description: `${itemToRemove.product.name} dihapus dari keranjang`,
-        });
-      }
-      
-      return currentItems.filter(item => item.product.id !== productId);
-    });
+  const removeFromCart = (productId: string) => {
+    setItems(prev => prev.filter(item => item.product.id !== productId));
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeItem(productId);
+      removeFromCart(productId);
       return;
     }
 
-    setItems(currentItems => {
-      return currentItems.map(item => {
-        if (item.product.id === productId) {
-          return { ...item, quantity };
-        }
-        return item;
-      });
-    });
+    setItems(prev =>
+      prev.map(item =>
+        item.product.id === productId
+          ? { ...item, quantity }
+          : item
+      )
+    );
   };
 
   const clearCart = () => {
     setItems([]);
-    toast({
-      title: "Keranjang kosong",
-      description: "Semua produk telah dihapus dari keranjang",
-    });
   };
 
-  const getTotalItems = () => {
-    return items.reduce((total, item) => total + item.quantity, 0);
+  const getItemQuantity = (productId: string): number => {
+    const item = items.find(item => item.product.id === productId);
+    return item ? item.quantity : 0;
   };
 
-  const getSubtotal = () => {
+  const getSubtotal = (): number => {
     return items.reduce((total, item) => total + (item.product.price * item.quantity), 0);
   };
 
-  const getTaxAmount = () => {
+  const getTaxAmount = (): number => {
     return items.reduce((total, item) => {
-      const itemTax = (item.product.price * item.quantity) * (item.product.tax / 100);
-      return total + itemTax;
+      const itemTotal = item.product.price * item.quantity;
+      const taxAmount = (itemTotal * item.product.tax) / 100;
+      return total + taxAmount;
     }, 0);
   };
 
-  const getTotal = () => {
+  const getTotal = (): number => {
     return getSubtotal() + getTaxAmount();
   };
 
@@ -163,14 +157,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     <CartContext.Provider
       value={{
         items,
-        addItem,
-        removeItem,
+        addToCart,
+        removeFromCart,
         updateQuantity,
         clearCart,
-        getTotalItems,
+        getItemQuantity,
         getSubtotal,
         getTaxAmount,
         getTotal,
+        products,
+        fetchProducts,
       }}
     >
       {children}

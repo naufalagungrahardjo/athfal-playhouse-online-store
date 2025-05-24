@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   BarChart3, 
   Package, 
@@ -11,23 +13,6 @@ import {
   TrendingUp,
   Calendar,
 } from 'lucide-react';
-
-// Mock data for dashboard
-const recentOrders = [
-  { id: 'ORD-001', customer: 'Ahmad Faiz', date: '2023-05-20', total: 250000, status: 'completed' },
-  { id: 'ORD-002', customer: 'Siti Nuraini', date: '2023-05-19', total: 450000, status: 'pending' },
-  { id: 'ORD-003', customer: 'Budi Santoso', date: '2023-05-18', total: 120000, status: 'completed' },
-  { id: 'ORD-004', customer: 'Maya Indah', date: '2023-05-17', total: 300000, status: 'pending' },
-  { id: 'ORD-005', customer: 'Reza Mahendra', date: '2023-05-16', total: 180000, status: 'completed' },
-];
-
-const topProducts = [
-  { id: 'pop1', name: 'Pop Up Class - Usia 2-3 Tahun', sales: 24, revenue: 6000000 },
-  { id: 'bumi1', name: 'Bumi Class: Mengenal Alam', sales: 18, revenue: 5400000 },
-  { id: 'kit1', name: 'Play Kit - Alphabet Fun', sales: 15, revenue: 2985000 },
-  { id: 'consult1', name: 'Konsultasi Anak 60 Menit', sales: 12, revenue: 4200000 },
-  { id: 'merch1', name: 'Kaos Athfal Playhouse - Anak', sales: 10, revenue: 1200000 },
-];
 
 // Format currency
 const formatCurrency = (amount: number) => {
@@ -48,46 +33,107 @@ const formatDate = (dateString: string) => {
 };
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
   const [loading, setLoading] = useState(true);
-  
-  // Mock statistics based on selected period
-  const getStats = () => {
-    switch(period) {
-      case 'daily':
-        return {
-          sales: 2,
-          revenue: 650000,
-          visitors: 45,
-          newCustomers: 3
-        };
-      case 'weekly':
-        return {
-          sales: 14,
-          revenue: 3500000,
-          visitors: 280,
-          newCustomers: 18
-        };
-      case 'monthly':
-      default:
-        return {
-          sales: 62,
-          revenue: 15000000,
-          visitors: 1250,
-          newCustomers: 75
-        };
+  const [stats, setStats] = useState({
+    sales: 0,
+    revenue: 0,
+    visitors: 0,
+    newCustomers: 0
+  });
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [topProducts, setTopProducts] = useState<any[]>([]);
+
+  // Fetch dashboard data
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      // Calculate date range based on period
+      const now = new Date();
+      let startDate = new Date();
+      
+      switch(period) {
+        case 'daily':
+          startDate.setDate(now.getDate() - 1);
+          break;
+        case 'weekly':
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case 'monthly':
+          startDate.setMonth(now.getMonth() - 1);
+          break;
+      }
+
+      // Fetch orders for the period
+      const { data: orders, error: ordersError } = await supabase
+        .from('orders')
+        .select('*')
+        .gte('created_at', startDate.toISOString())
+        .order('created_at', { ascending: false });
+
+      if (ordersError) throw ordersError;
+
+      // Calculate stats
+      const totalSales = orders?.length || 0;
+      const totalRevenue = orders?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
+      
+      setStats({
+        sales: totalSales,
+        revenue: totalRevenue,
+        visitors: Math.floor(totalSales * 4.2), // Mock calculation
+        newCustomers: Math.floor(totalSales * 0.6) // Mock calculation
+      });
+
+      // Fetch recent orders (last 5)
+      const { data: recentOrdersData, error: recentError } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (recentError) throw recentError;
+      setRecentOrders(recentOrdersData || []);
+
+      // Fetch top products
+      const { data: orderItems, error: itemsError } = await supabase
+        .from('order_items')
+        .select('product_id, product_name, product_price, quantity');
+
+      if (itemsError) throw itemsError;
+
+      // Group by product and calculate totals
+      const productStats: { [key: string]: { name: string, sales: number, revenue: number } } = {};
+      
+      orderItems?.forEach(item => {
+        if (!productStats[item.product_id]) {
+          productStats[item.product_id] = {
+            name: item.product_name,
+            sales: 0,
+            revenue: 0
+          };
+        }
+        productStats[item.product_id].sales += item.quantity;
+        productStats[item.product_id].revenue += item.product_price * item.quantity;
+      });
+
+      // Convert to array and sort by sales
+      const topProductsArray = Object.entries(productStats)
+        .map(([id, stats]) => ({ id, ...stats }))
+        .sort((a, b) => b.sales - a.sales)
+        .slice(0, 5);
+
+      setTopProducts(topProductsArray);
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const stats = getStats();
-
-  // Simulate loading data
   useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
+    fetchDashboardData();
   }, [period]);
 
   return (
@@ -178,17 +224,19 @@ const AdminDashboard = () => {
                 <tbody className="divide-y divide-gray-200">
                   {recentOrders.map((order) => (
                     <tr key={order.id} className="text-sm">
-                      <td className="px-4 py-3 font-medium text-gray-800">{order.id}</td>
-                      <td className="px-4 py-3 text-gray-600">{order.customer}</td>
-                      <td className="px-4 py-3 text-gray-600">{formatDate(order.date)}</td>
-                      <td className="px-4 py-3 text-gray-600">{formatCurrency(order.total)}</td>
+                      <td className="px-4 py-3 font-medium text-gray-800">{order.id.slice(0, 8)}...</td>
+                      <td className="px-4 py-3 text-gray-600">{order.customer_name}</td>
+                      <td className="px-4 py-3 text-gray-600">{formatDate(order.created_at)}</td>
+                      <td className="px-4 py-3 text-gray-600">{formatCurrency(order.total_amount)}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           order.status === 'completed' 
                             ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
+                            : order.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
                         }`}>
-                          {order.status === 'completed' ? 'Completed' : 'Pending'}
+                          {order.status === 'completed' ? 'Completed' : order.status === 'pending' ? 'Pending' : 'Cancelled'}
                         </span>
                       </td>
                     </tr>
@@ -197,7 +245,13 @@ const AdminDashboard = () => {
               </table>
             </div>
             <div className="mt-4 text-right">
-              <Button variant="outline" size="sm">View All Orders</Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/admin/orders')}
+              >
+                View All Orders
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -228,7 +282,13 @@ const AdminDashboard = () => {
               </table>
             </div>
             <div className="mt-4 text-right">
-              <Button variant="outline" size="sm">View All Products</Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/admin/products')}
+              >
+                View All Products
+              </Button>
             </div>
           </CardContent>
         </Card>

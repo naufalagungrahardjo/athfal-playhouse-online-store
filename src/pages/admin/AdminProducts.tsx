@@ -9,9 +9,7 @@ import {
   DialogDescription, 
   DialogHeader, 
   DialogTitle, 
-  DialogTrigger,
   DialogFooter,
-  DialogClose
 } from '@/components/ui/dialog';
 import { 
   DropdownMenu, 
@@ -30,8 +28,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
 import { 
-  ChevronDown, 
   Plus, 
   Search, 
   Filter, 
@@ -42,63 +40,10 @@ import {
 } from 'lucide-react';
 import { ProductCategory } from '@/contexts/CartContext';
 
-// Mock products data
-const MOCK_PRODUCTS = [
-  {
-    id: 'pop1',
-    name: 'Pop Up Class - Usia 2-3 Tahun',
-    description: 'Kelas untuk anak usia 2-3 tahun yang menyenangkan dan edukatif',
-    price: 250000,
-    image: 'https://images.unsplash.com/photo-1588075592405-d68745302891',
-    category: 'pop-up-class' as ProductCategory,
-    tax: 11,
-    stock: 10,
-  },
-  {
-    id: 'pop2',
-    name: 'Pop Up Class - Usia 4-5 Tahun',
-    description: 'Kelas untuk anak usia 4-5 tahun dengan aktivitas yang lebih kompleks',
-    price: 300000,
-    image: 'https://images.unsplash.com/photo-1543087903-1ac2ec7aa8c5',
-    category: 'pop-up-class' as ProductCategory,
-    tax: 11,
-    stock: 8,
-  },
-  {
-    id: 'bumi1',
-    name: 'Bumi Class: Mengenal Alam',
-    description: 'Kelas belajar mengenal alam untuk anak-anak',
-    price: 300000,
-    image: 'https://images.unsplash.com/photo-1590592006475-d0264ad1ee92',
-    category: 'bumi-class' as ProductCategory,
-    tax: 11,
-    stock: 10,
-  },
-  {
-    id: 'kit1',
-    name: 'Play Kit - Alphabet Fun',
-    description: 'Kit bermain sambil belajar alfabet untuk anak',
-    price: 199000,
-    image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b',
-    category: 'play-kit' as ProductCategory,
-    tax: 11,
-    stock: 20,
-  },
-  {
-    id: 'consult1',
-    name: 'Konsultasi Anak 60 Menit',
-    description: 'Sesi konsultasi psikologi anak dengan ahli',
-    price: 350000,
-    image: 'https://images.unsplash.com/photo-1516733968668-dbdce39c4651',
-    category: 'consultation' as ProductCategory,
-    tax: 11,
-    stock: 5,
-  },
-];
-
 // Product form type
 interface ProductFormData {
-  id: string;
+  id?: string;
+  product_id: string;
   name: string;
   description: string;
   price: number;
@@ -150,7 +95,7 @@ const AdminProducts = () => {
 
   // Empty product form
   const emptyProduct: ProductFormData = {
-    id: '',
+    product_id: '',
     name: '',
     description: '',
     price: 0,
@@ -160,14 +105,31 @@ const AdminProducts = () => {
     stock: 0,
   };
 
-  // Fetch products (simulation)
-  useEffect(() => {
+  // Fetch products from database
+  const fetchProducts = async () => {
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setProducts(MOCK_PRODUCTS);
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast({
+        variant: "destructive",
+        title: "Error fetching products",
+        description: "Failed to load products from database",
+      });
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
   }, []);
 
   // Filter products
@@ -206,43 +168,95 @@ const AdminProducts = () => {
   };
 
   // Handle save product (create or update)
-  const handleSaveProduct = (formData: ProductFormData) => {
-    if (isEditing) {
-      // Update existing product
-      const updatedProducts = products.map(p => 
-        p.id === formData.id ? formData : p
-      );
-      setProducts(updatedProducts);
+  const handleSaveProduct = async (formData: ProductFormData) => {
+    try {
+      if (isEditing && currentProduct?.id) {
+        // Update existing product
+        const { error } = await supabase
+          .from('products')
+          .update({
+            product_id: formData.product_id,
+            name: formData.name,
+            description: formData.description,
+            price: formData.price,
+            image: formData.image,
+            category: formData.category,
+            tax: formData.tax,
+            stock: formData.stock,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', currentProduct.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Product updated",
+          description: `${formData.name} has been updated successfully.`,
+        });
+      } else {
+        // Add new product
+        const { error } = await supabase
+          .from('products')
+          .insert([{
+            product_id: formData.product_id,
+            name: formData.name,
+            description: formData.description,
+            price: formData.price,
+            image: formData.image,
+            category: formData.category,
+            tax: formData.tax,
+            stock: formData.stock
+          }]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Product added",
+          description: `${formData.name} has been added successfully.`,
+        });
+      }
+
+      // Refresh products list
+      await fetchProducts();
+      setShowAddEditModal(false);
+    } catch (error) {
+      console.error('Error saving product:', error);
       toast({
-        title: "Product updated",
-        description: `${formData.name} has been updated successfully.`,
-      });
-    } else {
-      // Add new product
-      const newProduct = {
-        ...formData,
-        id: `prod-${Math.random().toString(36).substring(2, 9)}`,
-      };
-      setProducts([...products, newProduct]);
-      toast({
-        title: "Product added",
-        description: `${newProduct.name} has been added successfully.`,
+        variant: "destructive",
+        title: "Error saving product",
+        description: "Failed to save product to database",
       });
     }
-    setShowAddEditModal(false);
   };
 
   // Handle confirm delete
-  const handleConfirmDelete = () => {
-    if (currentProduct) {
-      const updatedProducts = products.filter(p => p.id !== currentProduct.id);
-      setProducts(updatedProducts);
-      toast({
-        title: "Product deleted",
-        description: `${currentProduct.name} has been deleted successfully.`,
-        variant: "destructive",
-      });
-      setShowDeleteModal(false);
+  const handleConfirmDelete = async () => {
+    if (currentProduct?.id) {
+      try {
+        const { error } = await supabase
+          .from('products')
+          .delete()
+          .eq('id', currentProduct.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Product deleted",
+          description: `${currentProduct.name} has been deleted successfully.`,
+          variant: "destructive",
+        });
+
+        // Refresh products list
+        await fetchProducts();
+        setShowDeleteModal(false);
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        toast({
+          variant: "destructive",
+          title: "Error deleting product",
+          description: "Failed to delete product from database",
+        });
+      }
     }
   };
 
@@ -347,7 +361,7 @@ const AdminProducts = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleViewProduct(product.id)}>
+                              <DropdownMenuItem onClick={() => handleViewProduct(product.product_id)}>
                                 <Eye className="mr-2 h-4 w-4" /> View
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleEditProduct(product)}>
@@ -391,6 +405,19 @@ const AdminProducts = () => {
               </TabsList>
               <TabsContent value="basic">
                 <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="product_id">Product ID *</Label>
+                    <Input
+                      id="product_id"
+                      value={currentProduct.product_id}
+                      onChange={(e) => setCurrentProduct({
+                        ...currentProduct,
+                        product_id: e.target.value
+                      })}
+                      placeholder="Enter unique product ID"
+                      required
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="name">Product Name *</Label>
                     <Input
