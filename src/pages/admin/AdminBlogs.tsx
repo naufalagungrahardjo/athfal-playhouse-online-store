@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,6 +71,7 @@ const AdminBlogs = () => {
   const handleSaveBlog = async () => {
     if (!editingBlog) return;
     
+    console.log('Saving blog with published status:', editingBlog.published);
     await saveBlog(editingBlog);
     setEditingBlog(null);
   };
@@ -88,6 +88,7 @@ const AdminBlogs = () => {
 
   const handleTogglePublish = async (blog: Blog) => {
     const updatedBlog = { ...blog, published: !blog.published };
+    console.log('Toggling publish status from', blog.published, 'to', updatedBlog.published);
     await saveBlog(updatedBlog);
   };
 
@@ -158,6 +159,7 @@ const AdminBlogs = () => {
                             e.stopPropagation();
                             handleTogglePublish(blog);
                           }}
+                          title={blog.published ? 'Published' : 'Draft'}
                         >
                           <span className={`h-2 w-2 rounded-full ${
                             blog.published ? 'bg-green-500' : 'bg-gray-300'
@@ -306,7 +308,7 @@ const AdminBlogs = () => {
                     variant="secondary"
                     onClick={async () => {
                       const updatedBlog = {...editingBlog, published: !editingBlog.published};
-                      setEditingBlog(updatedBlog);
+                      console.log('Publishing/Unpublishing blog:', updatedBlog.published);
                       await saveBlog(updatedBlog);
                       setEditingBlog(null);
                     }}

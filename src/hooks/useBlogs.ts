@@ -22,14 +22,20 @@ export const useBlogs = () => {
   const fetchBlogs = async () => {
     try {
       setLoading(true);
+      // Use raw SQL query since the types haven't been updated yet
       const { data, error } = await supabase
-        .from('blogs')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .rpc('get_blogs_data')
+        .catch(async () => {
+          // Fallback to direct table query if RPC doesn't exist
+          return await supabase
+            .from('blogs' as any)
+            .select('*')
+            .order('created_at', { ascending: false });
+        });
 
       if (error) throw error;
       
-      const formattedBlogs: Blog[] = (data || []).map(blog => ({
+      const formattedBlogs: Blog[] = (data || []).map((blog: any) => ({
         id: blog.id,
         title: blog.title,
         content: blog.content,
@@ -56,7 +62,7 @@ export const useBlogs = () => {
   const saveBlog = async (blog: Blog) => {
     try {
       const { error } = await supabase
-        .from('blogs')
+        .from('blogs' as any)
         .upsert({
           id: blog.id,
           title: blog.title,
@@ -65,7 +71,8 @@ export const useBlogs = () => {
           author: blog.author,
           date: blog.date,
           category: blog.category,
-          published: blog.published
+          published: blog.published,
+          updated_at: new Date().toISOString()
         });
 
       if (error) throw error;
@@ -89,7 +96,7 @@ export const useBlogs = () => {
   const deleteBlog = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('blogs')
+        .from('blogs' as any)
         .delete()
         .eq('id', id);
 
