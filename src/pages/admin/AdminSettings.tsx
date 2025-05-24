@@ -1,69 +1,45 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { useSettings } from "@/hooks/useSettings";
 import { Save } from "lucide-react";
-
-// Mock contact details
-const MOCK_CONTACT = {
-  email: "athfalplayhouse@gmail.com",
-  whatsapp: "082120614748",
-  address: "Apartemen Park View Depok Town Square Lt. 1, Jl. Margonda Daya, Depok, 16424",
-  instagram: "https://instagram.com/athfalplayhouse/",
-  youtube: "https://www.youtube.com/@AthfalPlayhouse",
-  whatsappGroup: "",
-};
-
-// Mock payment options
-const MOCK_PAYMENTS = [
-  {
-    id: "bca",
-    bank: "BCA",
-    accountNumber: "1234567890",
-    accountName: "Athfal Playhouse",
-    active: true,
-  },
-  {
-    id: "jago",
-    bank: "Bank Jago",
-    accountNumber: "0987654321",
-    accountName: "Fadhilah Ramadhannisa",
-    active: true,
-  },
-  {
-    id: "hijra",
-    bank: "Bank Hijra",
-    accountNumber: "7800110100142022",
-    accountName: "Fadhilah Ramadhannisa",
-    active: true,
-  },
-];
-
-// Mock VAT settings
-const MOCK_VAT = {
-  enabled: true,
-  percentage: 11,
-};
 
 const AdminSettings = () => {
   const { toast } = useToast();
-  const [contact, setContact] = useState(MOCK_CONTACT);
-  const [payments, setPayments] = useState(MOCK_PAYMENTS);
-  const [vat, setVat] = useState(MOCK_VAT);
+  const { 
+    contact, 
+    payments, 
+    vat, 
+    loading,
+    saveContactSettings,
+    savePaymentSettings,
+    saveVatSettings
+  } = useSettings();
+
+  const [localContact, setLocalContact] = useState(contact);
+  const [localPayments, setLocalPayments] = useState(payments);
+  const [localVat, setLocalVat] = useState(vat);
+
+  useEffect(() => {
+    setLocalContact(contact);
+    setLocalPayments(payments);
+    setLocalVat(vat);
+  }, [contact, payments, vat]);
   
-  const handleContactChange = (field: keyof typeof contact, value: string) => {
-    setContact(prev => ({
+  const handleContactChange = (field: keyof typeof localContact, value: string) => {
+    setLocalContact(prev => ({
       ...prev,
       [field]: value
     }));
   };
   
   const handlePaymentChange = (id: string, field: string, value: string | boolean) => {
-    setPayments(prev => 
+    setLocalPayments(prev => 
       prev.map(payment => 
         payment.id === id ? { ...payment, [field]: value } : payment
       )
@@ -72,27 +48,47 @@ const AdminSettings = () => {
   
   const handleAddPayment = () => {
     const newPayment = {
-      id: `payment-${payments.length + 1}`,
+      id: `payment-${localPayments.length + 1}`,
       bank: "",
       accountNumber: "",
       accountName: "",
       active: true,
     };
     
-    setPayments([...payments, newPayment]);
+    setLocalPayments([...localPayments, newPayment]);
   };
   
   const handleRemovePayment = (id: string) => {
-    setPayments(prev => prev.filter(payment => payment.id !== id));
+    setLocalPayments(prev => prev.filter(payment => payment.id !== id));
   };
   
-  const handleSaveSettings = (section: string) => {
-    // In a real app, this would save to a database/API
+  const handleSaveContact = () => {
+    saveContactSettings(localContact);
     toast({
-      title: `${section} settings updated`,
-      description: "Your changes have been saved successfully.",
+      title: "Contact settings updated",
+      description: "Your contact information has been saved successfully.",
     });
   };
+
+  const handleSavePayments = () => {
+    savePaymentSettings(localPayments);
+    toast({
+      title: "Payment settings updated",
+      description: "Your payment methods have been saved successfully.",
+    });
+  };
+
+  const handleSaveVat = () => {
+    saveVatSettings(localVat);
+    toast({
+      title: "Tax settings updated",
+      description: "Your tax settings have been saved successfully.",
+    });
+  };
+
+  if (loading) {
+    return <div className="p-8 text-center">Loading settings...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -123,7 +119,7 @@ const AdminSettings = () => {
                   <Input
                     id="email"
                     type="email"
-                    value={contact.email}
+                    value={localContact.email}
                     onChange={(e) => handleContactChange('email', e.target.value)}
                   />
                 </div>
@@ -132,7 +128,7 @@ const AdminSettings = () => {
                   <Label htmlFor="whatsapp">WhatsApp Number</Label>
                   <Input
                     id="whatsapp"
-                    value={contact.whatsapp}
+                    value={localContact.whatsapp}
                     onChange={(e) => handleContactChange('whatsapp', e.target.value)}
                   />
                   <p className="text-xs text-gray-500">
@@ -144,7 +140,7 @@ const AdminSettings = () => {
                   <Label htmlFor="address">Address</Label>
                   <Input
                     id="address"
-                    value={contact.address}
+                    value={localContact.address}
                     onChange={(e) => handleContactChange('address', e.target.value)}
                   />
                 </div>
@@ -153,7 +149,7 @@ const AdminSettings = () => {
                   <Label htmlFor="instagram">Instagram URL</Label>
                   <Input
                     id="instagram"
-                    value={contact.instagram}
+                    value={localContact.instagram}
                     onChange={(e) => handleContactChange('instagram', e.target.value)}
                   />
                 </div>
@@ -162,7 +158,7 @@ const AdminSettings = () => {
                   <Label htmlFor="youtube">YouTube Channel URL</Label>
                   <Input
                     id="youtube"
-                    value={contact.youtube}
+                    value={localContact.youtube}
                     onChange={(e) => handleContactChange('youtube', e.target.value)}
                   />
                 </div>
@@ -171,14 +167,14 @@ const AdminSettings = () => {
                   <Label htmlFor="whatsappGroup">WhatsApp Group Link (Optional)</Label>
                   <Input
                     id="whatsappGroup"
-                    value={contact.whatsappGroup}
+                    value={localContact.whatsappGroup}
                     onChange={(e) => handleContactChange('whatsappGroup', e.target.value)}
                   />
                 </div>
               </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={() => handleSaveSettings('Contact')}>
+              <Button onClick={handleSaveContact}>
                 <Save className="mr-2 h-4 w-4" /> Save Contact Details
               </Button>
             </CardFooter>
@@ -196,7 +192,7 @@ const AdminSettings = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {payments.map((payment, index) => (
+                {localPayments.map((payment, index) => (
                   <div 
                     key={payment.id}
                     className={`grid grid-cols-1 md:grid-cols-3 gap-4 items-end ${
@@ -266,7 +262,7 @@ const AdminSettings = () => {
               </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={() => handleSaveSettings('Payment')}>
+              <Button onClick={handleSavePayments}>
                 <Save className="mr-2 h-4 w-4" /> Save Payment Settings
               </Button>
             </CardFooter>
@@ -287,8 +283,8 @@ const AdminSettings = () => {
                 <input
                   type="checkbox"
                   id="enable-vat"
-                  checked={vat.enabled}
-                  onChange={(e) => setVat({...vat, enabled: e.target.checked})}
+                  checked={localVat.enabled}
+                  onChange={(e) => setLocalVat({...localVat, enabled: e.target.checked})}
                   className="rounded border-gray-300 text-athfal-pink focus:ring-athfal-pink"
                 />
                 <Label htmlFor="enable-vat" className="cursor-pointer">
@@ -296,15 +292,15 @@ const AdminSettings = () => {
                 </Label>
               </div>
               
-              {vat.enabled && (
+              {localVat.enabled && (
                 <div className="space-y-2">
                   <Label htmlFor="vat-percentage">Default VAT/Tax Percentage</Label>
                   <div className="flex items-center">
                     <Input
                       id="vat-percentage"
                       type="number"
-                      value={vat.percentage}
-                      onChange={(e) => setVat({...vat, percentage: Number(e.target.value)})}
+                      value={localVat.percentage}
+                      onChange={(e) => setLocalVat({...localVat, percentage: Number(e.target.value)})}
                       className="w-24"
                     />
                     <span className="ml-2">%</span>
@@ -316,7 +312,7 @@ const AdminSettings = () => {
               )}
             </CardContent>
             <CardFooter>
-              <Button onClick={() => handleSaveSettings('Tax')}>
+              <Button onClick={handleSaveVat}>
                 <Save className="mr-2 h-4 w-4" /> Save Tax Settings
               </Button>
             </CardFooter>

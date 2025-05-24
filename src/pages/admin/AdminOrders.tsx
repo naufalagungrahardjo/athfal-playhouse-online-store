@@ -90,6 +90,7 @@ const AdminOrders = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
   const [newStatus, setNewStatus] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
 
   // Fetch orders from database
@@ -164,27 +165,39 @@ const AdminOrders = () => {
 
   // Handle update order status
   const handleUpdateStatus = async () => {
-    if (!currentOrder) return;
+    if (!currentOrder || !newStatus) return;
 
+    setIsUpdating(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('orders')
         .update({ 
           status: newStatus,
           updated_at: new Date().toISOString()
         })
-        .eq('id', currentOrder.id);
+        .eq('id', currentOrder.id)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Update local state
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order.id === currentOrder.id 
+            ? { ...order, status: newStatus, updated_at: data.updated_at }
+            : order
+        )
+      );
+
+      // Update current order
+      setCurrentOrder(prev => prev ? { ...prev, status: newStatus } : null);
 
       toast({
         title: "Order status updated",
         description: `Order status has been updated to ${newStatus}`,
       });
 
-      // Refresh orders list
-      await fetchOrders();
-      setShowDetailsModal(false);
     } catch (error) {
       console.error('Error updating order status:', error);
       toast({
@@ -192,6 +205,8 @@ const AdminOrders = () => {
         title: "Error updating order",
         description: "Failed to update order status",
       });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -207,15 +222,17 @@ const AdminOrders = () => {
 
       if (error) throw error;
 
+      // Update local state
+      setOrders(prevOrders => prevOrders.filter(order => order.id !== currentOrder.id));
+
       toast({
         title: "Order deleted",
         description: `Order has been deleted successfully`,
         variant: "destructive",
       });
 
-      // Refresh orders list
-      await fetchOrders();
       setShowDeleteModal(false);
+      setCurrentOrder(null);
     } catch (error) {
       console.error('Error deleting order:', error);
       toast({
@@ -465,9 +482,9 @@ const AdminOrders = () => {
               <Button 
                 onClick={handleUpdateStatus}
                 className="bg-athfal-pink hover:bg-athfal-pink/80 text-white"
-                disabled={newStatus === currentOrder.status}
+                disabled={newStatus === currentOrder.status || isUpdating}
               >
-                Update Status
+                {isUpdating ? 'Updating...' : 'Update Status'}
               </Button>
             </DialogFooter>
           </DialogContent>
