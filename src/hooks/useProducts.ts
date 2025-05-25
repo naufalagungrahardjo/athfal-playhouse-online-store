@@ -2,11 +2,13 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product, ProductCategory } from '@/contexts/CartContext';
+import { useToast } from '@/hooks/use-toast';
 
 export const useProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const fetchProducts = async () => {
     try {
@@ -35,6 +37,11 @@ export const useProducts = () => {
     } catch (err) {
       console.error('Error fetching products:', err);
       setError('Failed to fetch products');
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch products from database"
+      });
     } finally {
       setLoading(false);
     }

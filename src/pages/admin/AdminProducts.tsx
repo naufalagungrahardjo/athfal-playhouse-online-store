@@ -36,6 +36,7 @@ const AdminProducts = () => {
   const [products, setProducts] = useState<ProductListData[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductFormData | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -44,16 +45,24 @@ const AdminProducts = () => {
 
   const fetchProducts = async () => {
     try {
+      setLoading(true);
+      console.log('Fetching products from database...');
+      
       const { data, error } = await supabase
         .from('products')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase products error:', error);
+        throw error;
+      }
 
-      // Transform database products to match our interface - ensure id is always present
+      console.log('Products fetched:', data);
+      
+      // Transform database products to match our interface
       const transformedProducts: ProductListData[] = (data || []).map(product => ({
-        id: product.id, // This will always be present from the database
+        id: product.id,
         product_id: product.product_id,
         name: product.name,
         description: product.description,
@@ -65,18 +74,21 @@ const AdminProducts = () => {
       }));
 
       setProducts(transformedProducts);
+      console.log('Transformed products:', transformedProducts);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch products"
+        description: "Failed to fetch products from database"
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleEdit = (product: ProductListData) => {
-    // Convert ProductListData to ProductFormData for editing
+    console.log('Editing product:', product);
     const editProduct: ProductFormData = {
       id: product.id,
       product_id: product.product_id,
@@ -98,19 +110,25 @@ const AdminProducts = () => {
     }
 
     try {
+      console.log('Deleting product:', productId);
       const { error } = await supabase
         .from('products')
         .delete()
         .eq('id', productId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Delete product error:', error);
+        throw error;
+      }
 
+      console.log('Product deleted successfully');
       toast({
         title: "Success",
         description: "Product deleted successfully"
       });
 
-      fetchProducts();
+      // Refresh the product list
+      await fetchProducts();
     } catch (error) {
       console.error('Error deleting product:', error);
       toast({
@@ -122,6 +140,7 @@ const AdminProducts = () => {
   };
 
   const handleProductSaved = () => {
+    console.log('Product saved, refreshing list...');
     fetchProducts();
     setEditingProduct(null);
   };
@@ -135,6 +154,19 @@ const AdminProducts = () => {
     setIsDialogOpen(false);
     setEditingProduct(null);
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Product Management</h1>
+        </div>
+        <div className="text-center py-12">
+          <div>Loading products...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
