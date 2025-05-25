@@ -24,18 +24,12 @@ export const useBanners = () => {
       console.log('Fetching banners from database...');
       
       const { data, error } = await supabase
-        .from('banners')
+        .from('banners' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Supabase banners error:', error);
-        // If table doesn't exist, create some default data
-        if (error?.message?.includes('relation "public.banners" does not exist')) {
-          console.log('Banners table does not exist yet');
-          setBanners([]);
-          return;
-        }
         throw error;
       }
       
@@ -57,7 +51,7 @@ export const useBanners = () => {
     try {
       console.log('Saving banner:', banner);
       const { error } = await supabase
-        .from('banners')
+        .from('banners' as any)
         .upsert({
           id: banner.id,
           title: banner.title,
@@ -93,7 +87,7 @@ export const useBanners = () => {
     try {
       console.log('Deleting banner:', id);
       const { error } = await supabase
-        .from('banners')
+        .from('banners' as any)
         .delete()
         .eq('id', id);
 
