@@ -24,7 +24,7 @@ export const useBanners = () => {
       console.log('Fetching banners from database...');
       
       const { data, error } = await supabase
-        .from('banners' as any)
+        .from('banners')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -51,7 +51,7 @@ export const useBanners = () => {
     try {
       console.log('Saving banner:', banner);
       const { error } = await supabase
-        .from('banners' as any)
+        .from('banners')
         .upsert({
           id: banner.id,
           title: banner.title,
@@ -87,7 +87,7 @@ export const useBanners = () => {
     try {
       console.log('Deleting banner:', id);
       const { error } = await supabase
-        .from('banners' as any)
+        .from('banners')
         .delete()
         .eq('id', id);
 
