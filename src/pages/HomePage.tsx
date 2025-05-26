@@ -3,73 +3,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProductCategory } from '@/contexts/CartContext';
-
-// Mock data for banners - in production, these would come from an API
-const MOCK_BANNERS = [
-  {
-    id: '1',
-    image: 'https://images.unsplash.com/photo-1655115295566-e23e5104386d',
-    title: 'Pop Up Class',
-    description: 'Belajar sambil bermain dengan metode Montessori',
-    link: '/products/pop-up-class',
-    linkText: 'Daftar Sekarang',
-  },
-  {
-    id: '2',
-    image: 'https://images.unsplash.com/photo-1472457897821-70d3819a0e24',
-    title: 'Play Kit',
-    description: 'Paket permainan edukatif untuk anak',
-    link: '/products/play-kit',
-    linkText: 'Beli Sekarang',
-  },
-  {
-    id: '3',
-    image: 'https://images.unsplash.com/photo-1576404425423-443e03992f31',
-    title: 'Bumi Class',
-    description: 'Kelas seru belajar tentang lingkungan',
-    link: '/products/bumi-class',
-    linkText: 'Ikuti Kelas',
-  },
-];
-
-// Mock featured products
-const FEATURED_PRODUCTS = [
-  {
-    id: '1',
-    name: 'Pop Up Class - Usia 2-3 Tahun',
-    description: 'Kelas untuk anak usia 2-3 tahun yang menyenangkan dan edukatif',
-    price: 250000,
-    image: 'https://images.unsplash.com/photo-1588075592405-d68745302891',
-    category: 'pop-up-class' as ProductCategory,
-  },
-  {
-    id: '2',
-    name: 'Bumi Class: Mengenal Alam',
-    description: 'Kelas belajar mengenal alam untuk anak-anak',
-    price: 300000,
-    image: 'https://images.unsplash.com/photo-1590592006475-d0264ad1ee92',
-    category: 'bumi-class' as ProductCategory,
-  },
-  {
-    id: '3',
-    name: 'Play Kit - Alphabet Fun',
-    description: 'Kit bermain sambil belajar alfabet untuk anak',
-    price: 199000,
-    image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b',
-    category: 'play-kit' as ProductCategory,
-  },
-  {
-    id: '4',
-    name: 'Konsultasi Anak 60 Menit',
-    description: 'Sesi konsultasi psikologi anak dengan ahli',
-    price: 350000,
-    image: 'https://images.unsplash.com/photo-1516733968668-dbdce39c4651',
-    category: 'consultation' as ProductCategory,
-  },
-];
+import { HomeBanner } from '@/components/HomeBanner';
+import { useProducts } from '@/hooks/useProducts';
 
 // Mock testimonials
 const TESTIMONIALS = [
@@ -107,47 +44,17 @@ const formatCurrency = (amount: number) => {
 
 const HomePage = () => {
   const { t, language } = useLanguage();
+  const { products, loading } = useProducts();
   
-  // In a real app, we'd fetch these from the API
-  const [banners, setBanners] = useState(MOCK_BANNERS);
-  const [featuredProducts, setFeaturedProducts] = useState(FEATURED_PRODUCTS);
   const [testimonials, setTestimonials] = useState(TESTIMONIALS);
+
+  // Get featured products (first 4 products from database)
+  const featuredProducts = products.slice(0, 4);
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hero Banner Carousel */}
-      <section className="w-full">
-        <Carousel className="w-full">
-          <CarouselContent>
-            {banners.map((banner) => (
-              <CarouselItem key={banner.id}>
-                <div 
-                  className="relative h-[300px] md:h-[500px] w-full bg-cover bg-center"
-                  style={{ backgroundImage: `url(${banner.image})` }}
-                >
-                  <div className="absolute inset-0 bg-black/40 flex flex-col justify-center px-8 md:px-20">
-                    <div className="max-w-xl text-white">
-                      <h1 className="text-3xl md:text-5xl font-bold mb-4 animate-fade-in">
-                        {banner.title}
-                      </h1>
-                      <p className="text-lg md:text-xl mb-6 animate-slide-in">
-                        {banner.description}
-                      </p>
-                      <Link to={banner.link}>
-                        <Button className="bg-athfal-yellow hover:bg-athfal-yellow/80 text-black font-semibold px-6 py-2">
-                          {banner.linkText}
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="left-4" />
-          <CarouselNext className="right-4" />
-        </Carousel>
-      </section>
+      {/* Hero Banner */}
+      <HomeBanner />
 
       {/* Categories Section */}
       <section className="py-16 bg-athfal-peach/10">
@@ -227,35 +134,51 @@ const HomePage = () => {
             {language === 'id' ? 'Produk Unggulan' : 'Featured Products'}
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {featuredProducts.map((product) => (
-              <Link to={`/product/${product.id}`} key={product.id}>
-                <Card className="athfal-card overflow-hidden h-full hover:scale-[1.02] transition-all">
-                  <div className="aspect-square overflow-hidden">
-                    <img 
-                      src={product.image} 
-                      alt={product.name} 
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-lg mb-2 text-athfal-pink line-clamp-2">
-                      {product.name}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                      {product.description}
-                    </p>
-                    <p className="font-bold text-athfal-green">
-                      {formatCurrency(product.price)}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-gray-200 aspect-square rounded-lg mb-4"></div>
+                  <div className="bg-gray-200 h-4 rounded mb-2"></div>
+                  <div className="bg-gray-200 h-3 rounded"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {featuredProducts.map((product) => (
+                <Link to={`/product/${product.id}`} key={product.id}>
+                  <Card className="athfal-card overflow-hidden h-full hover:scale-[1.02] transition-all">
+                    <div className="aspect-square overflow-hidden">
+                      <img 
+                        src={product.image} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop';
+                        }}
+                      />
+                    </div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold text-lg mb-2 text-athfal-pink line-clamp-2">
+                        {product.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                        {product.description}
+                      </p>
+                      <p className="font-bold text-athfal-green">
+                        {formatCurrency(product.price)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
 
           <div className="text-center mt-10">
-            <Link to="/products/pop-up-class">
+            <Link to="/products">
               <Button className="bg-athfal-pink hover:bg-athfal-pink/80 text-white py-2 px-6">
                 {language === 'id' ? 'Lihat Semua Produk' : 'View All Products'}
               </Button>
