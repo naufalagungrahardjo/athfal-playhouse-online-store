@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,11 +16,11 @@ const AdminBanners = () => {
   const [editingBanners, setEditingBanners] = useState<Banner[]>([]);
 
   // Initialize editing banners when banners load
-  useState(() => {
-    if (banners.length > 0 && editingBanners.length === 0) {
+  useEffect(() => {
+    if (banners.length > 0) {
       setEditingBanners([...banners]);
     }
-  });
+  }, [banners]);
 
   const handleAddBanner = () => {
     const newBanner: Banner = {
@@ -116,7 +116,7 @@ const AdminBanners = () => {
       </div>
 
       <div className="text-sm text-gray-500 mb-4">
-        Manage homepage banners. Active banners will be displayed on the website.
+        Manage homepage banners. Only one banner should be active at a time.
       </div>
       
       <div className="space-y-6">
@@ -177,14 +177,21 @@ const AdminBanners = () => {
                   id={`image-${banner.id}`}
                   value={banner.image}
                   onChange={(e) => handleUpdateBanner(banner.id, "image", e.target.value)}
-                  placeholder="Enter image URL"
+                  placeholder="Enter image URL (use direct image links)"
                 />
+                <p className="text-xs text-gray-500">
+                  Note: Google Drive links won't work. Use direct image URLs.
+                </p>
                 {banner.image && (
                   <div className="border rounded-md p-1 mt-2">
                     <img
                       src={banner.image}
                       alt="Banner preview"
                       className="w-full h-auto max-h-32 object-cover rounded"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
                     />
                   </div>
                 )}

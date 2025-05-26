@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,15 +34,44 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<ProductFormData>({
-    product_id: editingProduct?.product_id || '',
-    name: editingProduct?.name || '',
-    description: editingProduct?.description || '',
-    price: editingProduct?.price || 0,
-    image: editingProduct?.image || '',
-    category: editingProduct?.category || 'pop-up-class',
-    tax: editingProduct?.tax || 11,
-    stock: editingProduct?.stock || 0,
+    product_id: '',
+    name: '',
+    description: '',
+    price: 0,
+    image: '',
+    category: 'pop-up-class',
+    tax: 11,
+    stock: 0,
   });
+
+  // Update form data when editingProduct changes
+  useEffect(() => {
+    if (editingProduct) {
+      setFormData({
+        id: editingProduct.id,
+        product_id: editingProduct.product_id,
+        name: editingProduct.name,
+        description: editingProduct.description,
+        price: editingProduct.price,
+        image: editingProduct.image,
+        category: editingProduct.category,
+        tax: editingProduct.tax,
+        stock: editingProduct.stock,
+      });
+    } else {
+      // Reset form for new product
+      setFormData({
+        product_id: '',
+        name: '',
+        description: '',
+        price: 0,
+        image: '',
+        category: 'pop-up-class',
+        tax: 11,
+        stock: 0,
+      });
+    }
+  }, [editingProduct, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,8 +201,25 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
               id="image"
               value={formData.image}
               onChange={(e) => setFormData({...formData, image: e.target.value})}
+              placeholder="Use direct image URLs (e.g., https://images.unsplash.com/...)"
               required
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Note: Google Drive links won't work. Use direct image URLs or upload to image hosting services.
+            </p>
+            {formData.image && (
+              <div className="mt-2">
+                <img
+                  src={formData.image}
+                  alt="Preview"
+                  className="w-32 h-32 object-cover rounded"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-4">
