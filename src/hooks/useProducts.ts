@@ -34,6 +34,7 @@ export const useProducts = () => {
       }));
 
       setProducts(formattedProducts);
+      console.log('Products fetched and formatted:', formattedProducts);
     } catch (err) {
       console.error('Error fetching products:', err);
       setError('Failed to fetch products');
@@ -47,8 +48,30 @@ export const useProducts = () => {
     }
   };
 
+  // Add real-time subscription for products
   useEffect(() => {
     fetchProducts();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('products-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'products'
+        },
+        () => {
+          console.log('Products table changed, refetching...');
+          fetchProducts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const getProductsByCategory = (category: ProductCategory) => {

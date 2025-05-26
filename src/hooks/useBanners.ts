@@ -117,8 +117,30 @@ export const useBanners = () => {
     return banners.find(banner => banner.active);
   };
 
+  // Add real-time subscription for banners
   useEffect(() => {
     fetchBanners();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('banners-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'banners'
+        },
+        () => {
+          console.log('Banners table changed, refetching...');
+          fetchBanners();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {
