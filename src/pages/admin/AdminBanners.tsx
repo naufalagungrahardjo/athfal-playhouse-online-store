@@ -75,6 +75,16 @@ const AdminBanners = () => {
 
   const handleSaveBanner = async (banner: Banner) => {
     try {
+      // Validate required fields
+      if (!banner.title || !banner.image) {
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description: "Title and image URL are required."
+        });
+        return;
+      }
+
       // Generate a proper ID for new banners
       const bannerToSave = banner.id.startsWith('temp-') 
         ? { ...banner, id: crypto.randomUUID() }
@@ -116,7 +126,7 @@ const AdminBanners = () => {
       </div>
 
       <div className="text-sm text-gray-500 mb-4">
-        Manage homepage banners. Only one banner should be active at a time.
+        Manage homepage banners. You can have multiple active banners - they will rotate automatically on the website.
       </div>
       
       <div className="space-y-6">
@@ -177,10 +187,10 @@ const AdminBanners = () => {
                   id={`image-${banner.id}`}
                   value={banner.image}
                   onChange={(e) => handleUpdateBanner(banner.id, "image", e.target.value)}
-                  placeholder="Enter image URL (use direct image links)"
+                  placeholder="Enter direct image URL (Imgur, Unsplash, etc.)"
                 />
                 <p className="text-xs text-gray-500">
-                  Note: Google Drive links won't work. Use direct image URLs.
+                  Use direct image URLs from Imgur, Unsplash, or other image hosting services. Google Drive links won't work.
                 </p>
                 {banner.image && (
                   <div className="border rounded-md p-1 mt-2">
@@ -191,6 +201,10 @@ const AdminBanners = () => {
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
+                      }}
+                      onLoad={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'block';
                       }}
                     />
                   </div>

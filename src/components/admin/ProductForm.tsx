@@ -201,11 +201,11 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
               id="image"
               value={formData.image}
               onChange={(e) => setFormData({...formData, image: e.target.value})}
-              placeholder="Use direct image URLs (e.g., https://images.unsplash.com/...)"
+              placeholder="Use direct image URLs (Imgur, Unsplash, etc.)"
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              Note: Google Drive links won't work. Use direct image URLs or upload to image hosting services.
+              Use direct image URLs from Imgur, Unsplash, or other image hosting services. Google Drive links won't work.
             </p>
             {formData.image && (
               <div className="mt-2">
@@ -216,6 +216,10 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
+                  }}
+                  onLoad={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'block';
                   }}
                 />
               </div>
@@ -228,9 +232,11 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
               <Input
                 id="price"
                 type="number"
-                value={formData.price}
-                onChange={(e) => setFormData({...formData, price: Number(e.target.value)})}
+                value={formData.price || ''}
+                onChange={(e) => setFormData({...formData, price: Number(e.target.value) || 0})}
+                placeholder="Enter price"
                 required
+                min="0"
               />
             </div>
             <div>
@@ -238,9 +244,12 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
               <Input
                 id="tax"
                 type="number"
-                value={formData.tax}
-                onChange={(e) => setFormData({...formData, tax: Number(e.target.value)})}
+                value={formData.tax || ''}
+                onChange={(e) => setFormData({...formData, tax: Number(e.target.value) || 11})}
+                placeholder="Enter tax percentage"
                 required
+                min="0"
+                max="100"
               />
             </div>
             <div>
@@ -248,9 +257,11 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
               <Input
                 id="stock"
                 type="number"
-                value={formData.stock}
-                onChange={(e) => setFormData({...formData, stock: Number(e.target.value)})}
+                value={formData.stock || ''}
+                onChange={(e) => setFormData({...formData, stock: Number(e.target.value) || 0})}
+                placeholder="Enter stock quantity"
                 required
+                min="0"
               />
             </div>
           </div>

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +62,7 @@ const AdminBlogs = () => {
     };
     
     setEditingBlog(newBlog);
+    setDate(new Date());
   };
 
   const handleEditBlog = (blog: Blog) => {
@@ -71,7 +73,23 @@ const AdminBlogs = () => {
   const handleSaveBlog = async () => {
     if (!editingBlog) return;
     
-    console.log('Saving blog with published status:', editingBlog.published);
+    // Validate required fields
+    if (!editingBlog.title.trim()) {
+      alert('Blog title is required');
+      return;
+    }
+    
+    if (!editingBlog.content.trim()) {
+      alert('Blog content is required');
+      return;
+    }
+    
+    if (!editingBlog.author.trim()) {
+      alert('Blog author is required');
+      return;
+    }
+    
+    console.log('Saving blog with data:', editingBlog);
     await saveBlog(editingBlog);
     setEditingBlog(null);
   };
@@ -278,6 +296,7 @@ const AdminBlogs = () => {
                       id="blog-image"
                       value={editingBlog.image}
                       onChange={(e) => setEditingBlog({...editingBlog, image: e.target.value})}
+                      placeholder="Enter direct image URL (Imgur, Unsplash, etc.)"
                     />
                   </div>
                 </div>

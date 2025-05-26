@@ -38,29 +38,25 @@ export const useBlogs = () => {
       
       const formattedBlogs: Blog[] = (data || []).map((blog: any) => ({
         id: blog.id,
-        title: blog.title,
-        content: blog.content,
-        image: blog.image,
-        author: blog.author,
-        date: blog.date,
-        category: blog.category,
-        published: blog.published
+        title: blog.title || '',
+        content: blog.content || '',
+        image: blog.image || '',
+        author: blog.author || 'Admin',
+        date: blog.date || new Date().toISOString().split('T')[0],
+        category: blog.category || 'General',
+        published: blog.published || false
       }));
 
       setBlogs(formattedBlogs);
       console.log('Formatted blogs:', formattedBlogs);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching blogs:', error);
-      // Don't show error toast immediately, let's check if table exists first
-      if (error?.message?.includes('relation "public.blogs" does not exist')) {
-        console.log('Blogs table does not exist yet - this is normal if you just created it');
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to fetch blogs"
-        });
-      }
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch blogs: " + (error.message || 'Unknown error')
+      });
+      setBlogs([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -69,19 +65,27 @@ export const useBlogs = () => {
   const saveBlog = async (blog: Blog) => {
     try {
       console.log('Saving blog:', blog);
+      
+      // Validate required fields
+      if (!blog.title || !blog.content || !blog.author) {
+        throw new Error('Title, content, and author are required fields');
+      }
+
+      const blogData = {
+        id: blog.id,
+        title: blog.title,
+        content: blog.content,
+        image: blog.image || 'https://images.unsplash.com/photo-1516733968668-dbdce39c4651',
+        author: blog.author,
+        date: blog.date,
+        category: blog.category,
+        published: blog.published,
+        updated_at: new Date().toISOString()
+      };
+
       const { error } = await supabase
         .from('blogs')
-        .upsert({
-          id: blog.id,
-          title: blog.title,
-          content: blog.content,
-          image: blog.image,
-          author: blog.author,
-          date: blog.date,
-          category: blog.category,
-          published: blog.published,
-          updated_at: new Date().toISOString()
-        });
+        .upsert(blogData);
 
       if (error) {
         console.error('Save blog error:', error);
@@ -95,12 +99,12 @@ export const useBlogs = () => {
       });
 
       await fetchBlogs();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving blog:', error);
       toast({
         variant: "destructive",
         title: "Error", 
-        description: "Failed to save blog"
+        description: "Failed to save blog: " + (error.message || 'Unknown error')
       });
     }
   };
@@ -125,12 +129,12 @@ export const useBlogs = () => {
       });
 
       await fetchBlogs();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting blog:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete blog"
+        description: "Failed to delete blog: " + (error.message || 'Unknown error')
       });
     }
   };
