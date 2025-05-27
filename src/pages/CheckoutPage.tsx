@@ -1,398 +1,215 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useCart } from '@/contexts/CartContext';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Copy, Check } from 'lucide-react';
-
-// Mock payment methods - in a real app, this would come from an API
-const PAYMENT_METHODS = [
-  {
-    id: 'hijra',
-    name: 'Bank Hijra',
-    number: '7800110100142022',
-    accountName: 'Fadhilah Ramadhannisa',
-    logo: 'https://logosmarcas.net/wp-content/uploads/2021/03/BCA-Logo.png',
-  },
-  {
-    id: 'bca',
-    name: 'BCA',
-    number: '0123456789',
-    accountName: 'Athfal Playhouse',
-    logo: 'https://logosmarcas.net/wp-content/uploads/2021/03/BCA-Logo.png',
-  },
-  {
-    id: 'jago',
-    name: 'Bank Jago',
-    number: '9876543210',
-    accountName: 'Athfal Playhouse',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Bank_Jago_logo.svg',
-  }
-];
-
-// Format currency
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(amount);
-};
+import { useDatabase } from '@/hooks/useDatabase';
+import { useOrderProcessing } from '@/hooks/useOrderProcessing';
 
 const CheckoutPage = () => {
-  const { user } = useAuth();
-  const { items, getSubtotal, getTaxAmount, getTotal } = useCart();
-  const { language } = useLanguage();
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { items, getTotalPrice, getTotalTax, clearCart } = useCart();
+  const { paymentMethods } = useDatabase();
+  const { processOrder, processing } = useOrderProcessing();
+  
+  const [formData, setFormData] = useState({
+    customerName: '',
+    customerEmail: '',
+    customerPhone: '',
+    customerAddress: '',
+    paymentMethod: '',
+    notes: ''
+  });
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [notes, setNotes] = useState('');
-  const [selectedPayment, setSelectedPayment] = useState('hijra');
-  const [isLoading, setIsLoading] = useState(false);
-  const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
-
-  // Redirect if cart is empty
   useEffect(() => {
     if (items.length === 0) {
       navigate('/cart');
     }
   }, [items, navigate]);
 
-  // Fill user info if logged in
-  useEffect(() => {
-    if (user) {
-      setName(user.name || '');
-      setEmail(user.email || '');
-    }
-  }, [user]);
-
-  const handleCopyAccountNumber = () => {
-    const selectedMethod = PAYMENT_METHODS.find(method => method.id === selectedPayment);
-    if (selectedMethod) {
-      navigator.clipboard.writeText(selectedMethod.number);
-      setCopiedAccountNumber(true);
-      toast({
-        title: language === 'id' ? 'Disalin ke clipboard' : 'Copied to clipboard',
-        description: language === 'id' ? 'Nomor rekening telah disalin' : 'Account number has been copied',
-      });
-      
-      setTimeout(() => {
-        setCopiedAccountNumber(false);
-      }, 2000);
-    }
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const handleProceedOrder = async () => {
-    if (!name || !email || !phone) {
-      toast({
-        variant: "destructive",
-        title: language === 'id' ? 'Informasi tidak lengkap' : 'Incomplete information',
-        description: language === 'id' 
-          ? 'Silakan lengkapi nama, email, dan nomor telepon Anda' 
-          : 'Please complete your name, email, and phone number',
-      });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.customerName || !formData.customerEmail || !formData.customerPhone || !formData.paymentMethod) {
+      alert('Please fill in all required fields');
       return;
     }
 
-    setIsLoading(true);
+    const subtotal = getTotalPrice();
+    const taxAmount = getTotalTax();
+    const totalAmount = subtotal + taxAmount;
 
-    try {
-      // Create order in database
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert([{
-          user_id: user?.id || null,
-          customer_name: name,
-          customer_email: email,
-          customer_phone: phone,
-          customer_address: address || null,
-          notes: notes || null,
-          payment_method: selectedPayment,
-          subtotal: getSubtotal(),
-          tax_amount: getTaxAmount(),
-          total_amount: getTotal(),
-          status: 'pending'
-        }])
-        .select()
-        .single();
+    const result = await processOrder({
+      ...formData,
+      items,
+      subtotal,
+      taxAmount,
+      totalAmount
+    });
 
-      if (orderError) throw orderError;
-
-      // Create order items
-      const orderItems = items.map(item => ({
-        order_id: orderData.id,
-        product_id: item.product.id,
-        product_name: item.product.name,
-        product_price: item.product.price,
-        quantity: item.quantity
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
-
-      // Save order ID and selected payment method to localStorage for the order details page
-      localStorage.setItem('orderId', orderData.id);
-      localStorage.setItem('selectedPayment', selectedPayment);
-      
-      toast({
-        title: language === 'id' ? 'Pesanan berhasil dibuat' : 'Order created successfully',
-        description: language === 'id' 
-          ? 'Anda akan diarahkan ke halaman detail pesanan' 
-          : 'You will be redirected to the order details page',
-      });
-
-      // Redirect to order details page
-      navigate('/order-details');
-    } catch (error) {
-      console.error('Error creating order:', error);
-      toast({
-        variant: "destructive",
-        title: language === 'id' ? 'Gagal memproses pesanan' : 'Failed to process order',
-        description: language === 'id'
-          ? 'Terjadi kesalahan saat memproses pesanan Anda. Silakan coba lagi.'
-          : 'An error occurred while processing your order. Please try again.',
-      });
-    } finally {
-      setIsLoading(false);
+    if (result.success) {
+      clearCart();
+      navigate(`/order-details/${result.orderId}`);
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const subtotal = getTotalPrice();
+  const taxAmount = getTotalTax();
+  const total = subtotal + taxAmount;
+
+  const activePaymentMethods = paymentMethods.filter(method => method.active);
+
   return (
-    <div className="min-h-screen">
-      <div className="athfal-container py-12">
-        <div className="flex items-center mb-8">
-          <Link to="/cart" className="flex items-center text-athfal-pink hover:underline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {language === 'id' ? 'Kembali ke Keranjang' : 'Back to Cart'}
-          </Link>
-          <h1 className="text-3xl font-bold text-athfal-pink ml-auto">
-            {language === 'id' ? 'Checkout' : 'Checkout'}
-          </h1>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Customer Information */}
-          <div className="lg:col-span-2">
-            <Card className="bg-white rounded-3xl shadow-md overflow-hidden mb-8">
-              <CardContent className="p-6">
-                <h2 className="text-xl font-bold text-athfal-pink mb-4">
-                  {language === 'id' ? 'Informasi Pelanggan' : 'Customer Information'}
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">
-                      {language === 'id' ? 'Nama Lengkap' : 'Full Name'} *
-                    </Label>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">Checkout</h1>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Customer Information Form */}
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Customer Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <Label htmlFor="customerName">Full Name *</Label>
                     <Input
-                      id="name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder={language === 'id' ? 'Masukkan nama lengkap' : 'Enter full name'}
+                      id="customerName"
+                      type="text"
+                      value={formData.customerName}
+                      onChange={(e) => handleInputChange('customerName', e.target.value)}
                       required
-                      className="athfal-input"
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">
-                      Email *
-                    </Label>
+                  
+                  <div>
+                    <Label htmlFor="customerEmail">Email Address *</Label>
                     <Input
-                      id="email"
+                      id="customerEmail"
                       type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder={language === 'id' ? 'Masukkan email' : 'Enter email'}
+                      value={formData.customerEmail}
+                      onChange={(e) => handleInputChange('customerEmail', e.target.value)}
                       required
-                      className="athfal-input"
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">
-                      {language === 'id' ? 'Nomor Telepon' : 'Phone Number'} *
-                    </Label>
+                  
+                  <div>
+                    <Label htmlFor="customerPhone">Phone Number *</Label>
                     <Input
-                      id="phone"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder={language === 'id' ? 'Masukkan nomor telepon' : 'Enter phone number'}
+                      id="customerPhone"
+                      type="tel"
+                      value={formData.customerPhone}
+                      onChange={(e) => handleInputChange('customerPhone', e.target.value)}
                       required
-                      className="athfal-input"
                     />
                   </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="address">
-                      {language === 'id' ? 'Alamat' : 'Address'}
-                    </Label>
+                  
+                  <div>
+                    <Label htmlFor="customerAddress">Address</Label>
                     <Textarea
-                      id="address"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder={language === 'id' ? 'Masukkan alamat lengkap (opsional)' : 'Enter full address (optional)'}
-                      className="min-h-24 rounded-3xl border border-athfal-peach/50 p-3 focus:border-athfal-pink focus:outline-none focus:ring-2 focus:ring-athfal-pink/30"
+                      id="customerAddress"
+                      value={formData.customerAddress}
+                      onChange={(e) => handleInputChange('customerAddress', e.target.value)}
+                      rows={3}
                     />
                   </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="notes">
-                      {language === 'id' ? 'Catatan' : 'Notes'}
-                    </Label>
+                  
+                  <div>
+                    <Label htmlFor="paymentMethod">Payment Method *</Label>
+                    <Select value={formData.paymentMethod} onValueChange={(value) => handleInputChange('paymentMethod', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select payment method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {activePaymentMethods.map((method) => (
+                          <SelectItem key={method.id} value={method.id}>
+                            {method.bank_name} - {method.account_number} ({method.account_name})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="notes">Notes (Optional)</Label>
                     <Textarea
                       id="notes"
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder={language === 'id' ? 'Catatan tambahan untuk pesanan Anda (opsional)' : 'Additional notes for your order (optional)'}
-                      className="min-h-24 rounded-3xl border border-athfal-peach/50 p-3 focus:border-athfal-pink focus:outline-none focus:ring-2 focus:ring-athfal-pink/30"
+                      value={formData.notes}
+                      onChange={(e) => handleInputChange('notes', e.target.value)}
+                      rows={3}
+                      placeholder="Any special instructions or notes..."
                     />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Payment Method */}
-            <Card className="bg-white rounded-3xl shadow-md overflow-hidden">
-              <CardContent className="p-6">
-                <h2 className="text-xl font-bold text-athfal-pink mb-4">
-                  {language === 'id' ? 'Metode Pembayaran' : 'Payment Method'}
-                </h2>
-
-                <RadioGroup 
-                  value={selectedPayment}
-                  onValueChange={setSelectedPayment}
-                  className="space-y-4"
-                >
-                  {PAYMENT_METHODS.map(method => (
-                    <div 
-                      key={method.id}
-                      className={`flex items-center justify-between border rounded-xl p-4 cursor-pointer transition-all ${
-                        selectedPayment === method.id 
-                          ? 'border-athfal-pink bg-athfal-pink/5' 
-                          : 'border-gray-200 hover:border-athfal-pink/50'
-                      }`}
-                    >
-                      <div className="flex items-center">
-                        <RadioGroupItem value={method.id} id={`payment-${method.id}`} className="mr-4" />
-                        <div>
-                          <Label 
-                            htmlFor={`payment-${method.id}`} 
-                            className="font-medium cursor-pointer"
-                          >
-                            {method.name}
-                          </Label>
-                          <div className="text-sm text-gray-600 mt-1">
-                            {method.number} - {method.accountName}
-                          </div>
-                        </div>
-                      </div>
-                      {selectedPayment === method.id && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={handleCopyAccountNumber}
-                          type="button"
-                        >
-                          {copiedAccountNumber ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </RadioGroup>
-
-                <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                  <p className="text-yellow-800 text-sm">
-                    {language === 'id' 
-                      ? 'Setelah menekan tombol "Lanjutkan Pesanan", Anda akan diarahkan ke halaman detail pesanan untuk melakukan pembayaran.'
-                      : 'After pressing the "Proceed Order" button, you will be directed to the order details page to make payment.'}
-                  </p>
-                </div>
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full mt-6"
+                    disabled={processing}
+                  >
+                    {processing ? 'Processing...' : `Proceed Order - ${formatCurrency(total)}`}
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           </div>
-
+          
           {/* Order Summary */}
-          <div className="lg:col-span-1">
-            <Card className="bg-white rounded-3xl shadow-md overflow-hidden sticky top-24">
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold text-athfal-pink mb-4">
-                  {language === 'id' ? 'Ringkasan Pesanan' : 'Order Summary'}
-                </h3>
-
-                {/* Items list */}
-                <div className="space-y-4 mb-6">
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Order Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
                   {items.map((item) => (
-                    <div key={item.product.id} className="flex items-start gap-3">
-                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                        <img 
-                          src={item.product.image} 
-                          alt={item.product.name} 
-                          className="w-full h-full object-cover"
-                        />
+                    <div key={item.id} className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium">{item.name}</p>
+                        <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                       </div>
-                      <div className="flex-grow">
-                        <h4 className="font-medium text-gray-800 line-clamp-1">{item.product.name}</h4>
-                        <p className="text-sm text-gray-600">
-                          {language === 'id' ? 'Jumlah' : 'Quantity'}: {item.quantity}
-                        </p>
-                        <p className="font-medium text-athfal-green mt-1">
-                          {formatCurrency(item.product.price * item.quantity)}
-                        </p>
-                      </div>
+                      <p className="font-medium">{formatCurrency(item.price * item.quantity)}</p>
                     </div>
                   ))}
-                </div>
-
-                <Separator className="my-4" />
-
-                {/* Price summary */}
-                <div className="space-y-3 mb-6">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">{language === 'id' ? 'Subtotal' : 'Subtotal'}</span>
-                    <span>{formatCurrency(getSubtotal())}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">{language === 'id' ? 'Pajak' : 'Tax'}</span>
-                    <span>{formatCurrency(getTaxAmount())}</span>
-                  </div>
-                  <Separator className="my-3" />
-                  <div className="flex justify-between font-bold">
-                    <span>{language === 'id' ? 'Total' : 'Total'}</span>
-                    <span className="text-athfal-green">{formatCurrency(getTotal())}</span>
+                  
+                  <hr className="my-4" />
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Subtotal:</span>
+                      <span>{formatCurrency(subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Tax:</span>
+                      <span>{formatCurrency(taxAmount)}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-lg border-t pt-2">
+                      <span>Total:</span>
+                      <span>{formatCurrency(total)}</span>
+                    </div>
                   </div>
                 </div>
-
-                {/* Proceed order button */}
-                <Button 
-                  onClick={handleProceedOrder}
-                  disabled={isLoading}
-                  className="w-full bg-athfal-pink hover:bg-athfal-pink/80 text-white text-lg py-6"
-                >
-                  {isLoading
-                    ? (language === 'id' ? 'Memproses...' : 'Processing...')
-                    : (language === 'id' ? 'Lanjutkan Pesanan' : 'Proceed Order')}
-                </Button>
-                <p className="text-center text-sm text-gray-500 mt-4">
-                  {language === 'id' 
-                    ? 'Anda akan diarahkan ke halaman detail pesanan'
-                    : 'You will be redirected to the order details page'}
-                </p>
               </CardContent>
             </Card>
           </div>

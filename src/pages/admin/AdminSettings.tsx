@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,29 +6,44 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useSettings } from "@/hooks/useSettings";
-import { Save } from "lucide-react";
+import { useDatabase } from "@/hooks/useDatabase";
+import { Save, Trash2 } from "lucide-react";
 
 const AdminSettings = () => {
   const { toast } = useToast();
   const { 
     contact, 
-    payments, 
     vat, 
-    loading,
+    loading: settingsLoading,
     saveContactSettings,
-    savePaymentSettings,
     saveVatSettings
   } = useSettings();
+  
+  const { 
+    paymentMethods, 
+    loading: dbLoading, 
+    savePaymentMethod, 
+    deletePaymentMethod 
+  } = useDatabase();
 
   const [localContact, setLocalContact] = useState(contact);
-  const [localPayments, setLocalPayments] = useState(payments);
   const [localVat, setLocalVat] = useState(vat);
+  const [localPayments, setLocalPayments] = useState(paymentMethods);
+  const [newPayment, setNewPayment] = useState({
+    bank_name: '',
+    account_number: '',
+    account_name: '',
+    active: true
+  });
 
   useEffect(() => {
     setLocalContact(contact);
-    setLocalPayments(payments);
     setLocalVat(vat);
-  }, [contact, payments, vat]);
+  }, [contact, vat]);
+
+  useEffect(() => {
+    setLocalPayments(paymentMethods);
+  }, [paymentMethods]);
   
   const handleContactChange = (field: keyof typeof localContact, value: string) => {
     setLocalContact(prev => ({
@@ -38,43 +52,11 @@ const AdminSettings = () => {
     }));
   };
   
-  const handlePaymentChange = (id: string, field: string, value: string | boolean) => {
-    setLocalPayments(prev => 
-      prev.map(payment => 
-        payment.id === id ? { ...payment, [field]: value } : payment
-      )
-    );
-  };
-  
-  const handleAddPayment = () => {
-    const newPayment = {
-      id: `payment-${localPayments.length + 1}`,
-      bank: "",
-      accountNumber: "",
-      accountName: "",
-      active: true,
-    };
-    
-    setLocalPayments([...localPayments, newPayment]);
-  };
-  
-  const handleRemovePayment = (id: string) => {
-    setLocalPayments(prev => prev.filter(payment => payment.id !== id));
-  };
-  
   const handleSaveContact = () => {
     saveContactSettings(localContact);
     toast({
       title: "Contact settings updated",
       description: "Your contact information has been saved successfully.",
-    });
-  };
-
-  const handleSavePayments = () => {
-    savePaymentSettings(localPayments);
-    toast({
-      title: "Payment settings updated",
-      description: "Your payment methods have been saved successfully.",
     });
   };
 
@@ -86,7 +68,36 @@ const AdminSettings = () => {
     });
   };
 
-  if (loading) {
+  const handleAddPayment = async () => {
+    if (!newPayment.bank_name || !newPayment.account_number || !newPayment.account_name) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please fill in all payment method fields.",
+      });
+      return;
+    }
+
+    await savePaymentMethod(newPayment);
+    setNewPayment({
+      bank_name: '',
+      account_number: '',
+      account_name: '',
+      active: true
+    });
+  };
+
+  const handleUpdatePayment = async (id: string, field: string, value: string | boolean) => {
+    const payment = localPayments.find(p => p.id === id);
+    if (payment) {
+      await savePaymentMethod({
+        ...payment,
+        [field]: value
+      });
+    }
+  };
+
+  if (settingsLoading || dbLoading) {
     return <div className="p-8 text-center">Loading settings...</div>;
   }
 
@@ -191,81 +202,87 @@ const AdminSettings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {localPayments.map((payment, index) => (
-                  <div 
-                    key={payment.id}
-                    className={`grid grid-cols-1 md:grid-cols-3 gap-4 items-end ${
-                      index > 0 ? 'pt-4 border-t' : ''
-                    }`}
-                  >
-                    <div className="space-y-2">
-                      <Label htmlFor={`bank-${payment.id}`}>Bank Name</Label>
-                      <Input
-                        id={`bank-${payment.id}`}
-                        value={payment.bank}
-                        onChange={(e) => handlePaymentChange(payment.id, 'bank', e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor={`account-number-${payment.id}`}>Account Number</Label>
-                      <Input
-                        id={`account-number-${payment.id}`}
-                        value={payment.accountNumber}
-                        onChange={(e) => handlePaymentChange(payment.id, 'accountNumber', e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor={`account-name-${payment.id}`}>Account Name</Label>
-                      <Input
-                        id={`account-name-${payment.id}`}
-                        value={payment.accountName}
-                        onChange={(e) => handlePaymentChange(payment.id, 'accountName', e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id={`active-${payment.id}`}
-                        checked={payment.active}
-                        onChange={(e) => handlePaymentChange(payment.id, 'active', e.target.checked)}
-                        className="rounded border-gray-300 text-athfal-pink focus:ring-athfal-pink"
-                      />
-                      <Label htmlFor={`active-${payment.id}`} className="cursor-pointer">
-                        Active
-                      </Label>
-                    </div>
-                    
-                    <div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-500 hover:text-red-600"
-                        onClick={() => handleRemovePayment(payment.id)}
-                      >
-                        Remove
-                      </Button>
-                    </div>
+              <div className="space-y-6">
+                {/* Add new payment method */}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                  <h3 className="font-medium mb-4">Add New Payment Method</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Input
+                      placeholder="Bank Name"
+                      value={newPayment.bank_name}
+                      onChange={(e) => setNewPayment({...newPayment, bank_name: e.target.value})}
+                    />
+                    <Input
+                      placeholder="Account Number"
+                      value={newPayment.account_number}
+                      onChange={(e) => setNewPayment({...newPayment, account_number: e.target.value})}
+                    />
+                    <Input
+                      placeholder="Account Name"
+                      value={newPayment.account_name}
+                      onChange={(e) => setNewPayment({...newPayment, account_name: e.target.value})}
+                    />
                   </div>
-                ))}
-                
-                <Button
-                  variant="outline"
-                  className="w-full mt-4"
-                  onClick={handleAddPayment}
-                >
-                  Add Payment Method
-                </Button>
+                  <Button onClick={handleAddPayment} className="mt-4">
+                    Add Payment Method
+                  </Button>
+                </div>
+
+                {/* Existing payment methods */}
+                <div className="space-y-4">
+                  {localPayments.map((payment) => (
+                    <div 
+                      key={payment.id}
+                      className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center p-4 border rounded-lg"
+                    >
+                      <div>
+                        <Label>Bank Name</Label>
+                        <Input
+                          value={payment.bank_name}
+                          onChange={(e) => handleUpdatePayment(payment.id, 'bank_name', e.target.value)}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label>Account Number</Label>
+                        <Input
+                          value={payment.account_number}
+                          onChange={(e) => handleUpdatePayment(payment.id, 'account_number', e.target.value)}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label>Account Name</Label>
+                        <Input
+                          value={payment.account_name}
+                          onChange={(e) => handleUpdatePayment(payment.id, 'account_name', e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={payment.active}
+                            onChange={(e) => handleUpdatePayment(payment.id, 'active', e.target.checked)}
+                            className="rounded border-gray-300"
+                          />
+                          <Label>Active</Label>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-500 hover:text-red-600"
+                          onClick={() => deletePaymentMethod(payment.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </CardContent>
-            <CardFooter>
-              <Button onClick={handleSavePayments}>
-                <Save className="mr-2 h-4 w-4" /> Save Payment Settings
-              </Button>
-            </CardFooter>
           </Card>
         </TabsContent>
         
@@ -285,7 +302,7 @@ const AdminSettings = () => {
                   id="enable-vat"
                   checked={localVat.enabled}
                   onChange={(e) => setLocalVat({...localVat, enabled: e.target.checked})}
-                  className="rounded border-gray-300 text-athfal-pink focus:ring-athfal-pink"
+                  className="rounded border-gray-300"
                 />
                 <Label htmlFor="enable-vat" className="cursor-pointer">
                   Enable VAT/Tax
