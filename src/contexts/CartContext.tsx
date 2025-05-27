@@ -16,6 +16,9 @@ export interface Product {
 }
 
 export interface CartItem {
+  id: string;
+  name: string;
+  price: number;
   product: Product;
   quantity: number;
 }
@@ -31,7 +34,9 @@ interface CartContextType {
   getItemQuantity: (productId: string) => number;
   getTotalItems: () => number;
   getSubtotal: () => number;
+  getTotalPrice: () => number;
   getTaxAmount: () => number;
+  getTotalTax: () => number;
   getTotal: () => number;
   products: Product[];
   fetchProducts: () => Promise<void>;
@@ -109,7 +114,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             : item
         );
       } else {
-        return [...prev, { product, quantity }];
+        return [...prev, { 
+          id: product.id, 
+          name: product.name, 
+          price: product.price, 
+          product, 
+          quantity 
+        }];
       }
     });
   };
@@ -156,12 +167,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     return items.reduce((total, item) => total + (item.product.price * item.quantity), 0);
   };
 
+  const getTotalPrice = (): number => {
+    return getSubtotal();
+  };
+
   const getTaxAmount = (): number => {
     return items.reduce((total, item) => {
       const itemTotal = item.product.price * item.quantity;
       const taxAmount = (itemTotal * item.product.tax) / 100;
       return total + taxAmount;
     }, 0);
+  };
+
+  const getTotalTax = (): number => {
+    return getTaxAmount();
   };
 
   const getTotal = (): number => {
@@ -181,7 +200,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         getItemQuantity,
         getTotalItems,
         getSubtotal,
+        getTotalPrice,
         getTaxAmount,
+        getTotalTax,
         getTotal,
         products,
         fetchProducts,

@@ -29,17 +29,11 @@ export const useDatabase = () => {
 
   const fetchFAQs = async () => {
     try {
-      // Use raw SQL query to avoid TypeScript issues with new tables
-      const { data, error } = await supabase
-        .rpc('exec_sql', { sql: 'SELECT * FROM faqs ORDER BY order_num' })
-        .catch(async () => {
-          // Fallback: use direct table access with type assertion
-          const result = await (supabase as any)
-            .from('faqs')
-            .select('*')
-            .order('order_num');
-          return result;
-        });
+      // Use direct table access with type assertion
+      const { data, error } = await (supabase as any)
+        .from('faqs')
+        .select('*')
+        .order('order_num');
 
       if (error) throw error;
       setFaqs(data || []);
@@ -51,17 +45,11 @@ export const useDatabase = () => {
 
   const fetchPaymentMethods = async () => {
     try {
-      // Use raw SQL query to avoid TypeScript issues with new tables
-      const { data, error } = await supabase
-        .rpc('exec_sql', { sql: 'SELECT * FROM payment_methods ORDER BY created_at' })
-        .catch(async () => {
-          // Fallback: use direct table access with type assertion
-          const result = await (supabase as any)
-            .from('payment_methods')
-            .select('*')
-            .order('created_at');
-          return result;
-        });
+      // Use direct table access with type assertion
+      const { data, error } = await (supabase as any)
+        .from('payment_methods')
+        .select('*')
+        .order('created_at');
 
       if (error) throw error;
       setPaymentMethods(data || []);
