@@ -24,21 +24,24 @@ export const useBlogs = () => {
       setLoading(true);
       console.log('Fetching blogs from database...');
       
-      // Use the edge function instead of direct table access to avoid RLS issues
-      const { data, error } = await supabase.functions.invoke('get-blogs');
+      // Direct table access since we fixed the RLS issues
+      const { data, error } = await supabase
+        .from('blogs')
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Edge function error:', error);
+        console.error('Error fetching blogs:', error);
         throw error;
       }
       
-      console.log('Blogs fetched via edge function:', data);
+      console.log('Blogs fetched successfully:', data);
       
-      const formattedBlogs: Blog[] = (data.data || []).map((blog: any) => ({
+      const formattedBlogs: Blog[] = (data || []).map((blog: any) => ({
         id: blog.id,
         title: blog.title || '',
         content: blog.content || '',
-        image: blog.image || '',
+        image: blog.image || 'https://images.unsplash.com/photo-1516733968668-dbdce39c4651',
         author: blog.author || 'Admin',
         date: blog.date || new Date().toISOString().split('T')[0],
         category: blog.category || 'General',
@@ -49,38 +52,12 @@ export const useBlogs = () => {
       console.log('Formatted blogs:', formattedBlogs);
     } catch (error: any) {
       console.error('Error fetching blogs:', error);
-      // Fallback to direct table access if edge function fails
-      try {
-        console.log('Falling back to direct table access...');
-        const { data: directData, error: directError } = await supabase
-          .from('blogs')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (directError) throw directError;
-
-        const formattedBlogs: Blog[] = (directData || []).map((blog: any) => ({
-          id: blog.id,
-          title: blog.title || '',
-          content: blog.content || '',
-          image: blog.image || '',
-          author: blog.author || 'Admin',
-          date: blog.date || new Date().toISOString().split('T')[0],
-          category: blog.category || 'General',
-          published: blog.published || false
-        }));
-
-        setBlogs(formattedBlogs);
-        console.log('Blogs fetched via direct access:', formattedBlogs);
-      } catch (fallbackError: any) {
-        console.error('Fallback also failed:', fallbackError);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to fetch blogs. Please try again later."
-        });
-        setBlogs([]);
-      }
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch blogs. Please try again later."
+      });
+      setBlogs([]);
     } finally {
       setLoading(false);
     }

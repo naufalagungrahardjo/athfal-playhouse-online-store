@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ProductCategory } from '@/contexts/CartContext';
+import { ImageUpload } from '@/components/ImageUpload';
 
 interface ProductFormData {
   id?: string;
@@ -140,7 +141,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {editingProduct ? 'Edit Product' : 'Add New Product'}
@@ -195,36 +196,11 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             />
           </div>
 
-          <div>
-            <Label htmlFor="image">Image URL</Label>
-            <Input
-              id="image"
-              value={formData.image}
-              onChange={(e) => setFormData({...formData, image: e.target.value})}
-              placeholder="Use direct image URLs (Imgur, Unsplash, etc.)"
-              required
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Use direct image URLs from Imgur, Unsplash, or other image hosting services. Google Drive links won't work.
-            </p>
-            {formData.image && (
-              <div className="mt-2">
-                <img
-                  src={formData.image}
-                  alt="Preview"
-                  className="w-32 h-32 object-cover rounded"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
-                  onLoad={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'block';
-                  }}
-                />
-              </div>
-            )}
-          </div>
+          <ImageUpload
+            value={formData.image}
+            onChange={(url) => setFormData({...formData, image: url})}
+            label="Product Image"
+          />
 
           <div className="grid grid-cols-3 gap-4">
             <div>
@@ -232,8 +208,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
               <Input
                 id="price"
                 type="number"
-                value={formData.price || ''}
-                onChange={(e) => setFormData({...formData, price: Number(e.target.value) || 0})}
+                value={formData.price === 0 ? '' : formData.price}
+                onChange={(e) => setFormData({...formData, price: e.target.value ? Number(e.target.value) : 0})}
                 placeholder="Enter price"
                 required
                 min="0"
@@ -244,8 +220,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
               <Input
                 id="tax"
                 type="number"
-                value={formData.tax || ''}
-                onChange={(e) => setFormData({...formData, tax: Number(e.target.value) || 11})}
+                value={formData.tax === 0 ? '' : formData.tax}
+                onChange={(e) => setFormData({...formData, tax: e.target.value ? Number(e.target.value) : 11})}
                 placeholder="Enter tax percentage"
                 required
                 min="0"
@@ -257,8 +233,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
               <Input
                 id="stock"
                 type="number"
-                value={formData.stock || ''}
-                onChange={(e) => setFormData({...formData, stock: Number(e.target.value) || 0})}
+                value={formData.stock === 0 ? '' : formData.stock}
+                onChange={(e) => setFormData({...formData, stock: e.target.value ? Number(e.target.value) : 0})}
                 placeholder="Enter stock quantity"
                 required
                 min="0"
