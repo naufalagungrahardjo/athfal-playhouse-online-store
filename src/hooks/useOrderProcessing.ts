@@ -26,7 +26,7 @@ export const useOrderProcessing = () => {
       setProcessing(true);
       console.log('Processing order:', orderData);
 
-      // Create the order
+      // Create the order with all required fields
       const orderInsert = {
         customer_name: orderData.customerName,
         customer_email: orderData.customerEmail,
@@ -57,8 +57,8 @@ export const useOrderProcessing = () => {
       const orderItems = orderData.items.map(item => ({
         order_id: order.id,
         product_id: item.id,
-        product_name: item.name,
-        product_price: item.price,
+        product_name: item.product.name,
+        product_price: item.product.price,
         quantity: item.quantity
       }));
 
