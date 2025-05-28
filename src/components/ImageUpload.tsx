@@ -23,25 +23,36 @@ export const ImageUpload = ({ value, onChange, label = "Image", className = "" }
   const uploadImage = async (file: File) => {
     try {
       setUploading(true);
+      console.log('Starting upload for file:', file.name);
       
       // Create a unique filename
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `uploads/${fileName}`;
 
+      console.log('Uploading to path:', filePath);
+
+      // Upload the file
       const { error: uploadError, data } = await supabase.storage
         .from('images')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
-        console.error('Upload error:', uploadError);
+        console.error('Upload error details:', uploadError);
         throw uploadError;
       }
+
+      console.log('Upload successful, data:', data);
 
       // Get the public URL
       const { data: { publicUrl } } = supabase.storage
         .from('images')
         .getPublicUrl(filePath);
+
+      console.log('Public URL:', publicUrl);
 
       onChange(publicUrl);
       
@@ -54,7 +65,7 @@ export const ImageUpload = ({ value, onChange, label = "Image", className = "" }
       toast({
         variant: "destructive",
         title: "Upload failed",
-        description: error.message || "Failed to upload image"
+        description: error.message || "Failed to upload image. Please try again."
       });
     } finally {
       setUploading(false);
@@ -146,10 +157,10 @@ export const ImageUpload = ({ value, onChange, label = "Image", className = "" }
             accept="image/*"
             onChange={handleFileChange}
             disabled={uploading}
-            className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-athfal-pink file:text-white hover:file:bg-athfal-pink/80"
+            className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600"
           />
           {uploading && (
-            <p className="text-xs text-gray-500 mt-1">Uploading...</p>
+            <p className="text-xs text-blue-500 mt-1">Uploading image...</p>
           )}
         </div>
 
