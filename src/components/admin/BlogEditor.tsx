@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -39,7 +38,7 @@ export const BlogEditor = ({ editingBlog, onSave, onCancel, onPublishToggle }: B
   );
 
   // Update local state when editingBlog changes
-  useState(() => {
+  useEffect(() => {
     setBlog(editingBlog);
     setDate(editingBlog ? new Date(editingBlog.date) : new Date());
   }, [editingBlog]);
