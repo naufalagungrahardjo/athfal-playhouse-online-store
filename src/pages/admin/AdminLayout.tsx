@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { CreateImagesBucket } from '@/components/admin/CreateImagesBucket';
 import { 
   BarChart3, 
   Package, 
@@ -57,7 +56,6 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen flex">
-      <CreateImagesBucket />
       
       {/* Admin Sidebar */}
       <aside className="w-64 bg-gray-900 text-white min-h-screen fixed left-0 top-0 z-40 py-6 px-3 hidden md:block">
