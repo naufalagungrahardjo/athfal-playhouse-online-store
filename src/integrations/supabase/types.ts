@@ -93,6 +93,42 @@ export type Database = {
         }
         Relationships: []
       }
+      faqs: {
+        Row: {
+          answer_en: string
+          answer_id: string
+          category: string
+          created_at: string
+          id: string
+          order_num: number
+          question_en: string
+          question_id: string
+          updated_at: string
+        }
+        Insert: {
+          answer_en: string
+          answer_id: string
+          category?: string
+          created_at?: string
+          id?: string
+          order_num?: number
+          question_en: string
+          question_id: string
+          updated_at?: string
+        }
+        Update: {
+          answer_en?: string
+          answer_id?: string
+          category?: string
+          created_at?: string
+          id?: string
+          order_num?: number
+          question_en?: string
+          question_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string | null
@@ -189,6 +225,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_methods: {
+        Row: {
+          account_name: string
+          account_number: string
+          active: boolean
+          bank_name: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          active?: boolean
+          bank_name: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          active?: boolean
+          bank_name?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       products: {
         Row: {

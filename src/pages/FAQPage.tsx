@@ -9,121 +9,22 @@ import {
 } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-
-// Mock FAQ data
-const MOCK_FAQ = [
-  {
-    id: "faq1",
-    question: {
-      id: "Apa itu Athfal Playhouse?",
-      en: "What is Athfal Playhouse?",
-    },
-    answer: {
-      id: "Athfal Playhouse adalah pusat edukasi anak yang menggabungkan metode bermain sambil belajar dengan nilai-nilai Islam. Kami menawarkan kelas pop-up, program reguler, dan konsultasi psikologi untuk anak-anak usia 2-7 tahun.",
-      en: "Athfal Playhouse is a children's education center that combines play-based learning methods with Islamic values. We offer pop-up classes, regular programs, and psychological consultations for children aged 2-7 years.",
-    },
-    category: "general",
-  },
-  {
-    id: "faq2",
-    question: {
-      id: "Berapa usia minimum untuk anak-anak berpartisipasi?",
-      en: "What is the minimum age for children to participate?",
-    },
-    answer: {
-      id: "Program kami dirancang untuk anak-anak mulai dari usia 2 tahun. Beberapa kelas memiliki persyaratan usia spesifik yang dapat Anda lihat di halaman deskripsi kelas.",
-      en: "Our programs are designed for children starting from the age of 2 years. Some classes have specific age requirements which you can see on the class description page.",
-    },
-    category: "classes",
-  },
-  {
-    id: "faq3",
-    question: {
-      id: "Bagaimana cara mendaftar untuk kelas?",
-      en: "How do I register for classes?",
-    },
-    answer: {
-      id: "Anda dapat mendaftar untuk kelas melalui situs web kami dengan memilih kelas yang diinginkan, menambahkannya ke keranjang, dan menyelesaikan proses checkout. Setelah pembayaran dikonfirmasi, Anda akan menerima email berisi detail kelas dan informasi lainnya.",
-      en: "You can register for classes through our website by selecting the desired class, adding it to your cart, and completing the checkout process. After payment is confirmed, you will receive an email containing class details and other information.",
-    },
-    category: "registration",
-  },
-  {
-    id: "faq4",
-    question: {
-      id: "Apakah orang tua diharapkan hadir selama kelas?",
-      en: "Are parents expected to be present during classes?",
-    },
-    answer: {
-      id: "Untuk anak-anak di bawah usia 4 tahun, kami mengharapkan kehadiran orang tua atau pengasuh selama sesi kelas. Untuk anak-anak yang lebih tua, kehadiran orang tua bersifat opsional, tetapi kami menyambut partisipasi orang tua yang ingin bergabung.",
-      en: "For children under the age of 4, we expect parents or caregivers to be present during class sessions. For older children, parent attendance is optional, but we welcome the participation of parents who wish to join.",
-    },
-    category: "classes",
-  },
-  {
-    id: "faq5",
-    question: {
-      id: "Bagaimana kebijakan pembatalan dan pengembalian dana?",
-      en: "What is the cancellation and refund policy?",
-    },
-    answer: {
-      id: "Pembatalan yang dilakukan 7 hari atau lebih sebelum tanggal kelas akan menerima pengembalian dana penuh. Pembatalan kurang dari 7 hari sebelum kelas akan dikenakan biaya administrasi 20%. Tidak ada pengembalian dana untuk pembatalan pada hari kelas atau ketidakhadiran.",
-      en: "Cancellations made 7 days or more before the class date will receive a full refund. Cancellations less than 7 days before class will be charged a 20% administration fee. No refunds for cancellations on the day of class or for no-shows.",
-    },
-    category: "payment",
-  },
-  {
-    id: "faq6",
-    question: {
-      id: "Apakah ada diskon untuk pendaftaran beberapa kelas?",
-      en: "Are there discounts for multiple class registrations?",
-    },
-    answer: {
-      id: "Ya, kami menawarkan diskon 10% untuk pendaftaran dua kelas dan 15% untuk tiga kelas atau lebih. Diskon ini akan otomatis diterapkan saat checkout.",
-      en: "Yes, we offer a 10% discount for two class registrations and 15% for three or more classes. These discounts will be automatically applied at checkout.",
-    },
-    category: "payment",
-  },
-  {
-    id: "faq7",
-    question: {
-      id: "Apa yang perlu dibawa anak saya ke kelas?",
-      en: "What does my child need to bring to class?",
-    },
-    answer: {
-      id: "Anak Anda hanya perlu membawa pakaian yang nyaman dan botol air. Semua material dan peralatan untuk aktivitas kelas akan disediakan oleh Athfal Playhouse.",
-      en: "Your child only needs to bring comfortable clothing and a water bottle. All materials and equipment for class activities will be provided by Athfal Playhouse.",
-    },
-    category: "classes",
-  },
-  {
-    id: "faq8",
-    question: {
-      id: "Bagaimana jika anak saya melewatkan sesi kelas?",
-      en: "What if my child misses a class session?",
-    },
-    answer: {
-      id: "Jika anak Anda melewatkan sesi kelas karena sakit (dengan bukti medis) atau alasan penting lainnya, kami akan berusaha untuk menawarkan sesi pengganti atau memberikan kredit untuk kelas di masa mendatang. Harap beri tahu kami sesegera mungkin jika anak Anda tidak dapat menghadiri kelas.",
-      en: "If your child misses a class session due to illness (with medical proof) or other important reasons, we will try to offer a replacement session or provide credit for future classes. Please let us know as soon as possible if your child is unable to attend class.",
-    },
-    category: "classes",
-  },
-];
+import { useDatabase } from "@/hooks/useDatabase";
 
 const FAQPage = () => {
   const { language } = useLanguage();
+  const { faqs, loading } = useDatabase();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
 
   // Filter FAQs based on search term and category
-  const filteredFAQs = MOCK_FAQ.filter((faq) => {
+  const filteredFAQs = faqs.filter((faq) => {
+    const question = language === "id" ? faq.question_id : faq.question_en;
+    const answer = language === "id" ? faq.answer_id : faq.answer_en;
+    
     const matchesSearch =
-      faq.question[language === "id" ? "id" : "en"]
-        .toLowerCase()
-        .includes(search.toLowerCase()) ||
-      faq.answer[language === "id" ? "id" : "en"]
-        .toLowerCase()
-        .includes(search.toLowerCase());
+      question.toLowerCase().includes(search.toLowerCase()) ||
+      answer.toLowerCase().includes(search.toLowerCase());
 
     const matchesCategory = activeCategory === "all" || faq.category === activeCategory;
 
@@ -131,7 +32,18 @@ const FAQPage = () => {
   });
 
   // Get unique categories
-  const categories = ["all", ...Array.from(new Set(MOCK_FAQ.map((faq) => faq.category)))];
+  const categories = ["all", ...Array.from(new Set(faqs.map((faq) => faq.category)))];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-athfal-pink mx-auto mb-4"></div>
+          <p>{language === "id" ? "Memuat FAQ..." : "Loading FAQs..."}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -184,10 +96,10 @@ const FAQPage = () => {
               {filteredFAQs.map((faq) => (
                 <AccordionItem key={faq.id} value={faq.id} className="border rounded-lg px-4">
                   <AccordionTrigger className="text-left font-medium py-4 hover:no-underline">
-                    {faq.question[language === "id" ? "id" : "en"]}
+                    {language === "id" ? faq.question_id : faq.question_en}
                   </AccordionTrigger>
                   <AccordionContent className="pt-2 pb-4 text-gray-700">
-                    {faq.answer[language === "id" ? "id" : "en"]}
+                    {language === "id" ? faq.answer_id : faq.answer_en}
                   </AccordionContent>
                 </AccordionItem>
               ))}

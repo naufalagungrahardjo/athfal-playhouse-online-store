@@ -29,13 +29,18 @@ export const useDatabase = () => {
 
   const fetchFAQs = async () => {
     try {
-      // Use direct table access with type assertion
-      const { data, error } = await (supabase as any)
+      console.log('Fetching FAQs from database...');
+      const { data, error } = await supabase
         .from('faqs')
         .select('*')
         .order('order_num');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching FAQs:', error);
+        throw error;
+      }
+      
+      console.log('FAQs fetched:', data);
       setFaqs(data || []);
     } catch (error) {
       console.error('Error fetching FAQs:', error);
@@ -45,13 +50,18 @@ export const useDatabase = () => {
 
   const fetchPaymentMethods = async () => {
     try {
-      // Use direct table access with type assertion
-      const { data, error } = await (supabase as any)
+      console.log('Fetching payment methods from database...');
+      const { data, error } = await supabase
         .from('payment_methods')
         .select('*')
         .order('created_at');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching payment methods:', error);
+        throw error;
+      }
+      
+      console.log('Payment methods fetched:', data);
       setPaymentMethods(data || []);
     } catch (error) {
       console.error('Error fetching payment methods:', error);
@@ -61,15 +71,20 @@ export const useDatabase = () => {
 
   const saveFAQ = async (faq: Omit<DatabaseFAQ, 'id'> & { id?: string }) => {
     try {
-      const { error } = await (supabase as any)
+      console.log('Saving FAQ:', faq);
+      const { error } = await supabase
         .from('faqs')
         .upsert({
           ...faq,
           updated_at: new Date().toISOString()
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving FAQ:', error);
+        throw error;
+      }
 
+      console.log('FAQ saved successfully');
       toast({
         title: "Success",
         description: "FAQ saved successfully"
@@ -88,13 +103,18 @@ export const useDatabase = () => {
 
   const deleteFAQ = async (id: string) => {
     try {
-      const { error } = await (supabase as any)
+      console.log('Deleting FAQ:', id);
+      const { error } = await supabase
         .from('faqs')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting FAQ:', error);
+        throw error;
+      }
 
+      console.log('FAQ deleted successfully');
       toast({
         title: "Success",
         description: "FAQ deleted successfully"
@@ -113,15 +133,20 @@ export const useDatabase = () => {
 
   const savePaymentMethod = async (paymentMethod: Omit<DatabasePaymentMethod, 'id'> & { id?: string }) => {
     try {
-      const { error } = await (supabase as any)
+      console.log('Saving payment method:', paymentMethod);
+      const { error } = await supabase
         .from('payment_methods')
         .upsert({
           ...paymentMethod,
           updated_at: new Date().toISOString()
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving payment method:', error);
+        throw error;
+      }
 
+      console.log('Payment method saved successfully');
       toast({
         title: "Success",
         description: "Payment method saved successfully"
@@ -140,13 +165,18 @@ export const useDatabase = () => {
 
   const deletePaymentMethod = async (id: string) => {
     try {
-      const { error } = await (supabase as any)
+      console.log('Deleting payment method:', id);
+      const { error } = await supabase
         .from('payment_methods')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting payment method:', error);
+        throw error;
+      }
 
+      console.log('Payment method deleted successfully');
       toast({
         title: "Success",
         description: "Payment method deleted successfully"
