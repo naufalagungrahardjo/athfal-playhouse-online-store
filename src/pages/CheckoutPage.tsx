@@ -11,6 +11,16 @@ import { useCart } from '@/contexts/CartContext';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useOrderProcessing } from '@/hooks/useOrderProcessing';
 
+type PromoCode = {
+  id: string;
+  code: string;
+  discount_percentage: number;
+  description: string | null;
+  is_active: boolean;
+  valid_from: string | null;
+  valid_until: string | null;
+};
+
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { items, getTotalPrice, getTotalTax, clearCart } = useCart();
@@ -26,9 +36,22 @@ const CheckoutPage = () => {
     notes: ''
   });
 
+  const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
+
   useEffect(() => {
     if (items.length === 0) {
       navigate('/cart');
+    }
+
+    // Load applied promo from localStorage if it exists
+    const storedPromo = localStorage.getItem('appliedPromo');
+    if (storedPromo) {
+      try {
+        setAppliedPromo(JSON.parse(storedPromo));
+      } catch (error) {
+        console.error('Failed to parse stored promo', error);
+        localStorage.removeItem('appliedPromo');
+      }
     }
   }, [items, navigate]);
 
@@ -47,8 +70,8 @@ const CheckoutPage = () => {
       return;
     }
 
-    const subtotal = getTotalPrice();
-    const taxAmount = getTotalTax();
+    const subtotal = appliedPromo ? getDiscountedSubtotal() : getTotalPrice();
+    const taxAmount = appliedPromo ? getDiscountedTax() : getTotalTax();
     const totalAmount = subtotal + taxAmount;
 
     const result = await processOrder({
@@ -56,13 +79,39 @@ const CheckoutPage = () => {
       items,
       subtotal,
       taxAmount,
-      totalAmount
+      totalAmount,
+      promoCode: appliedPromo?.code || null,
+      discountAmount: appliedPromo ? getDiscountAmount() : 0
     });
 
     if (result.success) {
       clearCart();
+      localStorage.removeItem('appliedPromo'); // Clear promo after successful order
       navigate(`/order-details/${result.orderId}`);
     }
+  };
+
+  // Calculate discount amount
+  const getDiscountAmount = () => {
+    if (!appliedPromo) return 0;
+    const subtotal = getTotalPrice();
+    return subtotal * (appliedPromo.discount_percentage / 100);
+  };
+
+  // Get discounted subtotal
+  const getDiscountedSubtotal = () => {
+    return getTotalPrice() - getDiscountAmount();
+  };
+
+  // Get tax on discounted amount
+  const getDiscountedTax = () => {
+    if (!appliedPromo) return getTotalTax();
+    
+    return items.reduce((total, item) => {
+      const discountedPrice = item.product.price * (1 - (appliedPromo.discount_percentage / 100));
+      const itemTax = (discountedPrice * item.quantity) * (item.product.tax / 100);
+      return total + itemTax;
+    }, 0);
   };
 
   const formatCurrency = (amount: number) => {
@@ -73,11 +122,14 @@ const CheckoutPage = () => {
     }).format(amount);
   };
 
-  const subtotal = getTotalPrice();
-  const taxAmount = getTotalTax();
+  const subtotal = appliedPromo ? getDiscountedSubtotal() : getTotalPrice();
+  const taxAmount = appliedPromo ? getDiscountedTax() : getTotalTax();
   const total = subtotal + taxAmount;
 
   const activePaymentMethods = paymentMethods.filter(method => method.active);
+
+  console.log('Available payment methods:', activePaymentMethods);
+  console.log('Form payment method value:', formData.paymentMethod);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -138,18 +190,29 @@ const CheckoutPage = () => {
                   
                   <div>
                     <Label htmlFor="paymentMethod">Payment Method *</Label>
-                    <Select value={formData.paymentMethod} onValueChange={(value) => handleInputChange('paymentMethod', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select payment method" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {activePaymentMethods.map((method) => (
-                          <SelectItem key={method.id} value={method.id}>
-                            {method.bank_name} - {method.account_number} ({method.account_name})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {activePaymentMethods.length === 0 ? (
+                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                        <p className="text-sm text-yellow-700">
+                          No payment methods available. Please contact administrator.
+                        </p>
+                      </div>
+                    ) : (
+                      <Select 
+                        value={formData.paymentMethod} 
+                        onValueChange={(value) => handleInputChange('paymentMethod', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select payment method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {activePaymentMethods.map((method) => (
+                            <SelectItem key={method.id} value={method.id}>
+                              {method.bank_name} - {method.account_number} ({method.account_name})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                   
                   <div>
@@ -166,7 +229,7 @@ const CheckoutPage = () => {
                   <Button 
                     type="submit" 
                     className="w-full mt-6"
-                    disabled={processing}
+                    disabled={processing || activePaymentMethods.length === 0}
                   >
                     {processing ? 'Processing...' : `Proceed Order - ${formatCurrency(total)}`}
                   </Button>
@@ -198,8 +261,16 @@ const CheckoutPage = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span>Subtotal:</span>
-                      <span>{formatCurrency(subtotal)}</span>
+                      <span>{formatCurrency(getTotalPrice())}</span>
                     </div>
+                    
+                    {appliedPromo && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Discount ({appliedPromo.code} - {appliedPromo.discount_percentage}%):</span>
+                        <span>-{formatCurrency(getDiscountAmount())}</span>
+                      </div>
+                    )}
+                    
                     <div className="flex justify-between">
                       <span>Tax:</span>
                       <span>{formatCurrency(taxAmount)}</span>

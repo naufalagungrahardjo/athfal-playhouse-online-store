@@ -15,6 +15,8 @@ interface OrderData {
   subtotal: number;
   taxAmount: number;
   totalAmount: number;
+  promoCode?: string | null;
+  discountAmount?: number;
 }
 
 export const useOrderProcessing = () => {
@@ -37,7 +39,9 @@ export const useOrderProcessing = () => {
         subtotal: orderData.subtotal,
         tax_amount: orderData.taxAmount,
         total_amount: orderData.totalAmount,
-        status: 'pending'
+        status: 'pending',
+        promo_code: orderData.promoCode || null,
+        discount_amount: orderData.discountAmount || 0
       };
 
       const { data: order, error: orderError } = await supabase

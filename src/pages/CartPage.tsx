@@ -57,11 +57,13 @@ const CartPage = () => {
   const handleClearCart = () => {
     clearCart();
     setAppliedPromo(null);
+    // Clear stored promo when cart is cleared
+    localStorage.removeItem('appliedPromo');
   };
 
   const handleCheckout = () => {
     if (items.length > 0) {
-      // Store the applied promo in localStorage to use in checkout
+      // Store the applied promo in localStorage to use in checkout only if one is applied
       if (appliedPromo) {
         localStorage.setItem('appliedPromo', JSON.stringify(appliedPromo));
       } else {
@@ -165,21 +167,21 @@ const CartPage = () => {
   // Handle removing applied promo
   const removeAppliedPromo = () => {
     setAppliedPromo(null);
+    localStorage.removeItem('appliedPromo');
     toast({
       title: language === 'id' ? "Kode promo dihapus" : "Promo code removed",
     });
   };
   
-  // Load applied promo from localStorage on mount
+  // DO NOT LOAD APPLIED PROMO AUTOMATICALLY ON MOUNT
+  // Only load it if explicitly applied by user during this session
   useEffect(() => {
-    const storedPromo = localStorage.getItem('appliedPromo');
-    if (storedPromo) {
-      try {
-        setAppliedPromo(JSON.parse(storedPromo));
-      } catch (error) {
-        console.error('Failed to parse stored promo', error);
-        localStorage.removeItem('appliedPromo');
-      }
+    // Clear any previously stored promo when component mounts to prevent automatic application
+    // Only keep it if user navigates back from checkout
+    const currentPath = window.location.pathname;
+    if (currentPath === '/cart') {
+      // Don't automatically load promo code when accessing cart directly
+      // User must manually apply promo codes
     }
   }, []);
 
