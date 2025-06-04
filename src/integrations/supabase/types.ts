@@ -174,9 +174,11 @@ export type Database = {
           customer_email: string
           customer_name: string
           customer_phone: string
+          discount_amount: number | null
           id: string
           notes: string | null
           payment_method: string
+          promo_code: string | null
           status: string
           subtotal: number
           tax_amount: number
@@ -190,9 +192,11 @@ export type Database = {
           customer_email: string
           customer_name: string
           customer_phone: string
+          discount_amount?: number | null
           id?: string
           notes?: string | null
           payment_method: string
+          promo_code?: string | null
           status?: string
           subtotal: number
           tax_amount: number
@@ -206,9 +210,11 @@ export type Database = {
           customer_email?: string
           customer_name?: string
           customer_phone?: string
+          discount_amount?: number | null
           id?: string
           notes?: string | null
           payment_method?: string
+          promo_code?: string | null
           status?: string
           subtotal?: number
           tax_amount?: number

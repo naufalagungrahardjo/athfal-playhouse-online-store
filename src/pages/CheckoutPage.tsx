@@ -47,7 +47,9 @@ const CheckoutPage = () => {
     const storedPromo = localStorage.getItem('appliedPromo');
     if (storedPromo) {
       try {
-        setAppliedPromo(JSON.parse(storedPromo));
+        const parsedPromo = JSON.parse(storedPromo);
+        console.log('Loading stored promo:', parsedPromo);
+        setAppliedPromo(parsedPromo);
       } catch (error) {
         console.error('Failed to parse stored promo', error);
         localStorage.removeItem('appliedPromo');
@@ -70,18 +72,24 @@ const CheckoutPage = () => {
       return;
     }
 
+    console.log('Processing order with payment method:', formData.paymentMethod);
+    console.log('Available payment methods:', paymentMethods);
+
     const subtotal = appliedPromo ? getDiscountedSubtotal() : getTotalPrice();
     const taxAmount = appliedPromo ? getDiscountedTax() : getTotalTax();
     const totalAmount = subtotal + taxAmount;
+    const discountAmount = appliedPromo ? getDiscountAmount() : 0;
+
+    console.log('Order totals:', { subtotal, taxAmount, totalAmount, discountAmount });
 
     const result = await processOrder({
       ...formData,
       items,
-      subtotal,
-      taxAmount,
-      totalAmount,
+      subtotal: Math.round(subtotal),
+      taxAmount: Math.round(taxAmount),
+      totalAmount: Math.round(totalAmount),
       promoCode: appliedPromo?.code || null,
-      discountAmount: appliedPromo ? getDiscountAmount() : 0
+      discountAmount: Math.round(discountAmount)
     });
 
     if (result.success) {
@@ -130,6 +138,7 @@ const CheckoutPage = () => {
 
   console.log('Available payment methods:', activePaymentMethods);
   console.log('Form payment method value:', formData.paymentMethod);
+  console.log('Applied promo:', appliedPromo);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -199,7 +208,10 @@ const CheckoutPage = () => {
                     ) : (
                       <Select 
                         value={formData.paymentMethod} 
-                        onValueChange={(value) => handleInputChange('paymentMethod', value)}
+                        onValueChange={(value) => {
+                          console.log('Payment method selected:', value);
+                          handleInputChange('paymentMethod', value);
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select payment method" />

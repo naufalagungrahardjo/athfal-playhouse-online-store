@@ -44,6 +44,8 @@ export const useOrderProcessing = () => {
         discount_amount: orderData.discountAmount || 0
       };
 
+      console.log('Order insert data:', orderInsert);
+
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert(orderInsert)
@@ -55,7 +57,7 @@ export const useOrderProcessing = () => {
         throw orderError;
       }
 
-      console.log('Order created:', order);
+      console.log('Order created successfully:', order);
 
       // Create order items
       const orderItems = orderData.items.map(item => ({
@@ -65,6 +67,8 @@ export const useOrderProcessing = () => {
         product_price: item.product.price,
         quantity: item.quantity
       }));
+
+      console.log('Creating order items:', orderItems);
 
       const { error: itemsError } = await supabase
         .from('order_items')
