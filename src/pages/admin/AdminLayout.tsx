@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,7 +12,8 @@ import {
   CreditCard, 
   HelpCircle, 
   LogOut,
-  Ticket
+  Ticket,
+  Edit3
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -32,7 +34,7 @@ const AdminLayout = () => {
     { icon: Package, label: 'Products', path: '/admin/products' },
     { icon: FileText, label: 'Blog Posts', path: '/admin/blogs' },
     { icon: Images, label: 'Banners', path: '/admin/banners' },
-    { icon: FileText, label: 'Content', path: '/admin/content' },
+    { icon: Edit3, label: 'Website Copy', path: '/admin/website-copy' },
     { icon: HelpCircle, label: 'FAQ', path: '/admin/faq' },
     { icon: CreditCard, label: 'Payment Options', path: '/admin/payments' },
     { icon: Ticket, label: 'Promo Codes', path: '/admin/promo-codes' },

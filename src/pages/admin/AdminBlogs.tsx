@@ -5,7 +5,7 @@ import { FilePlus } from "lucide-react";
 import { format } from "date-fns";
 import { useBlogs, Blog } from "@/hooks/useBlogs";
 import { BlogList } from "@/components/admin/BlogList";
-import { BlogEditor } from "@/components/admin/BlogEditor";
+import { ImprovedBlogEditor } from "@/components/admin/ImprovedBlogEditor";
 
 const AdminBlogs = () => {
   const { blogs, loading, saveBlog, deleteBlog } = useBlogs();
@@ -61,8 +61,11 @@ const AdminBlogs = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Blog Management</h2>
-        <Button onClick={handleCreateNewBlog}>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Blog Management</h2>
+          <p className="text-gray-600">Create and manage blog posts with improved editor</p>
+        </div>
+        <Button onClick={handleCreateNewBlog} className="bg-athfal-pink hover:bg-athfal-pink/90">
           <FilePlus className="mr-2 h-4 w-4" /> New Blog Post
         </Button>
       </div>
@@ -83,9 +86,9 @@ const AdminBlogs = () => {
           />
         </div>
         
-        {/* Blog editor */}
+        {/* Improved blog editor */}
         <div className="md:col-span-2">
-          <BlogEditor
+          <ImprovedBlogEditor
             editingBlog={editingBlog}
             onSave={handleSaveBlog}
             onCancel={() => setEditingBlog(null)}

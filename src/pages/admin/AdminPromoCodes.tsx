@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -19,10 +20,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { PlusCircle, Pencil, Trash2 } from "lucide-react";
+import { PlusCircle, Pencil, Trash2, Calendar } from "lucide-react";
 
 type PromoCode = {
   id: string;
@@ -44,6 +44,7 @@ const AdminPromoCodes = () => {
     discount_percentage: 10,
     description: '',
     is_active: true,
+    valid_from: '',
     valid_until: ''
   });
   const { toast } = useToast();
@@ -97,6 +98,7 @@ const AdminPromoCodes = () => {
       discount_percentage: 10,
       description: '',
       is_active: true,
+      valid_from: '',
       valid_until: ''
     });
     setCurrentPromo(null);
@@ -110,6 +112,7 @@ const AdminPromoCodes = () => {
         discount_percentage: promo.discount_percentage,
         description: promo.description || '',
         is_active: promo.is_active,
+        valid_from: promo.valid_from ? new Date(promo.valid_from).toISOString().split('T')[0] : '',
         valid_until: promo.valid_until ? new Date(promo.valid_until).toISOString().split('T')[0] : ''
       });
     } else {
@@ -136,6 +139,7 @@ const AdminPromoCodes = () => {
             discount_percentage: formData.discount_percentage,
             description: formData.description,
             is_active: formData.is_active,
+            valid_from: formData.valid_from ? new Date(formData.valid_from).toISOString() : null,
             valid_until: formData.valid_until ? new Date(formData.valid_until).toISOString() : null,
             updated_at: new Date().toISOString()
           })
@@ -156,6 +160,7 @@ const AdminPromoCodes = () => {
             discount_percentage: formData.discount_percentage,
             description: formData.description,
             is_active: formData.is_active,
+            valid_from: formData.valid_from ? new Date(formData.valid_from).toISOString() : null,
             valid_until: formData.valid_until ? new Date(formData.valid_until).toISOString() : null
           }]);
           
@@ -207,7 +212,7 @@ const AdminPromoCodes = () => {
   };
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'No expiration';
+    if (!dateString) return 'Not set';
     return new Date(dateString).toLocaleDateString('id-ID', {
       year: 'numeric',
       month: 'long',
@@ -215,13 +220,34 @@ const AdminPromoCodes = () => {
     });
   };
 
+  const getPromoStatus = (promo: PromoCode) => {
+    if (!promo.is_active) return { status: 'Inactive', color: 'bg-gray-100 text-gray-800' };
+    
+    const now = new Date();
+    const validFrom = promo.valid_from ? new Date(promo.valid_from) : null;
+    const validUntil = promo.valid_until ? new Date(promo.valid_until) : null;
+    
+    if (validFrom && now < validFrom) {
+      return { status: 'Scheduled', color: 'bg-blue-100 text-blue-800' };
+    }
+    
+    if (validUntil && now > validUntil) {
+      return { status: 'Expired', color: 'bg-red-100 text-red-800' };
+    }
+    
+    return { status: 'Active', color: 'bg-green-100 text-green-800' };
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Promo Code Management</h1>
+        <div>
+          <h1 className="text-2xl font-bold">Promo Code Management</h1>
+          <p className="text-gray-600">Create and manage discount codes with date ranges</p>
+        </div>
         <Button 
           onClick={() => handleOpenDialog()} 
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-athfal-pink hover:bg-athfal-pink/90"
         >
           <PlusCircle size={16} />
           Add New Promo
@@ -236,6 +262,7 @@ const AdminPromoCodes = () => {
               <TableHead>Discount (%)</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Valid From</TableHead>
               <TableHead>Valid Until</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -243,75 +270,82 @@ const AdminPromoCodes = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4">Loading...</TableCell>
+                <TableCell colSpan={7} className="text-center py-4">Loading...</TableCell>
               </TableRow>
             ) : promoCodes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4">No promo codes found</TableCell>
+                <TableCell colSpan={7} className="text-center py-4">No promo codes found</TableCell>
               </TableRow>
             ) : (
-              promoCodes.map((promo) => (
-                <TableRow key={promo.id}>
-                  <TableCell className="font-medium">{promo.code}</TableCell>
-                  <TableCell>{promo.discount_percentage}%</TableCell>
-                  <TableCell>{promo.description || '-'}</TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      promo.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {promo.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </TableCell>
-                  <TableCell>{formatDate(promo.valid_until)}</TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => handleOpenDialog(promo)}>
-                      <Pencil size={16} className="mr-1" /> Edit
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-red-500" onClick={() => handleDeletePromo(promo.id)}>
-                      <Trash2 size={16} className="mr-1" /> Delete
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+              promoCodes.map((promo) => {
+                const statusInfo = getPromoStatus(promo);
+                return (
+                  <TableRow key={promo.id}>
+                    <TableCell className="font-medium">{promo.code}</TableCell>
+                    <TableCell>{promo.discount_percentage}%</TableCell>
+                    <TableCell>{promo.description || '-'}</TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
+                        {statusInfo.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>{formatDate(promo.valid_from)}</TableCell>
+                    <TableCell>{formatDate(promo.valid_until)}</TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Button variant="outline" size="sm" onClick={() => handleOpenDialog(promo)}>
+                        <Pencil size={16} className="mr-1" /> Edit
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-red-500" onClick={() => handleDeletePromo(promo.id)}>
+                        <Trash2 size={16} className="mr-1" /> Delete
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>{currentPromo ? 'Edit Promo Code' : 'Create New Promo Code'}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              {currentPromo ? 'Edit Promo Code' : 'Create New Promo Code'}
+            </DialogTitle>
             <DialogDescription>
-              Fill the form below to {currentPromo ? 'update the' : 'create a new'} promo code.
+              Fill the form below to {currentPromo ? 'update the' : 'create a new'} promo code with date range settings.
             </DialogDescription>
           </DialogHeader>
           
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="code">Promo Code</Label>
-              <Input
-                id="code"
-                name="code"
-                value={formData.code}
-                onChange={handleInputChange}
-                placeholder="e.g. SUMMER20"
-                required
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="discount_percentage">Discount Percentage</Label>
-              <Input
-                id="discount_percentage"
-                name="discount_percentage"
-                type="number"
-                min="1"
-                max="100"
-                value={formData.discount_percentage}
-                onChange={handleInputChange}
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="code">Promo Code</Label>
+                <Input
+                  id="code"
+                  name="code"
+                  value={formData.code}
+                  onChange={handleInputChange}
+                  placeholder="e.g. SUMMER20"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="discount_percentage">Discount Percentage</Label>
+                <Input
+                  id="discount_percentage"
+                  name="discount_percentage"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={formData.discount_percentage}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
             </div>
             
             <div>
@@ -325,15 +359,30 @@ const AdminPromoCodes = () => {
               />
             </div>
             
-            <div>
-              <Label htmlFor="valid_until">Valid Until</Label>
-              <Input
-                id="valid_until"
-                name="valid_until"
-                type="date"
-                value={formData.valid_until}
-                onChange={handleInputChange}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="valid_from">Valid From</Label>
+                <Input
+                  id="valid_from"
+                  name="valid_from"
+                  type="date"
+                  value={formData.valid_from}
+                  onChange={handleInputChange}
+                />
+                <p className="text-xs text-gray-500 mt-1">Leave empty for immediate activation</p>
+              </div>
+              
+              <div>
+                <Label htmlFor="valid_until">Valid Until</Label>
+                <Input
+                  id="valid_until"
+                  name="valid_until"
+                  type="date"
+                  value={formData.valid_until}
+                  onChange={handleInputChange}
+                />
+                <p className="text-xs text-gray-500 mt-1">Leave empty for no expiration</p>
+              </div>
             </div>
             
             <div className="flex items-center space-x-2">
@@ -349,7 +398,7 @@ const AdminPromoCodes = () => {
               <Button type="button" variant="outline" onClick={handleCloseDialog}>
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button type="submit" className="bg-athfal-pink hover:bg-athfal-pink/90">
                 {currentPromo ? 'Update' : 'Create'} Promo Code
               </Button>
             </DialogFooter>
