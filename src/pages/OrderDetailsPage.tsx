@@ -1,37 +1,13 @@
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCart } from '@/contexts/CartContext';
+import { useDatabase } from '@/hooks/useDatabase';
 import { ArrowLeft, Copy, Check, Clock } from 'lucide-react';
-
-// Mock payment methods - should match the ones in CheckoutPage
-const PAYMENT_METHODS = [
-  {
-    id: 'hijra',
-    name: 'Bank Hijra',
-    number: '7800110100142022',
-    accountName: 'Fadhilah Ramadhannisa',
-    logo: 'https://logosmarcas.net/wp-content/uploads/2021/03/BCA-Logo.png',
-  },
-  {
-    id: 'bca',
-    name: 'BCA',
-    number: '0123456789',
-    accountName: 'Athfal Playhouse',
-    logo: 'https://logosmarcas.net/wp-content/uploads/2021/03/BCA-Logo.png',
-  },
-  {
-    id: 'jago',
-    name: 'Bank Jago',
-    number: '9876543210',
-    accountName: 'Athfal Playhouse',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Bank_Jago_logo.svg',
-  }
-];
 
 // Format currency
 const formatCurrency = (amount: number) => {
@@ -42,30 +18,25 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
-// Format time as MM:SS
-const formatTime = (seconds: number) => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-};
-
 const OrderDetailsPage = () => {
   const { language } = useLanguage();
   const { items, getSubtotal, getTaxAmount, getTotal, clearCart } = useCart();
+  const { paymentMethods } = useDatabase();
+  const { orderId } = useParams();
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
   const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState('');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<any>(null);
 
-  // Get the payment method from localStorage
+  // Get the payment method from localStorage or from stored order data
   useEffect(() => {
-    const savedPayment = localStorage.getItem('selectedPayment');
-    if (savedPayment) {
-      setSelectedPayment(savedPayment);
-    } else {
-      // Default to hijra if nothing is saved
-      setSelectedPayment('hijra');
+    const savedPaymentMethodId = localStorage.getItem('selectedPaymentMethodId');
+    if (savedPaymentMethodId && paymentMethods.length > 0) {
+      const paymentMethod = paymentMethods.find(method => method.id === savedPaymentMethodId);
+      if (paymentMethod) {
+        setSelectedPaymentMethod(paymentMethod);
+      }
     }
-  }, []);
+  }, [paymentMethods]);
 
   // Countdown timer
   useEffect(() => {
@@ -80,9 +51,8 @@ const OrderDetailsPage = () => {
 
   // Handle copy account number
   const handleCopyAccountNumber = () => {
-    const paymentMethod = PAYMENT_METHODS.find(method => method.id === selectedPayment);
-    if (paymentMethod) {
-      navigator.clipboard.writeText(paymentMethod.number);
+    if (selectedPaymentMethod) {
+      navigator.clipboard.writeText(selectedPaymentMethod.account_number);
       setCopiedAccountNumber(true);
       
       // Reset copy icon after 2 seconds
@@ -103,6 +73,8 @@ const OrderDetailsPage = () => {
     const message = `
 *${language === 'id' ? 'KONFIRMASI PEMBAYARAN ATHFAL PLAYHOUSE' : 'ATHFAL PLAYHOUSE PAYMENT CONFIRMATION'}*
 
+${orderId ? `*Order ID: ${orderId.slice(0, 8)}*` : ''}
+
 *${language === 'id' ? 'Detail Pesanan' : 'Order Details'}:*
 ${itemsList}
 
@@ -119,16 +91,16 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
     // Redirect to WhatsApp
     window.open(whatsappUrl, '_blank');
     
-    // Clear cart after sending confirmation
+    // Clear cart and stored payment method after sending confirmation
     clearCart();
+    localStorage.removeItem('selectedPaymentMethodId');
+    localStorage.removeItem('appliedPromo');
     
     // Redirect to home page
     setTimeout(() => {
       window.location.href = '/';
     }, 500);
   };
-
-  const selectedPaymentMethod = PAYMENT_METHODS.find(method => method.id === selectedPayment);
 
   return (
     <div className="min-h-screen">
@@ -213,11 +185,11 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                   {language === 'id' ? 'Instruksi Pembayaran' : 'Payment Instructions'}
                 </h2>
                 
-                {selectedPaymentMethod && (
+                {selectedPaymentMethod ? (
                   <div>
                     <div className="bg-gray-50 rounded-xl p-4 mb-6">
                       <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-semibold">{selectedPaymentMethod.name}</h3>
+                        <h3 className="font-semibold">{selectedPaymentMethod.bank_name}</h3>
                         <Button 
                           variant="ghost" 
                           size="sm"
@@ -232,10 +204,10 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                         </Button>
                       </div>
                       <p className="text-gray-700">
-                        {language === 'id' ? 'Nomor Rekening:' : 'Account Number:'} <span className="font-medium">{selectedPaymentMethod.number}</span>
+                        {language === 'id' ? 'Nomor Rekening:' : 'Account Number:'} <span className="font-medium">{selectedPaymentMethod.account_number}</span>
                       </p>
                       <p className="text-gray-700">
-                        {language === 'id' ? 'Atas Nama:' : 'Account Name:'} <span className="font-medium">{selectedPaymentMethod.accountName}</span>
+                        {language === 'id' ? 'Atas Nama:' : 'Account Name:'} <span className="font-medium">{selectedPaymentMethod.account_name}</span>
                       </p>
                     </div>
                     
@@ -244,12 +216,16 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                     </h3>
                     
                     <ol className="list-decimal pl-5 space-y-2 text-gray-700 mb-6">
-                      <li>{language === 'id' ? 'Buka aplikasi m-banking atau internet banking Anda.' : 'Open your m-banking or internet banking application.'}</li>
-                      <li>{language === 'id' ? 'Pilih menu transfer antar bank.' : 'Select the bank transfer menu.'}</li>
-                      <li>{language === 'id' ? `Masukkan nomor rekening ${selectedPaymentMethod.name} tujuan: ${selectedPaymentMethod.number}.` : `Enter the ${selectedPaymentMethod.name} account number: ${selectedPaymentMethod.number}.`}</li>
-                      <li>{language === 'id' ? `Masukkan jumlah transfer sejumlah ${formatCurrency(getTotal())}.` : `Enter the transfer amount of ${formatCurrency(getTotal())}.`}</li>
-                      <li>{language === 'id' ? 'Konfirmasi dan selesaikan transfer Anda.' : 'Confirm and complete your transfer.'}</li>
-                      <li>{language === 'id' ? 'Simpan bukti pembayaran Anda.' : 'Save your payment receipt.'}</li>
+                      {selectedPaymentMethod.payment_steps?.map((step: string, index: number) => (
+                        <li key={index}>
+                          {step.includes('account number') || step.includes('nomor rekening') 
+                            ? step.replace(/account number/g, selectedPaymentMethod.account_number).replace(/nomor rekening/g, selectedPaymentMethod.account_number)
+                            : step.includes('transfer amount') || step.includes('jumlah transfer')
+                            ? step.replace(/transfer amount/g, formatCurrency(getTotal())).replace(/jumlah transfer/g, formatCurrency(getTotal()))
+                            : step
+                          }
+                        </li>
+                      ))}
                     </ol>
                     
                     <div className="bg-athfal-peach/10 p-4 rounded-lg mb-6">
@@ -269,6 +245,12 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                     >
                       {language === 'id' ? 'Konfirmasi Pembayaran' : 'Confirm Payment'}
                     </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">
+                      {language === 'id' ? 'Metode pembayaran tidak ditemukan' : 'Payment method not found'}
+                    </p>
                   </div>
                 )}
               </CardContent>

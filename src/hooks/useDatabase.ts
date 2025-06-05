@@ -19,6 +19,7 @@ export interface DatabasePaymentMethod {
   account_number: string;
   account_name: string;
   active: boolean;
+  payment_steps?: string[];
 }
 
 export const useDatabase = () => {
@@ -62,7 +63,20 @@ export const useDatabase = () => {
       }
       
       console.log('Payment methods fetched:', data);
-      setPaymentMethods(data || []);
+      // Parse payment_steps from JSON
+      const processedData = data?.map(method => ({
+        ...method,
+        payment_steps: method.payment_steps || [
+          "Open your m-banking or internet banking application.",
+          "Select the bank transfer menu.",
+          "Enter the account number.",
+          "Enter the transfer amount.",
+          "Confirm and complete your transfer.",
+          "Save your payment receipt."
+        ]
+      })) || [];
+      
+      setPaymentMethods(processedData);
     } catch (error) {
       console.error('Error fetching payment methods:', error);
       setPaymentMethods([]);
@@ -138,6 +152,14 @@ export const useDatabase = () => {
         .from('payment_methods')
         .upsert({
           ...paymentMethod,
+          payment_steps: paymentMethod.payment_steps || [
+            "Open your m-banking or internet banking application.",
+            "Select the bank transfer menu.",
+            "Enter the account number.",
+            "Enter the transfer amount.",
+            "Confirm and complete your transfer.",
+            "Save your payment receipt."
+          ],
           updated_at: new Date().toISOString()
         });
 

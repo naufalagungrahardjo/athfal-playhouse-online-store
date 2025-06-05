@@ -81,6 +81,9 @@ export const useOrderProcessing = () => {
 
       console.log('Order items created successfully');
 
+      // Store selected payment method in localStorage for order details page
+      localStorage.setItem('selectedPaymentMethodId', orderData.paymentMethod);
+
       toast({
         title: "Order Successful",
         description: `Your order has been placed successfully! Order ID: ${order.id.slice(0, 8)}`

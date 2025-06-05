@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useSettings } from "@/hooks/useSettings";
 import { useDatabase } from "@/hooks/useDatabase";
-import { Save, Trash2 } from "lucide-react";
+import { Save, Trash2, Plus, X } from "lucide-react";
 
 const AdminSettings = () => {
   const { toast } = useToast();
@@ -33,7 +34,15 @@ const AdminSettings = () => {
     bank_name: '',
     account_number: '',
     account_name: '',
-    active: true
+    active: true,
+    payment_steps: [
+      "Open your m-banking or internet banking application.",
+      "Select the bank transfer menu.",
+      "Enter the account number.",
+      "Enter the transfer amount.",
+      "Confirm and complete your transfer.",
+      "Save your payment receipt."
+    ]
   });
 
   useEffect(() => {
@@ -83,11 +92,19 @@ const AdminSettings = () => {
       bank_name: '',
       account_number: '',
       account_name: '',
-      active: true
+      active: true,
+      payment_steps: [
+        "Open your m-banking or internet banking application.",
+        "Select the bank transfer menu.",
+        "Enter the account number.",
+        "Enter the transfer amount.",
+        "Confirm and complete your transfer.",
+        "Save your payment receipt."
+      ]
     });
   };
 
-  const handleUpdatePayment = async (id: string, field: string, value: string | boolean) => {
+  const handleUpdatePayment = async (id: string, field: string, value: string | boolean | string[]) => {
     const payment = localPayments.find(p => p.id === id);
     if (payment) {
       await savePaymentMethod({
@@ -95,6 +112,47 @@ const AdminSettings = () => {
         [field]: value
       });
     }
+  };
+
+  const handleAddPaymentStep = (paymentId: string) => {
+    setLocalPayments(prevPayments => 
+      prevPayments.map(payment => 
+        payment.id === paymentId 
+          ? { 
+              ...payment, 
+              payment_steps: [...(payment.payment_steps || []), ""] 
+            }
+          : payment
+      )
+    );
+  };
+
+  const handleRemovePaymentStep = (paymentId: string, stepIndex: number) => {
+    setLocalPayments(prevPayments => 
+      prevPayments.map(payment => 
+        payment.id === paymentId 
+          ? { 
+              ...payment, 
+              payment_steps: payment.payment_steps?.filter((_, index) => index !== stepIndex) || []
+            }
+          : payment
+      )
+    );
+  };
+
+  const handleUpdatePaymentStep = (paymentId: string, stepIndex: number, value: string) => {
+    setLocalPayments(prevPayments => 
+      prevPayments.map(payment => 
+        payment.id === paymentId 
+          ? { 
+              ...payment, 
+              payment_steps: payment.payment_steps?.map((step, index) => 
+                index === stepIndex ? value : step
+              ) || []
+            }
+          : payment
+      )
+    );
   };
 
   if (settingsLoading || dbLoading) {
@@ -198,7 +256,7 @@ const AdminSettings = () => {
             <CardHeader>
               <CardTitle>Payment Methods</CardTitle>
               <CardDescription>
-                Manage the payment methods available for customers.
+                Manage the payment methods available for customers and customize payment instructions.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -206,7 +264,7 @@ const AdminSettings = () => {
                 {/* Add new payment method */}
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
                   <h3 className="font-medium mb-4">Add New Payment Method</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <Input
                       placeholder="Bank Name"
                       value={newPayment.bank_name}
@@ -223,42 +281,119 @@ const AdminSettings = () => {
                       onChange={(e) => setNewPayment({...newPayment, account_name: e.target.value})}
                     />
                   </div>
-                  <Button onClick={handleAddPayment} className="mt-4">
+                  
+                  <div className="mb-4">
+                    <Label className="text-sm font-medium mb-2 block">Payment Steps</Label>
+                    {newPayment.payment_steps.map((step, index) => (
+                      <div key={index} className="flex gap-2 mb-2">
+                        <Input
+                          value={step}
+                          onChange={(e) => {
+                            const updatedSteps = [...newPayment.payment_steps];
+                            updatedSteps[index] = e.target.value;
+                            setNewPayment({...newPayment, payment_steps: updatedSteps});
+                          }}
+                          placeholder={`Step ${index + 1}`}
+                        />
+                        {newPayment.payment_steps.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const updatedSteps = newPayment.payment_steps.filter((_, i) => i !== index);
+                              setNewPayment({...newPayment, payment_steps: updatedSteps});
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setNewPayment({
+                        ...newPayment, 
+                        payment_steps: [...newPayment.payment_steps, ""]
+                      })}
+                      className="mt-2"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add Step
+                    </Button>
+                  </div>
+                  
+                  <Button onClick={handleAddPayment}>
                     Add Payment Method
                   </Button>
                 </div>
 
                 {/* Existing payment methods */}
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {localPayments.map((payment) => (
                     <div 
                       key={payment.id}
-                      className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center p-4 border rounded-lg"
+                      className="border rounded-lg p-6"
                     >
-                      <div>
-                        <Label>Bank Name</Label>
-                        <Input
-                          value={payment.bank_name}
-                          onChange={(e) => handleUpdatePayment(payment.id, 'bank_name', e.target.value)}
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                          <Label>Bank Name</Label>
+                          <Input
+                            value={payment.bank_name}
+                            onChange={(e) => handleUpdatePayment(payment.id, 'bank_name', e.target.value)}
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label>Account Number</Label>
+                          <Input
+                            value={payment.account_number}
+                            onChange={(e) => handleUpdatePayment(payment.id, 'account_number', e.target.value)}
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label>Account Name</Label>
+                          <Input
+                            value={payment.account_name}
+                            onChange={(e) => handleUpdatePayment(payment.id, 'account_name', e.target.value)}
+                          />
+                        </div>
                       </div>
-                      
-                      <div>
-                        <Label>Account Number</Label>
-                        <Input
-                          value={payment.account_number}
-                          onChange={(e) => handleUpdatePayment(payment.id, 'account_number', e.target.value)}
-                        />
+
+                      <div className="mb-4">
+                        <Label className="text-sm font-medium mb-2 block">Payment Steps</Label>
+                        {payment.payment_steps?.map((step, index) => (
+                          <div key={index} className="flex gap-2 mb-2">
+                            <Input
+                              value={step}
+                              onChange={(e) => handleUpdatePaymentStep(payment.id, index, e.target.value)}
+                              placeholder={`Step ${index + 1}`}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleRemovePaymentStep(payment.id, index)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAddPaymentStep(payment.id)}
+                          className="mt-2"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add Step
+                        </Button>
                       </div>
-                      
-                      <div>
-                        <Label>Account Name</Label>
-                        <Input
-                          value={payment.account_name}
-                          onChange={(e) => handleUpdatePayment(payment.id, 'account_name', e.target.value)}
-                        />
-                      </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                           <input
@@ -269,14 +404,25 @@ const AdminSettings = () => {
                           />
                           <Label>Active</Label>
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-500 hover:text-red-600"
-                          onClick={() => deletePaymentMethod(payment.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleUpdatePayment(payment.id, 'payment_steps', payment.payment_steps || [])}
+                          >
+                            <Save className="h-4 w-4 mr-1" />
+                            Save Steps
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-500 hover:text-red-600"
+                            onClick={() => deletePaymentMethod(payment.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
