@@ -63,17 +63,23 @@ export const useDatabase = () => {
       }
       
       console.log('Payment methods fetched:', data);
-      // Parse payment_steps from JSON
-      const processedData = data?.map(method => ({
-        ...method,
-        payment_steps: method.payment_steps || [
-          "Open your m-banking or internet banking application.",
-          "Select the bank transfer menu.",
-          "Enter the account number.",
-          "Enter the transfer amount.",
-          "Confirm and complete your transfer.",
-          "Save your payment receipt."
-        ]
+      // Parse payment_steps from JSON and ensure proper typing
+      const processedData: DatabasePaymentMethod[] = data?.map(method => ({
+        id: method.id,
+        bank_name: method.bank_name,
+        account_number: method.account_number,
+        account_name: method.account_name,
+        active: method.active,
+        payment_steps: Array.isArray(method.payment_steps) 
+          ? method.payment_steps as string[]
+          : [
+              "Open your m-banking or internet banking application.",
+              "Select the bank transfer menu.",
+              "Enter the account number.",
+              "Enter the transfer amount.",
+              "Confirm and complete your transfer.",
+              "Save your payment receipt."
+            ]
       })) || [];
       
       setPaymentMethods(processedData);
