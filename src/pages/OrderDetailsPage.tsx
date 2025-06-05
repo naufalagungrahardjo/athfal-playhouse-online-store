@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useCart } from '@/contexts/CartContext';
 import { useDatabase } from '@/hooks/useDatabase';
+import { useOrderDetails } from '@/hooks/useOrderDetails';
+import { PaymentTimeoutPage } from '@/components/PaymentTimeoutPage';
 import { ArrowLeft, Copy, Check, Clock } from 'lucide-react';
 
 // Format currency
@@ -20,30 +21,40 @@ const formatCurrency = (amount: number) => {
 
 const OrderDetailsPage = () => {
   const { language } = useLanguage();
-  const { items, getSubtotal, getTaxAmount, getTotal, clearCart } = useCart();
   const { paymentMethods } = useDatabase();
   const { orderId } = useParams();
+  const { order, loading } = useOrderDetails(orderId);
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
   const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<any>(null);
 
-  // Get the payment method from localStorage or from stored order data
+  // Get the payment method from order data
   useEffect(() => {
-    const savedPaymentMethodId = localStorage.getItem('selectedPaymentMethodId');
-    if (savedPaymentMethodId && paymentMethods.length > 0) {
-      const paymentMethod = paymentMethods.find(method => method.id === savedPaymentMethodId);
+    if (order && paymentMethods.length > 0) {
+      const paymentMethod = paymentMethods.find(method => method.id === order.payment_method);
       if (paymentMethod) {
         setSelectedPaymentMethod(paymentMethod);
       }
     }
-  }, [paymentMethods]);
+  }, [order, paymentMethods]);
+
+  // Calculate time left based on order creation time
+  useEffect(() => {
+    if (order?.created_at) {
+      const orderTime = new Date(order.created_at).getTime();
+      const currentTime = Date.now();
+      const elapsed = Math.floor((currentTime - orderTime) / 1000);
+      const remaining = Math.max(0, (25 * 60) - elapsed);
+      setTimeLeft(remaining);
+    }
+  }, [order?.created_at]);
 
   // Countdown timer
   useEffect(() => {
     if (timeLeft <= 0) return;
     
     const timer = setInterval(() => {
-      setTimeLeft(prevTime => prevTime - 1);
+      setTimeLeft(prevTime => Math.max(0, prevTime - 1));
     }, 1000);
     
     return () => clearInterval(timer);
@@ -64,21 +75,23 @@ const OrderDetailsPage = () => {
 
   // Handle confirm payment
   const handleConfirmPayment = () => {
+    if (!order) return;
+
     // Format items for WhatsApp message
-    const itemsList = items.map(item => 
-      `${item.product.name} (${item.quantity}x) - ${formatCurrency(item.product.price * item.quantity)}`
+    const itemsList = order.items.map(item => 
+      `${item.product_name} (${item.quantity}x) - ${formatCurrency(item.product_price * item.quantity)}`
     ).join('\n');
 
     // Construct WhatsApp message
     const message = `
 *${language === 'id' ? 'KONFIRMASI PEMBAYARAN ATHFAL PLAYHOUSE' : 'ATHFAL PLAYHOUSE PAYMENT CONFIRMATION'}*
 
-${orderId ? `*Order ID: ${orderId.slice(0, 8)}*` : ''}
+*Order ID: ${order.id.slice(0, 8)}*
 
 *${language === 'id' ? 'Detail Pesanan' : 'Order Details'}:*
 ${itemsList}
 
-*${language === 'id' ? 'Total' : 'Total'}: ${formatCurrency(getTotal())}*
+*${language === 'id' ? 'Total' : 'Total'}: ${formatCurrency(order.total_amount)}*
 
 ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi pesanan saya.' : 'I have made the payment and would like to confirm my order.'}
     `;
@@ -90,17 +103,46 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
     
     // Redirect to WhatsApp
     window.open(whatsappUrl, '_blank');
-    
-    // Clear cart and stored payment method after sending confirmation
-    clearCart();
-    localStorage.removeItem('selectedPaymentMethodId');
-    localStorage.removeItem('appliedPromo');
-    
-    // Redirect to home page
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 500);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-athfal-pink mx-auto mb-4"></div>
+          <p className="text-gray-600">
+            {language === 'id' ? 'Memuat detail pesanan...' : 'Loading order details...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">
+            {language === 'id' ? 'Pesanan Tidak Ditemukan' : 'Order Not Found'}
+          </h1>
+          <p className="text-gray-600 mb-6">
+            {language === 'id' ? 'Pesanan yang Anda cari tidak ditemukan.' : 'The order you are looking for was not found.'}
+          </p>
+          <Link to="/">
+            <Button>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {language === 'id' ? 'Kembali ke Beranda' : 'Back to Home'}
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Show timeout page if time is up
+  if (timeLeft <= 0) {
+    return <PaymentTimeoutPage orderId={order.id} totalAmount={order.total_amount} />;
+  }
 
   return (
     <div className="min-h-screen">
@@ -133,23 +175,21 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
 
                 {/* Products list */}
                 <div className="space-y-4 mb-6">
-                  {items.map((item) => (
-                    <div key={item.product.id} className="flex items-start gap-3">
-                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                        <img 
-                          src={item.product.image} 
-                          alt={item.product.name} 
-                          className="w-full h-full object-cover"
-                        />
+                  {order.items.map((item) => (
+                    <div key={item.id} className="flex items-start gap-3">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
+                        <span className="text-xs text-gray-500">
+                          {language === 'id' ? 'Gambar' : 'Image'}
+                        </span>
                       </div>
                       <div className="flex-grow">
-                        <h4 className="font-medium text-gray-800">{item.product.name}</h4>
+                        <h4 className="font-medium text-gray-800">{item.product_name}</h4>
                         <div className="flex justify-between items-center mt-1">
                           <p className="text-sm text-gray-600">
                             {language === 'id' ? 'Jumlah' : 'Quantity'}: {item.quantity}
                           </p>
                           <p className="font-medium text-athfal-green">
-                            {formatCurrency(item.product.price * item.quantity)}
+                            {formatCurrency(item.product_price * item.quantity)}
                           </p>
                         </div>
                       </div>
@@ -163,16 +203,22 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                 <div className="space-y-2 mb-6">
                   <div className="flex justify-between">
                     <span className="text-gray-600">{language === 'id' ? 'Subtotal' : 'Subtotal'}</span>
-                    <span>{formatCurrency(getSubtotal())}</span>
+                    <span>{formatCurrency(order.subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">{language === 'id' ? 'Pajak' : 'Tax'}</span>
-                    <span>{formatCurrency(getTaxAmount())}</span>
+                    <span>{formatCurrency(order.tax_amount)}</span>
                   </div>
+                  {order.discount_amount && order.discount_amount > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">{language === 'id' ? 'Diskon' : 'Discount'}</span>
+                      <span className="text-green-600">-{formatCurrency(order.discount_amount)}</span>
+                    </div>
+                  )}
                   <Separator className="my-2" />
                   <div className="flex justify-between font-bold">
                     <span>{language === 'id' ? 'Total' : 'Total'}</span>
-                    <span className="text-athfal-green">{formatCurrency(getTotal())}</span>
+                    <span className="text-athfal-green">{formatCurrency(order.total_amount)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -221,7 +267,7 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                           {step.includes('account number') || step.includes('nomor rekening') 
                             ? step.replace(/account number/g, selectedPaymentMethod.account_number).replace(/nomor rekening/g, selectedPaymentMethod.account_number)
                             : step.includes('transfer amount') || step.includes('jumlah transfer')
-                            ? step.replace(/transfer amount/g, formatCurrency(getTotal())).replace(/jumlah transfer/g, formatCurrency(getTotal()))
+                            ? step.replace(/transfer amount/g, formatCurrency(order.total_amount)).replace(/jumlah transfer/g, formatCurrency(order.total_amount))
                             : step
                           }
                         </li>
@@ -266,6 +312,10 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
               
               <div className="space-y-2 mb-6">
                 <div className="flex justify-between">
+                  <span className="text-gray-600">{language === 'id' ? 'Order ID' : 'Order ID'}</span>
+                  <span className="font-mono text-sm">{order.id.slice(0, 8)}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-gray-600">{language === 'id' ? 'Status' : 'Status'}</span>
                   <span className="text-yellow-600 font-medium">
                     {language === 'id' ? 'Menunggu Pembayaran' : 'Awaiting Payment'}
@@ -273,11 +323,11 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">{language === 'id' ? 'Jumlah Item' : 'Total Items'}</span>
-                  <span>{items.reduce((sum, item) => sum + item.quantity, 0)}</span>
+                  <span>{order.items.reduce((sum, item) => sum + item.quantity, 0)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">{language === 'id' ? 'Total' : 'Total'}</span>
-                  <span className="font-bold text-athfal-green">{formatCurrency(getTotal())}</span>
+                  <span className="font-bold text-athfal-green">{formatCurrency(order.total_amount)}</span>
                 </div>
               </div>
               
