@@ -1,129 +1,111 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Save } from "lucide-react";
+import { Save, FileText, Image, Info } from "lucide-react";
+import { ImageUpload } from "@/components/ImageUpload";
 
-// Mock content data
-const MOCK_CONTENT = {
-  homeBanner: {
-    title: {
-      id: "Belajar Sambil Bermain dengan Athfal Playhouse",
-      en: "Learn Through Play with Athfal Playhouse",
-    },
-    subtitle: {
-      id: "Mengembangkan potensi anak melalui pendekatan Islami yang menyenangkan",
-      en: "Developing your child's potential through a fun Islamic approach",
-    },
-    buttonText: {
-      id: "Jelajahi Kelas Kami",
-      en: "Explore Our Classes",
-    },
-    buttonLink: "/products/pop-up-class"
-  },
-  about: {
-    title: {
+// Content data structure for About Us and Gallery
+const CONTENT_DATA = {
+  aboutUs: {
+    heroTitle: {
       id: "Tentang Athfal Playhouse",
       en: "About Athfal Playhouse",
     },
-    content: {
-      id: "Athfal Playhouse adalah pusat edukasi anak yang menggabungkan metode bermain sambil belajar dengan nilai-nilai Islam. Kami menawarkan kelas pop-up, program reguler, dan konsultasi psikologi untuk anak-anak usia 2-7 tahun.",
-      en: "Athfal Playhouse is a children's education center that combines play-based learning methods with Islamic values. We offer pop-up classes, regular programs, and psychological consultations for children aged 2-7 years.",
+    heroSubtitle: {
+      id: "Mengenal lebih dekat visi, misi, dan nilai-nilai kami",
+      en: "Get to know our vision, mission, and values",
     },
-  },
-  mission: {
-    title: {
+    missionTitle: {
       id: "Misi Kami",
       en: "Our Mission",
     },
-    content: {
-      id: "Menyediakan lingkungan belajar yang menyenangkan dan inklusif di mana anak-anak dapat mengembangkan potensi penuh mereka melalui bermain, eksplorasi, dan penemuan yang dibimbing.",
-      en: "To provide a fun and inclusive learning environment where children can develop their full potential through play, exploration, and guided discovery.",
+    missionDescription: {
+      id: "Menyediakan lingkungan belajar yang aman, menyenangkan, dan inspiratif untuk anak-anak Muslim dengan menggabungkan metode bermain sambil belajar dengan nilai-nilai Islam.",
+      en: "Providing a safe, fun, and inspiring learning environment for Muslim children by combining play-based learning methods with Islamic values.",
     },
-  },
-  vision: {
-    title: {
+    visionTitle: {
       id: "Visi Kami",
       en: "Our Vision",
     },
-    content: {
-      id: "Menjadi pusat edukasi anak terkemuka yang menginspirasi kreativitas, kecintaan pada Islam, dan pembelajaran seumur hidup.",
-      en: "To be a leading children's education center that inspires creativity, love for Islam, and lifelong learning.",
+    visionDescription: {
+      id: "Menjadi pusat edukasi anak terdepan yang mengembangkan generasi Muslim yang cerdas, kreatif, dan berakhlak mulia.",
+      en: "To become a leading children's education center that develops intelligent, creative, and noble Muslim generations.",
     },
+    valuesTitle: {
+      id: "Nilai-Nilai Kami",
+      en: "Our Values",
+    },
+    valuesDescription: {
+      id: "Pendidikan Islami, Kreativitas, Keamanan, dan Kesenangan dalam belajar.",
+      en: "Islamic Education, Creativity, Safety, and Fun in learning.",
+    },
+    teamTitle: {
+      id: "Tim Kami",
+      en: "Our Team",
+    },
+    teamDescription: {
+      id: "Tim profesional yang berpengalaman dan berdedikasi dalam pendidikan anak.",
+      en: "Professional team experienced and dedicated in children's education.",
+    },
+    heroImage: "https://images.unsplash.com/photo-1635107510862-53886e926b74?w=800&h=600&fit=crop&auto=format",
   },
-  categories: {
-    popUpClass: {
-      title: {
-        id: "Pop Up Class",
-        en: "Pop Up Class",
-      },
-      description: {
-        id: "Kelas one-time untuk anak-anak dengan tema yang menarik dan aktivitas yang menyenangkan.",
-        en: "One-time classes for children with exciting themes and fun activities.",
-      },
+  gallery: {
+    heroTitle: {
+      id: "Galeri Athfal Playhouse",
+      en: "Athfal Playhouse Gallery",
     },
-    bumiClass: {
-      title: {
-        id: "Bumi Class",
-        en: "Bumi Class",
-      },
-      description: {
-        id: "Program reguler yang berfokus pada pembelajaran tentang alam dan lingkungan.",
-        en: "Regular program focused on learning about nature and the environment.",
-      },
+    heroSubtitle: {
+      id: "Lihat momen-momen berharga dan kegiatan seru di Athfal Playhouse",
+      en: "See precious moments and fun activities at Athfal Playhouse",
     },
-    tahsinClass: {
-      title: {
-        id: "Tahsin Class",
-        en: "Tahsin Class",
-      },
-      description: {
-        id: "Program pembelajaran Al-Quran dengan metode yang menyenangkan.",
-        en: "Quran learning program with fun methods.",
-      },
+    activitiesTitle: {
+      id: "Kegiatan Kami",
+      en: "Our Activities",
     },
-    playKit: {
-      title: {
-        id: "Play Kit",
-        en: "Play Kit",
-      },
-      description: {
-        id: "Kit bermain edukatif untuk aktivitas di rumah.",
-        en: "Educational play kits for at-home activities.",
-      },
+    activitiesDescription: {
+      id: "Berbagai kegiatan edukatif dan menyenangkan yang dilakukan anak-anak di Athfal Playhouse.",
+      en: "Various educational and fun activities carried out by children at Athfal Playhouse.",
     },
-    consultation: {
-      title: {
-        id: "Konsultasi Psikologi",
-        en: "Psychological Consultation",
-      },
-      description: {
-        id: "Layanan konsultasi psikologi anak dengan psikolog profesional.",
-        en: "Child psychology consultation services with professional psychologists.",
-      },
+    facilitiesTitle: {
+      id: "Fasilitas",
+      en: "Facilities",
     },
-    merchandise: {
-      title: {
-        id: "Merchandise & Lainnya",
-        en: "Merchandise & Others",
-      },
-      description: {
-        id: "Berbagai merchandise dan produk lainnya dari Athfal Playhouse.",
-        en: "Various merchandise and other products from Athfal Playhouse.",
-      },
+    facilitiesDescription: {
+      id: "Ruang bermain yang aman dan nyaman dengan fasilitas lengkap untuk mendukung proses belajar.",
+      en: "Safe and comfortable play areas with complete facilities to support the learning process.",
     },
-  },
+    eventsTitle: {
+      id: "Acara Spesial",
+      en: "Special Events",
+    },
+    eventsDescription: {
+      id: "Dokumentasi acara-acara spesial dan perayaan yang diadakan di Athfal Playhouse.",
+      en: "Documentation of special events and celebrations held at Athfal Playhouse.",
+    },
+    heroImage: "https://images.unsplash.com/photo-1544925808-1b704a4ab262?w=800&h=600&fit=crop&auto=format",
+  }
 };
 
 const AdminContent = () => {
   const { toast } = useToast();
-  const [content, setContent] = useState(MOCK_CONTENT);
+  const [content, setContent] = useState(CONTENT_DATA);
+  const [activeTab, setActiveTab] = useState("about");
 
-  const handleChange = (section: string, field: string, language: string, value: string) => {
+  const handleSave = () => {
+    // In a real implementation, this would save to database
+    toast({
+      title: "Content updated",
+      description: "Your changes have been saved successfully.",
+    });
+  };
+
+  const updateText = (section: string, field: string, language: string, value: string) => {
     setContent(prev => ({
       ...prev,
       [section]: {
@@ -136,406 +118,325 @@ const AdminContent = () => {
     }));
   };
 
-  const handleCategoryChange = (category: string, field: string, language: string, value: string) => {
+  const updateImage = (section: string, imageField: string, value: string) => {
     setContent(prev => ({
       ...prev,
-      categories: {
-        ...prev.categories,
-        [category]: {
-          ...prev.categories[category as keyof typeof prev.categories],
-          [field]: {
-            ...(prev.categories[category as keyof typeof prev.categories][field as keyof typeof prev.categories[keyof typeof prev.categories]] as any),
-            [language]: value
-          }
-        }
+      [section]: {
+        ...prev[section as keyof typeof prev],
+        [imageField]: value
       }
     }));
-  };
-
-  const handleHomeBannerChange = (field: string, language: string, value: string) => {
-    if (field === 'buttonLink') {
-      setContent(prev => ({
-        ...prev,
-        homeBanner: {
-          ...prev.homeBanner,
-          buttonLink: value
-        }
-      }));
-    } else {
-      setContent(prev => ({
-        ...prev,
-        homeBanner: {
-          ...prev.homeBanner,
-          [field]: {
-            ...(prev.homeBanner[field as keyof typeof prev.homeBanner] as any),
-            [language]: value
-          }
-        }
-      }));
-    }
-  };
-
-  const handleSave = () => {
-    // In a real app, this would save to a database/API
-    toast({
-      title: "Content updated",
-      description: "Your changes have been saved successfully.",
-    });
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Website Content</h2>
-        <Button onClick={handleSave}>
+        <div className="flex items-center gap-3">
+          <FileText className="h-8 w-8 text-athfal-pink" />
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Content Management</h2>
+            <p className="text-gray-600">Manage About Us and Gallery page content</p>
+          </div>
+        </div>
+        <Button onClick={handleSave} className="bg-athfal-pink hover:bg-athfal-pink/90">
           <Save className="mr-2 h-4 w-4" /> Save All Changes
         </Button>
       </div>
       
-      <Tabs defaultValue="home" className="w-full">
-        <TabsList className="grid grid-cols-4 mb-4">
-          <TabsTrigger value="home">Home Page</TabsTrigger>
-          <TabsTrigger value="about">About</TabsTrigger>
-          <TabsTrigger value="categories">Product Categories</TabsTrigger>
-          <TabsTrigger value="misc">Miscellaneous</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-2 mb-6">
+          <TabsTrigger value="about">About Us Page</TabsTrigger>
+          <TabsTrigger value="gallery">Gallery Page</TabsTrigger>
         </TabsList>
         
-        {/* Home Page Content */}
-        <TabsContent value="home" className="space-y-4">
+        {/* About Us Content */}
+        <TabsContent value="about" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Home Banner</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Info className="h-5 w-5" />
+                Hero Section
+              </CardTitle>
               <CardDescription>
-                Edit the content displayed on the home page banner.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="banner-title-id">Title (Indonesian)</Label>
-                  <Input
-                    id="banner-title-id"
-                    value={content.homeBanner.title.id}
-                    onChange={(e) => handleHomeBannerChange('title', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="banner-title-en">Title (English)</Label>
-                  <Input
-                    id="banner-title-en"
-                    value={content.homeBanner.title.en}
-                    onChange={(e) => handleHomeBannerChange('title', 'en', e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="banner-subtitle-id">Subtitle (Indonesian)</Label>
-                  <Input
-                    id="banner-subtitle-id"
-                    value={content.homeBanner.subtitle.id}
-                    onChange={(e) => handleHomeBannerChange('subtitle', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="banner-subtitle-en">Subtitle (English)</Label>
-                  <Input
-                    id="banner-subtitle-en"
-                    value={content.homeBanner.subtitle.en}
-                    onChange={(e) => handleHomeBannerChange('subtitle', 'en', e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="banner-button-id">Button Text (Indonesian)</Label>
-                  <Input
-                    id="banner-button-id"
-                    value={content.homeBanner.buttonText.id}
-                    onChange={(e) => handleHomeBannerChange('buttonText', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="banner-button-en">Button Text (English)</Label>
-                  <Input
-                    id="banner-button-en"
-                    value={content.homeBanner.buttonText.en}
-                    onChange={(e) => handleHomeBannerChange('buttonText', 'en', e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="banner-link">Button Link</Label>
-                <Input
-                  id="banner-link"
-                  value={content.homeBanner.buttonLink}
-                  onChange={(e) => handleHomeBannerChange('buttonLink', '', e.target.value)}
-                />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={handleSave}>Save Banner Changes</Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-        
-        {/* About Content */}
-        <TabsContent value="about" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>About Athfal Playhouse</CardTitle>
-              <CardDescription>
-                Edit the content displayed on the about page.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="about-title-id">Title (Indonesian)</Label>
-                  <Input
-                    id="about-title-id"
-                    value={content.about.title.id}
-                    onChange={(e) => handleChange('about', 'title', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="about-title-en">Title (English)</Label>
-                  <Input
-                    id="about-title-en"
-                    value={content.about.title.en}
-                    onChange={(e) => handleChange('about', 'title', 'en', e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="about-content-id">Content (Indonesian)</Label>
-                  <Textarea
-                    id="about-content-id"
-                    rows={4}
-                    value={content.about.content.id}
-                    onChange={(e) => handleChange('about', 'content', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="about-content-en">Content (English)</Label>
-                  <Textarea
-                    id="about-content-en"
-                    rows={4}
-                    value={content.about.content.en}
-                    onChange={(e) => handleChange('about', 'content', 'en', e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={handleSave}>Save About Changes</Button>
-            </CardFooter>
-          </Card>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Vision */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Vision</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="vision-title-id">Title (Indonesian)</Label>
-                  <Input
-                    id="vision-title-id"
-                    value={content.vision.title.id}
-                    onChange={(e) => handleChange('vision', 'title', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="vision-title-en">Title (English)</Label>
-                  <Input
-                    id="vision-title-en"
-                    value={content.vision.title.en}
-                    onChange={(e) => handleChange('vision', 'title', 'en', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="vision-content-id">Content (Indonesian)</Label>
-                  <Textarea
-                    id="vision-content-id"
-                    rows={4}
-                    value={content.vision.content.id}
-                    onChange={(e) => handleChange('vision', 'content', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="vision-content-en">Content (English)</Label>
-                  <Textarea
-                    id="vision-content-en"
-                    rows={4}
-                    value={content.vision.content.en}
-                    onChange={(e) => handleChange('vision', 'content', 'en', e.target.value)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Mission */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Mission</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="mission-title-id">Title (Indonesian)</Label>
-                  <Input
-                    id="mission-title-id"
-                    value={content.mission.title.id}
-                    onChange={(e) => handleChange('mission', 'title', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="mission-title-en">Title (English)</Label>
-                  <Input
-                    id="mission-title-en"
-                    value={content.mission.title.en}
-                    onChange={(e) => handleChange('mission', 'title', 'en', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="mission-content-id">Content (Indonesian)</Label>
-                  <Textarea
-                    id="mission-content-id"
-                    rows={4}
-                    value={content.mission.content.id}
-                    onChange={(e) => handleChange('mission', 'content', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="mission-content-en">Content (English)</Label>
-                  <Textarea
-                    id="mission-content-en"
-                    rows={4}
-                    value={content.mission.content.en}
-                    onChange={(e) => handleChange('mission', 'content', 'en', e.target.value)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        {/* Product Categories Content */}
-        <TabsContent value="categories" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Product Categories</CardTitle>
-              <CardDescription>
-                Edit the descriptions for each product category page.
+                Main banner content for the About Us page
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Pop Up Class */}
-              <div>
-                <h3 className="text-lg font-medium mb-4">Pop Up Class</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="pop-title-id">Title (Indonesian)</Label>
-                    <Input
-                      id="pop-title-id"
-                      value={content.categories.popUpClass.title.id}
-                      onChange={(e) => handleCategoryChange('popUpClass', 'title', 'id', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="pop-title-en">Title (English)</Label>
-                    <Input
-                      id="pop-title-en"
-                      value={content.categories.popUpClass.title.en}
-                      onChange={(e) => handleCategoryChange('popUpClass', 'title', 'en', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="pop-desc-id">Description (Indonesian)</Label>
-                    <Textarea
-                      id="pop-desc-id"
-                      value={content.categories.popUpClass.description.id}
-                      onChange={(e) => handleCategoryChange('popUpClass', 'description', 'id', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="pop-desc-en">Description (English)</Label>
-                    <Textarea
-                      id="pop-desc-en"
-                      value={content.categories.popUpClass.description.en}
-                      onChange={(e) => handleCategoryChange('popUpClass', 'description', 'en', e.target.value)}
-                    />
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Hero Title (Indonesian)</Label>
+                  <Input
+                    value={content.aboutUs.heroTitle.id}
+                    onChange={(e) => updateText('aboutUs', 'heroTitle', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Hero Title (English)</Label>
+                  <Input
+                    value={content.aboutUs.heroTitle.en}
+                    onChange={(e) => updateText('aboutUs', 'heroTitle', 'en', e.target.value)}
+                  />
                 </div>
               </div>
               
-              {/* Bumi Class */}
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-medium mb-4">Bumi Class</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bumi-title-id">Title (Indonesian)</Label>
-                    <Input
-                      id="bumi-title-id"
-                      value={content.categories.bumiClass.title.id}
-                      onChange={(e) => handleCategoryChange('bumiClass', 'title', 'id', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="bumi-title-en">Title (English)</Label>
-                    <Input
-                      id="bumi-title-en"
-                      value={content.categories.bumiClass.title.en}
-                      onChange={(e) => handleCategoryChange('bumiClass', 'title', 'en', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="bumi-desc-id">Description (Indonesian)</Label>
-                    <Textarea
-                      id="bumi-desc-id"
-                      value={content.categories.bumiClass.description.id}
-                      onChange={(e) => handleCategoryChange('bumiClass', 'description', 'id', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="bumi-desc-en">Description (English)</Label>
-                    <Textarea
-                      id="bumi-desc-en"
-                      value={content.categories.bumiClass.description.en}
-                      onChange={(e) => handleCategoryChange('bumiClass', 'description', 'en', e.target.value)}
-                    />
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Hero Subtitle (Indonesian)</Label>
+                  <Textarea
+                    rows={3}
+                    value={content.aboutUs.heroSubtitle.id}
+                    onChange={(e) => updateText('aboutUs', 'heroSubtitle', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Hero Subtitle (English)</Label>
+                  <Textarea
+                    rows={3}
+                    value={content.aboutUs.heroSubtitle.en}
+                    onChange={(e) => updateText('aboutUs', 'heroSubtitle', 'en', e.target.value)}
+                  />
                 </div>
               </div>
-              
-              {/* Other categories would follow the same pattern */}
+
+              <div className="space-y-2">
+                <Label>Hero Image</Label>
+                <ImageUpload
+                  value={content.aboutUs.heroImage}
+                  onChange={(url) => updateImage('aboutUs', 'heroImage', url)}
+                />
+              </div>
             </CardContent>
-            <CardFooter>
-              <Button onClick={handleSave}>Save Category Changes</Button>
-            </CardFooter>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Mission Section</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Mission Title (Indonesian)</Label>
+                  <Input
+                    value={content.aboutUs.missionTitle.id}
+                    onChange={(e) => updateText('aboutUs', 'missionTitle', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Mission Title (English)</Label>
+                  <Input
+                    value={content.aboutUs.missionTitle.en}
+                    onChange={(e) => updateText('aboutUs', 'missionTitle', 'en', e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Mission Description (Indonesian)</Label>
+                  <Textarea
+                    rows={4}
+                    value={content.aboutUs.missionDescription.id}
+                    onChange={(e) => updateText('aboutUs', 'missionDescription', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Mission Description (English)</Label>
+                  <Textarea
+                    rows={4}
+                    value={content.aboutUs.missionDescription.en}
+                    onChange={(e) => updateText('aboutUs', 'missionDescription', 'en', e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Vision Section</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Vision Title (Indonesian)</Label>
+                  <Input
+                    value={content.aboutUs.visionTitle.id}
+                    onChange={(e) => updateText('aboutUs', 'visionTitle', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Vision Title (English)</Label>
+                  <Input
+                    value={content.aboutUs.visionTitle.en}
+                    onChange={(e) => updateText('aboutUs', 'visionTitle', 'en', e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Vision Description (Indonesian)</Label>
+                  <Textarea
+                    rows={4}
+                    value={content.aboutUs.visionDescription.id}
+                    onChange={(e) => updateText('aboutUs', 'visionDescription', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Vision Description (English)</Label>
+                  <Textarea
+                    rows={4}
+                    value={content.aboutUs.visionDescription.en}
+                    onChange={(e) => updateText('aboutUs', 'visionDescription', 'en', e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
         
-        {/* Miscellaneous Content */}
-        <TabsContent value="misc">
+        {/* Gallery Content */}
+        <TabsContent value="gallery" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Miscellaneous Content</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Image className="h-5 w-5" />
+                Gallery Hero Section
+              </CardTitle>
               <CardDescription>
-                Edit other miscellaneous content elements across the website.
+                Main banner content for the Gallery page
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                This section will include other content that doesn't fit in the categories above,
-                such as footer text, policy pages, etc.
-              </p>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Hero Title (Indonesian)</Label>
+                  <Input
+                    value={content.gallery.heroTitle.id}
+                    onChange={(e) => updateText('gallery', 'heroTitle', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Hero Title (English)</Label>
+                  <Input
+                    value={content.gallery.heroTitle.en}
+                    onChange={(e) => updateText('gallery', 'heroTitle', 'en', e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Hero Subtitle (Indonesian)</Label>
+                  <Textarea
+                    rows={3}
+                    value={content.gallery.heroSubtitle.id}
+                    onChange={(e) => updateText('gallery', 'heroSubtitle', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Hero Subtitle (English)</Label>
+                  <Textarea
+                    rows={3}
+                    value={content.gallery.heroSubtitle.en}
+                    onChange={(e) => updateText('gallery', 'heroSubtitle', 'en', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Hero Image</Label>
+                <ImageUpload
+                  value={content.gallery.heroImage}
+                  onChange={(url) => updateImage('gallery', 'heroImage', url)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Activities Section</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Activities Title (Indonesian)</Label>
+                  <Input
+                    value={content.gallery.activitiesTitle.id}
+                    onChange={(e) => updateText('gallery', 'activitiesTitle', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Activities Title (English)</Label>
+                  <Input
+                    value={content.gallery.activitiesTitle.en}
+                    onChange={(e) => updateText('gallery', 'activitiesTitle', 'en', e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Activities Description (Indonesian)</Label>
+                  <Textarea
+                    rows={3}
+                    value={content.gallery.activitiesDescription.id}
+                    onChange={(e) => updateText('gallery', 'activitiesDescription', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Activities Description (English)</Label>
+                  <Textarea
+                    rows={3}
+                    value={content.gallery.activitiesDescription.en}
+                    onChange={(e) => updateText('gallery', 'activitiesDescription', 'en', e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Facilities Section</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Facilities Title (Indonesian)</Label>
+                  <Input
+                    value={content.gallery.facilitiesTitle.id}
+                    onChange={(e) => updateText('gallery', 'facilitiesTitle', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Facilities Title (English)</Label>
+                  <Input
+                    value={content.gallery.facilitiesTitle.en}
+                    onChange={(e) => updateText('gallery', 'facilitiesTitle', 'en', e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Facilities Description (Indonesian)</Label>
+                  <Textarea
+                    rows={3}
+                    value={content.gallery.facilitiesDescription.id}
+                    onChange={(e) => updateText('gallery', 'facilitiesDescription', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Facilities Description (English)</Label>
+                  <Textarea
+                    rows={3}
+                    value={content.gallery.facilitiesDescription.en}
+                    onChange={(e) => updateText('gallery', 'facilitiesDescription', 'en', e.target.value)}
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

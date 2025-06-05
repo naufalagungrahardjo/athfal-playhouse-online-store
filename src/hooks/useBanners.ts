@@ -50,16 +50,28 @@ export const useBanners = () => {
   const saveBanner = async (banner: Banner) => {
     try {
       console.log('Saving banner:', banner);
+      
+      // Ensure subtitle is not undefined
+      const bannerData = {
+        id: banner.id,
+        title: banner.title.trim(),
+        subtitle: banner.subtitle?.trim() || '',
+        image: banner.image.trim(),
+        active: banner.active,
+        updated_at: new Date().toISOString()
+      };
+
+      // Validate required fields
+      if (!bannerData.title) {
+        throw new Error('Banner title is required');
+      }
+      if (!bannerData.image) {
+        throw new Error('Banner image is required');
+      }
+
       const { error } = await supabase
         .from('banners')
-        .upsert({
-          id: banner.id,
-          title: banner.title,
-          subtitle: banner.subtitle,
-          image: banner.image,
-          active: banner.active,
-          updated_at: new Date().toISOString()
-        });
+        .upsert(bannerData);
 
       if (error) {
         console.error('Save banner error:', error);
@@ -78,8 +90,9 @@ export const useBanners = () => {
       toast({
         variant: "destructive",
         title: "Error", 
-        description: "Failed to save banner"
+        description: error instanceof Error ? error.message : "Failed to save banner"
       });
+      throw error;
     }
   };
 

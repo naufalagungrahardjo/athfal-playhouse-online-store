@@ -10,11 +10,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { FilePlus, Edit, Trash2 } from "lucide-react";
 import { useBanners, Banner } from "@/hooks/useBanners";
 import { ImageUpload } from "@/components/ImageUpload";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminBanners = () => {
   const { banners, loading, saveBanner, deleteBanner } = useBanners();
+  const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<Banner>({
     id: '',
     title: '',
@@ -37,19 +40,42 @@ const AdminBanners = () => {
 
   const handleEdit = (banner: Banner) => {
     setEditingBanner(banner);
-    setFormData(banner);
+    setFormData({ ...banner });
     setIsDialogOpen(true);
   };
 
   const handleSave = async () => {
-    if (!formData.title.trim()) {
-      alert('Banner title is required');
-      return;
-    }
+    try {
+      setSaving(true);
+      
+      // Validate form data
+      if (!formData.title?.trim()) {
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description: "Banner title is required"
+        });
+        return;
+      }
 
-    await saveBanner(formData);
-    setIsDialogOpen(false);
-    setEditingBanner(null);
+      if (!formData.image?.trim()) {
+        toast({
+          variant: "destructive",
+          title: "Validation Error", 
+          description: "Banner image is required"
+        });
+        return;
+      }
+
+      await saveBanner(formData);
+      setIsDialogOpen(false);
+      setEditingBanner(null);
+    } catch (error) {
+      // Error is already handled in the hook
+      console.error('Failed to save banner:', error);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -58,7 +84,11 @@ const AdminBanners = () => {
   };
 
   const handleToggleActive = async (banner: Banner) => {
-    await saveBanner({ ...banner, active: !banner.active });
+    try {
+      await saveBanner({ ...banner, active: !banner.active });
+    } catch (error) {
+      console.error('Failed to toggle banner status:', error);
+    }
   };
 
   if (loading) {
@@ -141,7 +171,7 @@ const AdminBanners = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">Title *</Label>
               <Input
                 id="title"
                 value={formData.title}
@@ -165,7 +195,7 @@ const AdminBanners = () => {
             <ImageUpload
               value={formData.image}
               onChange={(url) => setFormData({...formData, image: url})}
-              label="Banner Image"
+              label="Banner Image *"
             />
 
             <div className="flex items-center space-x-2">
@@ -178,11 +208,11 @@ const AdminBanners = () => {
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={saving}>
                 Cancel
               </Button>
-              <Button onClick={handleSave}>
-                {editingBanner ? 'Update' : 'Create'}
+              <Button onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving...' : editingBanner ? 'Update' : 'Create'}
               </Button>
             </div>
           </div>

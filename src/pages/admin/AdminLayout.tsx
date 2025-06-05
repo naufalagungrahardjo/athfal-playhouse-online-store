@@ -1,126 +1,108 @@
 
-import { useEffect } from 'react';
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { 
-  BarChart3, 
+  LayoutDashboard, 
   Package, 
+  ShoppingCart, 
+  Users, 
   FileText, 
-  Settings, 
-  Images, 
-  Home, 
-  CreditCard, 
   HelpCircle, 
+  Settings, 
+  CreditCard,
+  Tag,
+  Image,
+  Home,
   LogOut,
-  Ticket,
-  Edit3
+  Globe,
+  BookOpen
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminLayout = () => {
-  const { user, isAdmin, logout } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
+  const { signOut } = useAuth();
 
-  // Check if user is admin, if not redirect to home
-  useEffect(() => {
-    if (!user || !isAdmin()) {
-      navigate('/auth/login');
-    }
-  }, [user, isAdmin, navigate]);
-
-  // Admin sidebar links
-  const sidebarLinks = [
-    { icon: BarChart3, label: 'Dashboard', path: '/admin' },
-    { icon: Package, label: 'Products', path: '/admin/products' },
-    { icon: FileText, label: 'Blog Posts', path: '/admin/blogs' },
-    { icon: Images, label: 'Banners', path: '/admin/banners' },
-    { icon: Edit3, label: 'Website Copy', path: '/admin/website-copy' },
-    { icon: HelpCircle, label: 'FAQ', path: '/admin/faq' },
-    { icon: CreditCard, label: 'Payment Options', path: '/admin/payments' },
-    { icon: Ticket, label: 'Promo Codes', path: '/admin/promo-codes' },
-    { icon: Settings, label: 'Settings', path: '/admin/settings' },
+  const navigation = [
+    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+    { name: 'Products', href: '/admin/products', icon: Package },
+    { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+    { name: 'Banners', href: '/admin/banners', icon: Image },
+    { name: 'Content', href: '/admin/content', icon: BookOpen },
+    { name: 'Website Copy', href: '/admin/website-copy', icon: Globe },
+    { name: 'Blogs', href: '/admin/blogs', icon: FileText },
+    { name: 'FAQ', href: '/admin/faq', icon: HelpCircle },
+    { name: 'Promo Codes', href: '/admin/promo-codes', icon: Tag },
+    { name: 'Payments', href: '/admin/payments', icon: CreditCard },
+    { name: 'Settings', href: '/admin/settings', icon: Settings },
   ];
 
-  // Check if a link is active
-  const isActiveLink = (path: string) => {
-    return location.pathname === path;
-  };
-  
-  // Handle logout
-  const handleLogout = () => {
-    logout();
+  const isActive = (href: string) => {
+    if (href === '/admin') {
+      return location.pathname === '/admin';
+    }
+    return location.pathname.startsWith(href);
   };
 
-  // If not logged in as admin, don't render the admin layout
-  if (!user || !isAdmin()) {
-    return null;
-  }
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex">
-      
-      {/* Admin Sidebar */}
-      <aside className="w-64 bg-gray-900 text-white min-h-screen fixed left-0 top-0 z-40 py-6 px-3 hidden md:block">
-        <div className="mb-8 px-4">
-          <Link to="/" className="flex items-center">
-            <img 
-              src="/lovable-uploads/bcf7e399-f8e5-4001-8bfe-dd335c021c8e.png" 
-              alt="Athfal Playhouse Logo" 
-              className="h-10"
-            />
+    <div className="min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg">
+        <div className="flex h-16 items-center justify-between px-6 border-b">
+          <Link to="/" className="flex items-center gap-2">
+            <Home className="h-6 w-6 text-athfal-pink" />
+            <span className="font-bold text-athfal-pink">Athfal Admin</span>
           </Link>
-          <div className="mt-2 text-xs text-gray-400">Admin Panel</div>
         </div>
-
-        <nav className="space-y-1">
-          {sidebarLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
-                isActiveLink(link.path)
-                  ? 'bg-athfal-pink text-white'
-                  : 'text-gray-300 hover:bg-gray-800'
-              }`}
+        
+        <nav className="mt-6">
+          <div className="space-y-1 px-3">
+            {navigation.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    isActive(item.href)
+                      ? 'bg-athfal-pink/10 text-athfal-pink'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </div>
+          
+          <div className="mt-8 px-3">
+            <Button
+              variant="outline"
+              onClick={handleSignOut}
+              className="w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50"
             >
-              <link.icon className="h-5 w-5 mr-3" />
-              <span>{link.label}</span>
-            </Link>
-          ))}
-          
-          <Link to="/" className="flex items-center px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors mt-4">
-            <Home className="h-5 w-5 mr-3" />
-            <span>Back to Site</span>
-          </Link>
-          
-          <button 
-            onClick={handleLogout} 
-            className="flex items-center w-full text-left px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors mt-4"
-          >
-            <LogOut className="h-5 w-5 mr-3" />
-            <span>Logout</span>
-          </button>
+              <LogOut className="h-5 w-5" />
+              Sign Out
+            </Button>
+          </div>
         </nav>
-      </aside>
-
-      {/* Mobile sidebar */}
-      <div className="md:hidden bg-gray-900 text-white w-full p-4 flex justify-between items-center fixed top-0 z-40">
-        <Link to="/" className="flex items-center">
-          <img 
-            src="/lovable-uploads/bcf7e399-f8e5-4001-8bfe-dd335c021c8e.png" 
-            alt="Athfal Playhouse Logo" 
-            className="h-8"
-          />
-        </Link>
-        <div className="text-sm text-gray-300">Admin Panel</div>
       </div>
 
-      {/* Main content area */}
-      <main className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen bg-gray-50">
-        <div className="p-6">
+      {/* Main content */}
+      <div className="pl-64">
+        <main className="p-8">
           <Outlet />
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };
