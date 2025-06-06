@@ -1,4 +1,3 @@
-
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -21,7 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const AdminLayout = () => {
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { logout } = useAuth();
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -46,7 +45,7 @@ const AdminLayout = () => {
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      logout();
     } catch (error) {
       console.error('Error signing out:', error);
     }
