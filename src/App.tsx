@@ -9,7 +9,6 @@ import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import Index from "./pages/Index";
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import AllProductsPage from "./pages/AllProductsPage";
@@ -78,7 +77,7 @@ const App = () => (
                         <Header />
                         <main className="flex-1">
                           <Routes>
-                            <Route path="/" element={<Index />} />
+                            <Route path="/" element={<HomePage />} />
                             <Route path="/home" element={<HomePage />} />
                             <Route path="/about" element={<AboutPage />} />
                             <Route path="/products" element={<AllProductsPage />} />
