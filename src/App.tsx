@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,7 +9,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import WhatsAppFloatButton from "@/components/WhatsAppFloatButton";
+import { WhatsAppFloatButton } from "@/components/WhatsAppFloatButton";
 import HomePage from "@/pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import AllProductsPage from "./pages/AllProductsPage";
