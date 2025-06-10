@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+
+import { useState, useEffect } from 'react';
+import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { 
@@ -16,10 +17,26 @@ import {
   Copy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const { user, isAdmin, loading } = useAuth();
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  // Redirect non-admin users to home page
+  if (!user || !isAdmin()) {
+    return <Navigate to="/" replace />;
+  }
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -113,3 +130,4 @@ const AdminLayout = () => {
 };
 
 export default AdminLayout;
+

@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -59,9 +60,12 @@ export const useBanners = () => {
         throw new Error('Banner image is required');
       }
 
+      // Generate ID for new banners
+      const bannerId = banner.id || `banner_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
       // Ensure subtitle is not undefined and prepare data
       const bannerData = {
-        id: banner.id,
+        id: bannerId,
         title: banner.title.trim(),
         subtitle: banner.subtitle?.trim() || '',
         image: banner.image.trim(),
@@ -169,3 +173,4 @@ export const useBanners = () => {
     getActiveBanner
   };
 };
+

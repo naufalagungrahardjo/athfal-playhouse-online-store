@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,8 @@ import { Eye, EyeOff } from 'lucide-react';
 type AuthMode = 'login' | 'signup' | 'forgot-password';
 
 const AuthPage = () => {
-  const { mode = 'login' } = useParams<{ mode: AuthMode }>();
+  const { mode } = useParams<{ mode?: string }>();
+  const authMode: AuthMode = (mode as AuthMode) || 'login';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -21,7 +23,7 @@ const AuthPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const { login, signup, resetPassword, user } = useAuth();
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
   const navigate = useNavigate();
 
   // Redirect if user is already logged in
@@ -37,7 +39,7 @@ const AuthPage = () => {
     setError('');
 
     try {
-      switch (mode) {
+      switch (authMode) {
         case 'login':
           await login(email, password);
           break;
@@ -62,7 +64,7 @@ const AuthPage = () => {
   };
 
   const getTitle = (): string => {
-    switch (mode) {
+    switch (authMode) {
       case 'login':
         return language === 'id' ? 'Masuk' : 'Login';
       case 'signup':
@@ -75,7 +77,7 @@ const AuthPage = () => {
   };
 
   const getDescription = (): string => {
-    switch (mode) {
+    switch (authMode) {
       case 'login':
         return language === 'id' 
           ? 'Masukkan email dan password Anda untuk masuk ke akun Anda.'
@@ -114,7 +116,7 @@ const AuthPage = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name field (only for signup) */}
-              {mode === 'signup' && (
+              {authMode === 'signup' && (
                 <div className="space-y-2">
                   <Label htmlFor="name">{language === 'id' ? 'Nama' : 'Name'}</Label>
                   <Input 
@@ -144,7 +146,7 @@ const AuthPage = () => {
               </div>
 
               {/* Password field (not for forgot-password) */}
-              {mode !== 'forgot-password' && (
+              {authMode !== 'forgot-password' && (
                 <div className="space-y-2">
                   <Label htmlFor="password">{language === 'id' ? 'Password' : 'Password'}</Label>
                   <div className="relative">
@@ -170,7 +172,7 @@ const AuthPage = () => {
               )}
 
               {/* Confirm Password field (only for signup) */}
-              {mode === 'signup' && (
+              {authMode === 'signup' && (
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword">
                     {language === 'id' ? 'Konfirmasi Password' : 'Confirm Password'}
@@ -212,9 +214,9 @@ const AuthPage = () => {
                   <span>{language === 'id' ? 'Memproses...' : 'Processing...'}</span>
                 ) : (
                   <span>
-                    {mode === 'login' && (language === 'id' ? 'Masuk' : 'Login')}
-                    {mode === 'signup' && (language === 'id' ? 'Daftar' : 'Sign Up')}
-                    {mode === 'forgot-password' && (language === 'id' ? 'Reset Password' : 'Reset Password')}
+                    {authMode === 'login' && (language === 'id' ? 'Masuk' : 'Login')}
+                    {authMode === 'signup' && (language === 'id' ? 'Daftar' : 'Sign Up')}
+                    {authMode === 'forgot-password' && (language === 'id' ? 'Reset Password' : 'Reset Password')}
                   </span>
                 )}
               </Button>
@@ -222,7 +224,7 @@ const AuthPage = () => {
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-2 border-t p-4">
-            {mode === 'login' && (
+            {authMode === 'login' && (
               <>
                 <Link 
                   to="/auth/forgot-password" 
@@ -239,7 +241,7 @@ const AuthPage = () => {
               </>
             )}
 
-            {mode === 'signup' && (
+            {authMode === 'signup' && (
               <div className="text-sm text-gray-600">
                 {language === 'id' ? 'Sudah memiliki akun? ' : 'Already have an account? '}
                 <Link to="/auth/login" className="text-athfal-pink hover:underline">
@@ -248,7 +250,7 @@ const AuthPage = () => {
               </div>
             )}
 
-            {mode === 'forgot-password' && (
+            {authMode === 'forgot-password' && (
               <div className="text-sm text-gray-600">
                 <Link to="/auth/login" className="text-athfal-pink hover:underline">
                   {language === 'id' ? 'Kembali ke halaman masuk' : 'Back to login'}
@@ -263,3 +265,4 @@ const AuthPage = () => {
 };
 
 export default AuthPage;
+
