@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,15 +22,18 @@ const AdminContent = () => {
   const [showAddTeamForm, setShowAddTeamForm] = useState(false);
   const [showAddGalleryForm, setShowAddGalleryForm] = useState(false);
 
-  const handleAboutContentChange = (section: string, field: string, language: string, value: string) => {
-    const updatedContent = {
-      ...aboutContent,
-      [section]: {
-        ...aboutContent[section as keyof typeof aboutContent],
-        [language]: value
-      }
-    };
-    saveAboutContent(updatedContent);
+  const handleAboutContentChange = (section: keyof typeof aboutContent, language: 'id' | 'en', value: string) => {
+    const currentSection = aboutContent[section];
+    if (typeof currentSection === 'object' && currentSection !== null && 'id' in currentSection && 'en' in currentSection) {
+      const updatedContent = {
+        ...aboutContent,
+        [section]: {
+          ...currentSection,
+          [language]: value
+        }
+      };
+      saveAboutContent(updatedContent);
+    }
   };
 
   const handleAboutImageChange = (field: string, value: string) => {
@@ -40,15 +44,18 @@ const AdminContent = () => {
     saveAboutContent(updatedContent);
   };
 
-  const handleGalleryContentChange = (field: string, language: string, value: string) => {
-    const updatedContent = {
-      ...galleryContent,
-      [field]: {
-        ...galleryContent[field as keyof typeof galleryContent],
-        [language]: value
-      }
-    };
-    saveGalleryContent(updatedContent);
+  const handleGalleryContentChange = (field: keyof typeof galleryContent, language: 'id' | 'en', value: string) => {
+    const currentField = galleryContent[field];
+    if (typeof currentField === 'object' && currentField !== null && 'id' in currentField && 'en' in currentField) {
+      const updatedContent = {
+        ...galleryContent,
+        [field]: {
+          ...currentField,
+          [language]: value
+        }
+      };
+      saveGalleryContent(updatedContent);
+    }
   };
 
   const handleGalleryImageChange = (field: string, value: string) => {
@@ -92,14 +99,14 @@ const AdminContent = () => {
                   <Label>Hero Title (Indonesian)</Label>
                   <Input
                     value={aboutContent.heroTitle.id}
-                    onChange={(e) => handleAboutContentChange('heroTitle', 'heroTitle', 'id', e.target.value)}
+                    onChange={(e) => handleAboutContentChange('heroTitle', 'id', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Hero Title (English)</Label>
                   <Input
                     value={aboutContent.heroTitle.en}
-                    onChange={(e) => handleAboutContentChange('heroTitle', 'heroTitle', 'en', e.target.value)}
+                    onChange={(e) => handleAboutContentChange('heroTitle', 'en', e.target.value)}
                   />
                 </div>
               </div>
@@ -110,7 +117,7 @@ const AdminContent = () => {
                   <Textarea
                     rows={3}
                     value={aboutContent.heroSubtitle.id}
-                    onChange={(e) => handleAboutContentChange('heroSubtitle', 'heroSubtitle', 'id', e.target.value)}
+                    onChange={(e) => handleAboutContentChange('heroSubtitle', 'id', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -118,7 +125,7 @@ const AdminContent = () => {
                   <Textarea
                     rows={3}
                     value={aboutContent.heroSubtitle.en}
-                    onChange={(e) => handleAboutContentChange('heroSubtitle', 'heroSubtitle', 'en', e.target.value)}
+                    onChange={(e) => handleAboutContentChange('heroSubtitle', 'en', e.target.value)}
                   />
                 </div>
               </div>
@@ -131,7 +138,7 @@ const AdminContent = () => {
             </CardContent>
           </Card>
 
-          {/* Mission, Vision, Values sections - keeping same structure but using the hook */}
+          {/* Mission, Vision, Values sections */}
           <Card>
             <CardHeader>
               <CardTitle>Mission Section</CardTitle>
@@ -142,14 +149,14 @@ const AdminContent = () => {
                   <Label>Mission Title (Indonesian)</Label>
                   <Input
                     value={aboutContent.missionTitle.id}
-                    onChange={(e) => handleAboutContentChange('missionTitle', 'missionTitle', 'id', e.target.value)}
+                    onChange={(e) => handleAboutContentChange('missionTitle', 'id', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Mission Title (English)</Label>
                   <Input
                     value={aboutContent.missionTitle.en}
-                    onChange={(e) => handleAboutContentChange('missionTitle', 'missionTitle', 'en', e.target.value)}
+                    onChange={(e) => handleAboutContentChange('missionTitle', 'en', e.target.value)}
                   />
                 </div>
               </div>
@@ -160,7 +167,7 @@ const AdminContent = () => {
                   <Textarea
                     rows={4}
                     value={aboutContent.missionDescription.id}
-                    onChange={(e) => handleAboutContentChange('missionDescription', 'missionDescription', 'id', e.target.value)}
+                    onChange={(e) => handleAboutContentChange('missionDescription', 'id', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -168,7 +175,93 @@ const AdminContent = () => {
                   <Textarea
                     rows={4}
                     value={aboutContent.missionDescription.en}
-                    onChange={(e) => handleAboutContentChange('missionDescription', 'missionDescription', 'en', e.target.value)}
+                    onChange={(e) => handleAboutContentChange('missionDescription', 'en', e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Vision Section</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Vision Title (Indonesian)</Label>
+                  <Input
+                    value={aboutContent.visionTitle.id}
+                    onChange={(e) => handleAboutContentChange('visionTitle', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Vision Title (English)</Label>
+                  <Input
+                    value={aboutContent.visionTitle.en}
+                    onChange={(e) => handleAboutContentChange('visionTitle', 'en', e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Vision Description (Indonesian)</Label>
+                  <Textarea
+                    rows={4}
+                    value={aboutContent.visionDescription.id}
+                    onChange={(e) => handleAboutContentChange('visionDescription', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Vision Description (English)</Label>
+                  <Textarea
+                    rows={4}
+                    value={aboutContent.visionDescription.en}
+                    onChange={(e) => handleAboutContentChange('visionDescription', 'en', e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Values Section</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Values Title (Indonesian)</Label>
+                  <Input
+                    value={aboutContent.valuesTitle.id}
+                    onChange={(e) => handleAboutContentChange('valuesTitle', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Values Title (English)</Label>
+                  <Input
+                    value={aboutContent.valuesTitle.en}
+                    onChange={(e) => handleAboutContentChange('valuesTitle', 'en', e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Values Description (Indonesian)</Label>
+                  <Textarea
+                    rows={4}
+                    value={aboutContent.valuesDescription.id}
+                    onChange={(e) => handleAboutContentChange('valuesDescription', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Values Description (English)</Label>
+                  <Textarea
+                    rows={4}
+                    value={aboutContent.valuesDescription.en}
+                    onChange={(e) => handleAboutContentChange('valuesDescription', 'en', e.target.value)}
                   />
                 </div>
               </div>
