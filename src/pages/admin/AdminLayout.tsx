@@ -1,104 +1,110 @@
+import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { 
   LayoutDashboard, 
   Package, 
   ShoppingCart, 
-  Users, 
   FileText, 
-  HelpCircle, 
   Settings, 
-  CreditCard,
-  Tag,
+  Menu,
   Image,
-  Home,
-  LogOut,
-  Globe,
-  BookOpen
+  HelpCircle,
+  CreditCard,
+  Users,
+  Copy
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 const AdminLayout = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { logout } = useAuth();
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Products', href: '/admin/products', icon: Package },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-    { name: 'Banners', href: '/admin/banners', icon: Image },
-    { name: 'Content', href: '/admin/content', icon: BookOpen },
-    { name: 'Website Copy', href: '/admin/website-copy', icon: Globe },
     { name: 'Blogs', href: '/admin/blogs', icon: FileText },
+    { name: 'Banners', href: '/admin/banners', icon: Image },
+    { name: 'Content', href: '/admin/content', icon: Copy },
+    { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'FAQ', href: '/admin/faq', icon: HelpCircle },
-    { name: 'Promo Codes', href: '/admin/promo-codes', icon: Tag },
+    { name: 'Promo Codes', href: '/admin/promo-codes', icon: CreditCard },
     { name: 'Payments', href: '/admin/payments', icon: CreditCard },
+    { name: 'Website Copy', href: '/admin/website-copy', icon: Copy },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ];
 
-  const isActive = (href: string) => {
-    if (href === '/admin') {
-      return location.pathname === '/admin';
-    }
-    return location.pathname.startsWith(href);
-  };
-
-  const handleSignOut = async () => {
-    try {
-      logout();
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg">
-        <div className="flex h-16 items-center justify-between px-6 border-b">
-          <Link to="/" className="flex items-center gap-2">
-            <Home className="h-6 w-6 text-athfal-pink" />
-            <span className="font-bold text-athfal-pink">Athfal Admin</span>
+    <div className="flex h-screen bg-gray-100">
+      {/* Mobile Sidebar */}
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="md:hidden">
+            <Menu />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-64 p-0">
+          <div className="flex flex-col h-full">
+            <div className="px-6 py-4">
+              <Link to="/admin" className="flex items-center text-lg font-semibold">
+                Athfal Admin
+              </Link>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <ul className="space-y-1">
+                {navigation.map((item) => (
+                  <li key={item.name}>
+                    <Link
+                      to={item.href}
+                      className={cn(
+                        "flex items-center px-6 py-3 text-sm font-medium hover:bg-gray-200",
+                        location.pathname === item.href ? 'bg-gray-200' : 'bg-transparent'
+                      )}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {item.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex flex-col w-64 border-r border-gray-200">
+        <div className="px-6 py-4">
+          <Link to="/admin" className="flex items-center text-lg font-semibold">
+            Athfal Admin
           </Link>
         </div>
-        
-        <nav className="mt-6">
-          <div className="space-y-1 px-3">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              return (
+        <div className="flex-1 overflow-y-auto">
+          <ul className="space-y-1">
+            {navigation.map((item) => (
+              <li key={item.name}>
                 <Link
-                  key={item.name}
                   to={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                    isActive(item.href)
-                      ? 'bg-athfal-pink/10 text-athfal-pink'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
+                  className={cn(
+                    "flex items-center px-6 py-3 text-sm font-medium hover:bg-gray-200",
+                    location.pathname === item.href ? 'bg-gray-200' : 'bg-transparent'
+                  )}
                 >
-                  <Icon className="h-5 w-5" />
+                  <item.icon className="mr-2 h-4 w-4" />
                   {item.name}
                 </Link>
-              );
-            })}
-          </div>
-          
-          <div className="mt-8 px-3">
-            <Button
-              variant="outline"
-              onClick={handleSignOut}
-              className="w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              <LogOut className="h-5 w-5" />
-              Sign Out
-            </Button>
-          </div>
-        </nav>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
-      {/* Main content */}
-      <div className="pl-64">
-        <main className="p-8">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 p-6 overflow-y-auto">
           <Outlet />
         </main>
       </div>

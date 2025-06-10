@@ -51,7 +51,15 @@ export const useBanners = () => {
     try {
       console.log('Saving banner:', banner);
       
-      // Ensure subtitle is not undefined
+      // Validate required fields
+      if (!banner.title?.trim()) {
+        throw new Error('Banner title is required');
+      }
+      if (!banner.image?.trim()) {
+        throw new Error('Banner image is required');
+      }
+
+      // Ensure subtitle is not undefined and prepare data
       const bannerData = {
         id: banner.id,
         title: banner.title.trim(),
@@ -61,17 +69,13 @@ export const useBanners = () => {
         updated_at: new Date().toISOString()
       };
 
-      // Validate required fields
-      if (!bannerData.title) {
-        throw new Error('Banner title is required');
-      }
-      if (!bannerData.image) {
-        throw new Error('Banner image is required');
-      }
+      console.log('Banner data to save:', bannerData);
 
       const { error } = await supabase
         .from('banners')
-        .upsert(bannerData);
+        .upsert(bannerData, {
+          onConflict: 'id'
+        });
 
       if (error) {
         console.error('Save banner error:', error);

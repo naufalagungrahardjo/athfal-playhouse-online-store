@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Save, FileText, Image, Info, Plus, Trash2, Edit } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
+import { VideoUrlInput } from "@/components/admin/VideoUrlInput";
 import { useAboutContent, TeamMember } from "@/hooks/useAboutContent";
 import { useGalleryContent, GalleryItem } from "@/hooks/useGalleryContent";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -563,12 +564,19 @@ const GalleryItemForm = ({ initialData, onSave, onCancel }: {
         />
       </div>
       <div>
-        <Label>{item.type === 'video' ? 'Video URL (YouTube embed)' : 'Image URL'}</Label>
-        <Input
-          value={item.url}
-          onChange={(e) => setItem({...item, url: e.target.value})}
-          placeholder={item.type === 'video' ? 'https://www.youtube.com/embed/...' : 'https://example.com/image.jpg'}
-        />
+        {item.type === 'video' ? (
+          <VideoUrlInput
+            value={item.url}
+            onChange={(url) => setItem({...item, url})}
+            label="YouTube Video URL"
+          />
+        ) : (
+          <ImageUpload
+            value={item.url}
+            onChange={(url) => setItem({...item, url})}
+            label="Gallery Image"
+          />
+        )}
       </div>
       <div className="flex gap-2">
         <Button onClick={() => onSave(item)}>Save</Button>
