@@ -1,12 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, FileEdit, Eye, Save, Upload } from "lucide-react";
+import { CalendarIcon, FileEdit, Eye, Save } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -14,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { Blog } from "@/hooks/useBlogs";
 import { ImageUpload } from "@/components/ImageUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RichTextEditor } from "./RichTextEditor";
 
 // Blog category options
 const BLOG_CATEGORIES = [
@@ -86,7 +85,7 @@ export const ImprovedBlogEditor = ({ editingBlog, onSave, onCancel, onPublishTog
   };
 
   const renderPreview = () => (
-    <div className="prose max-w-none">
+    <div className="prose prose-lg max-w-none">
       <img src={blog.image} alt={blog.title} className="w-full h-64 object-cover rounded-lg mb-6" />
       <div className="flex items-center text-sm text-gray-500 mb-4">
         <span>{format(new Date(blog.date), "MMMM d, yyyy")}</span>
@@ -96,7 +95,7 @@ export const ImprovedBlogEditor = ({ editingBlog, onSave, onCancel, onPublishTog
         <span>By {blog.author}</span>
       </div>
       <h1 className="text-3xl font-bold mb-6">{blog.title}</h1>
-      <div className="whitespace-pre-wrap">{blog.content}</div>
+      <div dangerouslySetInnerHTML={{ __html: blog.content }} />
     </div>
   );
 
@@ -106,7 +105,7 @@ export const ImprovedBlogEditor = ({ editingBlog, onSave, onCancel, onPublishTog
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center">
             <FileEdit className="h-5 w-5 text-athfal-pink mr-2" />
-            <h3 className="font-semibold text-lg">Blog Editor</h3>
+            <h3 className="font-semibold text-lg">Rich Blog Editor</h3>
           </div>
           <div className="flex items-center gap-2">
             <div className="text-xs bg-gray-100 px-2 py-1 rounded-full">
@@ -146,20 +145,11 @@ export const ImprovedBlogEditor = ({ editingBlog, onSave, onCancel, onPublishTog
                 />
               </div>
               
-              <div>
-                <Label htmlFor="blog-content">Content</Label>
-                <Textarea
-                  id="blog-content"
-                  value={blog.content}
-                  onChange={(e) => setBlog({...blog, content: e.target.value})}
-                  rows={16}
-                  className="min-h-[400px] resize-none"
-                  placeholder="Write your blog content here..."
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  You can use HTML formatting for rich content.
-                </p>
-              </div>
+              <RichTextEditor
+                value={blog.content}
+                onChange={(content) => setBlog({...blog, content})}
+                label="Blog Content"
+              />
             </TabsContent>
             
             <TabsContent value="settings" className="space-y-4 mt-4">

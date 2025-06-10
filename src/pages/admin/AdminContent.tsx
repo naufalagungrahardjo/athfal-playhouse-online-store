@@ -1,131 +1,62 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Save, FileText, Image, Info } from "lucide-react";
+import { Save, FileText, Image, Info, Plus, Trash2, Edit } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
-
-// Content data structure for About Us and Gallery
-const CONTENT_DATA = {
-  aboutUs: {
-    heroTitle: {
-      id: "Tentang Athfal Playhouse",
-      en: "About Athfal Playhouse",
-    },
-    heroSubtitle: {
-      id: "Mengenal lebih dekat visi, misi, dan nilai-nilai kami",
-      en: "Get to know our vision, mission, and values",
-    },
-    missionTitle: {
-      id: "Misi Kami",
-      en: "Our Mission",
-    },
-    missionDescription: {
-      id: "Menyediakan lingkungan belajar yang aman, menyenangkan, dan inspiratif untuk anak-anak Muslim dengan menggabungkan metode bermain sambil belajar dengan nilai-nilai Islam.",
-      en: "Providing a safe, fun, and inspiring learning environment for Muslim children by combining play-based learning methods with Islamic values.",
-    },
-    visionTitle: {
-      id: "Visi Kami",
-      en: "Our Vision",
-    },
-    visionDescription: {
-      id: "Menjadi pusat edukasi anak terdepan yang mengembangkan generasi Muslim yang cerdas, kreatif, dan berakhlak mulia.",
-      en: "To become a leading children's education center that develops intelligent, creative, and noble Muslim generations.",
-    },
-    valuesTitle: {
-      id: "Nilai-Nilai Kami",
-      en: "Our Values",
-    },
-    valuesDescription: {
-      id: "Pendidikan Islami, Kreativitas, Keamanan, dan Kesenangan dalam belajar.",
-      en: "Islamic Education, Creativity, Safety, and Fun in learning.",
-    },
-    teamTitle: {
-      id: "Tim Kami",
-      en: "Our Team",
-    },
-    teamDescription: {
-      id: "Tim profesional yang berpengalaman dan berdedikasi dalam pendidikan anak.",
-      en: "Professional team experienced and dedicated in children's education.",
-    },
-    heroImage: "https://images.unsplash.com/photo-1635107510862-53886e926b74?w=800&h=600&fit=crop&auto=format",
-  },
-  gallery: {
-    heroTitle: {
-      id: "Galeri Athfal Playhouse",
-      en: "Athfal Playhouse Gallery",
-    },
-    heroSubtitle: {
-      id: "Lihat momen-momen berharga dan kegiatan seru di Athfal Playhouse",
-      en: "See precious moments and fun activities at Athfal Playhouse",
-    },
-    activitiesTitle: {
-      id: "Kegiatan Kami",
-      en: "Our Activities",
-    },
-    activitiesDescription: {
-      id: "Berbagai kegiatan edukatif dan menyenangkan yang dilakukan anak-anak di Athfal Playhouse.",
-      en: "Various educational and fun activities carried out by children at Athfal Playhouse.",
-    },
-    facilitiesTitle: {
-      id: "Fasilitas",
-      en: "Facilities",
-    },
-    facilitiesDescription: {
-      id: "Ruang bermain yang aman dan nyaman dengan fasilitas lengkap untuk mendukung proses belajar.",
-      en: "Safe and comfortable play areas with complete facilities to support the learning process.",
-    },
-    eventsTitle: {
-      id: "Acara Spesial",
-      en: "Special Events",
-    },
-    eventsDescription: {
-      id: "Dokumentasi acara-acara spesial dan perayaan yang diadakan di Athfal Playhouse.",
-      en: "Documentation of special events and celebrations held at Athfal Playhouse.",
-    },
-    heroImage: "https://images.unsplash.com/photo-1544925808-1b704a4ab262?w=800&h=600&fit=crop&auto=format",
-  }
-};
+import { useAboutContent, TeamMember } from "@/hooks/useAboutContent";
+import { useGalleryContent, GalleryItem } from "@/hooks/useGalleryContent";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const AdminContent = () => {
-  const { toast } = useToast();
-  const [content, setContent] = useState(CONTENT_DATA);
+  const { content: aboutContent, saveContent: saveAboutContent, addTeamMember, updateTeamMember, deleteTeamMember } = useAboutContent();
+  const { content: galleryContent, saveContent: saveGalleryContent, addGalleryItem, updateGalleryItem, deleteGalleryItem } = useGalleryContent();
+  
   const [activeTab, setActiveTab] = useState("about");
+  const [editingTeamMember, setEditingTeamMember] = useState<TeamMember | null>(null);
+  const [editingGalleryItem, setEditingGalleryItem] = useState<GalleryItem | null>(null);
+  const [showAddTeamForm, setShowAddTeamForm] = useState(false);
+  const [showAddGalleryForm, setShowAddGalleryForm] = useState(false);
 
-  const handleSave = () => {
-    // In a real implementation, this would save to database
-    toast({
-      title: "Content updated",
-      description: "Your changes have been saved successfully.",
-    });
+  const handleAboutContentChange = (section: string, field: string, language: string, value: string) => {
+    const updatedContent = {
+      ...aboutContent,
+      [section]: {
+        ...aboutContent[section as keyof typeof aboutContent],
+        [language]: value
+      }
+    };
+    saveAboutContent(updatedContent);
   };
 
-  const updateText = (section: string, field: string, language: string, value: string) => {
-    setContent(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section as keyof typeof prev],
-        [field]: {
-          ...(prev[section as keyof typeof prev][field as keyof typeof prev[keyof typeof prev]] as any),
-          [language]: value
-        }
-      }
-    }));
+  const handleAboutImageChange = (field: string, value: string) => {
+    const updatedContent = {
+      ...aboutContent,
+      [field]: value
+    };
+    saveAboutContent(updatedContent);
   };
 
-  const updateImage = (section: string, imageField: string, value: string) => {
-    setContent(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section as keyof typeof prev],
-        [imageField]: value
+  const handleGalleryContentChange = (field: string, language: string, value: string) => {
+    const updatedContent = {
+      ...galleryContent,
+      [field]: {
+        ...galleryContent[field as keyof typeof galleryContent],
+        [language]: value
       }
-    }));
+    };
+    saveGalleryContent(updatedContent);
+  };
+
+  const handleGalleryImageChange = (field: string, value: string) => {
+    const updatedContent = {
+      ...galleryContent,
+      [field]: value
+    };
+    saveGalleryContent(updatedContent);
   };
 
   return (
@@ -138,9 +69,6 @@ const AdminContent = () => {
             <p className="text-gray-600">Manage About Us and Gallery page content</p>
           </div>
         </div>
-        <Button onClick={handleSave} className="bg-athfal-pink hover:bg-athfal-pink/90">
-          <Save className="mr-2 h-4 w-4" /> Save All Changes
-        </Button>
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -157,24 +85,21 @@ const AdminContent = () => {
                 <Info className="h-5 w-5" />
                 Hero Section
               </CardTitle>
-              <CardDescription>
-                Main banner content for the About Us page
-              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Hero Title (Indonesian)</Label>
                   <Input
-                    value={content.aboutUs.heroTitle.id}
-                    onChange={(e) => updateText('aboutUs', 'heroTitle', 'id', e.target.value)}
+                    value={aboutContent.heroTitle.id}
+                    onChange={(e) => handleAboutContentChange('heroTitle', 'heroTitle', 'id', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Hero Title (English)</Label>
                   <Input
-                    value={content.aboutUs.heroTitle.en}
-                    onChange={(e) => updateText('aboutUs', 'heroTitle', 'en', e.target.value)}
+                    value={aboutContent.heroTitle.en}
+                    onChange={(e) => handleAboutContentChange('heroTitle', 'heroTitle', 'en', e.target.value)}
                   />
                 </div>
               </div>
@@ -184,30 +109,29 @@ const AdminContent = () => {
                   <Label>Hero Subtitle (Indonesian)</Label>
                   <Textarea
                     rows={3}
-                    value={content.aboutUs.heroSubtitle.id}
-                    onChange={(e) => updateText('aboutUs', 'heroSubtitle', 'id', e.target.value)}
+                    value={aboutContent.heroSubtitle.id}
+                    onChange={(e) => handleAboutContentChange('heroSubtitle', 'heroSubtitle', 'id', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Hero Subtitle (English)</Label>
                   <Textarea
                     rows={3}
-                    value={content.aboutUs.heroSubtitle.en}
-                    onChange={(e) => updateText('aboutUs', 'heroSubtitle', 'en', e.target.value)}
+                    value={aboutContent.heroSubtitle.en}
+                    onChange={(e) => handleAboutContentChange('heroSubtitle', 'heroSubtitle', 'en', e.target.value)}
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Hero Image</Label>
-                <ImageUpload
-                  value={content.aboutUs.heroImage}
-                  onChange={(url) => updateImage('aboutUs', 'heroImage', url)}
-                />
-              </div>
+              <ImageUpload
+                value={aboutContent.heroImage}
+                onChange={(url) => handleAboutImageChange('heroImage', url)}
+                label="Hero Image"
+              />
             </CardContent>
           </Card>
 
+          {/* Mission, Vision, Values sections - keeping same structure but using the hook */}
           <Card>
             <CardHeader>
               <CardTitle>Mission Section</CardTitle>
@@ -217,15 +141,15 @@ const AdminContent = () => {
                 <div className="space-y-2">
                   <Label>Mission Title (Indonesian)</Label>
                   <Input
-                    value={content.aboutUs.missionTitle.id}
-                    onChange={(e) => updateText('aboutUs', 'missionTitle', 'id', e.target.value)}
+                    value={aboutContent.missionTitle.id}
+                    onChange={(e) => handleAboutContentChange('missionTitle', 'missionTitle', 'id', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Mission Title (English)</Label>
                   <Input
-                    value={content.aboutUs.missionTitle.en}
-                    onChange={(e) => updateText('aboutUs', 'missionTitle', 'en', e.target.value)}
+                    value={aboutContent.missionTitle.en}
+                    onChange={(e) => handleAboutContentChange('missionTitle', 'missionTitle', 'en', e.target.value)}
                   />
                 </div>
               </div>
@@ -235,62 +159,90 @@ const AdminContent = () => {
                   <Label>Mission Description (Indonesian)</Label>
                   <Textarea
                     rows={4}
-                    value={content.aboutUs.missionDescription.id}
-                    onChange={(e) => updateText('aboutUs', 'missionDescription', 'id', e.target.value)}
+                    value={aboutContent.missionDescription.id}
+                    onChange={(e) => handleAboutContentChange('missionDescription', 'missionDescription', 'id', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Mission Description (English)</Label>
                   <Textarea
                     rows={4}
-                    value={content.aboutUs.missionDescription.en}
-                    onChange={(e) => updateText('aboutUs', 'missionDescription', 'en', e.target.value)}
+                    value={aboutContent.missionDescription.en}
+                    onChange={(e) => handleAboutContentChange('missionDescription', 'missionDescription', 'en', e.target.value)}
                   />
                 </div>
               </div>
             </CardContent>
           </Card>
 
+          {/* Team Management */}
           <Card>
             <CardHeader>
-              <CardTitle>Vision Section</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                Team Management
+                <Button onClick={() => setShowAddTeamForm(true)} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Team Member
+                </Button>
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Vision Title (Indonesian)</Label>
-                  <Input
-                    value={content.aboutUs.visionTitle.id}
-                    onChange={(e) => updateText('aboutUs', 'visionTitle', 'id', e.target.value)}
+            <CardContent>
+              {showAddTeamForm && (
+                <div className="border rounded-lg p-4 mb-4 bg-blue-50">
+                  <h4 className="font-medium mb-3">Add New Team Member</h4>
+                  <TeamMemberForm
+                    onSave={(member) => {
+                      addTeamMember(member);
+                      setShowAddTeamForm(false);
+                    }}
+                    onCancel={() => setShowAddTeamForm(false)}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Vision Title (English)</Label>
-                  <Input
-                    value={content.aboutUs.visionTitle.en}
-                    onChange={(e) => updateText('aboutUs', 'visionTitle', 'en', e.target.value)}
-                  />
-                </div>
-              </div>
+              )}
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Vision Description (Indonesian)</Label>
-                  <Textarea
-                    rows={4}
-                    value={content.aboutUs.visionDescription.id}
-                    onChange={(e) => updateText('aboutUs', 'visionDescription', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Vision Description (English)</Label>
-                  <Textarea
-                    rows={4}
-                    value={content.aboutUs.visionDescription.en}
-                    onChange={(e) => updateText('aboutUs', 'visionDescription', 'en', e.target.value)}
-                  />
-                </div>
+              <div className="grid gap-4">
+                {aboutContent.teamMembers.map((member) => (
+                  <div key={member.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                    <img src={member.image} alt={member.name} className="w-16 h-16 rounded-full object-cover" />
+                    <div className="flex-1">
+                      <h4 className="font-medium">{member.name}</h4>
+                      <p className="text-sm text-gray-500">{member.title}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingTeamMember(member)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteTeamMember(member.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
+
+              {editingTeamMember && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                    <h4 className="font-medium mb-3">Edit Team Member</h4>
+                    <TeamMemberForm
+                      initialData={editingTeamMember}
+                      onSave={(member) => {
+                        updateTeamMember(editingTeamMember.id, member);
+                        setEditingTeamMember(null);
+                      }}
+                      onCancel={() => setEditingTeamMember(null)}
+                    />
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -303,24 +255,21 @@ const AdminContent = () => {
                 <Image className="h-5 w-5" />
                 Gallery Hero Section
               </CardTitle>
-              <CardDescription>
-                Main banner content for the Gallery page
-              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Hero Title (Indonesian)</Label>
                   <Input
-                    value={content.gallery.heroTitle.id}
-                    onChange={(e) => updateText('gallery', 'heroTitle', 'id', e.target.value)}
+                    value={galleryContent.heroTitle.id}
+                    onChange={(e) => handleGalleryContentChange('heroTitle', 'id', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Hero Title (English)</Label>
                   <Input
-                    value={content.gallery.heroTitle.en}
-                    onChange={(e) => updateText('gallery', 'heroTitle', 'en', e.target.value)}
+                    value={galleryContent.heroTitle.en}
+                    onChange={(e) => handleGalleryContentChange('heroTitle', 'en', e.target.value)}
                   />
                 </div>
               </div>
@@ -330,117 +279,208 @@ const AdminContent = () => {
                   <Label>Hero Subtitle (Indonesian)</Label>
                   <Textarea
                     rows={3}
-                    value={content.gallery.heroSubtitle.id}
-                    onChange={(e) => updateText('gallery', 'heroSubtitle', 'id', e.target.value)}
+                    value={galleryContent.heroSubtitle.id}
+                    onChange={(e) => handleGalleryContentChange('heroSubtitle', 'id', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Hero Subtitle (English)</Label>
                   <Textarea
                     rows={3}
-                    value={content.gallery.heroSubtitle.en}
-                    onChange={(e) => updateText('gallery', 'heroSubtitle', 'en', e.target.value)}
+                    value={galleryContent.heroSubtitle.en}
+                    onChange={(e) => handleGalleryContentChange('heroSubtitle', 'en', e.target.value)}
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Hero Image</Label>
-                <ImageUpload
-                  value={content.gallery.heroImage}
-                  onChange={(url) => updateImage('gallery', 'heroImage', url)}
-                />
-              </div>
+              <ImageUpload
+                value={galleryContent.heroImage}
+                onChange={(url) => handleGalleryImageChange('heroImage', url)}
+                label="Hero Image"
+              />
             </CardContent>
           </Card>
 
+          {/* Gallery Items Management */}
           <Card>
             <CardHeader>
-              <CardTitle>Activities Section</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                Gallery Items
+                <Button onClick={() => setShowAddGalleryForm(true)} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Gallery Item
+                </Button>
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Activities Title (Indonesian)</Label>
-                  <Input
-                    value={content.gallery.activitiesTitle.id}
-                    onChange={(e) => updateText('gallery', 'activitiesTitle', 'id', e.target.value)}
+            <CardContent>
+              {showAddGalleryForm && (
+                <div className="border rounded-lg p-4 mb-4 bg-blue-50">
+                  <h4 className="font-medium mb-3">Add New Gallery Item</h4>
+                  <GalleryItemForm
+                    onSave={(item) => {
+                      addGalleryItem(item);
+                      setShowAddGalleryForm(false);
+                    }}
+                    onCancel={() => setShowAddGalleryForm(false)}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Activities Title (English)</Label>
-                  <Input
-                    value={content.gallery.activitiesTitle.en}
-                    onChange={(e) => updateText('gallery', 'activitiesTitle', 'en', e.target.value)}
-                  />
-                </div>
-              </div>
+              )}
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Activities Description (Indonesian)</Label>
-                  <Textarea
-                    rows={3}
-                    value={content.gallery.activitiesDescription.id}
-                    onChange={(e) => updateText('gallery', 'activitiesDescription', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Activities Description (English)</Label>
-                  <Textarea
-                    rows={3}
-                    value={content.gallery.activitiesDescription.en}
-                    onChange={(e) => updateText('gallery', 'activitiesDescription', 'en', e.target.value)}
-                  />
-                </div>
+              <div className="grid gap-4">
+                {galleryContent.items.map((item) => (
+                  <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                    <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
+                      {item.type === 'image' ? <Image className="h-6 w-6" /> : <span>🎥</span>}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium">{item.title}</h4>
+                      <p className="text-sm text-gray-500">{item.type} - {item.description}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingGalleryItem(item)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteGalleryItem(item.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Facilities Section</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Facilities Title (Indonesian)</Label>
-                  <Input
-                    value={content.gallery.facilitiesTitle.id}
-                    onChange={(e) => updateText('gallery', 'facilitiesTitle', 'id', e.target.value)}
-                  />
+              {editingGalleryItem && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                    <h4 className="font-medium mb-3">Edit Gallery Item</h4>
+                    <GalleryItemForm
+                      initialData={editingGalleryItem}
+                      onSave={(item) => {
+                        updateGalleryItem(editingGalleryItem.id, item);
+                        setEditingGalleryItem(null);
+                      }}
+                      onCancel={() => setEditingGalleryItem(null)}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Facilities Title (English)</Label>
-                  <Input
-                    value={content.gallery.facilitiesTitle.en}
-                    onChange={(e) => updateText('gallery', 'facilitiesTitle', 'en', e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Facilities Description (Indonesian)</Label>
-                  <Textarea
-                    rows={3}
-                    value={content.gallery.facilitiesDescription.id}
-                    onChange={(e) => updateText('gallery', 'facilitiesDescription', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Facilities Description (English)</Label>
-                  <Textarea
-                    rows={3}
-                    value={content.gallery.facilitiesDescription.en}
-                    onChange={(e) => updateText('gallery', 'facilitiesDescription', 'en', e.target.value)}
-                  />
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+};
+
+// Team Member Form Component
+const TeamMemberForm = ({ initialData, onSave, onCancel }: {
+  initialData?: TeamMember;
+  onSave: (member: Omit<TeamMember, 'id'>) => void;
+  onCancel: () => void;
+}) => {
+  const [member, setMember] = useState({
+    name: initialData?.name || '',
+    title: initialData?.title || '',
+    image: initialData?.image || '',
+    linkedin: initialData?.linkedin || ''
+  });
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label>Name</Label>
+        <Input
+          value={member.name}
+          onChange={(e) => setMember({...member, name: e.target.value})}
+        />
+      </div>
+      <div>
+        <Label>Title</Label>
+        <Input
+          value={member.title}
+          onChange={(e) => setMember({...member, title: e.target.value})}
+        />
+      </div>
+      <div>
+        <Label>LinkedIn URL</Label>
+        <Input
+          value={member.linkedin}
+          onChange={(e) => setMember({...member, linkedin: e.target.value})}
+        />
+      </div>
+      <ImageUpload
+        value={member.image}
+        onChange={(url) => setMember({...member, image: url})}
+        label="Profile Image"
+      />
+      <div className="flex gap-2">
+        <Button onClick={() => onSave(member)}>Save</Button>
+        <Button variant="outline" onClick={onCancel}>Cancel</Button>
+      </div>
+    </div>
+  );
+};
+
+// Gallery Item Form Component
+const GalleryItemForm = ({ initialData, onSave, onCancel }: {
+  initialData?: GalleryItem;
+  onSave: (item: Omit<GalleryItem, 'id'>) => void;
+  onCancel: () => void;
+}) => {
+  const [item, setItem] = useState({
+    type: initialData?.type || 'image' as 'image' | 'video',
+    url: initialData?.url || '',
+    title: initialData?.title || '',
+    description: initialData?.description || ''
+  });
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label>Type</Label>
+        <Select value={item.type} onValueChange={(value: 'image' | 'video') => setItem({...item, type: value})}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="image">Image</SelectItem>
+            <SelectItem value="video">Video</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Title</Label>
+        <Input
+          value={item.title}
+          onChange={(e) => setItem({...item, title: e.target.value})}
+        />
+      </div>
+      <div>
+        <Label>Description</Label>
+        <Input
+          value={item.description}
+          onChange={(e) => setItem({...item, description: e.target.value})}
+        />
+      </div>
+      <div>
+        <Label>{item.type === 'video' ? 'Video URL (YouTube embed)' : 'Image URL'}</Label>
+        <Input
+          value={item.url}
+          onChange={(e) => setItem({...item, url: e.target.value})}
+          placeholder={item.type === 'video' ? 'https://www.youtube.com/embed/...' : 'https://example.com/image.jpg'}
+        />
+      </div>
+      <div className="flex gap-2">
+        <Button onClick={() => onSave(item)}>Save</Button>
+        <Button variant="outline" onClick={onCancel}>Cancel</Button>
+      </div>
     </div>
   );
 };
