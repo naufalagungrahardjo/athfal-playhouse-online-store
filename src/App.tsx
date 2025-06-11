@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -10,7 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import WhatsAppFloatButton from "@/components/WhatsAppFloatButton";
+import { WhatsAppFloatButton } from "@/components/WhatsAppFloatButton";
 
 // Lazy load components
 const Index = lazy(() => import("./pages/Index"));
