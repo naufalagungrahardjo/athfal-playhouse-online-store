@@ -14,7 +14,8 @@ import {
   HelpCircle,
   CreditCard,
   Users,
-  Copy
+  Copy,
+  MessageSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -44,6 +45,7 @@ const AdminLayout = () => {
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Blogs', href: '/admin/blogs', icon: FileText },
     { name: 'Banners', href: '/admin/banners', icon: Image },
+    { name: 'Testimonials', href: '/admin/testimonials', icon: MessageSquare },
     { name: 'Content', href: '/admin/content', icon: Copy },
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'FAQ', href: '/admin/faq', icon: HelpCircle },
@@ -130,4 +132,3 @@ const AdminLayout = () => {
 };
 
 export default AdminLayout;
-

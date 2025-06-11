@@ -7,31 +7,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { ProductCategory } from '@/contexts/CartContext';
 import { HomeBanner } from '@/components/HomeBanner';
 import { useProducts } from '@/hooks/useProducts';
-
-// Mock testimonials
-const TESTIMONIALS = [
-  {
-    id: '1',
-    name: 'Ibu Sarah',
-    text: 'Anak saya sangat senang mengikuti Pop Up Class. Dia jadi lebih aktif dan belajar banyak hal baru!',
-    rating: 5,
-    avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-  },
-  {
-    id: '2',
-    name: 'Bapak Andi',
-    text: 'Play Kit dari Athfal sangat membantu anak saya belajar sambil bermain di rumah. Edukatif dan berkualitas!',
-    rating: 5,
-    avatar: 'https://randomuser.me/api/portraits/men/42.jpg',
-  },
-  {
-    id: '3',
-    name: 'Ibu Lina',
-    text: 'Konsultasi dengan psikolog anak sangat membantu saya memahami perkembangan anak. Recommended!',
-    rating: 4,
-    avatar: 'https://randomuser.me/api/portraits/women/68.jpg',
-  },
-];
+import { useTestimonials } from '@/hooks/useTestimonials';
+import { Star } from 'lucide-react';
 
 // Format currency
 const formatCurrency = (amount: number) => {
@@ -45,11 +22,22 @@ const formatCurrency = (amount: number) => {
 const HomePage = () => {
   const { t, language } = useLanguage();
   const { products, loading } = useProducts();
+  const { testimonials, loading: testimonialsLoading, getActiveTestimonials } = useTestimonials();
   
-  const [testimonials, setTestimonials] = useState(TESTIMONIALS);
-
   // Get featured products (first 4 products from database)
   const featuredProducts = products.slice(0, 4);
+  
+  // Get active testimonials from database
+  const activeTestimonials = getActiveTestimonials();
+
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }).map((_, i) => (
+      <Star 
+        key={i} 
+        className={`w-4 h-4 ${i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+      />
+    ));
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -242,30 +230,48 @@ const HomePage = () => {
             {language === 'id' ? 'Testimonial' : 'Testimonials'}
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial) => (
-              <Card key={testimonial.id} className="athfal-card h-full">
-                <CardContent className="p-6 flex flex-col h-full">
-                  <div className="flex items-center mb-4">
-                    <img
-                      src={testimonial.avatar}
-                      alt={testimonial.name}
-                      className="w-12 h-12 rounded-full mr-4"
-                    />
-                    <div>
-                      <h3 className="font-semibold text-athfal-pink">{testimonial.name}</h3>
-                      <div className="flex">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <span key={i} className={`text-${i < testimonial.rating ? 'yellow' : 'gray'}-400`}>★</span>
-                        ))}
+          {testimonialsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-gray-200 h-32 rounded-lg"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {activeTestimonials.length > 0 ? (
+                activeTestimonials.map((testimonial) => (
+                  <Card key={testimonial.id} className="athfal-card h-full">
+                    <CardContent className="p-6 flex flex-col h-full">
+                      <div className="flex items-center mb-4">
+                        <img
+                          src={testimonial.avatar || 'https://randomuser.me/api/portraits/women/44.jpg'}
+                          alt={testimonial.name}
+                          className="w-12 h-12 rounded-full mr-4 object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = 'https://randomuser.me/api/portraits/women/44.jpg';
+                          }}
+                        />
+                        <div>
+                          <h3 className="font-semibold text-athfal-pink">{testimonial.name}</h3>
+                          <div className="flex">
+                            {renderStars(testimonial.rating)}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 italic flex-grow">{testimonial.text}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                      <p className="text-gray-700 italic flex-grow">"{testimonial.text}"</p>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-12">
+                  <p className="text-gray-500">No testimonials available at the moment.</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
 

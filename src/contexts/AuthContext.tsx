@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const loadUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
-      // Check if user is admin
+      // Check if user is admin by checking admin_users table
       const { data: adminData } = await supabase
         .from('admin_users')
         .select('*')
