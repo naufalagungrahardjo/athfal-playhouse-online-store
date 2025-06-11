@@ -1,17 +1,16 @@
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, ReactNode } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { User as SupabaseUser, Session } from '@supabase/supabase-js';
-
-export type UserRole = 'user' | 'admin';
-
-export type User = {
-  id: string;
-  email: string;
-  name: string;
-  role: UserRole;
-};
+import { User } from '@/types/auth';
+import { useAuthState } from '@/hooks/useAuthState';
+import {
+  signInWithEmail,
+  signUpWithEmail,
+  signOut,
+  resetPasswordForEmail,
+  updateUserPassword,
+  loadUserProfile
+} from '@/utils/auth';
 
 type AuthContextType = {
   user: User | null;
@@ -35,89 +34,17 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading, setUser, setSession } = useAuthState();
   const { toast } = useToast();
-
-  // Initialize auth state
-  useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session);
-        setSession(session);
-        
-        if (session?.user) {
-          await loadUserProfile(session.user);
-        } else {
-          setUser(null);
-        }
-        setLoading(false);
-      }
-    );
-
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        loadUserProfile(session.user);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const loadUserProfile = async (supabaseUser: SupabaseUser) => {
-    try {
-      // Check if user is admin by checking admin_users table
-      const { data: adminData } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('user_id', supabaseUser.id)
-        .single();
-
-      const userRole: UserRole = adminData ? 'admin' : 'user';
-      
-      const userData: User = {
-        id: supabaseUser.id,
-        email: supabaseUser.email || '',
-        name: supabaseUser.user_metadata?.name || supabaseUser.email || '',
-        role: userRole
-      };
-
-      setUser(userData);
-    } catch (error) {
-      console.error('Error loading user profile:', error);
-      // Set basic user data even if profile loading fails
-      const userData: User = {
-        id: supabaseUser.id,
-        email: supabaseUser.email || '',
-        name: supabaseUser.user_metadata?.name || supabaseUser.email || '',
-        role: 'user'
-      };
-      setUser(userData);
-    }
-  };
 
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      console.log('Attempting login for:', email);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        throw error;
-      }
+      const data = await signInWithEmail(email, password);
 
       if (data.user) {
-        await loadUserProfile(data.user);
+        const userData = await loadUserProfile(data.user);
+        setUser(userData);
         toast({
           title: "Login berhasil",
           description: `Selamat datang`,
@@ -131,30 +58,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: error instanceof Error ? error.message : "Email atau password salah",
       });
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
   const signup = async (email: string, password: string, name: string) => {
-    setLoading(true);
     try {
-      console.log('Attempting signup for:', email);
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: name
-          },
-          emailRedirectTo: `${window.location.origin}/`
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
+      const data = await signUpWithEmail(email, password, name);
 
       if (data.user) {
         toast({
@@ -170,17 +79,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: error instanceof Error ? error.message : "Terjadi kesalahan saat membuat akun",
       });
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
   const logout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw error;
-      }
+      await signOut();
       
       setUser(null);
       setSession(null);
@@ -199,15 +103,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resetPassword = async (email: string) => {
-    setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`
-      });
-      
-      if (error) {
-        throw error;
-      }
+      await resetPasswordForEmail(email);
       
       toast({
         title: "Reset password berhasil",
@@ -221,21 +118,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: error instanceof Error ? error.message : "Terjadi kesalahan saat reset password",
       });
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
   const updatePassword = async (newPassword: string) => {
-    setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
-
-      if (error) {
-        throw error;
-      }
+      await updateUserPassword(newPassword);
 
       toast({
         title: "Password berhasil diperbarui",
@@ -249,8 +137,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: error instanceof Error ? error.message : "Terjadi kesalahan saat mengubah password",
       });
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 

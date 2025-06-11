@@ -1,181 +1,167 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-export interface Testimonial {
+export type Testimonial = {
   id: string;
   name: string;
   text: string;
   rating: number;
   avatar?: string;
-  active: boolean;
-  order_num: number;
+  active?: boolean;
+  order_num?: number;
   created_at?: string;
   updated_at?: string;
-}
+};
 
 export const useTestimonials = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchTestimonials = async () => {
     try {
       setLoading(true);
-      console.log('Fetching testimonials from database...');
+      setError(null);
       
+      // Use direct query with proper type assertion
       const { data, error } = await supabase
-        .from('testimonials')
+        .from('testimonials' as any)
         .select('*')
         .order('order_num', { ascending: true });
 
       if (error) {
-        console.error('Supabase testimonials error:', error);
         throw error;
       }
-      
-      console.log('Testimonials fetched:', data);
-      setTestimonials(data || []);
-    } catch (error) {
-      console.error('Error fetching testimonials:', error);
+
+      setTestimonials((data as any[]) || []);
+    } catch (err) {
+      console.error('Error fetching testimonials:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch testimonials');
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch testimonials"
+        description: "Failed to fetch testimonials",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const saveTestimonial = async (testimonial: Testimonial) => {
+  const addTestimonial = async (testimonial: Omit<Testimonial, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      console.log('Saving testimonial:', testimonial);
-      
-      // Validate required fields
-      if (!testimonial.name?.trim()) {
-        throw new Error('Testimonial name is required');
-      }
-      if (!testimonial.text?.trim()) {
-        throw new Error('Testimonial text is required');
-      }
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('testimonials' as any)
+        .insert([{
+          ...testimonial,
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
 
-      const testimonialData = {
-        name: testimonial.name.trim(),
-        text: testimonial.text.trim(),
-        rating: testimonial.rating || 5,
-        avatar: testimonial.avatar?.trim() || '',
-        active: testimonial.active,
-        order_num: testimonial.order_num || 1,
-        updated_at: new Date().toISOString()
-      };
-
-      console.log('Testimonial data to save:', testimonialData);
-
-      let result;
-      if (testimonial.id && testimonial.id !== '' && !testimonial.id.startsWith('testimonial_')) {
-        // Update existing testimonial
-        result = await supabase
-          .from('testimonials')
-          .update(testimonialData)
-          .eq('id', testimonial.id);
-      } else {
-        // Insert new testimonial
-        result = await supabase
-          .from('testimonials')
-          .insert([testimonialData]);
+      if (error) {
+        throw error;
       }
 
-      if (result.error) {
-        console.error('Save testimonial error:', result.error);
-        throw result.error;
-      }
-
-      console.log('Testimonial saved successfully');
+      setTestimonials(prev => [...prev, data as any]);
       toast({
         title: "Success",
-        description: "Testimonial saved successfully"
+        description: "Testimonial added successfully",
       });
-
-      await fetchTestimonials();
-    } catch (error) {
-      console.error('Error saving testimonial:', error);
+      return data;
+    } catch (err) {
+      console.error('Error adding testimonial:', err);
       toast({
         variant: "destructive",
-        title: "Error", 
-        description: error instanceof Error ? error.message : "Failed to save testimonial"
+        title: "Error",
+        description: "Failed to add testimonial",
       });
-      throw error;
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateTestimonial = async (id: string, updates: Partial<Testimonial>) => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('testimonials' as any)
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      setTestimonials(prev => prev.map(t => t.id === id ? data as any : t));
+      toast({
+        title: "Success",
+        description: "Testimonial updated successfully",
+      });
+      return data;
+    } catch (err) {
+      console.error('Error updating testimonial:', err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update testimonial",
+      });
+      throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
   const deleteTestimonial = async (id: string) => {
     try {
-      console.log('Deleting testimonial:', id);
+      setLoading(true);
       const { error } = await supabase
-        .from('testimonials')
+        .from('testimonials' as any)
         .delete()
         .eq('id', id);
 
       if (error) {
-        console.error('Delete testimonial error:', error);
         throw error;
       }
 
-      console.log('Testimonial deleted successfully');
+      setTestimonials(prev => prev.filter(t => t.id !== id));
       toast({
         title: "Success",
-        description: "Testimonial deleted successfully"
+        description: "Testimonial deleted successfully",
       });
-
-      await fetchTestimonials();
-    } catch (error) {
-      console.error('Error deleting testimonial:', error);
+    } catch (err) {
+      console.error('Error deleting testimonial:', err);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete testimonial"
+        description: "Failed to delete testimonial",
       });
+      throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getActiveTestimonials = () => {
-    return testimonials.filter(testimonial => testimonial.active);
-  };
-
-  // Add real-time subscription for testimonials
   useEffect(() => {
     fetchTestimonials();
-
-    // Set up real-time subscription
-    const channel = supabase
-      .channel('testimonials-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'testimonials'
-        },
-        () => {
-          console.log('Testimonials table changed, refetching...');
-          fetchTestimonials();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   return {
     testimonials,
     loading,
-    fetchTestimonials,
-    saveTestimonial,
+    error,
+    addTestimonial,
+    updateTestimonial,
     deleteTestimonial,
-    getActiveTestimonials
+    refetch: fetchTestimonials,
   };
 };
