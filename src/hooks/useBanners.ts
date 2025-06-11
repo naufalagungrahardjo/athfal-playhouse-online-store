@@ -1,5 +1,4 @@
 
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -60,12 +59,8 @@ export const useBanners = () => {
         throw new Error('Banner image is required');
       }
 
-      // Generate ID for new banners
-      const bannerId = banner.id || `banner_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Ensure subtitle is not undefined and prepare data
+      // For new banners, let the database generate the UUID
       const bannerData = {
-        id: bannerId,
         title: banner.title.trim(),
         subtitle: banner.subtitle?.trim() || '',
         image: banner.image.trim(),
@@ -75,15 +70,23 @@ export const useBanners = () => {
 
       console.log('Banner data to save:', bannerData);
 
-      const { error } = await supabase
-        .from('banners')
-        .upsert(bannerData, {
-          onConflict: 'id'
-        });
+      let result;
+      if (banner.id && banner.id !== '' && !banner.id.startsWith('banner_')) {
+        // Update existing banner
+        result = await supabase
+          .from('banners')
+          .update(bannerData)
+          .eq('id', banner.id);
+      } else {
+        // Insert new banner
+        result = await supabase
+          .from('banners')
+          .insert([bannerData]);
+      }
 
-      if (error) {
-        console.error('Save banner error:', error);
-        throw error;
+      if (result.error) {
+        console.error('Save banner error:', result.error);
+        throw result.error;
       }
 
       console.log('Banner saved successfully');
@@ -173,4 +176,3 @@ export const useBanners = () => {
     getActiveBanner
   };
 };
-

@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,7 +13,7 @@ const Header = () => {
   const { user, logout, isAdmin } = useAuth();
   const { getTotalItems } = useCart();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   // Check if the page has been scrolled
   useEffect(() => {
@@ -36,6 +35,10 @@ const Header = () => {
     { id: 'consultation', name: 'Psychological Consultation' },
     { id: 'merchandise', name: 'Merchandise & Others' },
   ];
+
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
 
   return (
     <header 
@@ -135,10 +138,8 @@ const Header = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
-                    <Link to="/profile" className="w-full">
-                      {t('profile')}
-                    </Link>
+                  <DropdownMenuItem onClick={handleProfileClick}>
+                    {t('profile')}
                   </DropdownMenuItem>
                   {isAdmin() && (
                     <DropdownMenuItem>
@@ -216,11 +217,13 @@ const Header = () => {
 
                   {user && (
                     <div className="pt-4 space-y-2">
-                      <Link to="/profile">
-                        <Button variant="outline" className="w-full">
-                          {t('profile')}
-                        </Button>
-                      </Link>
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={handleProfileClick}
+                      >
+                        {t('profile')}
+                      </Button>
                       {isAdmin() && (
                         <Link to="/admin">
                           <Button variant="outline" className="w-full">

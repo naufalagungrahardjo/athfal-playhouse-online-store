@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 export type UserRole = 'user' | 'admin';
 
@@ -19,6 +20,7 @@ type AuthContextType = {
   signup: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
   resetPassword: (email: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
   isAdmin: () => boolean;
 };
 
@@ -34,75 +36,95 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Load user from localStorage on mount
+  // Initialize auth state
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Failed to parse stored user', error);
-        localStorage.removeItem('user');
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session);
+        setSession(session);
+        
+        if (session?.user) {
+          await loadUserProfile(session.user);
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    );
+
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        loadUserProfile(session.user);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Authentication functions with Supabase integration
+  const loadUserProfile = async (supabaseUser: SupabaseUser) => {
+    try {
+      // Check if user is admin
+      const { data: adminData } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('user_id', supabaseUser.id)
+        .single();
+
+      const userRole: UserRole = adminData ? 'admin' : 'user';
+      
+      const userData: User = {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        name: supabaseUser.user_metadata?.name || supabaseUser.email || '',
+        role: userRole
+      };
+
+      setUser(userData);
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+      // Set basic user data even if profile loading fails
+      const userData: User = {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        name: supabaseUser.user_metadata?.name || supabaseUser.email || '',
+        role: 'user'
+      };
+      setUser(userData);
+    }
+  };
+
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Check if this is the admin
-      if (email === 'admin@athfal.com' && password === 'admin123') {
-        const adminUser = {
-          id: '1',
-          email,
-          name: 'Admin',
-          role: 'admin' as UserRole,
-        };
-        setUser(adminUser);
-        localStorage.setItem('user', JSON.stringify(adminUser));
+      console.log('Attempting login for:', email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
+        await loadUserProfile(data.user);
         toast({
           title: "Login berhasil",
-          description: "Selamat datang, Admin",
+          description: `Selamat datang`,
         });
-        return;
       }
-      
-      // For regular users, check against registered users
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .single();
-      
-      if (userError || !userData) {
-        throw new Error('Email tidak terdaftar');
-      }
-      
-      // In a real app, we would use proper password hashing
-      // This is just a simplified version for demo purposes
-      if (userData.password !== 'hashed_' + password) {
-        throw new Error('Password salah');
-      }
-      
-      const regularUser = {
-        id: userData.id,
-        email: userData.email,
-        name: userData.name,
-        role: 'user' as UserRole,
-      };
-      
-      setUser(regularUser);
-      localStorage.setItem('user', JSON.stringify(regularUser));
-      toast({
-        title: "Login berhasil",
-        description: `Selamat datang, ${regularUser.name}`,
-      });
     } catch (error) {
+      console.error('Login error:', error);
       toast({
         variant: "destructive",
         title: "Login gagal",
@@ -117,43 +139,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = async (email: string, password: string, name: string) => {
     setLoading(true);
     try {
-      // Check if user already exists
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .single();
+      console.log('Attempting signup for:', email);
       
-      if (existingUser) {
-        throw new Error('Email sudah terdaftar');
-      }
-      
-      // Create new user
-      const { data, error } = await supabase
-        .from('users')
-        .insert([{ email, name, password: 'hashed_' + password }])
-        .select()
-        .single();
-        
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name
+          },
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+
       if (error) {
         throw error;
       }
-      
-      const newUser = {
-        id: data.id,
-        email,
-        name,
-        role: 'user' as UserRole,
-      };
-      
-      setUser(newUser);
-      localStorage.setItem('user', JSON.stringify(newUser));
-      
-      toast({
-        title: "Pendaftaran berhasil",
-        description: "Akun Anda telah dibuat",
-      });
+
+      if (data.user) {
+        toast({
+          title: "Pendaftaran berhasil",
+          description: "Silakan cek email Anda untuk konfirmasi",
+        });
+      }
     } catch (error) {
+      console.error('Signup error:', error);
       toast({
         variant: "destructive",
         title: "Pendaftaran gagal",
@@ -165,30 +175,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-    toast({
-      title: "Logout berhasil",
-      description: "Anda telah keluar dari akun",
-    });
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        throw error;
+      }
+      
+      setUser(null);
+      setSession(null);
+      toast({
+        title: "Logout berhasil",
+        description: "Anda telah keluar dari akun",
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        variant: "destructive",
+        title: "Logout gagal",
+        description: "Terjadi kesalahan saat logout",
+      });
+    }
   };
 
   const resetPassword = async (email: string) => {
     setLoading(true);
     try {
-      // In a real app with Supabase auth, we would use:
-      // const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`
+      });
       
-      // Mock implementation
-      const { data } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .single();
-        
-      if (!data) {
-        throw new Error('Email tidak terdaftar');
+      if (error) {
+        throw error;
       }
       
       toast({
@@ -196,10 +214,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: "Cek email Anda untuk instruksi selanjutnya",
       });
     } catch (error) {
+      console.error('Reset password error:', error);
       toast({
         variant: "destructive",
         title: "Reset password gagal",
         description: error instanceof Error ? error.message : "Terjadi kesalahan saat reset password",
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Password berhasil diperbarui",
+        description: "Password Anda telah berhasil diubah",
+      });
+    } catch (error) {
+      console.error('Update password error:', error);
+      toast({
+        variant: "destructive",
+        title: "Gagal memperbarui password",
+        description: error instanceof Error ? error.message : "Terjadi kesalahan saat mengubah password",
       });
       throw error;
     } finally {
@@ -220,6 +267,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signup,
         logout,
         resetPassword,
+        updatePassword,
         isAdmin,
       }}
     >

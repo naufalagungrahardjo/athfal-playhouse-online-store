@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +28,7 @@ const AdminBanners = () => {
   const handleCreateNew = () => {
     setEditingBanner(null);
     setFormData({
-      id: `banner_${Date.now()}`,
+      id: '',
       title: '',
       subtitle: '',
       image: '',
