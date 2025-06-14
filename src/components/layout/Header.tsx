@@ -7,12 +7,15 @@ import { useCart } from '@/contexts/CartContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, ShoppingCart, Globe, User, ChevronDown } from "lucide-react";
+import Logo from "./Logo";
+import LanguageSwitcher from "./LanguageSwitcher";
+import CartButton from "./CartButton";
 
 const Header = () => {
   console.log('[Header] Rendering');
-  const { t, language, setLanguage } = useLanguage();
+  const { t, /*language, setLanguage*/ } = useLanguage();
   const { user, logout, isAdmin } = useAuth();
-  const { getTotalItems } = useCart();
+  // const { getTotalItems } = useCart();
   const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
 
@@ -50,13 +53,7 @@ const Header = () => {
       <div className="athfal-container py-4">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <img 
-              src="/lovable-uploads/bcf7e399-f8e5-4001-8bfe-dd335c021c8e.png" 
-              alt="Athfal Playhouse Logo" 
-              className="h-10 md:h-12"
-            />
-          </Link>
+          <Logo />
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
@@ -102,33 +99,10 @@ const Header = () => {
           {/* User Actions */}
           <div className="flex items-center space-x-4">
             {/* Language Switcher */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Globe className="h-5 w-5 text-athfal-pink" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setLanguage('id')} className={language === 'id' ? 'bg-athfal-peach/20' : ''}>
-                  Indonesia
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLanguage('en')} className={language === 'en' ? 'bg-athfal-peach/20' : ''}>
-                  English
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <LanguageSwitcher />
 
             {/* Cart */}
-            <Link to="/cart">
-              <Button variant="ghost" size="icon" className="relative">
-                <ShoppingCart className="h-5 w-5 text-athfal-pink" />
-                {getTotalItems() > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-athfal-yellow text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {getTotalItems()}
-                  </span>
-                )}
-              </Button>
-            </Link>
+            <CartButton />
 
             {/* User Menu */}
             {user ? (
