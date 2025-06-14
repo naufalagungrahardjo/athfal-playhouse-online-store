@@ -33,6 +33,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  console.log('[AuthProvider] Provider initialized');
   const { user, loading, setUser, setSession } = useAuthState();
   const { toast } = useToast();
 

@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, ShoppingCart, Globe, User, ChevronDown } from "lucide-react";
 
 const Header = () => {
+  console.log('[Header] Rendering');
   const { t, language, setLanguage } = useLanguage();
   const { user, logout, isAdmin } = useAuth();
   const { getTotalItems } = useCart();
