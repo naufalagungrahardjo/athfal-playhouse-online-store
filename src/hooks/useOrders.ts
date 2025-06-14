@@ -25,6 +25,8 @@ interface Order {
   notes?: string;
   created_at: string;
   items?: OrderItem[];
+  discount_amount?: number | null;
+  promo_code?: string | null;
 }
 
 export const useOrders = () => {

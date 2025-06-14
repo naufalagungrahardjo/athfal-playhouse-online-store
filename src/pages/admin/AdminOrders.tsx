@@ -13,12 +13,13 @@ import {
   PopoverContent,
 } from '@/components/ui/popover';
 import { format } from 'date-fns';
+import { DateRange } from "react-day-picker";
 
 const AdminOrders = () => {
   const { orders, loading, fetchOrders, deleteOrder } = useOrders();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [dateRange, setDateRange] = useState<{from: Date | undefined, to: Date | undefined}>({from: undefined, to: undefined});
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   const handleViewDetails = (order: any) => {
     setSelectedOrder(order);
