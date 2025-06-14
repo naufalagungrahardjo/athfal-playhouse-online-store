@@ -14,6 +14,9 @@ import {
 } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { DateRange } from "react-day-picker";
+import { OrderStatistics } from "@/components/admin/OrderStatistics";
+import { OrderFilterToolbar } from "@/components/admin/OrderFilterToolbar";
+import { OrderListItem } from "@/components/admin/OrderListItem";
 
 const AdminOrders = () => {
   const { orders, loading, fetchOrders, deleteOrder } = useOrders();
@@ -153,97 +156,17 @@ const AdminOrders = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold">Order Management</h1>
-          <div className="flex items-center gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={(!dateRange.from || !dateRange.to) ? "text-muted-foreground" : ""}
-                >
-                  <CalendarDays className="mr-2 h-4 w-4" />
-                  {dateRange.from && dateRange.to
-                    ? `${format(dateRange.from, 'MMM dd, yyyy')} - ${format(dateRange.to, 'MMM dd, yyyy')}`
-                    : "Select Date Range"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
-                <Calendar
-                  mode="range"
-                  selected={dateRange}
-                  onSelect={setDateRange}
-                  numberOfMonths={2}
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-            {(dateRange.from && dateRange.to) && (
-              <Button
-                variant="ghost"
-                onClick={() => setDateRange({from: undefined, to: undefined})}
-                className="text-xs text-gray-500"
-              >
-                Clear
-              </Button>
-            )}
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={fetchOrders} variant="outline">
-            Refresh Orders
-          </Button>
-          <Button onClick={exportOrdersToCSV} variant="default">
-            Export Orders as CSV
-          </Button>
-        </div>
-      </div>
+      <OrderFilterToolbar
+        dateRange={dateRange}
+        setDateRange={setDateRange}
+        onRefresh={fetchOrders}
+        onExport={exportOrdersToCSV}
+      />
 
-      {/* Order Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{orders.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
-            <User className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{getStatusCount('pending')}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            <User className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{getStatusCount('completed')}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(orders.reduce((sum, order) => sum + order.total_amount, 0))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <OrderStatistics
+        orders={orders}
+        getStatusCount={getStatusCount}
+      />
 
       {/* Orders List */}
       <Card>
@@ -253,67 +176,18 @@ const AdminOrders = () => {
         <CardContent>
           {filteredOrders.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">No orders found{(dateRange.from && dateRange.to) ? " in selected range" : ""}.</p>
+              <p className="text-gray-500">No orders found{(dateRange?.from && dateRange?.to) ? " in selected range" : ""}.</p>
             </div>
           ) : (
             <div className="space-y-4">
               {filteredOrders.map((order) => (
-                <div key={order.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold">#{order.id.slice(0, 8)}</h3>
-                        <Badge className={getStatusColor(order.status)}>
-                          {order.status.toUpperCase()}
-                        </Badge>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                        <div>
-                          <span className="font-medium">Customer:</span> {order.customer_name}
-                        </div>
-                        <div>
-                          <span className="font-medium">Email:</span> {order.customer_email}
-                        </div>
-                        <div>
-                          <span className="font-medium">Phone:</span> {order.customer_phone}
-                        </div>
-                        <div>
-                          <span className="font-medium">Payment:</span> {order.payment_method}
-                        </div>
-                        <div>
-                          <span className="font-medium">Total:</span> {formatCurrency(order.total_amount)}
-                        </div>
-                        <div>
-                          <span className="font-medium">Items:</span> {order.items?.length || 0} products
-                        </div>
-                      </div>
-                      
-                      <div className="text-xs text-gray-500 mt-2">
-                        Created: {new Date(order.created_at).toLocaleString()}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 ml-4">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleViewDetails(order)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View Details
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteOrder(order.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                <OrderListItem
+                  key={order.id}
+                  order={order}
+                  getStatusColor={getStatusColor}
+                  onViewDetails={handleViewDetails}
+                  onDelete={handleDeleteOrder}
+                />
               ))}
             </div>
           )}
