@@ -1,17 +1,24 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, Trash2, Calendar, User, DollarSign } from 'lucide-react';
+import { Eye, Trash2, CalendarDays, User, DollarSign } from 'lucide-react';
 import { useOrders } from '@/hooks/useOrders';
 import { OrderDetailsDialog } from '@/components/admin/OrderDetailsDialog';
 import { formatCurrency } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from '@/components/ui/popover';
+import { format } from 'date-fns';
 
 const AdminOrders = () => {
   const { orders, loading, fetchOrders, deleteOrder } = useOrders();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [dateRange, setDateRange] = useState<{from: Date | undefined, to: Date | undefined}>({from: undefined, to: undefined});
 
   const handleViewDetails = (order: any) => {
     setSelectedOrder(order);
@@ -49,6 +56,89 @@ const AdminOrders = () => {
     return orders.filter(order => order.status === status).length;
   };
 
+  // Filter orders by date
+  const filteredOrders = orders.filter(order => {
+    if (dateRange.from && dateRange.to) {
+      // Assume order.created_at is a string (ISO format)
+      const orderDate = new Date(order.created_at);
+      // Include start and end date
+      return (
+        orderDate >= new Date(dateRange.from.setHours(0,0,0,0)) &&
+        orderDate <= new Date(dateRange.to.setHours(23,59,59,999))
+      );
+    }
+    return true;
+  });
+
+  // CSV Export
+  const exportOrdersToCSV = () => {
+    // CSV Header
+    const headers = [
+      "Order ID",
+      "Created At",
+      "Status",
+      "Customer Name",
+      "Customer Email",
+      "Customer Phone",
+      "Customer Address",
+      "Payment Method",
+      "Subtotal",
+      "Tax",
+      "Discount",
+      "Promo Code",
+      "Total",
+      "Notes",
+      "Order Items",
+    ];
+
+    // Flatten order items for csv (as a text field)
+    const rows = filteredOrders.map(order => [
+      order.id,
+      order.created_at,
+      order.status,
+      order.customer_name,
+      order.customer_email,
+      order.customer_phone,
+      order.customer_address || "",
+      order.payment_method,
+      order.subtotal,
+      order.tax_amount,
+      order.discount_amount || "",
+      order.promo_code || "",
+      order.total_amount,
+      (order.notes || ""),
+      (order.items ?? [])
+        .map(item => `${item.product_name} (x${item.quantity}; ${item.product_price})`)
+        .join(" | "),
+    ]);
+
+    const csvString = [
+      headers.join(","),
+      ...rows.map(row => row.map(field => {
+        // Escape commas and quotes
+        if (typeof field === 'string' && (field.includes(',') || field.includes('"') || field.includes('\n'))) {
+          return `"${field.replace(/"/g, '""')}"`;
+        }
+        return field;
+      }).join(',')),
+    ].join('\r\n');
+
+    // Download
+    const blob = new Blob([csvString], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    const dateInfo = dateRange.from && dateRange.to
+      ? `_from_${format(dateRange.from, "yyyyMMdd")}_to_${format(dateRange.to, "yyyyMMdd")}`
+      : "";
+    a.download = `orders${dateInfo}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -62,11 +152,51 @@ const AdminOrders = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Order Management</h1>
-        <Button onClick={fetchOrders} variant="outline">
-          Refresh Orders
-        </Button>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold">Order Management</h1>
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={(!dateRange.from || !dateRange.to) ? "text-muted-foreground" : ""}
+                >
+                  <CalendarDays className="mr-2 h-4 w-4" />
+                  {dateRange.from && dateRange.to
+                    ? `${format(dateRange.from, 'MMM dd, yyyy')} - ${format(dateRange.to, 'MMM dd, yyyy')}`
+                    : "Select Date Range"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                <Calendar
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={2}
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+            {(dateRange.from && dateRange.to) && (
+              <Button
+                variant="ghost"
+                onClick={() => setDateRange({from: undefined, to: undefined})}
+                className="text-xs text-gray-500"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={fetchOrders} variant="outline">
+            Refresh Orders
+          </Button>
+          <Button onClick={exportOrdersToCSV} variant="default">
+            Export Orders as CSV
+          </Button>
+        </div>
       </div>
 
       {/* Order Statistics */}
@@ -120,13 +250,13 @@ const AdminOrders = () => {
           <CardTitle>Recent Orders</CardTitle>
         </CardHeader>
         <CardContent>
-          {orders.length === 0 ? (
+          {filteredOrders.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">No orders found.</p>
+              <p className="text-gray-500">No orders found{(dateRange.from && dateRange.to) ? " in selected range" : ""}.</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <div key={order.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
