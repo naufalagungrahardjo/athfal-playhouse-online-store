@@ -1,4 +1,3 @@
-
 import { createContext, useContext, ReactNode } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { User } from '@/types/auth';
@@ -38,7 +37,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
     try {
       const data = await signInWithEmail(email, password);
 

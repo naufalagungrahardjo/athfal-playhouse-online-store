@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,8 +24,6 @@ export const useTestimonials = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      // Use direct query with proper type assertion
       const { data, error } = await supabase
         .from('testimonials' as any)
         .select('*')
@@ -151,6 +148,24 @@ export const useTestimonials = () => {
     }
   };
 
+  // Helper: get only active testimonials (for home page)
+  const getActiveTestimonials = () => {
+    return testimonials.filter((t) => t.active);
+  };
+
+  // saveTestimonial: add or update
+  const saveTestimonial = async (testimonial: Testimonial) => {
+    if (!testimonial.id) {
+      // New, create it. Omit id, created_at, updated_at
+      const { id, created_at, updated_at, ...rest } = testimonial;
+      return addTestimonial(rest as Omit<Testimonial, 'id' | 'created_at' | 'updated_at'>);
+    } else {
+      // Existing, update it
+      const { id, ...updates } = testimonial;
+      return updateTestimonial(id, updates);
+    }
+  };
+
   useEffect(() => {
     fetchTestimonials();
   }, []);
@@ -162,6 +177,8 @@ export const useTestimonials = () => {
     addTestimonial,
     updateTestimonial,
     deleteTestimonial,
+    saveTestimonial,
+    getActiveTestimonials,
     refetch: fetchTestimonials,
   };
 };

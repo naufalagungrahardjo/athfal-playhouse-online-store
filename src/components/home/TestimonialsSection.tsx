@@ -6,7 +6,7 @@ import { TestimonialCard } from './TestimonialCard';
 export const TestimonialsSection = () => {
   const { language } = useLanguage();
   const { loading: testimonialsLoading, getActiveTestimonials } = useTestimonials();
-  
+
   // Get active testimonials from database
   const activeTestimonials = getActiveTestimonials();
 
