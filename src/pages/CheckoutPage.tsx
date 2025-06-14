@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCart } from '@/contexts/CartContext';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useOrderProcessing } from '@/hooks/useOrderProcessing';
+import CheckoutForm from "@/components/checkout/CheckoutForm";
+import OrderSummary from "@/components/checkout/OrderSummary";
 
 type PromoCode = {
   id: string;
@@ -153,148 +154,29 @@ const CheckoutPage = () => {
                 <CardTitle>Customer Information</CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <Label htmlFor="customerName">Full Name *</Label>
-                    <Input
-                      id="customerName"
-                      type="text"
-                      value={formData.customerName}
-                      onChange={(e) => handleInputChange('customerName', e.target.value)}
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="customerEmail">Email Address *</Label>
-                    <Input
-                      id="customerEmail"
-                      type="email"
-                      value={formData.customerEmail}
-                      onChange={(e) => handleInputChange('customerEmail', e.target.value)}
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="customerPhone">Phone Number *</Label>
-                    <Input
-                      id="customerPhone"
-                      type="tel"
-                      value={formData.customerPhone}
-                      onChange={(e) => handleInputChange('customerPhone', e.target.value)}
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="customerAddress">Address</Label>
-                    <Textarea
-                      id="customerAddress"
-                      value={formData.customerAddress}
-                      onChange={(e) => handleInputChange('customerAddress', e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="paymentMethod">Payment Method *</Label>
-                    {activePaymentMethods.length === 0 ? (
-                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                        <p className="text-sm text-yellow-700">
-                          No payment methods available. Please contact administrator.
-                        </p>
-                      </div>
-                    ) : (
-                      <Select 
-                        value={formData.paymentMethod} 
-                        onValueChange={(value) => {
-                          console.log('Payment method selected:', value);
-                          handleInputChange('paymentMethod', value);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select payment method" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {activePaymentMethods.map((method) => (
-                            <SelectItem key={method.id} value={method.id}>
-                              {method.bank_name} - {method.account_number} ({method.account_name})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="notes">Notes (Optional)</Label>
-                    <Textarea
-                      id="notes"
-                      value={formData.notes}
-                      onChange={(e) => handleInputChange('notes', e.target.value)}
-                      rows={3}
-                      placeholder="Any special instructions or notes..."
-                    />
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full mt-6"
-                    disabled={processing || activePaymentMethods.length === 0}
-                  >
-                    {processing ? 'Processing...' : `Proceed Order - ${formatCurrency(total)}`}
-                  </Button>
-                </form>
+                <CheckoutForm
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  handleSubmit={handleSubmit}
+                  processing={processing}
+                  activePaymentMethods={activePaymentMethods}
+                  formatCurrency={formatCurrency}
+                  total={total}
+                />
               </CardContent>
             </Card>
           </div>
-          
           {/* Order Summary */}
           <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {items.map((item) => (
-                    <div key={item.id} className="flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
-                      </div>
-                      <p className="font-medium">{formatCurrency(item.price * item.quantity)}</p>
-                    </div>
-                  ))}
-                  
-                  <hr className="my-4" />
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>Subtotal:</span>
-                      <span>{formatCurrency(getTotalPrice())}</span>
-                    </div>
-                    
-                    {appliedPromo && (
-                      <div className="flex justify-between text-green-600">
-                        <span>Discount ({appliedPromo.code} - {appliedPromo.discount_percentage}%):</span>
-                        <span>-{formatCurrency(getDiscountAmount())}</span>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between">
-                      <span>Tax:</span>
-                      <span>{formatCurrency(taxAmount)}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-lg border-t pt-2">
-                      <span>Total:</span>
-                      <span>{formatCurrency(total)}</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <OrderSummary
+              items={items}
+              appliedPromo={appliedPromo}
+              getTotalPrice={getTotalPrice}
+              getDiscountAmount={getDiscountAmount}
+              taxAmount={taxAmount}
+              total={total}
+              formatCurrency={formatCurrency}
+            />
           </div>
         </div>
       </div>
