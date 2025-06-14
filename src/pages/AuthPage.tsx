@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -9,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Eye, EyeOff } from 'lucide-react';
+import LoginForm from "@/components/auth/LoginForm";
+import SignupForm from "@/components/auth/SignupForm";
+import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 
 type AuthMode = 'login' | 'signup' | 'forgot-password';
 
@@ -114,113 +115,49 @@ const AuthPage = () => {
             <CardDescription>{getDescription()}</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Name field (only for signup) */}
-              {authMode === 'signup' && (
-                <div className="space-y-2">
-                  <Label htmlFor="name">{language === 'id' ? 'Nama' : 'Name'}</Label>
-                  <Input 
-                    id="name" 
-                    type="text" 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder={language === 'id' ? 'Nama lengkap' : 'Full name'}
-                    required
-                    className="athfal-input"
-                  />
-                </div>
-              )}
-
-              {/* Email field */}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="email@example.com"
-                  required
-                  className="athfal-input"
-                />
-              </div>
-
-              {/* Password field (not for forgot-password) */}
-              {authMode !== 'forgot-password' && (
-                <div className="space-y-2">
-                  <Label htmlFor="password">{language === 'id' ? 'Password' : 'Password'}</Label>
-                  <div className="relative">
-                    <Input 
-                      id="password" 
-                      type={showPassword ? 'text' : 'password'} 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder={language === 'id' ? 'Masukkan password' : 'Enter password'}
-                      required
-                      className="athfal-input pr-10"
-                    />
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Confirm Password field (only for signup) */}
-              {authMode === 'signup' && (
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">
-                    {language === 'id' ? 'Konfirmasi Password' : 'Confirm Password'}
-                  </Label>
-                  <div className="relative">
-                    <Input 
-                      id="confirmPassword" 
-                      type={showPassword ? 'text' : 'password'} 
-                      value={confirmPassword} 
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder={language === 'id' ? 'Konfirmasi password' : 'Confirm password'}
-                      required
-                      className="athfal-input pr-10"
-                    />
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Error message */}
-              {error && (
-                <div className="text-red-500 text-sm">{error}</div>
-              )}
-
-              {/* Submit button */}
-              <Button 
-                type="submit" 
-                className="w-full bg-athfal-pink hover:bg-athfal-pink/80 text-white"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <span>{language === 'id' ? 'Memproses...' : 'Processing...'}</span>
-                ) : (
-                  <span>
-                    {authMode === 'login' && (language === 'id' ? 'Masuk' : 'Login')}
-                    {authMode === 'signup' && (language === 'id' ? 'Daftar' : 'Sign Up')}
-                    {authMode === 'forgot-password' && (language === 'id' ? 'Reset Password' : 'Reset Password')}
-                  </span>
-                )}
-              </Button>
-            </form>
+            {/* Refactored to use form components */}
+            {authMode === "login" && (
+              <LoginForm
+                email={email}
+                password={password}
+                onEmailChange={setEmail}
+                onPasswordChange={setPassword}
+                onSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
+                error={error}
+                language={language}
+                setShowPassword={setShowPassword}
+                showPassword={showPassword}
+              />
+            )}
+            {authMode === "signup" && (
+              <SignupForm
+                name={name}
+                email={email}
+                password={password}
+                confirmPassword={confirmPassword}
+                onNameChange={setName}
+                onEmailChange={setEmail}
+                onPasswordChange={setPassword}
+                onConfirmPasswordChange={setConfirmPassword}
+                onSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
+                error={error}
+                language={language}
+                setShowPassword={setShowPassword}
+                showPassword={showPassword}
+              />
+            )}
+            {authMode === "forgot-password" && (
+              <ForgotPasswordForm
+                email={email}
+                onEmailChange={setEmail}
+                onSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
+                error={error}
+                language={language}
+              />
+            )}
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-2 border-t p-4">
@@ -265,4 +202,3 @@ const AuthPage = () => {
 };
 
 export default AuthPage;
-
