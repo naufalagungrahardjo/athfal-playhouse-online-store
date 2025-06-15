@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -73,12 +72,12 @@ export const useOrderProcessing = () => {
         .single();
 
       if (orderError) {
-        // Deep log for debugging
+        // NEW: Expose full error object and SQL error message to the user!
         console.error(`[${errorId}] Order creation error:`, orderError, orderInsert, orderData);
         toast({
           variant: "destructive",
           title: "Order Failed",
-          description: `Supabase error: ${orderError.message || "Unknown error!"} [${errorId}]`
+          description: `Supabase error: ${orderError.message || JSON.stringify(orderError)} [${errorId}]`
         });
         setProcessing(false);
         return { success: false };
@@ -130,7 +129,7 @@ export const useOrderProcessing = () => {
       toast({
         variant: "destructive",
         title: "Order Failed",
-        description: `JS Error: ${error.message || "An error occurred while processing your order."} [${errorId}]`
+        description: `JS Error: ${(error && error.message) || JSON.stringify(error)} [${errorId}]`
       });
       setProcessing(false);
       return { success: false };
@@ -139,4 +138,3 @@ export const useOrderProcessing = () => {
 
   return { processOrder, processing };
 };
-
