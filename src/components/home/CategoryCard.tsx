@@ -16,17 +16,19 @@ export const CategoryCard = ({ title, href, image, bgColor }: CategoryCardProps)
   return (
     <Link to={href} className="group">
       <div className="bg-white rounded-3xl shadow-md p-6 flex flex-col items-center text-center hover:shadow-lg transition-shadow duration-200">
-        <div className="relative rounded-full p-4 mb-4 group-hover:scale-105 transition-transform flex items-center justify-center" style={{ width: 56, height: 56 }}>
-          {/* Background layer */}
+        <div
+          className="relative rounded-full p-4 mb-4 group-hover:scale-105 transition-transform flex items-center justify-center"
+          style={{ width: 56, height: 56 }}
+        >
+          {/* Background layer, explicitly behind */}
           <div
-            className="absolute inset-0 rounded-full"
+            className="absolute inset-0 rounded-full z-0"
             style={{
               background: isHex ? bgColor : pastel,
               opacity: 0.20,
-              zIndex: 1,
             }}
           />
-          {/* Image layer */}
+          {/* Image layer, explicitly above */}
           <img
             src={image}
             alt={title}
