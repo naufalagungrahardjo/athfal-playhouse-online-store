@@ -70,7 +70,7 @@ const BlogDetailPage = () => {
   return (
     <div className="min-h-screen bg-white">
       <div className="w-full">
-        <div className="max-w-[760px] mx-auto px-4 sm:px-6 py-12">
+        <div className="max-w-[760px] mx-auto px-2 sm:px-6 py-12">
           {/* Breadcrumb */}
           <div className="mb-6">
             <Link to="/" className="text-gray-500 hover:text-athfal-pink">
@@ -115,29 +115,38 @@ const BlogDetailPage = () => {
           </div>
 
           {/* Blog content - Support HTML content */}
-          <div className="prose prose-lg max-w-none mb-12">
-            <div 
-              dangerouslySetInnerHTML={{ __html: blog.content }} 
-              className="whitespace-pre-wrap"
-            />
+          <div className="flex justify-center">
+            <div
+              className="prose prose-lg max-w-prose w-full bg-white px-4 sm:px-6 md:px-8 mb-12 rounded-xl"
+              style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.02)" }}
+            >
+              <div
+                dangerouslySetInnerHTML={{ __html: blog.content }}
+                className="whitespace-pre-wrap"
+              />
+            </div>
           </div>
 
           <style>
             {`
               .prose img {
-                max-width: 680px;
-                width: 100%;
+                max-width: 100%;
                 height: auto;
                 margin: 2rem auto;
-                border-radius: 1.5rem;
+                border-radius: 1.25rem;
                 box-shadow: 0 4px 24px rgba(0,0,0,0.06);
                 display: block;
               }
               @media (max-width: 768px) {
+                .prose {
+                  max-width: 100vw;
+                  padding-left: 0.5rem;
+                  padding-right: 0.5rem;
+                }
                 .prose img {
                   max-width: 100%;
                   margin: 1rem 0;
-                  border-radius: 1rem;
+                  border-radius: 0.75rem;
                 }
               }
             `}
