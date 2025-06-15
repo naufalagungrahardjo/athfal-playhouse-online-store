@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -25,7 +26,8 @@ export const useOrderProcessing = () => {
   const processOrder = async (orderData: OrderData): Promise<{ success: boolean; orderId?: string }> => {
     try {
       setProcessing(true);
-      console.log('Processing order:', orderData);
+      const errorId = `ORD-${Date.now()}`;
+      console.log(`[${errorId}] Processing order:`, orderData);
 
       // Validate required fields for guest orders
       if (
@@ -40,7 +42,7 @@ export const useOrderProcessing = () => {
         toast({
           variant: "destructive",
           title: "Order Error",
-          description: "One or more required fields are missing! Please check your checkout form."
+          description: `One or more required fields are missing! Please check your checkout form. [${errorId}]`
         });
         setProcessing(false);
         return { success: false };
@@ -62,7 +64,7 @@ export const useOrderProcessing = () => {
         discount_amount: orderData.discountAmount || 0
       };
 
-      console.log('Order insert data (before submit):', orderInsert);
+      console.log(`[${errorId}] Order insert data (before submit):`, orderInsert);
 
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -71,16 +73,18 @@ export const useOrderProcessing = () => {
         .single();
 
       if (orderError) {
-        console.error('Order creation error:', orderError);
+        // Deep log for debugging
+        console.error(`[${errorId}] Order creation error:`, orderError, orderInsert, orderData);
         toast({
           variant: "destructive",
           title: "Order Failed",
-          description: orderError.message || "An error occurred while processing your order. Please try again."
+          description: `Supabase error: ${orderError.message || "Unknown error!"} [${errorId}]`
         });
+        setProcessing(false);
         return { success: false };
       }
 
-      console.log('Order created successfully:', order);
+      console.log(`[${errorId}] Order created successfully:`, order);
 
       // Create order items
       const orderItems = orderData.items.map(item => ({
@@ -91,18 +95,24 @@ export const useOrderProcessing = () => {
         quantity: item.quantity
       }));
 
-      console.log('Creating order items:', orderItems);
+      console.log(`[${errorId}] Creating order items:`, orderItems);
 
       const { error: itemsError } = await supabase
         .from('order_items')
         .insert(orderItems);
 
       if (itemsError) {
-        console.error('Order items creation error:', itemsError);
-        throw itemsError;
+        console.error(`[${errorId}] Order items creation error:`, itemsError);
+        toast({
+          variant: "destructive",
+          title: "Order Item Failed",
+          description: `Supabase error: ${itemsError.message || "Unknown error!"} [${errorId}]`
+        });
+        setProcessing(false);
+        return { success: false };
       }
 
-      console.log('Order items created successfully');
+      console.log(`[${errorId}] Order items created successfully`);
 
       // Store selected payment method in localStorage for order details page
       localStorage.setItem('selectedPaymentMethodId', orderData.paymentMethod);
@@ -112,19 +122,21 @@ export const useOrderProcessing = () => {
         description: `Your order has been placed successfully! Order ID: ${order.id.slice(0, 8)}`
       });
 
+      setProcessing(false);
       return { success: true, orderId: order.id };
     } catch (error: any) {
-      console.error('Error processing order:', error);
+      const errorId = `ORD-${Date.now()}`;
+      console.error(`[${errorId}] Error processing order:`, error);
       toast({
         variant: "destructive",
         title: "Order Failed",
-        description: error.message || "An error occurred while processing your order. Please try again."
+        description: `JS Error: ${error.message || "An error occurred while processing your order."} [${errorId}]`
       });
-      return { success: false };
-    } finally {
       setProcessing(false);
+      return { success: false };
     }
   };
 
   return { processOrder, processing };
 };
+
