@@ -11,6 +11,7 @@ export interface Banner {
   active: boolean;
   created_at?: string;
   updated_at?: string;
+  expiry_date?: string | null;
 }
 
 export const useBanners = () => {
@@ -22,7 +23,6 @@ export const useBanners = () => {
     try {
       setLoading(true);
       console.log('Fetching banners from database...');
-      
       const { data, error } = await supabase
         .from('banners')
         .select('*')
@@ -32,9 +32,14 @@ export const useBanners = () => {
         console.error('Supabase banners error:', error);
         throw error;
       }
-      
-      console.log('Banners fetched:', data);
-      setBanners(data || []);
+      // Only include banners with no expiry, or expiry_date in the future
+      const now = new Date();
+      const filtered = (data || []).filter((b: any) => {
+        if (!b.expiry_date) return true;
+        return new Date(b.expiry_date) > now;
+      });
+      setBanners(filtered || []);
+      console.log('Banners fetched:', filtered);
     } catch (error) {
       console.error('Error fetching banners:', error);
       toast({
@@ -50,7 +55,7 @@ export const useBanners = () => {
   const saveBanner = async (banner: Banner) => {
     try {
       console.log('Saving banner:', banner);
-      
+
       // Validate required fields
       if (!banner.title?.trim()) {
         throw new Error('Banner title is required');
@@ -59,16 +64,14 @@ export const useBanners = () => {
         throw new Error('Banner image is required');
       }
 
-      // For new banners, let the database generate the UUID
       const bannerData = {
         title: banner.title.trim(),
         subtitle: banner.subtitle?.trim() || '',
         image: banner.image.trim(),
         active: banner.active,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        expiry_date: banner.expiry_date ?? null,
       };
-
-      console.log('Banner data to save:', bannerData);
 
       let result;
       if (banner.id && banner.id !== '' && !banner.id.startsWith('banner_')) {
@@ -141,7 +144,6 @@ export const useBanners = () => {
     return banners.find(banner => banner.active);
   };
 
-  // Add real-time subscription for banners
   useEffect(() => {
     fetchBanners();
 

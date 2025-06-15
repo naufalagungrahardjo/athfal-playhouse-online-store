@@ -49,6 +49,7 @@ export type Database = {
         Row: {
           active: boolean
           created_at: string
+          expiry_date: string | null
           id: string
           image: string
           subtitle: string | null
@@ -58,6 +59,7 @@ export type Database = {
         Insert: {
           active?: boolean
           created_at?: string
+          expiry_date?: string | null
           id?: string
           image: string
           subtitle?: string | null
@@ -67,6 +69,7 @@ export type Database = {
         Update: {
           active?: boolean
           created_at?: string
+          expiry_date?: string | null
           id?: string
           image?: string
           subtitle?: string | null
@@ -82,6 +85,7 @@ export type Database = {
           content: string
           created_at: string
           date: string
+          expiry_date: string | null
           id: string
           image: string
           published: boolean
@@ -94,6 +98,7 @@ export type Database = {
           content: string
           created_at?: string
           date: string
+          expiry_date?: string | null
           id: string
           image: string
           published?: boolean
@@ -106,6 +111,7 @@ export type Database = {
           content?: string
           created_at?: string
           date?: string
+          expiry_date?: string | null
           id?: string
           image?: string
           published?: boolean

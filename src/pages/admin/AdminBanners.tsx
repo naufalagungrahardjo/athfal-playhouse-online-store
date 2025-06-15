@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,10 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FilePlus, Edit, Trash2 } from "lucide-react";
+import { FilePlus, Edit, Trash2, CalendarIcon } from "lucide-react";
 import { useBanners, Banner } from "@/hooks/useBanners";
 import { ImageUpload } from "@/components/ImageUpload";
 import { useToast } from "@/hooks/use-toast";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 const AdminBanners = () => {
   const { banners, loading, saveBanner, deleteBanner } = useBanners();
@@ -22,8 +27,10 @@ const AdminBanners = () => {
     title: '',
     subtitle: '',
     image: '',
-    active: false
+    active: false,
+    expiry_date: null
   });
+  const [expiryPopoverOpen, setExpiryPopoverOpen] = useState(false);
 
   const handleCreateNew = () => {
     setEditingBanner(null);
@@ -32,7 +39,8 @@ const AdminBanners = () => {
       title: '',
       subtitle: '',
       image: '',
-      active: false
+      active: false,
+      expiry_date: null
     });
     setIsDialogOpen(true);
   };
@@ -46,7 +54,7 @@ const AdminBanners = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      
+
       // Validate form data
       if (!formData.title?.trim()) {
         toast({
@@ -94,6 +102,9 @@ const AdminBanners = () => {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
 
+  // get expiry date object
+  const expiryDateValue = formData.expiry_date ? new Date(formData.expiry_date) : undefined;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -139,6 +150,12 @@ const AdminBanners = () => {
                 </div>
                 {banner.subtitle && (
                   <p className="text-sm text-gray-600 line-clamp-2">{banner.subtitle}</p>
+                )}
+                {banner.expiry_date && (
+                  <div className="text-xs mt-2 text-gray-500 flex items-center gap-2">
+                    <CalendarIcon className="w-4 h-4" />
+                    Expires: {format(new Date(banner.expiry_date), "PPP")}
+                  </div>
                 )}
               </CardContent>
               <CardFooter className="flex justify-between">
@@ -196,6 +213,67 @@ const AdminBanners = () => {
               onChange={(url) => setFormData({...formData, image: url})}
               label="Banner Image *"
             />
+
+            <div>
+              <Label htmlFor="banner-expiry-date">Expiry Date</Label>
+              <div className="flex items-center gap-3">
+                <Popover open={expiryPopoverOpen} onOpenChange={setExpiryPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className={cn(
+                        "w-full h-10 px-3 py-2 border border-input bg-background rounded-md text-sm font-normal text-left transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium",
+                        !expiryDateValue ? "text-muted-foreground" : "",
+                        "relative"
+                      )}
+                      style={{ cursor: "pointer", width: "200px" }}
+                      aria-label="Select expiry date"
+                    >
+                      {expiryDateValue
+                        ? format(expiryDateValue, "PPP")
+                        : "Forever (no expiry)"}
+                      <CalendarIcon className="absolute right-4 top-2 h-4 w-4 pointer-events-none opacity-60" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={expiryDateValue}
+                      onSelect={(newDate) => {
+                        setExpiryPopoverOpen(false);
+                        setFormData({
+                          ...formData,
+                          expiry_date: newDate ? newDate.toISOString() : null,
+                        });
+                      }}
+                      initialFocus
+                    />
+                    <button
+                      className="mt-2 block text-xs text-athfal-pink/80 hover:underline"
+                      onClick={() => {
+                        setFormData({ ...formData, expiry_date: null });
+                        setExpiryPopoverOpen(false);
+                      }}
+                      type="button"
+                    >
+                      No expiry (up forever)
+                    </button>
+                  </PopoverContent>
+                </Popover>
+                {expiryDateValue && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, expiry_date: null })}
+                    className="text-xs text-athfal-pink/80 hover:underline"
+                  >
+                    Remove Expiry
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Leave as "Forever" to keep this banner active indefinitely.
+              </p>
+            </div>
 
             <div className="flex items-center space-x-2">
               <Switch

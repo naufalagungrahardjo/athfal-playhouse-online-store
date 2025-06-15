@@ -12,6 +12,7 @@ export interface Blog {
   date: string;
   category: string;
   published: boolean;
+  expiry_date?: string | null;
 }
 
 export const useBlogs = () => {
@@ -23,8 +24,6 @@ export const useBlogs = () => {
     try {
       setLoading(true);
       console.log('Fetching blogs from database...');
-      
-      // Direct table access since we fixed the RLS issues
       const { data, error } = await supabase
         .from('blogs')
         .select('*')
@@ -34,10 +33,17 @@ export const useBlogs = () => {
         console.error('Error fetching blogs:', error);
         throw error;
       }
-      
-      console.log('Blogs fetched successfully:', data);
-      
-      const formattedBlogs: Blog[] = (data || []).map((blog: any) => ({
+
+      // Only include blogs that have no expiry, or expiry_date in the future
+      const now = new Date();
+      const filteredBlogs = (data || []).filter((blog: any) => {
+        if (!blog.expiry_date) return true;
+        return new Date(blog.expiry_date) > now;
+      });
+
+      console.log('Blogs fetched successfully:', filteredBlogs);
+
+      const formattedBlogs: Blog[] = filteredBlogs.map((blog: any) => ({
         id: blog.id,
         title: blog.title || '',
         content: blog.content || '',
@@ -45,7 +51,8 @@ export const useBlogs = () => {
         author: blog.author || 'Admin',
         date: blog.date || new Date().toISOString().split('T')[0],
         category: blog.category || 'General',
-        published: blog.published || false
+        published: blog.published || false,
+        expiry_date: blog.expiry_date
       }));
 
       setBlogs(formattedBlogs);
@@ -66,12 +73,10 @@ export const useBlogs = () => {
   const saveBlog = async (blog: Blog) => {
     try {
       console.log('Saving blog:', blog);
-      
       // Validate required fields
       if (!blog.title || !blog.content || !blog.author) {
         throw new Error('Title, content, and author are required fields');
       }
-
       const blogData = {
         id: blog.id,
         title: blog.title,
@@ -81,7 +86,8 @@ export const useBlogs = () => {
         date: blog.date,
         category: blog.category,
         published: blog.published,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        expiry_date: blog.expiry_date ?? null
       };
 
       const { error } = await supabase
@@ -142,7 +148,6 @@ export const useBlogs = () => {
 
   useEffect(() => {
     fetchBlogs();
-
     // Set up real-time subscription for blogs
     const channel = supabase
       .channel('blogs-changes')
