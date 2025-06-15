@@ -3,19 +3,24 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUpload } from "@/components/ImageUpload";
 
 interface Props {
   aboutTitle: { id: string; en: string };
   aboutDescription: { id: string; en: string };
   aboutExtraParagraph: { id: string; en: string };
+  aboutDecorativeImage?: string;
   onChange: (field: string, lang: "id" | "en", value: string) => void;
+  onDecorativeImageChange?: (url: string) => void;
 }
 
 export default function AboutSectionEditor({
   aboutTitle,
   aboutDescription,
   aboutExtraParagraph,
-  onChange
+  aboutDecorativeImage,
+  onChange,
+  onDecorativeImageChange
 }: Props) {
   return (
     <Card>
@@ -77,6 +82,14 @@ export default function AboutSectionEditor({
               onChange={e => onChange('aboutExtraParagraph', 'en', e.target.value)}
             />
           </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Decorative Image (Yellow Circle - Small Image)</Label>
+          <ImageUpload
+            value={aboutDecorativeImage}
+            onChange={url => onDecorativeImageChange && onDecorativeImageChange(url)}
+            label="Decorative Image"
+          />
         </div>
       </CardContent>
     </Card>

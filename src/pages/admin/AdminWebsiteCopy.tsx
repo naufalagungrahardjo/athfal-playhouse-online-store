@@ -71,6 +71,7 @@ const WEBSITE_COPY = {
       id: "Tempat bermain dan belajar yang menyenangkan untuk anak-anak.",
       en: "A fun and educational play and learning space for children.",
     },
+    aboutDecorativeImage: "",
   },
   navigation: {
     home: { id: "Beranda", en: "Home" },
@@ -136,6 +137,17 @@ const AdminWebsiteCopy = () => {
           ...(prev.homePage as any)[field],
           [lang]: value,
         }
+      }
+    }));
+  };
+
+  // Handle aboutDecorativeImage as a special case (not translatable)
+  const handleAboutDecorativeImageChange = (url: string) => {
+    setCopy(prev => ({
+      ...prev,
+      homePage: {
+        ...prev.homePage,
+        aboutDecorativeImage: url
       }
     }));
   };
@@ -262,7 +274,9 @@ const AdminWebsiteCopy = () => {
             aboutTitle={copy.homePage.aboutTitle}
             aboutDescription={copy.homePage.aboutDescription}
             aboutExtraParagraph={copy.homePage.aboutExtraParagraph}
-            onChange={handleAboutChange}
+            aboutDecorativeImage={copy.homePage.aboutDecorativeImage}
+            onChange={handleHomePageChange}
+            onDecorativeImageChange={handleAboutDecorativeImageChange}
           />
         </TabsContent>
         

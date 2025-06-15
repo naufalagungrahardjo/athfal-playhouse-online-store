@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 
 type CopyField = { id: string; en: string };
@@ -9,6 +8,7 @@ type HomePageCopy = {
   aboutTitle: CopyField;
   aboutDescription: CopyField;
   aboutExtraParagraph: CopyField;
+  aboutDecorativeImage?: string;
   ctaSectionTitle: CopyField;
   ctaSectionSubtitle: CopyField;
   homeSlogan: CopyField;
@@ -45,6 +45,7 @@ const DEFAULT_COPY: WebsiteCopy = {
     aboutTitle: { id: "Tentang Athfal Playhouse", en: "About Athfal Playhouse" },
     aboutDescription: { id: "Athfal Playhouse adalah pusat edukasi anak yang menggabungkan metode bermain sambil belajar dengan nilai-nilai Islam.", en: "Athfal Playhouse is a children's education center that combines play-based learning methods with Islamic values." },
     aboutExtraParagraph: { id: "Dengan metode pembelajaran yang interaktif dan menyenangkan, kami membantu anak-anak untuk mengembangkan kreativitas dan kemampuan berpikir kritis mereka sejak dini.", en: "With interactive and fun learning methods, we help children develop their creativity and critical thinking skills from an early age." },
+    aboutDecorativeImage: "/lovable-uploads/4e490da3-e092-4eec-b20b-d66ed04832e7.png",
     ctaSectionTitle: { id: "Bergabung Sekarang", en: "Join Now" },
     ctaSectionSubtitle: { id: "Temukan berbagai kegiatan menyenangkan dan edukatif untuk anak-anak Anda di Athfal Playhouse!", en: "Discover various fun and educational activities for your children at Athfal Playhouse!" },
     homeSlogan: { id: "Tempat bermain dan belajar yang menyenangkan untuk anak-anak.", en: "A fun and educational play and learning space for children." }
