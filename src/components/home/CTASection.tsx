@@ -10,8 +10,8 @@ export const CTASection = () => {
 
   return (
     <section className="py-16 bg-gradient-to-br from-athfal-teal-light/30 to-athfal-pink/10">
-      <div className="athfal-container flex flex-col items-center justify-center gap-8">
-        <div className="flex-1 w-full max-w-2xl text-center">
+      <div className="athfal-container flex flex-col gap-8">
+        <div className="flex-1 w-full max-w-2xl mx-auto text-left">
           <h2 className="text-2xl md:text-3xl font-bold text-athfal-teal mb-4">
             {language === "id"
               ? copy.homePage.ctaSectionTitle.id
@@ -23,7 +23,7 @@ export const CTASection = () => {
               : copy.homePage.ctaSectionSubtitle.en}
           </p>
           <Link to="/products/pop-up-class">
-            <Button className="bg-athfal-pink hover:bg-athfal-pink/80 text-white py-3 px-8 rounded-full text-lg mx-auto block">
+            <Button className="bg-athfal-pink hover:bg-athfal-pink/80 text-white py-3 px-8 rounded-full text-lg">
               {language === 'id' ? 'Daftar Kelas' : 'Register for Classes'}
             </Button>
           </Link>
