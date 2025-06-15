@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from "@/hooks/use-toast";
 import { User, ShoppingBag, CreditCard } from 'lucide-react';
+import DeleteAccountButton from "@/components/profile/DeleteAccountButton";
 
 // Mock order history data
 const mockOrderHistory = [
@@ -176,6 +176,8 @@ const ProfilePage = () => {
                 >
                   {language === 'id' ? 'Keluar' : 'Sign Out'}
                 </Button>
++               {/* Only common user can see the delete account button */}
++               <DeleteAccountButton />
               </CardContent>
             </Card>
           </div>
