@@ -46,6 +46,7 @@ const AboutUsAdminTab = () => {
 
   return (
     <div className="space-y-6">
+      {/* --- About Us Hero Section --- */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -56,6 +57,7 @@ const AboutUsAdminTab = () => {
         <CardContent className="space-y-6">
           {/* --- Hero Title/Subtitle fields --- */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* ... keep hero title inputs ... */}
             <div className="space-y-2">
               <Label>Hero Title (Indonesian)</Label>
               <Input
@@ -72,18 +74,21 @@ const AboutUsAdminTab = () => {
             </div>
           </div>
           {/* --- Hero Image Upload --- */}
-          <ImageUpload
-            value={aboutContent.heroImage}
-            onChange={(url) => handleAboutImageChange('heroImage', url)}
-            label="Hero Image (Main Large Image)"
-          />
-          {/* --- Decorative Image Upload --- */}
-          <ImageUpload
-            value={aboutContent.aboutDecorativeImage || ""}
-            onChange={(url) => handleAboutImageChange('aboutDecorativeImage', url)}
-            label="Decorative Image (Yellow Circle - Small Image)"
-            className="mt-6"
-          />
+          <div className="mt-6">
+            <ImageUpload
+              value={aboutContent.heroImage}
+              onChange={(url) => handleAboutImageChange('heroImage', url)}
+              label="Hero Image (Main Large Image)"
+            />
+          </div>
+          {/* --- Decorative (Yellow Circle) Image Upload --- */}
+          <div className="mt-6">
+            <ImageUpload
+              value={aboutContent.aboutDecorativeImage || ""}
+              onChange={(url) => handleAboutImageChange('aboutDecorativeImage', url)}
+              label="Decorative Image (Yellow Circle - Small Image)"
+            />
+          </div>
         </CardContent>
       </Card>
       <Card>
