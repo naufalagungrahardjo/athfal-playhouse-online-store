@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -40,7 +39,7 @@ const DesktopNavigation = () => {
         </DropdownMenuContent>
       </DropdownMenu>
       <Link to="/gallery" className={navItemClass}>
-        {language === "id" ? nav.gallery?.id || "Galeri" : nav.gallery?.en || "Gallery"}
+        {language === "id" ? nav.gallery.id : nav.gallery.en}
       </Link>
       <Link to="/about" className={navItemClass}>
         {language === "id" ? nav.about.id : nav.about.en}

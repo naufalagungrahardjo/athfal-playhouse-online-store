@@ -9,7 +9,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useState } from "react";
 
 const MobileMenu = () => {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { copy } = useWebsiteCopy();
   const nav = copy.navigation;
   const { user, logout, isAdmin } = useAuth();
@@ -34,7 +34,6 @@ const MobileMenu = () => {
           <Link to="/" className={navItemClass}>
             {language === "id" ? nav.home.id : nav.home.en}
           </Link>
-
           <div className="py-2">
             <h3 className="font-medium text-athfal-pink mb-2 text-base">
               {language === "id" ? nav.products.id : nav.products.en}
@@ -51,19 +50,15 @@ const MobileMenu = () => {
               ))}
             </div>
           </div>
-          
           <Link to="/gallery" className={navItemClass}>
-            {language === "id" ? nav.gallery?.id || "Galeri" : nav.gallery?.en || "Gallery"}
+            {language === "id" ? nav.gallery.id : nav.gallery.en}
           </Link>
-          
           <Link to="/about" className={navItemClass}>
             {language === "id" ? nav.about.id : nav.about.en}
           </Link>
-          
           <Link to="/blog" className={navItemClass}>
             {language === "id" ? nav.blog.id : nav.blog.en}
           </Link>
-          
           <Link to="/faq" className={navItemClass}>
             {language === "id" ? nav.faq.id : nav.faq.en}
           </Link>

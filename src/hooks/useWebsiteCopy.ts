@@ -21,6 +21,7 @@ type NavigationCopy = {
   blog: CopyField;
   contact: CopyField;
   faq: CopyField;
+  gallery: CopyField; // <--- Added gallery field!
 };
 
 type ProductCategoryCopy = {
@@ -54,7 +55,8 @@ const DEFAULT_COPY: WebsiteCopy = {
     products: { id: "Produk", en: "Products" },
     blog: { id: "Blog", en: "Blog" },
     contact: { id: "Kontak", en: "Contact" },
-    faq: { id: "FAQ", en: "FAQ" }
+    faq: { id: "FAQ", en: "FAQ" },
+    gallery: { id: "Galeri", en: "Gallery" }, // <--- Added gallery field!
   },
   productCategories: {}
 };
