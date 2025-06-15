@@ -8,6 +8,8 @@ import { ImageUpload } from "@/components/ImageUpload";
 import TeamMemberForm from "../team/TeamMemberForm";
 import { useAboutContent, TeamMember } from "@/hooks/useAboutContent";
 import { useState } from "react";
+import AboutSectionHeroImageUpload from "./AboutSectionHeroImageUpload";
+import AboutSectionDecorativeImageUpload from "./AboutSectionDecorativeImageUpload";
 
 const AboutUsAdminTab = () => {
   const {
@@ -73,22 +75,14 @@ const AboutUsAdminTab = () => {
               />
             </div>
           </div>
-          {/* --- Hero Image Upload --- */}
-          <div className="mt-6">
-            <ImageUpload
-              value={aboutContent.heroImage}
-              onChange={(url) => handleAboutImageChange('heroImage', url)}
-              label="Hero Image (Main Large Image)"
-            />
-          </div>
-          {/* --- Decorative (Yellow Circle) Image Upload --- */}
-          <div className="mt-6">
-            <ImageUpload
-              value={aboutContent.aboutDecorativeImage || ""}
-              onChange={(url) => handleAboutImageChange('aboutDecorativeImage', url)}
-              label="Decorative Image (Yellow Circle - Small Image)"
-            />
-          </div>
+          <AboutSectionHeroImageUpload
+            value={aboutContent.heroImage}
+            onChange={(url) => handleAboutImageChange('heroImage', url)}
+          />
+          <AboutSectionDecorativeImageUpload
+            value={aboutContent.aboutDecorativeImage || ""}
+            onChange={(url) => handleAboutImageChange('aboutDecorativeImage', url)}
+          />
         </CardContent>
       </Card>
       <Card>
