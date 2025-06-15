@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -241,11 +240,6 @@ const ProductDetailPage = () => {
               <div className="prose max-w-none">
                 <p className="mb-4">
                   {product.description}
-                </p>
-                <p className="mb-4">
-                  {language === 'id' 
-                    ? 'Di Athfal Playhouse, kami percaya bahwa belajar seharusnya menyenangkan dan melibatkan. Produk ini dirancang untuk membantu anak-anak belajar sambil bermain, mengembangkan keterampilan kognitif dan motorik mereka dalam lingkungan yang menyenangkan dan mendukung.'
-                    : 'At Athfal Playhouse, we believe that learning should be fun and engaging. This product is designed to help children learn while playing, developing their cognitive and motor skills in a fun and supportive environment.'}
                 </p>
               </div>
             </TabsContent>
