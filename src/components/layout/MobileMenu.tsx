@@ -17,7 +17,7 @@ const MobileMenu = () => {
     navigate('/profile');
   };
 
-  // Consistent large font size for mobile nav menu
+  // Set all mobile nav menu items (main and categories) to text-2xl
   const navItemClass = "text-athfal-pink font-medium hover:text-athfal-pink/80 py-2 text-2xl";
 
   return (
@@ -40,7 +40,7 @@ const MobileMenu = () => {
                 <Link 
                   key={category.id}
                   to={`/products/${category.slug}`} 
-                  className="text-athfal-pink/80 hover:text-athfal-pink text-lg"
+                  className="text-athfal-pink/80 hover:text-athfal-pink text-2xl"
                 >
                   {category.title}
                 </Link>
@@ -106,3 +106,4 @@ const MobileMenu = () => {
 };
 
 export default MobileMenu;
+

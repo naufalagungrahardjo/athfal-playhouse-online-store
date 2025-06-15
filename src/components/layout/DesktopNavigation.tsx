@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -10,7 +9,7 @@ const DesktopNavigation = () => {
   const { t } = useLanguage();
   const { categories } = useCategories();
 
-  // Apply consistent and large font-size ('text-2xl' for header menu)
+  // Set all menu and dropdown links to text-2xl for consistency
   const navItemClass = "text-athfal-pink font-medium hover:text-athfal-pink/80 text-2xl";
 
   return (
@@ -30,7 +29,9 @@ const DesktopNavigation = () => {
         <DropdownMenuContent className="bg-white">
           {categories.map(category => (
             <DropdownMenuItem key={category.id}>
-              <Link to={`/products/${category.slug}`} className="w-full text-athfal-pink text-base">{category.title}</Link>
+              <Link to={`/products/${category.slug}`} className="w-full text-athfal-pink text-2xl">
+                {category.title}
+              </Link>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
