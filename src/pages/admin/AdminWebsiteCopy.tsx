@@ -26,6 +26,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import TeamMemberForm from "./team/TeamMemberForm";
 import GalleryItemForm from "./gallery/GalleryItemForm";
 
+import AboutUsAdminTab from "./website-copy/AboutUsAdminTab";
+import GalleryAdminTab from "./website-copy/GalleryAdminTab";
+
 // Initial Website Copy State
 const WEBSITE_COPY = {
   homePage: {
