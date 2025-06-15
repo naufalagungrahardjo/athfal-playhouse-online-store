@@ -1,4 +1,3 @@
-
 import { Link, useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -17,8 +16,8 @@ const MobileMenu = () => {
     navigate('/profile');
   };
 
-  // Set all mobile nav menu items (main and categories) to text-2xl
-  const navItemClass = "text-athfal-pink font-medium hover:text-athfal-pink/80 py-2 text-2xl";
+  // Match mobile nav items to Login button font (text-sm font-medium)
+  const navItemClass = "text-athfal-pink font-medium hover:text-athfal-pink/80 py-2 text-sm";
 
   return (
     <Sheet>
@@ -34,13 +33,13 @@ const MobileMenu = () => {
           </Link>
 
           <div className="py-2">
-            <h3 className="font-medium text-athfal-pink mb-2 text-xl">{t('products')}</h3>
+            <h3 className="font-medium text-athfal-pink mb-2 text-base">{t('products')}</h3>
             <div className="pl-4 flex flex-col space-y-2">
               {categories.map(category => (
                 <Link 
                   key={category.id}
                   to={`/products/${category.slug}`} 
-                  className="text-athfal-pink/80 hover:text-athfal-pink text-2xl"
+                  className="text-athfal-pink/80 hover:text-athfal-pink text-sm font-medium"
                 >
                   {category.title}
                 </Link>
@@ -106,4 +105,3 @@ const MobileMenu = () => {
 };
 
 export default MobileMenu;
-
