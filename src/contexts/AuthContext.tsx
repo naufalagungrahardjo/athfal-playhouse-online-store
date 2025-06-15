@@ -140,7 +140,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const isAdmin = () => {
-    return user?.role === 'admin';
+    // Accept any recognized admin role
+    return (
+      user?.role === 'admin' ||
+      user?.role === 'super_admin' ||
+      user?.role === 'orders_manager' ||
+      user?.role === 'order_staff' ||
+      user?.role === 'content_manager' ||
+      user?.role === 'content_staff'
+    );
   };
 
   return (
