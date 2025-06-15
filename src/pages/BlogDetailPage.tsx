@@ -106,21 +106,53 @@ const BlogDetailPage = () => {
         </div>
 
         {/* Featured image */}
-        <div className="mb-8 rounded-3xl overflow-hidden">
+        <div className="mb-8 rounded-3xl overflow-hidden max-w-3xl mx-auto">
           <img
             src={blog.image}
             alt={blog.title}
             className="w-full h-auto object-cover"
+            style={{ maxHeight: "420px", objectFit: "cover" }}
           />
         </div>
 
         {/* Blog content - Support HTML content */}
-        <div className="prose prose-lg max-w-none mb-12">
+        <div className="prose prose-lg max-w-2xl mx-auto mb-12">
           <div 
             dangerouslySetInnerHTML={{ __html: blog.content }} 
             className="whitespace-pre-wrap"
+            // prevent accidental pointer events from bubbling out of this zone
+            onClick={e => {
+              // Allow genuine links to work, but stop any other kind of element click
+              const target = e.target as HTMLElement;
+              if (target.tagName === "A") {
+                // allow default behavior for links
+                return;
+              }
+              e.stopPropagation();
+            }}
           />
         </div>
+
+        <style>
+          {`
+            .prose img {
+              max-width: 680px;
+              width: 100%;
+              height: auto;
+              margin: 2rem auto;
+              border-radius: 1.5rem;
+              box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+              display: block;
+            }
+            @media (max-width: 768px) {
+              .prose img {
+                max-width: 100%;
+                margin: 1rem 0;
+                border-radius: 1rem;
+              }
+            }
+          `}
+        </style>
 
         {/* Related articles */}
         {relatedBlogs.length > 0 && (
