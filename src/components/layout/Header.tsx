@@ -13,6 +13,7 @@ import CartButton from "./CartButton";
 import UserMenu from "./UserMenu";
 import DesktopNavigation from "./DesktopNavigation";
 import MobileMenu from "./MobileMenu";
+import BlogSearchBar from "./BlogSearchBar";
 
 const Header = () => {
   console.log('[Header] Rendering');
@@ -50,6 +51,8 @@ const Header = () => {
 
           {/* User Actions */}
           <div className="flex items-center space-x-4">
+            {/* Search bar placed to left of LanguageSwitcher */}
+            <BlogSearchBar />
             <LanguageSwitcher />
             <CartButton />
             <UserMenu />
