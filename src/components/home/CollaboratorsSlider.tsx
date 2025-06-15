@@ -3,30 +3,12 @@ import { useState, useEffect } from 'react';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 
 const collaborators = [
-  {
-    name: 'Techify Inc.',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg',
-  },
-  {
-    name: 'EduWorld',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/4/4f/Icon-Vue.png',
-  },
-  {
-    name: 'Coders LTD',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg',
-  },
-  {
-    name: 'Jane Studios',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/9/96/Solidity.svg',
-  },
-  {
-    name: 'NextLeap',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/8/8e/Nextjs-logo.svg',
-  },
-  {
-    name: 'DesignLab',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/3/33/Figma-logo.svg',
-  },
+  { name: 'Techify Inc.', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg' },
+  { name: 'EduWorld', logo: 'https://upload.wikimedia.org/wikipedia/commons/4/4f/Icon-Vue.png' },
+  { name: 'Coders LTD', logo: 'https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg' },
+  { name: 'Jane Studios', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/96/Solidity.svg' },
+  { name: 'NextLeap', logo: 'https://upload.wikimedia.org/wikipedia/commons/8/8e/Nextjs-logo.svg' },
+  { name: 'DesignLab', logo: 'https://upload.wikimedia.org/wikipedia/commons/3/33/Figma-logo.svg' },
 ];
 
 export default function CollaboratorsSlider() {
@@ -34,8 +16,8 @@ export default function CollaboratorsSlider() {
 
   useEffect(() => {
     if (!emblaApi) return;
+
     const interval = setInterval(() => {
-      // Scrolls right (next)
       emblaApi.scrollNext();
     }, 3000);
 
@@ -48,10 +30,11 @@ export default function CollaboratorsSlider() {
         <Carousel
           opts={{
             align: 'start',
-            loop: true,
-            dragFree: true,
-            slidesToScroll: 'auto',
+            loop: true,             // Enable infinite looping
+            dragFree: false,        // Snap cleanly to each slide
+            slidesToScroll: 1,      // Only slide one item per movement
             containScroll: 'trimSnaps',
+            draggable: false        // Disable dragging for a perfect seamless auto-slider
           }}
           setApi={setEmblaApi}
           className="relative w-full max-w-5xl mx-auto"
