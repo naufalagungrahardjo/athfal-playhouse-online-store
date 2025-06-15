@@ -43,7 +43,7 @@ export default function CollaboratorsSlider() {
             dragFree: true,
             slidesToScroll: 'auto',
             containScroll: 'trimSnaps',
-            speed: 10,
+            // speed: 10, // <-- Removed invalid property
           }}
           className="relative w-full max-w-5xl mx-auto"
         >
@@ -69,3 +69,4 @@ export default function CollaboratorsSlider() {
     </section>
   );
 }
+
