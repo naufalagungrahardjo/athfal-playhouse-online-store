@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,6 +23,8 @@ import { Plus, Trash2, Edit } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { VideoUrlInput } from "@/components/admin/VideoUrlInput";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import TeamMemberForm from "./team/TeamMemberForm";
+import GalleryItemForm from "./gallery/GalleryItemForm";
 
 // Initial Website Copy State
 const WEBSITE_COPY = {
@@ -641,118 +642,6 @@ const AdminWebsiteCopy = () => {
           />
         </TabsContent>
       </Tabs>
-    </div>
-  );
-};
-
-// --- Forms reused from Content Management ---
-const TeamMemberForm = ({ initialData, onSave, onCancel }: {
-  initialData?: TeamMember;
-  onSave: (member: Omit<TeamMember, 'id'>) => void;
-  onCancel: () => void;
-}) => {
-  const [member, setMember] = useState({
-    name: initialData?.name || '',
-    title: initialData?.title || '',
-    image: initialData?.image || '',
-    linkedin: initialData?.linkedin || ''
-  });
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <Label>Name</Label>
-        <Input
-          value={member.name}
-          onChange={(e) => setMember({...member, name: e.target.value})}
-        />
-      </div>
-      <div>
-        <Label>Title</Label>
-        <Input
-          value={member.title}
-          onChange={(e) => setMember({...member, title: e.target.value})}
-        />
-      </div>
-      <div>
-        <Label>LinkedIn URL</Label>
-        <Input
-          value={member.linkedin}
-          onChange={(e) => setMember({...member, linkedin: e.target.value})}
-        />
-      </div>
-      <ImageUpload
-        value={member.image}
-        onChange={(url) => setMember({...member, image: url})}
-        label="Profile Image"
-      />
-      <div className="flex gap-2">
-        <Button onClick={() => onSave(member)}>Save</Button>
-        <Button variant="outline" onClick={onCancel}>Cancel</Button>
-      </div>
-    </div>
-  );
-};
-
-const GalleryItemForm = ({ initialData, onSave, onCancel }: {
-  initialData?: GalleryItem;
-  onSave: (item: Omit<GalleryItem, 'id'>) => void;
-  onCancel: () => void;
-}) => {
-  const [item, setItem] = useState({
-    type: initialData?.type || 'image' as 'image' | 'video',
-    url: initialData?.url || '',
-    title: initialData?.title || '',
-    description: initialData?.description || ''
-  });
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <Label>Type</Label>
-        <Select value={item.type} onValueChange={(value: 'image' | 'video') => setItem({...item, type: value})}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="image">Image</SelectItem>
-            <SelectItem value="video">Video</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <Label>Title</Label>
-        <Input
-          value={item.title}
-          onChange={(e) => setItem({...item, title: e.target.value})}
-        />
-      </div>
-      <div>
-        <Label>Description</Label>
-        <Input
-          value={item.description}
-          onChange={(e) => setItem({...item, description: e.target.value})}
-        />
-      </div>
-      <div>
-        {item.type === 'video' ? (
-          <VideoUrlInput
-            value={item.url}
-            onChange={(url) => setItem({...item, url})}
-            label="YouTube Video URL"
-          />
-        ) : (
-          <ImageUpload
-            value={item.url}
-            onChange={(url) => setItem({...item, url})}
-            label="Gallery Image"
-          />
-        )}
-      </div>
-      <div className="flex gap-2">
-        <Button onClick={() => onSave(item)}>Save</Button>
-        <Button variant="outline" onClick={onCancel}>Cancel</Button>
-      </div>
     </div>
   );
 };
