@@ -1,3 +1,4 @@
+
 import { HomeBanner } from '@/components/HomeBanner';
 import { CategoriesSection } from '@/components/home/CategoriesSection';
 import { FeaturedProductsSection } from '@/components/home/FeaturedProductsSection';
