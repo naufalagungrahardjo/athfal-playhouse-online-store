@@ -117,7 +117,7 @@ const BlogDetailPage = () => {
           {/* Blog content - Support HTML content */}
           <div className="flex justify-center">
             <div
-              className="prose prose-lg max-w-[820px] w-full bg-white px-6 sm:px-8 md:px-10 mb-12 rounded-xl"
+              className="prose prose-lg max-w-[900px] w-full bg-white px-6 sm:px-8 md:px-10 mb-12 rounded-xl"
               style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.02)" }}
             >
               <div
