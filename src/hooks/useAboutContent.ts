@@ -82,13 +82,16 @@ export const useAboutContent = () => {
       // Insert default content on first run (for convenience)
       await supabase
         .from('about_content')
-        .insert([{ id: ABOUT_DOC_ID, content: DEFAULT_CONTENT }]);
+        .insert([
+          { id: ABOUT_DOC_ID, content: DEFAULT_CONTENT as any }
+        ]);
       setContent(DEFAULT_CONTENT);
       setLoading(false);
       return;
     }
 
-    setContent(data.content as AboutContent);
+    // TS is unsure about the shape here, so cast safely
+    setContent((data.content as unknown) as AboutContent);
     setLoading(false);
   };
 
@@ -98,7 +101,9 @@ export const useAboutContent = () => {
 
     const { error } = await supabase
       .from('about_content')
-      .upsert({ id: ABOUT_DOC_ID, content: newContent });
+      .upsert([
+        { id: ABOUT_DOC_ID, content: newContent as any }
+      ]);
 
     if (error) {
       toast({
@@ -120,7 +125,7 @@ export const useAboutContent = () => {
       ...member,
       id: Date.now().toString()
     };
-    const updatedContent = {
+    const updatedContent: AboutContent = {
       ...content,
       teamMembers: [...content.teamMembers, newMember]
     };
@@ -128,7 +133,7 @@ export const useAboutContent = () => {
   };
 
   const updateTeamMember = (id: string, updatedMember: Partial<TeamMember>) => {
-    const updatedContent = {
+    const updatedContent: AboutContent = {
       ...content,
       teamMembers: content.teamMembers.map(member =>
         member.id === id ? { ...member, ...updatedMember } : member
@@ -138,7 +143,7 @@ export const useAboutContent = () => {
   };
 
   const deleteTeamMember = (id: string) => {
-    const updatedContent = {
+    const updatedContent: AboutContent = {
       ...content,
       teamMembers: content.teamMembers.filter(member => member.id !== id)
     };
