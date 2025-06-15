@@ -20,6 +20,7 @@ interface ProductFormData {
   category: ProductCategory;
   tax: number;
   stock: number;
+  schedule?: { day: string; time: string; note?: string }[] | null; // <-- Added
 }
 
 interface ProductFormProps {
@@ -57,6 +58,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         category: editingProduct.category,
         tax: editingProduct.tax,
         stock: editingProduct.stock,
+        schedule: editingProduct.schedule
       });
     } else {
       // Reset form for new product, but no default description!

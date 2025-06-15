@@ -14,7 +14,7 @@ export const useProducts = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const { data, error } = await supabase
         .from('products')
         .select('*')
@@ -30,7 +30,8 @@ export const useProducts = () => {
         image: product.image,
         category: product.category as ProductCategory,
         tax: product.tax,
-        stock: product.stock
+        stock: product.stock,
+        schedule: product.schedule ?? null // <-- MAP SCHEDULE PROPERTY
       }));
 
       setProducts(formattedProducts);

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -13,6 +12,7 @@ export interface Product {
   category: ProductCategory;
   tax: number;
   stock: number;
+  schedule?: { day: string; time: string; note?: string }[] | null; // <-- Added
 }
 
 export interface CartItem {

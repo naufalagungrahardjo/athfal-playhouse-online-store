@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock } from "lucide-react";
 import { Product } from "@/contexts/CartContext";
@@ -112,4 +111,3 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ product, language, formatCurr
 );
 
 export default ProductTabs;
-
