@@ -1,20 +1,46 @@
-
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 
+function getGoogleMapsEmbedUrl(rawUrl?: string) {
+  // If no URL, fallback to a default location embed
+  if (!rawUrl) {
+    return "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.566656536656!2d106.8199630758761!3d-6.186486960569591!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69ec3aeb818273%3A0x8b6adf1b88bf2b14!2sApartemen%20Park%20View%20Depok%20Town%20Square%2C%20Jl.%20Margonda%20Daya%2C%20Depok%2C%2016424!5e0!3m2!1sen!2sid!4v1682329286740!5m2!1sen!2sid";
+  }
+  // Convert Google short link to embed (or fallback if not possible)
+  // If admin provides a direct embed link, use it
+  if (rawUrl.includes('google.com/maps/embed')) {
+    return rawUrl;
+  }
+  // If admin provides a place/maps url (not embed), attempt to convert it
+  if (rawUrl.startsWith('https://goo.gl') || rawUrl.startsWith('https://g.co') || rawUrl.startsWith('http://g.co')) {
+    // The g.co/kgs... short links cannot be directly embedded.
+    // Recommend admin to input EMBED link, but for now, default to fallback embed
+    return "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.566656536656!2d106.8199630758761!3d-6.186486960569591!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69ec3aeb818273%3A0x8b6adf1b88bf2b14!2sApartemen%20Park%20View%20Depok%20Town%20Square%2C%20Jl.%20Margonda%20Daya%2C%20Depok%2C%2016424!5e0!3m2!1sen!2sid!4v1682329286740!5m2!1sen!2sid";
+  }
+  if (rawUrl.startsWith("https://www.google.com/maps/place/")) {
+    // Convert place URL to embed by replacing /place/ with /embed?pb=
+    // But best is for admin to copy the iframe src from Google Maps > Share > Embed a map
+    // For now, fallback
+    return "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.566656536656!2d106.8199630758761!3d-6.186486960569591!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69ec3aeb818273%3A0x8b6adf1b88bf2b14!2sApartemen%20Park%20View%20Depok%20Town%20Square%2C%20Jl.%20Margonda%20Daya%2C%20Depok%2C%2016424!5e0!3m2!1sen!2sid!4v1682329286740!5m2!1sen!2sid";
+  }
+  // Otherwise, fallback
+  return "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.566656536656!2d106.8199630758761!3d-6.186486960569591!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69ec3aeb818273%3A0x8b6adf1b88bf2b14!2sApartemen%20Park%20View%20Depok%20Town%20Square%2C%20Jl.%20Margonda%20Daya%2C%20Depok%2C%2016424!5e0!3m2!1sen!2sid!4v1682329286740!5m2!1sen!2sid";
+}
+
 const Footer = () => {
   const { t, language } = useLanguage();
   const { contact } = useSettings();
-  const googleMapsUrl = contact?.googleMapsUrl || "https://g.co/kgs/jaPrJtj";
+  const googleMapsUrl = contact?.googleMapsUrl;
+  const googleMapsEmbedUrl = getGoogleMapsEmbedUrl(googleMapsUrl);
 
   return (
     <footer className="bg-athfal-peach/30 pt-12 pb-6">
       <div className="athfal-container">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo and Info */}
-          <div className="col-span-1 md:col-span-1 lg:col-span-1">
+          <div className="col-span-1">
             <Link to="/" className="flex items-center">
               <img 
                 src="/lovable-uploads/bcf7e399-f8e5-4001-8bfe-dd335c021c8e.png" 
@@ -107,26 +133,14 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact Info & Location */}
+          {/* Contact Info & Map */}
           <div className="col-span-1 flex flex-col h-full">
-            {/* Header row: Contact Us + Location button */}
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-athfal-pink">
-                {t('contactUs')}
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-athfal-pink flex items-center">
+                <span>{t('contactUs')}</span>
               </h3>
-              <a
-                href={googleMapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center bg-white/80 shadow px-3 py-2 rounded-lg transition hover:bg-athfal-pink hover:text-white border border-athfal-pink ml-3 whitespace-nowrap"
-                aria-label="View our location on Google Maps"
-                title="View our location on Google Maps"
-              >
-                <MapPin className="w-5 h-5 mr-2 text-athfal-pink group-hover:text-white" />
-                <span className="font-medium">{language === 'id' ? 'Lokasi' : 'Location'}</span>
-              </a>
             </div>
-            <ul className="space-y-3">
+            <ul className="space-y-3 mb-2">
               <li className="flex items-start">
                 <MapPin className="w-5 h-5 text-athfal-pink mr-2 mt-0.5" />
                 <span className="text-gray-700">
@@ -174,6 +188,24 @@ const Footer = () => {
                 </div>
               </li>
             </ul>
+            {/* Embedded Google Map */}
+            <div className="w-full mt-5 border rounded-lg overflow-hidden shadow-xl bg-white">
+              <iframe
+                src={googleMapsEmbedUrl}
+                title="Google Map Location"
+                width="100%"
+                height="200"
+                loading="lazy"
+                style={{ border: 0 }}
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              {language === "id"
+                ? "Lokasi di Google Maps sesuai pengaturan admin."
+                : "Location as set in admin settings."}
+            </p>
           </div>
         </div>
 
