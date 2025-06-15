@@ -240,6 +240,20 @@ const AdminSettings = () => {
                     onChange={(e) => handleContactChange('whatsappGroup', e.target.value)}
                   />
                 </div>
+                
+                {/* New: Google Maps Location URL */}
+                <div className="space-y-2">
+                  <Label htmlFor="googleMapsUrl">Google Maps Location URL</Label>
+                  <Input
+                    id="googleMapsUrl"
+                    value={localContact.googleMapsUrl || ""}
+                    onChange={(e) => handleContactChange('googleMapsUrl', e.target.value)}
+                    placeholder="https://g.co/kgs/jaPrJtj"
+                  />
+                  <p className="text-xs text-gray-500">
+                    This location will appear in the website footer for customers to open in Google Maps.
+                  </p>
+                </div>
               </div>
             </CardContent>
             <CardFooter>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 
 export interface ContactSettings {
@@ -8,6 +7,7 @@ export interface ContactSettings {
   instagram: string;
   youtube: string;
   whatsappGroup: string;
+  googleMapsUrl?: string;
 }
 
 export interface PaymentMethod {
@@ -31,6 +31,7 @@ const DEFAULT_CONTACT: ContactSettings = {
   instagram: "https://instagram.com/athfalplayhouse/",
   youtube: "https://www.youtube.com/@AthfalPlayhouse",
   whatsappGroup: "",
+  googleMapsUrl: "https://g.co/kgs/jaPrJtj",
 };
 
 const DEFAULT_PAYMENTS: PaymentMethod[] = [
@@ -78,7 +79,8 @@ export const useSettings = () => {
       const savedVat = localStorage.getItem('athfal_vat_settings');
 
       if (savedContact) {
-        setContact(JSON.parse(savedContact));
+        // Merge default with saved in case new fields are added
+        setContact({ ...DEFAULT_CONTACT, ...JSON.parse(savedContact) });
       }
       if (savedPayments) {
         setPayments(JSON.parse(savedPayments));
