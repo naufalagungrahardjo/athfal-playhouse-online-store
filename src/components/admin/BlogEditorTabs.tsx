@@ -1,4 +1,3 @@
-
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -95,22 +94,18 @@ export const BlogEditorTabs = ({
         <Label htmlFor="blog-date">Publish Date</Label>
         <Popover>
           <PopoverTrigger asChild>
-            <div>
-              <Input
-                as="button"
-                readOnly
-                value={date ? format(date, "PPP") : ""}
-                className={
-                  cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  ) +
-                  " cursor-pointer"
-                }
-                style={{ cursor: "pointer" }}
-              />
+            <button
+              type="button"
+              className={cn(
+                "w-full h-10 px-3 py-2 border border-input bg-background rounded-md text-sm font-normal text-left transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium " +
+                  (!date ? "text-muted-foreground" : ""),
+                "relative"
+              )}
+              style={{ cursor: "pointer" }}
+            >
+              {date ? format(date, "PPP") : ""}
               <CalendarIcon className="absolute right-4 top-2 h-4 w-4 pointer-events-none opacity-60" />
-            </div>
+            </button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">
             <Calendar
