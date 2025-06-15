@@ -65,13 +65,24 @@ export const useAboutContent = () => {
   // Fetch from Supabase (get "main" only row)
   const loadContent = async () => {
     setLoading(true);
+    // Use .maybeSingle() to handle empty/first time DB
     const { data, error } = await supabase
       .from('about_content')
       .select('content')
       .eq('id', ABOUT_DOC_ID)
-      .single();
+      .maybeSingle();
 
-    if (error || !data) {
+    if (error) {
+      setContent(DEFAULT_CONTENT);
+      setLoading(false);
+      return;
+    }
+
+    if (!data) {
+      // Insert default content on first run (for convenience)
+      await supabase
+        .from('about_content')
+        .insert([{ id: ABOUT_DOC_ID, content: DEFAULT_CONTENT }]);
       setContent(DEFAULT_CONTENT);
       setLoading(false);
       return;
@@ -84,10 +95,10 @@ export const useAboutContent = () => {
   // Save to Supabase (upsert, always on id="main")
   const saveContent = async (newContent: AboutContent) => {
     setLoading(true);
+
     const { error } = await supabase
       .from('about_content')
-      .upsert([{ id: ABOUT_DOC_ID, content: newContent }])
-      .eq('id', ABOUT_DOC_ID);
+      .upsert({ id: ABOUT_DOC_ID, content: newContent });
 
     if (error) {
       toast({
