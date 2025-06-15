@@ -47,6 +47,7 @@ const AdminWebsiteCopy = lazy(() => import("./pages/admin/AdminWebsiteCopy"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
 const AdminAccounts = lazy(() => import("./pages/admin/AdminAccounts"));
+const AdminLogs = lazy(() => import("./pages/admin/AdminLogs"));
 
 const queryClient = new QueryClient();
 
@@ -98,6 +99,7 @@ const App = () => (
                         <Route path="settings" element={<AdminSettings />} />
                         <Route path="categories" element={<AdminCategories />} />
                         <Route path="accounts" element={<AdminAccounts />} />
+                        <Route path="logs" element={<AdminLogs />} />
                       </Route>
                       
                       <Route path="*" element={<NotFound />} />
