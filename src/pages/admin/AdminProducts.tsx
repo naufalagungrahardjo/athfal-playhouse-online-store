@@ -1,172 +1,35 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Plus } from 'lucide-react';
 import { ProductCategory } from '@/contexts/CartContext';
-import { ProductForm } from '@/components/admin/ProductForm';
 import { ProductList } from '@/components/admin/ProductList';
-import { useAuth } from '@/contexts/AuthContext';
-import { logAdminAction } from '@/utils/logAdminAction';
-
-interface ProductFormData {
-  id?: string;
-  product_id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  category: ProductCategory;
-  tax: number;
-  stock: number;
-}
-
-interface ProductListData {
-  id: string;
-  product_id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  category: ProductCategory;
-  tax: number;
-  stock: number;
-}
+import { ProductDialog } from '@/components/admin/ProductDialog';
+import { useProductActions, ProductFormData } from '@/components/admin/ProductActions';
 
 const AdminProducts = () => {
-  const [products, setProducts] = useState<ProductListData[]>([]);
+  const [products, setProducts] = useState<ProductFormData[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductFormData | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-  const { user } = useAuth();
+
+  const { fetchProducts, handleDelete, handleProductSaved } = useProductActions(fetchAllProducts, editingProduct);
+
+  async function fetchAllProducts() {
+    setLoading(true);
+    const data = await fetchProducts();
+    setProducts(data);
+    setLoading(false);
+  }
 
   useEffect(() => {
-    fetchProducts();
+    fetchAllProducts();
+    // eslint-disable-next-line
   }, []);
 
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      console.log('Fetching products from database...');
-      
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase products error:', error);
-        throw error;
-      }
-
-      console.log('Products fetched:', data);
-      
-      // Transform database products to match our interface
-      const transformedProducts: ProductListData[] = (data || []).map(product => ({
-        id: product.id,
-        product_id: product.product_id,
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        image: product.image,
-        category: product.category as ProductCategory,
-        tax: product.tax,
-        stock: product.stock,
-      }));
-
-      setProducts(transformedProducts);
-      console.log('Transformed products:', transformedProducts);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch products from database"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEdit = (product: ProductListData) => {
-    console.log('Editing product:', product);
-    const editProduct: ProductFormData = {
-      id: product.id,
-      product_id: product.product_id,
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      image: product.image,
-      category: product.category,
-      tax: product.tax,
-      stock: product.stock,
-    };
-    setEditingProduct(editProduct);
+  const handleEdit = (product: ProductFormData) => {
+    setEditingProduct(product);
     setIsDialogOpen(true);
-  };
-
-  const handleDelete = async (productId: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) {
-      return;
-    }
-
-    try {
-      console.log('Deleting product:', productId);
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', productId);
-
-      if (error) {
-        console.error('Delete product error:', error);
-        throw error;
-      }
-
-      console.log('Product deleted successfully');
-      toast({
-        title: "Success",
-        description: "Product deleted successfully"
-      });
-
-      // Log admin action
-      await logAdminAction({
-        user,
-        action: `Deleted product (id: ${productId})`,
-      });
-
-      // Refresh the product list
-      await fetchProducts();
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete product"
-      });
-    }
-  };
-
-  const handleProductSaved = async () => {
-    console.log('Product saved, refreshing list...');
-    await fetchProducts();
-    // Find what changed
-    if (editingProduct) {
-      // Updated product
-      await logAdminAction({
-        user,
-        action: `Updated product (id: ${editingProduct.id}, name: ${editingProduct.name})`,
-      });
-    } else {
-      // New product - find the most recent product
-      const productsAfter = await supabase.from('products').select('*').order('created_at', { ascending: false }).limit(1);
-      const recent = productsAfter.data && productsAfter.data[0];
-      await logAdminAction({
-        user,
-        action: `Added new product${recent ? ` (id: ${recent.id}, name: ${recent.name})` : ''}`,
-      });
-    }
-    setEditingProduct(null);
   };
 
   const handleAddNew = () => {
@@ -208,11 +71,11 @@ const AdminProducts = () => {
         onDelete={handleDelete}
       />
 
-      <ProductForm
+      <ProductDialog
         isOpen={isDialogOpen}
         onClose={handleCloseDialog}
         editingProduct={editingProduct}
-        onProductSaved={handleProductSaved}
+        onProductSaved={async () => { await handleProductSaved(); await fetchAllProducts(); }}
       />
     </div>
   );
