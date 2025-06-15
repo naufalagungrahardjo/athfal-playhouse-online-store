@@ -469,6 +469,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      is_super_admin: {
+        Args: { email: string }
+        Returns: boolean
+      }
     }
     Enums: {
       admin_role:
