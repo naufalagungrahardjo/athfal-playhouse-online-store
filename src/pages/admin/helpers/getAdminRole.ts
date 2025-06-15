@@ -9,10 +9,17 @@ export type AdminRole =
   | "content_staff"
   | null;
 
-// Replace with actual admin role fetching, here is a placeholder:
 export function getAdminRole(user: User | null): AdminRole {
   if (!user) return null;
-  if (user.email === "athfalplayhouse@gmail.com") return "super_admin";
-  // TODO: Add actual fetching logic for roles based on email.
+  // Use the actual user.role string if it matches
+  if (
+    user.role === "super_admin" ||
+    user.role === "orders_manager" ||
+    user.role === "order_staff" ||
+    user.role === "content_manager" ||
+    user.role === "content_staff"
+  ) {
+    return user.role;
+  }
   return null;
 }
