@@ -1,5 +1,4 @@
 
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +27,13 @@ export function CategoryForm({ onSubmit, form, setForm, editId, onCancelEdit }: 
         <CardTitle>{editId ? "Edit Category" : "Add New Category"}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSubmit(form);
+          }}
+          className="space-y-4"
+        >
           <Input
             name="title"
             placeholder="Category Title"

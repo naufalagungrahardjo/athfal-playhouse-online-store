@@ -40,7 +40,7 @@ export default function AdminCategories() {
   };
 
   const handleDelete = async (categoryId: string, categorySlug: string) => {
-    if (!window.confirm("Are you sure you want to delete this category? Products in this category will be moved to 'Merchandise & Others'.")) {
+    if (!window.confirm("Are you sure you want to delete this category? Products in this category will be moved to 'Merchandise & Others'.") {
       return;
     }
     try {
