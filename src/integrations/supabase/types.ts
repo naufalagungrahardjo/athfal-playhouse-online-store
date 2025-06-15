@@ -93,6 +93,36 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          bg_color: string
+          created_at: string | null
+          id: string
+          image: string
+          slug: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          bg_color?: string
+          created_at?: string | null
+          id?: string
+          image: string
+          slug: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          bg_color?: string
+          created_at?: string | null
+          id?: string
+          image?: string
+          slug?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       faqs: {
         Row: {
           answer_en: string

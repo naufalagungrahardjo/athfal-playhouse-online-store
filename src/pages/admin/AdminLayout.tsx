@@ -53,6 +53,7 @@ const AdminLayout = () => {
     { name: 'Payments', href: '/admin/payments', icon: CreditCard },
     { name: 'Website Copy', href: '/admin/website-copy', icon: Copy },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
+    { name: 'Categories', href: '/admin/categories', icon: Package },
   ];
 
   return (
