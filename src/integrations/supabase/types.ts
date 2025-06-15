@@ -147,6 +147,27 @@ export type Database = {
         }
         Relationships: []
       }
+      collaborators: {
+        Row: {
+          created_at: string
+          id: string
+          logo: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logo: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo?: string
+          name?: string
+        }
+        Relationships: []
+      }
       faqs: {
         Row: {
           answer_en: string

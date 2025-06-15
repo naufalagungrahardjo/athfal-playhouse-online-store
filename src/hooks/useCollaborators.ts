@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import type { TablesInsert, Tables } from "@/integrations/supabase/types";
 
 export interface Collaborator {
   id: string;
@@ -26,12 +27,14 @@ export function useCollaborators() {
       setLoading(false);
       return;
     }
-    setCollaborators(data ?? []);
+    setCollaborators((data ?? []) as Collaborator[]);
     setLoading(false);
   }
 
   async function addCollaborator(name: string, logo: string) {
-    const { error } = await supabase.from("collaborators").insert([{ name, logo }]);
+    // Use the Supabase types to ensure type safety
+    const insertData: TablesInsert<"collaborators"> = { name, logo };
+    const { error } = await supabase.from("collaborators").insert([insertData]);
     if (error) {
       toast({ variant: "destructive", title: "Error", description: "Could not add partner" });
       return false;
