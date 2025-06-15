@@ -1,5 +1,5 @@
-
-import { ShoppingBag, Separator } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 // Copy of mockOrderHistory and helpers from ProfilePage
