@@ -1,3 +1,4 @@
+
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react';
@@ -15,8 +16,7 @@ function getGoogleMapsEmbedUrl(rawUrl?: string) {
 const Footer = () => {
   const { t, language } = useLanguage();
   const { contact } = useSettings();
-  const googleMapsUrl = contact?.googleMapsUrl;
-  const googleMapsEmbedUrl = getGoogleMapsEmbedUrl(googleMapsUrl);
+  const googleMapsEmbedUrl = getGoogleMapsEmbedUrl(contact?.googleMapsUrl);
 
   return (
     <footer className="bg-athfal-peach/30 pt-12 pb-6">
@@ -116,79 +116,85 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact Info & Map */}
-          <div className="col-span-1 flex flex-col h-full">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-athfal-pink flex items-center">
+          {/* Contact Info & Map (Made two columns: Contact Info and Map) */}
+          <div className="col-span-1 flex flex-col h-full gap-4">
+            <div>
+              <h3 className="text-lg font-semibold text-athfal-pink flex items-center mb-4">
                 <span>{t('contactUs')}</span>
               </h3>
-            </div>
-            <ul className="space-y-3 mb-2">
-              <li className="flex items-start">
-                <MapPin className="w-5 h-5 text-athfal-pink mr-2 mt-0.5" />
-                <span className="text-gray-700">
-                  {contact?.address || "Apartemen Park View Depok Town Square Lt. 1, Jl. Margonda Daya, Depok, 16424"}
-                </span>
-              </li>
-              <li>
-                <a 
-                  href={`mailto:${contact?.email || "athfalplayhouse@gmail.com"}`} 
-                  className="flex items-center text-gray-700 hover:text-athfal-pink"
-                >
-                  <Mail className="w-5 h-5 text-athfal-pink mr-2" />
-                  {contact?.email || "athfalplayhouse@gmail.com"}
-                </a>
-              </li>
-              <li>
-                <a 
-                  href={`https://wa.me/${(contact?.whatsapp ?? "082120614748").replace(/[^0-9]/g, '')}`} 
-                  className="flex items-center text-gray-700 hover:text-athfal-pink"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Phone className="w-5 h-5 text-athfal-pink mr-2" />
-                  {contact?.whatsapp || "082120614748"}
-                </a>
-              </li>
-              <li className="pt-2">
-                <div className="flex space-x-3">
-                  <a
-                    href={contact?.instagram || "https://instagram.com/athfalplayhouse/"}
+              <ul className="space-y-3 mb-2">
+                <li className="flex items-start">
+                  <MapPin className="w-5 h-5 text-athfal-pink mr-2 mt-0.5" />
+                  <span className="text-gray-700">
+                    {contact?.address || "Apartemen Park View Depok Town Square Lt. 1, Jl. Margonda Daya, Depok, 16424"}
+                  </span>
+                </li>
+                <li>
+                  <a 
+                    href={`mailto:${contact?.email || "athfalplayhouse@gmail.com"}`} 
+                    className="flex items-center text-gray-700 hover:text-athfal-pink"
+                  >
+                    <Mail className="w-5 h-5 text-athfal-pink mr-2" />
+                    {contact?.email || "athfalplayhouse@gmail.com"}
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href={`https://wa.me/${(contact?.whatsapp ?? "082120614748").replace(/[^0-9]/g, '')}`} 
+                    className="flex items-center text-gray-700 hover:text-athfal-pink"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-white p-2 rounded-full text-athfal-pink hover:bg-athfal-pink hover:text-white transition-colors"
                   >
-                    <Instagram className="w-5 h-5" />
+                    <Phone className="w-5 h-5 text-athfal-pink mr-2" />
+                    {contact?.whatsapp || "082120614748"}
                   </a>
-                  <a
-                    href={contact?.youtube || "https://www.youtube.com/@AthfalPlayhouse"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-white p-2 rounded-full text-athfal-pink hover:bg-athfal-pink hover:text-white transition-colors"
-                  >
-                    <Youtube className="w-5 h-5" />
-                  </a>
-                </div>
-              </li>
-            </ul>
-            {/* Embedded Google Map */}
-            <div className="w-full mt-5 border rounded-lg overflow-hidden shadow-xl bg-white">
-              <iframe
-                src={getGoogleMapsEmbedUrl(contact?.googleMapsUrl)}
-                title="Google Map Location"
-                width="100%"
-                height="240"
-                loading="lazy"
-                style={{ border: 0, minHeight: 200 }}
-                allowFullScreen
-                referrerPolicy="no-referrer-when-downgrade"
-              ></iframe>
+                </li>
+                <li className="pt-2">
+                  <div className="flex space-x-3">
+                    <a
+                      href={contact?.instagram || "https://instagram.com/athfalplayhouse/"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-white p-2 rounded-full text-athfal-pink hover:bg-athfal-pink hover:text-white transition-colors"
+                    >
+                      <Instagram className="w-5 h-5" />
+                    </a>
+                    <a
+                      href={contact?.youtube || "https://www.youtube.com/@AthfalPlayhouse"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-white p-2 rounded-full text-athfal-pink hover:bg-athfal-pink hover:text-white transition-colors"
+                    >
+                      <Youtube className="w-5 h-5" />
+                    </a>
+                  </div>
+                </li>
+              </ul>
             </div>
-            <p className="text-xs text-gray-400 mt-2">
-              {language === "id"
-                ? "Arahkan lokasi di Google Maps setting admin (gunakan link embed, bukan link biasa)."
-                : "Location set in admin settings with embed URL (not regular map link)."}
-            </p>
+            
+            {/* Embedded Google Map as part of TOP-LEVEL columns */}
+            <div className="mt-2">
+              <h4 className="text-base font-semibold text-athfal-pink mb-2">
+                {language === "id" ? "Lokasi di Google Maps" : "Google Maps Location"}
+              </h4>
+              <div className="w-full border rounded-lg overflow-hidden shadow-xl bg-white">
+                <iframe
+                  src={googleMapsEmbedUrl}
+                  title="Google Map Location"
+                  width="100%"
+                  height="200"
+                  loading="lazy"
+                  style={{ border: 0, minHeight: 180, width: '100%' }}
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">
+                {language === "id"
+                  ? "Arahkan lokasi di Google Maps setting admin (gunakan link embed, bukan link biasa)."
+                  : "Location set in admin settings with embed URL (not regular map link)."}
+              </p>
+            </div>
           </div>
         </div>
 
