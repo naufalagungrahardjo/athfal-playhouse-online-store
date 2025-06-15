@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -7,6 +6,8 @@ import { Plus } from 'lucide-react';
 import { ProductCategory } from '@/contexts/CartContext';
 import { ProductForm } from '@/components/admin/ProductForm';
 import { ProductList } from '@/components/admin/ProductList';
+import { useAuth } from '@/contexts/AuthContext';
+import { logAdminAction } from '@/utils/logAdminAction';
 
 interface ProductFormData {
   id?: string;
@@ -38,6 +39,7 @@ const AdminProducts = () => {
   const [editingProduct, setEditingProduct] = useState<ProductFormData | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchProducts();
@@ -127,6 +129,12 @@ const AdminProducts = () => {
         description: "Product deleted successfully"
       });
 
+      // Log admin action
+      await logAdminAction({
+        user,
+        action: `Deleted product (id: ${productId})`,
+      });
+
       // Refresh the product list
       await fetchProducts();
     } catch (error) {
@@ -139,9 +147,25 @@ const AdminProducts = () => {
     }
   };
 
-  const handleProductSaved = () => {
+  const handleProductSaved = async () => {
     console.log('Product saved, refreshing list...');
-    fetchProducts();
+    await fetchProducts();
+    // Find what changed
+    if (editingProduct) {
+      // Updated product
+      await logAdminAction({
+        user,
+        action: `Updated product (id: ${editingProduct.id}, name: ${editingProduct.name})`,
+      });
+    } else {
+      // New product - find the most recent product
+      const productsAfter = await supabase.from('products').select('*').order('created_at', { ascending: false }).limit(1);
+      const recent = productsAfter.data && productsAfter.data[0];
+      await logAdminAction({
+        user,
+        action: `Added new product${recent ? ` (id: ${recent.id}, name: ${recent.name})` : ''}`,
+      });
+    }
     setEditingProduct(null);
   };
 

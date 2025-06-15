@@ -1,7 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { logAdminAction } from '@/utils/logAdminAction';
 
 interface OrderItem {
   id: string;
@@ -33,6 +34,7 @@ export const useOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchOrders = async () => {
     try {
@@ -104,6 +106,11 @@ export const useOrders = () => {
         description: "Order status updated successfully"
       });
 
+      await logAdminAction({
+        user,
+        action: `Updated order status to "${status}" (order id: ${orderId})`,
+      });
+
       await fetchOrders();
     } catch (error) {
       console.error('Error updating order status:', error);
@@ -136,6 +143,11 @@ export const useOrders = () => {
       toast({
         title: "Success",
         description: "Order deleted successfully"
+      });
+
+      await logAdminAction({
+        user,
+        action: `Deleted order (order id: ${orderId})`,
       });
 
       await fetchOrders();

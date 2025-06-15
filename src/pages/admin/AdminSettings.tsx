@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useSettings } from "@/hooks/useSettings";
 import { useDatabase } from "@/hooks/useDatabase";
 import { Save, Trash2, Plus, X } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { logAdminAction } from "@/utils/logAdminAction";
 
 const AdminSettings = () => {
   const { toast } = useToast();
@@ -26,6 +28,8 @@ const AdminSettings = () => {
     savePaymentMethod, 
     deletePaymentMethod 
   } = useDatabase();
+
+  const { user } = useAuth();
 
   const [localContact, setLocalContact] = useState(contact);
   const [localVat, setLocalVat] = useState(vat);
@@ -67,6 +71,10 @@ const AdminSettings = () => {
       title: "Contact settings updated",
       description: "Your contact information has been saved successfully.",
     });
+    logAdminAction({
+      user,
+      action: `Updated contact settings`
+    });
   };
 
   const handleSaveVat = () => {
@@ -74,6 +82,10 @@ const AdminSettings = () => {
     toast({
       title: "Tax settings updated",
       description: "Your tax settings have been saved successfully.",
+    });
+    logAdminAction({
+      user,
+      action: `Updated VAT/tax settings`
     });
   };
 
@@ -102,6 +114,10 @@ const AdminSettings = () => {
         "Save your payment receipt."
       ]
     });
+    logAdminAction({
+      user,
+      action: `Added new payment method (bank: ${newPayment.bank_name}, account: ${newPayment.account_number})`
+    });
   };
 
   const handleUpdatePayment = async (id: string, field: string, value: string | boolean | string[]) => {
@@ -110,6 +126,10 @@ const AdminSettings = () => {
       await savePaymentMethod({
         ...payment,
         [field]: value
+      });
+      logAdminAction({
+        user,
+        action: `Updated payment method (id: ${id}, bank: ${payment.bank_name})`,
       });
     }
   };
@@ -138,6 +158,10 @@ const AdminSettings = () => {
           : payment
       )
     );
+    logAdminAction({
+      user,
+      action: `Removed a payment step from payment method (id: ${paymentId})`
+    });
   };
 
   const handleUpdatePaymentStep = (paymentId: string, stepIndex: number, value: string) => {

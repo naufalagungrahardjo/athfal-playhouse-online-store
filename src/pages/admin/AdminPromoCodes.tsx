@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -23,6 +22,8 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { PlusCircle, Pencil, Trash2, Calendar } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { logAdminAction } from "@/utils/logAdminAction";
 
 type PromoCode = {
   id: string;
@@ -48,6 +49,7 @@ const AdminPromoCodes = () => {
     valid_until: ''
   });
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchPromoCodes = async () => {
     try {
@@ -151,9 +153,14 @@ const AdminPromoCodes = () => {
           title: "Success",
           description: "Promo code updated successfully",
         });
+
+        await logAdminAction({
+          user,
+          action: `Updated promo code (id: ${currentPromo.id}, code: ${formData.code})`,
+        });
       } else {
         // Create new promo code
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('promo_codes')
           .insert([{
             code: formData.code,
@@ -162,13 +169,20 @@ const AdminPromoCodes = () => {
             is_active: formData.is_active,
             valid_from: formData.valid_from ? new Date(formData.valid_from).toISOString() : null,
             valid_until: formData.valid_until ? new Date(formData.valid_until).toISOString() : null
-          }]);
+          }])
+          .select()
+          .single();
           
         if (error) throw error;
         
         toast({
           title: "Success",
           description: "Promo code created successfully",
+        });
+
+        await logAdminAction({
+          user,
+          action: `Created new promo code (id: ${data.id}, code: ${data.code})`,
         });
       }
       
@@ -198,6 +212,11 @@ const AdminPromoCodes = () => {
       toast({
         title: "Success",
         description: "Promo code deleted successfully",
+      });
+
+      await logAdminAction({
+        user,
+        action: `Deleted promo code (id: ${id})`,
       });
       
       fetchPromoCodes();
