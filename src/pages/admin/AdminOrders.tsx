@@ -20,11 +20,15 @@ import { OrderListItem } from "@/components/admin/OrderListItem";
 
 const AdminOrders = () => {
   const { orders, loading, fetchOrders, deleteOrder } = useOrders();
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   const handleViewDetails = (order: any) => {
+    if (!order || typeof order !== 'object') {
+      console.error('Tried to view details of invalid order:', order);
+      return;
+    }
     setSelectedOrder(order);
     setIsDetailsOpen(true);
   };
@@ -62,14 +66,19 @@ const AdminOrders = () => {
 
   // Filter orders by date
   const filteredOrders = orders.filter(order => {
-    if (dateRange.from && dateRange.to) {
-      // Assume order.created_at is a string (ISO format)
+    if (dateRange?.from && dateRange?.to) {
       const orderDate = new Date(order.created_at);
-      // Include start and end date
       return (
         orderDate >= new Date(dateRange.from.setHours(0,0,0,0)) &&
         orderDate <= new Date(dateRange.to.setHours(23,59,59,999))
       );
+    }
+    return true;
+  }).filter(order => {
+    // Defensive: ensure order has id, customer_name, customer_email, customer_phone
+    if (!order || !order.id || !order.customer_name || !order.customer_email || !order.customer_phone) {
+      console.warn('Filtered out malformed order:', order);
+      return false;
     }
     return true;
   });
@@ -180,26 +189,31 @@ const AdminOrders = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredOrders.map((order) => (
-                <OrderListItem
-                  key={order.id}
-                  order={order}
-                  getStatusColor={getStatusColor}
-                  onViewDetails={handleViewDetails}
-                  onDelete={handleDeleteOrder}
-                />
-              ))}
+              {filteredOrders.map((order) =>
+                order && order.id ? (
+                  <OrderListItem
+                    key={order.id}
+                    order={order}
+                    getStatusColor={getStatusColor}
+                    onViewDetails={handleViewDetails}
+                    onDelete={handleDeleteOrder}
+                  />
+                ) : null
+              )}
             </div>
           )}
         </CardContent>
       </Card>
 
-      <OrderDetailsDialog
-        order={selectedOrder}
-        isOpen={isDetailsOpen}
-        onClose={handleCloseDetails}
-        onOrderUpdated={fetchOrders}
-      />
+      {/* Only render OrderDetailsDialog when selectedOrder is not null and valid */}
+      {selectedOrder && selectedOrder.id && (
+        <OrderDetailsDialog
+          order={selectedOrder}
+          isOpen={isDetailsOpen}
+          onClose={handleCloseDetails}
+          onOrderUpdated={fetchOrders}
+        />
+      )}
     </div>
   );
 };
