@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Search, Trash2, Users } from "lucide-react";
+import { CalendarIcon, Search, Trash2, Users, Download } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useUserManagement } from "@/hooks/useUserManagement";
@@ -35,6 +34,52 @@ const AdminUsers = () => {
     return matchesSearch && matchesPeriod;
   });
 
+  // CSV Export function for users
+  const exportUsersToCSV = () => {
+    const headers = [
+      "User ID",
+      "Name",
+      "Email",
+      "Created At",
+      "Updated At",
+    ];
+    const rows = filteredUsers.map(user => [
+      user.id,
+      user.name,
+      user.email,
+      user.created_at,
+      user.updated_at,
+    ]);
+    const csvString = [
+      headers.join(","),
+      ...rows.map(row =>
+        row.map(field => {
+          if (
+            typeof field === "string" &&
+            (field.includes(",") || field.includes('"') || field.includes("\n"))
+          ) {
+            return `"${field.replace(/"/g, '""')}"`;
+          }
+          return field ?? "";
+        }).join(",")
+      ),
+    ].join("\r\n");
+
+    const blob = new Blob([csvString], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    let dateInfo = "";
+    if (startDate) dateInfo += `_from_${startDate.toISOString().slice(0, 10).replace(/-/g, "")}`;
+    if (endDate) dateInfo += `_to_${endDate.toISOString().slice(0, 10).replace(/-/g, "")}`;
+    a.download = `users${dateInfo}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
@@ -49,6 +94,11 @@ const AdminUsers = () => {
             <p className="text-gray-600">Manage registered users and view user analytics</p>
           </div>
         </div>
+        {/* Download Users CSV Button */}
+        <Button onClick={exportUsersToCSV} variant="outline">
+          <Download className="mr-2 h-4 w-4" />
+          Download Users as CSV
+        </Button>
       </div>
 
       <Card>
