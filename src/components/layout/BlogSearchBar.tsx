@@ -80,11 +80,42 @@ export const BlogSearchBar: React.FC = () => {
           {suggestions.map((blog) => (
             <button
               key={blog.id}
-              className={cn("w-full px-4 py-2 text-left text-sm hover:bg-athfal-pink/10 focus:bg-athfal-pink/20", "cursor-pointer")}
+              className={cn(
+                "w-full px-2 py-2 flex items-start space-x-3 hover:bg-athfal-pink/10 focus:bg-athfal-pink/20 transition-colors cursor-pointer"
+              )}
               onMouseDown={(e) => { e.preventDefault(); handleSelect(blog.id); }}
+              tabIndex={-1}
             >
-              <span className="font-medium">{blog.title}</span>
-              <div className="text-xs text-gray-500 truncate">{blog.content.replace(/<[^>]+>/g, "").slice(0, 60)}...</div>
+              {/* Blog image thumbnail */}
+              <img
+                src={blog.image}
+                alt={blog.title}
+                className="w-12 h-12 object-cover rounded-md flex-shrink-0 bg-gray-100 border"
+              />
+              <div className="flex-1 min-w-0 text-left">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium truncate">{blog.title}</span>
+                  {blog.category && (
+                    <span className="ml-2 px-2 py-0.5 bg-athfal-peach/40 text-xs text-athfal-pink font-semibold rounded">{blog.category}</span>
+                  )}
+                </div>
+                {/* Date and author metadata */}
+                <div className="text-xs text-gray-500">
+                  <span>{blog.date}</span>
+                  {blog.author && <> · <span>{blog.author}</span></>}
+                </div>
+                {/* Content snippet with highlight */}
+                <div className="text-xs text-gray-700 mt-1 line-clamp-2">
+                  {blog.content
+                    .replace(/<[^>]+>/g, "")
+                    .split(" ")
+                    .slice(0, 26)
+                    .join(" ")
+                  }
+                  {blog.content.replace(/<[^>]+>/g, "").split(" ").length > 26
+                    ? "..." : ""}
+                </div>
+              </div>
             </button>
           ))}
         </div>
