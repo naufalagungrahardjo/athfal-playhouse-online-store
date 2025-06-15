@@ -7,18 +7,35 @@ import { ProductList } from '@/components/admin/ProductList';
 import { ProductDialog } from '@/components/admin/ProductDialog';
 import { useProductActions, ProductFormData } from '@/components/admin/ProductActions';
 
+// A helper type that ensures 'id' is required
+type StrictProductFormData = ProductFormData & { id: string; };
+
 const AdminProducts = () => {
-  const [products, setProducts] = useState<ProductFormData[]>([]);
+  const [products, setProducts] = useState<StrictProductFormData[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductFormData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Make sure we fetch with correct types
   const { fetchProducts, handleDelete, handleProductSaved } = useProductActions(fetchAllProducts, editingProduct);
 
+  // Fetch and typecast from Supabase
   async function fetchAllProducts() {
     setLoading(true);
     const data = await fetchProducts();
-    setProducts(data);
+    const formatted: StrictProductFormData[] = (data || []).map((p: any) => ({
+      // Make sure 'id' is always present and 'category' is typed correctly
+      id: p.id ?? p.product_id, // fallback to product_id, just in case
+      product_id: p.product_id,
+      name: p.name,
+      description: p.description,
+      price: p.price,
+      image: p.image,
+      category: p.category as ProductCategory,
+      tax: p.tax,
+      stock: p.stock,
+    }));
+    setProducts(formatted);
     setLoading(false);
   }
 
@@ -27,7 +44,7 @@ const AdminProducts = () => {
     // eslint-disable-next-line
   }, []);
 
-  const handleEdit = (product: ProductFormData) => {
+  const handleEdit = (product: StrictProductFormData) => {
     setEditingProduct(product);
     setIsDialogOpen(true);
   };
