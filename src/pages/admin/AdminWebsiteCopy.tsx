@@ -29,6 +29,9 @@ import GalleryItemForm from "./gallery/GalleryItemForm";
 import AboutUsAdminTab from "./website-copy/AboutUsAdminTab";
 import GalleryAdminTab from "./website-copy/GalleryAdminTab";
 
+// Add new import:
+import CollaboratorsEditor from "./website-copy/CollaboratorsEditor";
+
 // Initial Website Copy State
 const WEBSITE_COPY = {
   homePage: {
@@ -229,12 +232,13 @@ const AdminWebsiteCopy = () => {
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-5 mb-6">
+        <TabsList className="grid grid-cols-6 mb-6">
           <TabsTrigger value="website-copy">Website Copy</TabsTrigger>
           <TabsTrigger value="about-us">About Us</TabsTrigger>
           <TabsTrigger value="gallery">Gallery</TabsTrigger>
           <TabsTrigger value="navigation">Navigation</TabsTrigger>
           <TabsTrigger value="categories">Product Categories</TabsTrigger>
+          <TabsTrigger value="collaborators">Partners</TabsTrigger>
         </TabsList>
 
         {/* Website Copy Section (Home page copy, Call to action, Slogan, About block) */}
@@ -286,6 +290,11 @@ const AdminWebsiteCopy = () => {
             productCategories={copy.productCategories}
             onChange={handleProductCategoriesChange}
           />
+        </TabsContent>
+        
+        {/* Partners/Collaborators Editor */}
+        <TabsContent value="collaborators" className="space-y-6">
+          <CollaboratorsEditor />
         </TabsContent>
       </Tabs>
     </div>

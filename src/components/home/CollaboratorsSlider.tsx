@@ -1,28 +1,43 @@
 
 import { useState, useEffect } from 'react';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
-
-const collaborators = [
-  { name: 'Techify Inc.', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg' },
-  { name: 'EduWorld', logo: 'https://upload.wikimedia.org/wikipedia/commons/4/4f/Icon-Vue.png' },
-  { name: 'Coders LTD', logo: 'https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg' },
-  { name: 'Jane Studios', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/96/Solidity.svg' },
-  { name: 'NextLeap', logo: 'https://upload.wikimedia.org/wikipedia/commons/8/8e/Nextjs-logo.svg' },
-  { name: 'DesignLab', logo: 'https://upload.wikimedia.org/wikipedia/commons/3/33/Figma-logo.svg' },
-];
+import { useCollaborators } from '@/hooks/useCollaborators';
 
 export default function CollaboratorsSlider() {
+  const { collaborators, loading } = useCollaborators();
   const [emblaApi, setEmblaApi] = useState<any>(null);
 
+  // Seamless auto-slide
   useEffect(() => {
-    if (!emblaApi) return;
+    if (!emblaApi || !collaborators.length) return;
 
     const interval = setInterval(() => {
       emblaApi.scrollNext();
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [emblaApi]);
+  }, [emblaApi, collaborators.length]);
+
+  // Fallback if empty
+  if (loading) {
+    return (
+      <section className="py-6 bg-white">
+        <div className="athfal-container">
+          <div className="text-gray-500 text-sm">Loading partners...</div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!collaborators.length) {
+    return (
+      <section className="py-6 bg-white">
+        <div className="athfal-container">
+          <div className="text-gray-400 text-sm">No partners yet.</div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-6 bg-white">
@@ -30,11 +45,10 @@ export default function CollaboratorsSlider() {
         <Carousel
           opts={{
             align: 'start',
-            loop: true,             // Enable infinite looping
-            dragFree: false,        // Snap cleanly to each slide
-            slidesToScroll: 1,      // Only slide one item per movement
-            containScroll: 'trimSnaps',
-            draggable: false        // Disable dragging for a perfect seamless auto-slider
+            loop: true,
+            dragFree: false,
+            slidesToScroll: 1,
+            containScroll: 'trimSnaps'
           }}
           setApi={setEmblaApi}
           className="relative w-full max-w-5xl mx-auto"
@@ -42,7 +56,7 @@ export default function CollaboratorsSlider() {
           <CarouselContent>
             {collaborators.map((c, idx) => (
               <CarouselItem
-                key={c.name + idx}
+                key={c.id ?? c.name + idx}
                 className="basis-auto px-4 flex items-center justify-center"
                 style={{
                   width: 220,
