@@ -5,21 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCategories } from "@/hooks/useCategories";
 import { useState } from "react";
-
-const PRODUCT_CATEGORIES = [
-  { id: 'pop-up-class', name: 'Pop Up Class' },
-  { id: 'bumi-class', name: 'Bumi Class' },
-  { id: 'tahsin-class', name: 'Tahsin Class' },
-  { id: 'play-kit', name: 'Play Kit' },
-  { id: 'consultation', name: 'Psychological Consultation' },
-  { id: 'merchandise', name: 'Merchandise & Others' },
-];
 
 const MobileMenu = () => {
   const { t } = useLanguage();
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const { categories } = useCategories();
   const handleProfileClick = () => {
     navigate('/profile');
   };
@@ -40,13 +33,13 @@ const MobileMenu = () => {
           <div className="py-2">
             <h3 className="font-medium text-athfal-pink mb-2">{t('products')}</h3>
             <div className="pl-4 flex flex-col space-y-2">
-              {PRODUCT_CATEGORIES.map(category => (
+              {categories.map(category => (
                 <Link 
                   key={category.id}
-                  to={`/products/${category.id}`} 
+                  to={`/products/${category.slug}`} 
                   className="text-athfal-pink/80 hover:text-athfal-pink"
                 >
-                  {category.name}
+                  {category.title}
                 </Link>
               ))}
             </div>

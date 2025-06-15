@@ -4,18 +4,11 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-const PRODUCT_CATEGORIES = [
-  { id: 'pop-up-class', name: 'Pop Up Class' },
-  { id: 'bumi-class', name: 'Bumi Class' },
-  { id: 'tahsin-class', name: 'Tahsin Class' },
-  { id: 'play-kit', name: 'Play Kit' },
-  { id: 'consultation', name: 'Psychological Consultation' },
-  { id: 'merchandise', name: 'Merchandise & Others' },
-];
+import { useCategories } from "@/hooks/useCategories";
 
 const DesktopNavigation = () => {
   const { t } = useLanguage();
+  const { categories } = useCategories();
 
   return (
     <nav className="hidden md:flex items-center space-x-6">
@@ -31,10 +24,10 @@ const DesktopNavigation = () => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="bg-white">
-          {PRODUCT_CATEGORIES.map(category => (
+          {categories.map(category => (
             <DropdownMenuItem key={category.id}>
-              <Link to={`/products/${category.id}`} className="w-full">
-                {category.name}
+              <Link to={`/products/${category.slug}`} className="w-full">
+                {category.title}
               </Link>
             </DropdownMenuItem>
           ))}

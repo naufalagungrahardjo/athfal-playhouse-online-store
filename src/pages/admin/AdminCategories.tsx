@@ -6,13 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X, Edit2, PlusCircle } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-const emptyForm = { title: "", slug: "", image: "", bg_color: "#e9c873" }; // default color
+const emptyForm = { title: "", slug: "", image: "", bg_color: "#e9c873" };
 
 export default function AdminCategories() {
   const { categories, loading, addCategory, updateCategory, deleteCategory } = useCategories();
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -47,6 +50,37 @@ export default function AdminCategories() {
   const handleCancelEdit = () => {
     setEditId(null);
     setForm(emptyForm);
+  };
+
+  // NEW: When deleting a category, first update all products using this category to "merchandise"
+  const handleDelete = async (categoryId: string, categorySlug: string) => {
+    if (!window.confirm("Are you sure you want to delete this category? Products in this category will be moved to 'Merchandise & Others'.")) {
+      return;
+    }
+    try {
+      // Step 1: Update products that reference this category (via slug) to "merchandise"
+      // The 'category' field in products contains the slug used for category routing
+      await supabase
+        .from("products")
+        .update({ category: "merchandise" })
+        .eq("category", categorySlug);
+
+      // Step 2: Delete the category as usual
+      await deleteCategory(categoryId);
+
+      toast({
+        title: "Category deleted",
+        description:
+          "Products in this category have been moved to 'Merchandise & Others'.",
+      });
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Delete Error",
+        description: "Failed to delete category and update products.",
+      });
+      console.error(err);
+    }
   };
 
   return (
@@ -136,7 +170,7 @@ export default function AdminCategories() {
               <Button size="sm" variant="outline" onClick={() => handleEdit(cat)}>
                 <Edit2 className="w-4 h-4 mr-1" /> Edit
               </Button>
-              <Button size="sm" variant="destructive" onClick={() => deleteCategory(cat.id)}>
+              <Button size="sm" variant="destructive" onClick={() => handleDelete(cat.id, cat.slug)}>
                 <X className="w-4 h-4 mr-1" /> Delete
               </Button>
             </CardContent>
@@ -150,3 +184,4 @@ export default function AdminCategories() {
     </div>
   );
 }
+
