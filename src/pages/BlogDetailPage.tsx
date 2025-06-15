@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -69,124 +68,114 @@ const BlogDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="athfal-container py-12">
-        {/* Breadcrumb */}
-        <div className="mb-6">
-          <Link to="/" className="text-gray-500 hover:text-athfal-pink">
-            {language === "id" ? "Beranda" : "Home"}
-          </Link>
-          <span className="mx-2 text-gray-500">/</span>
-          <Link to="/blog" className="text-gray-500 hover:text-athfal-pink">
-            Blog
-          </Link>
-          <span className="mx-2 text-gray-500">/</span>
-          <span className="text-gray-700">{blog.title}</span>
-        </div>
-
-        {/* Blog header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-athfal-pink mb-4">
-            {blog.title}
-          </h1>
-          
-          <div className="flex flex-wrap items-center text-sm text-gray-500 gap-4">
-            <div className="flex items-center">
-              <Calendar className="h-4 w-4 mr-1" />
-              <span>{formatDate(blog.date)}</span>
-            </div>
-            <div className="flex items-center">
-              <User className="h-4 w-4 mr-1" />
-              <span>{blog.author}</span>
-            </div>
-            <span className="px-2 py-1 bg-athfal-green/10 text-athfal-green rounded-full">
-              {blog.category}
-            </span>
+    <div className="min-h-screen bg-white">
+      <div className="w-full">
+        <div className="max-w-[760px] mx-auto px-4 sm:px-6 py-12">
+          {/* Breadcrumb */}
+          <div className="mb-6">
+            <Link to="/" className="text-gray-500 hover:text-athfal-pink">
+              {language === "id" ? "Beranda" : "Home"}
+            </Link>
+            <span className="mx-2 text-gray-500">/</span>
+            <Link to="/blog" className="text-gray-500 hover:text-athfal-pink">
+              Blog
+            </Link>
+            <span className="mx-2 text-gray-500">/</span>
+            <span className="text-gray-700">{blog.title}</span>
           </div>
-        </div>
 
-        {/* Featured image */}
-        <div className="mb-8 rounded-3xl overflow-hidden max-w-3xl mx-auto">
-          <img
-            src={blog.image}
-            alt={blog.title}
-            className="w-full h-auto object-cover"
-            style={{ maxHeight: "420px", objectFit: "cover" }}
-          />
-        </div>
+          {/* Blog header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-athfal-pink mb-4">
+              {blog.title}
+            </h1>
+            <div className="flex flex-wrap items-center text-sm text-gray-500 gap-4">
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 mr-1" />
+                <span>{formatDate(blog.date)}</span>
+              </div>
+              <div className="flex items-center">
+                <User className="h-4 w-4 mr-1" />
+                <span>{blog.author}</span>
+              </div>
+              <span className="px-2 py-1 bg-athfal-green/10 text-athfal-green rounded-full">
+                {blog.category}
+              </span>
+            </div>
+          </div>
 
-        {/* Blog content - Support HTML content */}
-        <div className="prose prose-lg max-w-2xl mx-auto mb-12">
-          <div 
-            dangerouslySetInnerHTML={{ __html: blog.content }} 
-            className="whitespace-pre-wrap"
-            // prevent accidental pointer events from bubbling out of this zone
-            onClick={e => {
-              // Allow genuine links to work, but stop any other kind of element click
-              const target = e.target as HTMLElement;
-              if (target.tagName === "A") {
-                // allow default behavior for links
-                return;
-              }
-              e.stopPropagation();
-            }}
-          />
-        </div>
+          {/* Featured image */}
+          <div className="mb-8 rounded-3xl overflow-hidden max-w-[680px] mx-auto">
+            <img
+              src={blog.image}
+              alt={blog.title}
+              className="w-full h-auto object-cover"
+              style={{ maxHeight: "420px", objectFit: "cover" }}
+            />
+          </div>
 
-        <style>
-          {`
-            .prose img {
-              max-width: 680px;
-              width: 100%;
-              height: auto;
-              margin: 2rem auto;
-              border-radius: 1.5rem;
-              box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-              display: block;
-            }
-            @media (max-width: 768px) {
+          {/* Blog content - Support HTML content */}
+          <div className="prose prose-lg max-w-none mb-12">
+            <div 
+              dangerouslySetInnerHTML={{ __html: blog.content }} 
+              className="whitespace-pre-wrap"
+            />
+          </div>
+
+          <style>
+            {`
               .prose img {
-                max-width: 100%;
-                margin: 1rem 0;
-                border-radius: 1rem;
+                max-width: 680px;
+                width: 100%;
+                height: auto;
+                margin: 2rem auto;
+                border-radius: 1.5rem;
+                box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+                display: block;
               }
-            }
-          `}
-        </style>
+              @media (max-width: 768px) {
+                .prose img {
+                  max-width: 100%;
+                  margin: 1rem 0;
+                  border-radius: 1rem;
+                }
+              }
+            `}
+          </style>
 
-        {/* Related articles */}
-        {relatedBlogs.length > 0 && (
-          <div className="mt-16 border-t pt-8">
-            <h2 className="text-2xl font-bold mb-6 text-athfal-pink">
-              {language === "id" ? "Artikel Terkait" : "Related Articles"}
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {relatedBlogs.map((relatedBlog) => (
-                <Link to={`/blog/${relatedBlog.id}`} key={relatedBlog.id} className="group">
-                  <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all h-full">
-                    <div className="aspect-[4/3] overflow-hidden">
-                      <img 
-                        src={relatedBlog.image} 
-                        alt={relatedBlog.title} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <div className="flex items-center text-xs text-gray-500 mb-2">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        <span>{formatDate(relatedBlog.date)}</span>
+          {/* Related articles */}
+          {relatedBlogs.length > 0 && (
+            <div className="mt-16 border-t pt-8">
+              <h2 className="text-2xl font-bold mb-6 text-athfal-pink">
+                {language === "id" ? "Artikel Terkait" : "Related Articles"}
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {relatedBlogs.map((relatedBlog) => (
+                  <Link to={`/blog/${relatedBlog.id}`} key={relatedBlog.id} className="group">
+                    <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all h-full">
+                      <div className="aspect-[4/3] overflow-hidden">
+                        <img 
+                          src={relatedBlog.image} 
+                          alt={relatedBlog.title} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
                       </div>
-                      <h3 className="font-semibold text-athfal-pink line-clamp-2">
-                        {relatedBlog.title}
-                      </h3>
+                      <div className="p-4">
+                        <div className="flex items-center text-xs text-gray-500 mb-2">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          <span>{formatDate(relatedBlog.date)}</span>
+                        </div>
+                        <h3 className="font-semibold text-athfal-pink line-clamp-2">
+                          {relatedBlog.title}
+                        </h3>
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
