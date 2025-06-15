@@ -21,6 +21,13 @@ const Footer = () => {
   return (
     <footer className="bg-athfal-peach/30 pt-12 pb-6">
       <div className="athfal-container">
+        {/* 
+          Adjust grid to have four main columns:
+          1. Logo + Info
+          2. Quick Links
+          3. Product Categories
+          4. Google Maps Location (contact info below map on desktop)
+        */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo and Info */}
           <div className="col-span-1">
@@ -116,10 +123,34 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact Info & Map (Made two columns: Contact Info and Map) */}
-          <div className="col-span-1 flex flex-col h-full gap-4">
+          {/* Google Map Column */}
+          <div className="col-span-1 flex flex-col gap-4">
             <div>
-              <h3 className="text-lg font-semibold text-athfal-pink flex items-center mb-4">
+              <h4 className="text-base font-semibold text-athfal-pink mb-2">
+                {language === "id" ? "Lokasi di Google Maps" : "Google Maps Location"}
+              </h4>
+              <div className="w-full border rounded-lg overflow-hidden shadow-xl bg-white">
+                <iframe
+                  src={googleMapsEmbedUrl}
+                  title="Google Map Location"
+                  width="100%"
+                  height="200"
+                  loading="lazy"
+                  style={{ border: 0, minHeight: 180, width: '100%' }}
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">
+                {language === "id"
+                  ? "Arahkan lokasi di Google Maps setting admin (gunakan link embed, bukan link biasa)."
+                  : "Location set in admin settings with embed URL (not regular map link)."}
+              </p>
+            </div>
+            {/* Contact Info below the map, only on large screens (desktop).
+                On mobile, display after map for flow. */}
+            <div>
+              <h3 className="text-lg font-semibold text-athfal-pink flex items-center mb-2">
                 <span>{t('contactUs')}</span>
               </h3>
               <ul className="space-y-3 mb-2">
@@ -171,30 +202,6 @@ const Footer = () => {
                 </li>
               </ul>
             </div>
-            
-            {/* Embedded Google Map as part of TOP-LEVEL columns */}
-            <div className="mt-2">
-              <h4 className="text-base font-semibold text-athfal-pink mb-2">
-                {language === "id" ? "Lokasi di Google Maps" : "Google Maps Location"}
-              </h4>
-              <div className="w-full border rounded-lg overflow-hidden shadow-xl bg-white">
-                <iframe
-                  src={googleMapsEmbedUrl}
-                  title="Google Map Location"
-                  width="100%"
-                  height="200"
-                  loading="lazy"
-                  style={{ border: 0, minHeight: 180, width: '100%' }}
-                  allowFullScreen
-                  referrerPolicy="no-referrer-when-downgrade"
-                ></iframe>
-              </div>
-              <p className="text-xs text-gray-400 mt-2">
-                {language === "id"
-                  ? "Arahkan lokasi di Google Maps setting admin (gunakan link embed, bukan link biasa)."
-                  : "Location set in admin settings with embed URL (not regular map link)."}
-              </p>
-            </div>
           </div>
         </div>
 
@@ -210,3 +217,4 @@ const Footer = () => {
 };
 
 export default Footer;
+
