@@ -10,6 +10,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { WhatsAppFloatButton } from "@/components/WhatsAppFloatButton";
+import ScrollToTop from "@/components/layout/ScrollToTop";
 
 // Lazy load components
 const Index = lazy(() => import("./pages/Index"));
@@ -56,6 +57,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <ScrollToTop />
               <div className="min-h-screen flex flex-col">
                 <Header />
                 <main className="flex-1">
