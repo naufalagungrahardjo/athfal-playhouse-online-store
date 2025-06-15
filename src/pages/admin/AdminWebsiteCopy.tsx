@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,7 +30,23 @@ const WEBSITE_COPY = {
     aboutDescription: {
       id: "Athfal Playhouse adalah pusat edukasi anak yang menggabungkan metode bermain sambil belajar dengan nilai-nilai Islam.",
       en: "Athfal Playhouse is a children's education center that combines play-based learning methods with Islamic values.",
-    }
+    },
+    aboutExtraParagraph: {
+      id: "Dengan metode pembelajaran yang interaktif dan menyenangkan, kami membantu anak-anak untuk mengembangkan kreativitas dan kemampuan berpikir kritis mereka sejak dini.",
+      en: "With interactive and fun learning methods, we help children develop their creativity and critical thinking skills from an early age.",
+    },
+    ctaSectionTitle: {
+      id: "Bergabung Sekarang",
+      en: "Join Now",
+    },
+    ctaSectionSubtitle: {
+      id: "Temukan berbagai kegiatan menyenangkan dan edukatif untuk anak-anak Anda di Athfal Playhouse!",
+      en: "Discover various fun and educational activities for your children at Athfal Playhouse!",
+    },
+    homeSlogan: {
+      id: "Tempat bermain dan belajar yang menyenangkan untuk anak-anak.",
+      en: "A fun and educational play and learning space for children.",
+    },
   },
   navigation: {
     home: { id: "Beranda", en: "Home" },
@@ -182,6 +197,90 @@ const AdminWebsiteCopy = () => {
             </CardContent>
           </Card>
 
+          {/* ✦ NEW: CTA Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Call-to-Action Section
+              </CardTitle>
+              <CardDescription>
+                CTA block at the bottom of homepage (e.g. "Join Now")
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>CTA Section Title (Indonesian)</Label>
+                  <Input
+                    value={copy.homePage.ctaSectionTitle.id}
+                    onChange={(e) =>
+                      updateText('homePage', 'ctaSectionTitle', 'id', e.target.value)
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>CTA Section Title (English)</Label>
+                  <Input
+                    value={copy.homePage.ctaSectionTitle.en}
+                    onChange={(e) =>
+                      updateText('homePage', 'ctaSectionTitle', 'en', e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>CTA Subtitle (Indonesian)</Label>
+                  <Textarea
+                    rows={3}
+                    value={copy.homePage.ctaSectionSubtitle.id}
+                    onChange={(e) =>
+                      updateText('homePage', 'ctaSectionSubtitle', 'id', e.target.value)
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>CTA Subtitle (English)</Label>
+                  <Textarea
+                    rows={3}
+                    value={copy.homePage.ctaSectionSubtitle.en}
+                    onChange={(e) =>
+                      updateText('homePage', 'ctaSectionSubtitle', 'en', e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* ✦ NEW: Home Slogan */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Homepage Slogan</CardTitle>
+              <CardDescription>
+                Slogan shown with logo at the top of homepage.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Slogan (Indonesian)</Label>
+                  <Input
+                    value={copy.homePage.homeSlogan.id}
+                    onChange={(e) => updateText('homePage', 'homeSlogan', 'id', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Slogan (English)</Label>
+                  <Input
+                    value={copy.homePage.homeSlogan.en}
+                    onChange={(e) => updateText('homePage', 'homeSlogan', 'en', e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>About Section</CardTitle>
@@ -222,6 +321,30 @@ const AdminWebsiteCopy = () => {
                     rows={4}
                     value={copy.homePage.aboutDescription.en}
                     onChange={(e) => updateText('homePage', 'aboutDescription', 'en', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* ✦ NEW: Additional About Paragraph */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Extra Paragraph (Indonesian)</Label>
+                  <Textarea
+                    rows={4}
+                    value={copy.homePage.aboutExtraParagraph.id}
+                    onChange={(e) =>
+                      updateText('homePage', 'aboutExtraParagraph', 'id', e.target.value)
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Extra Paragraph (English)</Label>
+                  <Textarea
+                    rows={4}
+                    value={copy.homePage.aboutExtraParagraph.en}
+                    onChange={(e) =>
+                      updateText('homePage', 'aboutExtraParagraph', 'en', e.target.value)
+                    }
                   />
                 </div>
               </div>
