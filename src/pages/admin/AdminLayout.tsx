@@ -46,12 +46,14 @@ const AdminLayout = () => {
     { name: 'Blogs', href: '/admin/blogs', icon: FileText },
     { name: 'Banners', href: '/admin/banners', icon: Image },
     { name: 'Testimonials', href: '/admin/testimonials', icon: MessageSquare },
-    { name: 'Content', href: '/admin/content', icon: Copy },
+    // { name: 'Content', href: '/admin/content', icon: Copy }, // removed
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'FAQ', href: '/admin/faq', icon: HelpCircle },
     { name: 'Promo Codes', href: '/admin/promo-codes', icon: CreditCard },
     { name: 'Payments', href: '/admin/payments', icon: CreditCard },
-    { name: 'Website Copy', href: '/admin/website-copy', icon: Copy },
+    // { name: 'Website Copy', href: '/admin/website-copy', icon: Copy }, // removed
+    // Combine both menus into one
+    { name: 'Website Content', href: '/admin/website-copy', icon: Copy },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
     { name: 'Categories', href: '/admin/categories', icon: Package },
   ];
