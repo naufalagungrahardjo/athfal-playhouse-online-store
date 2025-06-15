@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react';
@@ -22,13 +21,14 @@ const Footer = () => {
     <footer className="bg-athfal-peach/30 pt-12 pb-6">
       <div className="athfal-container">
         {/* 
-          Adjust grid to have four main columns:
+          Adjust grid to have:
           1. Logo + Info
-          2. Quick Links
+          2. Quick Links (Pages)
           3. Product Categories
-          4. Google Maps Location (contact info below map on desktop)
+          4. Contact Us
+          5. Google Maps Location
         */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Logo and Info */}
           <div className="col-span-1">
             <Link to="/" className="flex items-center">
@@ -45,8 +45,8 @@ const Footer = () => {
             </p>
           </div>
 
-          {/* Quick Links */}
-          <div className="col-span-1">
+          {/* Quick Links (Pages) */}
+          <div className="col-span-1 lg:pl-4">
             <h3 className="text-lg font-semibold text-athfal-pink mb-4">
               {language === 'id' ? 'Halaman' : 'Pages'}
             </h3>
@@ -84,8 +84,8 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Products */}
-          <div className="col-span-1">
+          {/* Product Categories */}
+          <div className="col-span-1 lg:pl-2">
             <h3 className="text-lg font-semibold text-athfal-pink mb-4">
               {language === 'id' ? 'Kategori Produk' : 'Product Categories'}
             </h3>
@@ -123,85 +123,83 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Google Map Column */}
-          <div className="col-span-1 flex flex-col gap-4">
-            <div>
-              <h4 className="text-base font-semibold text-athfal-pink mb-2">
-                {language === "id" ? "Lokasi di Google Maps" : "Google Maps Location"}
-              </h4>
-              <div className="w-full border rounded-lg overflow-hidden shadow-xl bg-white">
-                <iframe
-                  src={googleMapsEmbedUrl}
-                  title="Google Map Location"
-                  width="100%"
-                  height="200"
-                  loading="lazy"
-                  style={{ border: 0, minHeight: 180, width: '100%' }}
-                  allowFullScreen
-                  referrerPolicy="no-referrer-when-downgrade"
-                ></iframe>
-              </div>
-              <p className="text-xs text-gray-400 mt-2">
-                {language === "id"
-                  ? "Arahkan lokasi di Google Maps setting admin (gunakan link embed, bukan link biasa)."
-                  : "Location set in admin settings with embed URL (not regular map link)."}
-              </p>
-            </div>
-            {/* Contact Info below the map, only on large screens (desktop).
-                On mobile, display after map for flow. */}
-            <div>
-              <h3 className="text-lg font-semibold text-athfal-pink flex items-center mb-2">
-                <span>{t('contactUs')}</span>
-              </h3>
-              <ul className="space-y-3 mb-2">
-                <li className="flex items-start">
-                  <MapPin className="w-5 h-5 text-athfal-pink mr-2 mt-0.5" />
-                  <span className="text-gray-700">
-                    {contact?.address || "Apartemen Park View Depok Town Square Lt. 1, Jl. Margonda Daya, Depok, 16424"}
-                  </span>
-                </li>
-                <li>
-                  <a 
-                    href={`mailto:${contact?.email || "athfalplayhouse@gmail.com"}`} 
-                    className="flex items-center text-gray-700 hover:text-athfal-pink"
-                  >
-                    <Mail className="w-5 h-5 text-athfal-pink mr-2" />
-                    {contact?.email || "athfalplayhouse@gmail.com"}
-                  </a>
-                </li>
-                <li>
-                  <a 
-                    href={`https://wa.me/${(contact?.whatsapp ?? "082120614748").replace(/[^0-9]/g, '')}`} 
-                    className="flex items-center text-gray-700 hover:text-athfal-pink"
+          {/* Contact Us (moved between Product Categories and Google Maps) */}
+          <div className="col-span-1 lg:pl-2">
+            <h3 className="text-lg font-semibold text-athfal-pink flex items-center mb-4">
+              <span>{t('contactUs')}</span>
+            </h3>
+            <ul className="space-y-3 mb-2">
+              <li className="flex items-start">
+                <MapPin className="w-5 h-5 text-athfal-pink mr-2 mt-0.5" />
+                <span className="text-gray-700">
+                  {contact?.address || "Apartemen Park View Depok Town Square Lt. 1, Jl. Margonda Daya, Depok, 16424"}
+                </span>
+              </li>
+              <li>
+                <a 
+                  href={`mailto:${contact?.email || "athfalplayhouse@gmail.com"}`} 
+                  className="flex items-center text-gray-700 hover:text-athfal-pink"
+                >
+                  <Mail className="w-5 h-5 text-athfal-pink mr-2" />
+                  {contact?.email || "athfalplayhouse@gmail.com"}
+                </a>
+              </li>
+              <li>
+                <a 
+                  href={`https://wa.me/${(contact?.whatsapp ?? "082120614748").replace(/[^0-9]/g, '')}`} 
+                  className="flex items-center text-gray-700 hover:text-athfal-pink"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Phone className="w-5 h-5 text-athfal-pink mr-2" />
+                  {contact?.whatsapp || "082120614748"}
+                </a>
+              </li>
+              <li className="pt-2">
+                <div className="flex space-x-3">
+                  <a
+                    href={contact?.instagram || "https://instagram.com/athfalplayhouse/"}
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="bg-white p-2 rounded-full text-athfal-pink hover:bg-athfal-pink hover:text-white transition-colors"
                   >
-                    <Phone className="w-5 h-5 text-athfal-pink mr-2" />
-                    {contact?.whatsapp || "082120614748"}
+                    <Instagram className="w-5 h-5" />
                   </a>
-                </li>
-                <li className="pt-2">
-                  <div className="flex space-x-3">
-                    <a
-                      href={contact?.instagram || "https://instagram.com/athfalplayhouse/"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-white p-2 rounded-full text-athfal-pink hover:bg-athfal-pink hover:text-white transition-colors"
-                    >
-                      <Instagram className="w-5 h-5" />
-                    </a>
-                    <a
-                      href={contact?.youtube || "https://www.youtube.com/@AthfalPlayhouse"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-white p-2 rounded-full text-athfal-pink hover:bg-athfal-pink hover:text-white transition-colors"
-                    >
-                      <Youtube className="w-5 h-5" />
-                    </a>
-                  </div>
-                </li>
-              </ul>
+                  <a
+                    href={contact?.youtube || "https://www.youtube.com/@AthfalPlayhouse"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white p-2 rounded-full text-athfal-pink hover:bg-athfal-pink hover:text-white transition-colors"
+                  >
+                    <Youtube className="w-5 h-5" />
+                  </a>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          {/* Google Map Column (far right) */}
+          <div className="col-span-1">
+            <h4 className="text-base font-semibold text-athfal-pink mb-2">
+              {language === "id" ? "Lokasi di Google Maps" : "Google Maps Location"}
+            </h4>
+            <div className="w-full border rounded-lg overflow-hidden shadow-xl bg-white">
+              <iframe
+                src={googleMapsEmbedUrl}
+                title="Google Map Location"
+                width="100%"
+                height="200"
+                loading="lazy"
+                style={{ border: 0, minHeight: 180, width: '100%' }}
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+              ></iframe>
             </div>
+            <p className="text-xs text-gray-400 mt-2">
+              {language === "id"
+                ? "Arahkan lokasi di Google Maps setting admin (gunakan link embed, bukan link biasa)."
+                : "Location set in admin settings with embed URL (not regular map link)."}
+            </p>
           </div>
         </div>
 
@@ -217,4 +215,3 @@ const Footer = () => {
 };
 
 export default Footer;
-
