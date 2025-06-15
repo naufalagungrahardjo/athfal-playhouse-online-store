@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -182,7 +181,9 @@ const AdminTestimonials = () => {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent 
+          className="w-full max-w-md sm:max-w-lg p-4 sm:p-6 overflow-y-auto max-h-[90vh]"
+        >
           <DialogHeader>
             <DialogTitle>
               {editingTestimonial ? 'Edit Testimonial' : 'Create New Testimonial'}
