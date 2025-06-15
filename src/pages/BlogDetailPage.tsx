@@ -117,7 +117,7 @@ const BlogDetailPage = () => {
           {/* Blog content - Support HTML content */}
           <div className="flex justify-center">
             <div
-              className="prose prose-lg max-w-prose w-full bg-white px-4 sm:px-6 md:px-8 mb-12 rounded-xl"
+              className="prose prose-lg max-w-[820px] w-full bg-white px-6 sm:px-8 md:px-10 mb-12 rounded-xl"
               style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.02)" }}
             >
               <div
@@ -137,11 +137,18 @@ const BlogDetailPage = () => {
                 box-shadow: 0 4px 24px rgba(0,0,0,0.06);
                 display: block;
               }
+              @media (max-width: 1024px) {
+                .prose {
+                  max-width: 100vw;
+                  padding-left: 1rem !important;
+                  padding-right: 1rem !important;
+                }
+              }
               @media (max-width: 768px) {
                 .prose {
                   max-width: 100vw;
-                  padding-left: 0.5rem;
-                  padding-right: 0.5rem;
+                  padding-left: 0.5rem !important;
+                  padding-right: 0.5rem !important;
                 }
                 .prose img {
                   max-width: 100%;
