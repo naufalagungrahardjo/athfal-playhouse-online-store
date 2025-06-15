@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product, ProductCategory } from '@/contexts/CartContext';
@@ -9,23 +8,6 @@ export const useProducts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-
-  // Util for safely parsing/validating the schedule field
-  function parseSchedule(input: any): { day: string; time: string; note?: string }[] | null {
-    if (Array.isArray(input)) {
-      // Only accept array items that are objects (not string, etc)
-      const arr = input.filter(
-        s =>
-          s &&
-          typeof s === 'object' &&
-          typeof s.day === 'string' &&
-          typeof s.time === 'string'
-      );
-      return arr.length > 0 ? arr : null;
-    }
-    // If it's explicitly null or empty, pass through
-    return null;
-  }
 
   const fetchProducts = async () => {
     try {
@@ -48,7 +30,6 @@ export const useProducts = () => {
         category: product.category as ProductCategory,
         tax: product.tax,
         stock: product.stock,
-        schedule: parseSchedule(product.schedule)
       }));
 
       setProducts(formattedProducts);

@@ -18,9 +18,6 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ product, language, formatCurr
         <TabsTrigger value="details" className="px-8">
           {language === 'id' ? 'Detail' : 'Details'}
         </TabsTrigger>
-        <TabsTrigger value="schedule" className="px-8">
-          {language === 'id' ? 'Jadwal' : 'Schedule'}
-        </TabsTrigger>
       </TabsList>
       <TabsContent value="description" className="py-6">
         <div className="prose max-w-none">
@@ -71,40 +68,6 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ product, language, formatCurr
             </ul>
           </div>
         </div>
-      </TabsContent>
-      <TabsContent value="schedule" className="py-6">
-        {Array.isArray(product.schedule) && product.schedule.length > 0 ? (
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg mb-3 text-athfal-pink">{language === 'id' ? 'Jadwal Kelas' : 'Class Schedule'}</h3>
-            {product.schedule.map((sched: { day?: string; time?: string; note?: string }, idx: number) => (
-              <div key={idx} className="bg-athfal-peach/10 rounded-xl p-4 flex items-start">
-                <div>
-                  <p className="font-medium">
-                    {sched.day ? `${language === 'id' ? 'Hari' : 'Day'}: ${sched.day}` : null}
-                  </p>
-                  <p className="text-gray-600">
-                    {sched.time ? `${language === 'id' ? 'Waktu' : 'Time'}: ${sched.time}` : null}
-                  </p>
-                  {sched.note ? (
-                    <p className="text-gray-500">{sched.note}</p>
-                  ) : null}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : product.category.includes('class') ? (
-          <p className="text-gray-500">
-            {language === 'id'
-              ? 'Tidak ada informasi jadwal untuk produk ini.'
-              : 'No schedule information for this product.'}
-          </p>
-        ) : (
-          <p className="text-gray-500">
-            {language === 'id'
-              ? 'Tidak ada informasi jadwal untuk produk ini.'
-              : 'No schedule information for this product.'}
-          </p>
-        )}
       </TabsContent>
     </Tabs>
   </div>

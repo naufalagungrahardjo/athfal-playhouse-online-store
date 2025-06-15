@@ -12,7 +12,6 @@ export interface Product {
   category: ProductCategory;
   tax: number;
   stock: number;
-  schedule?: { day: string; time: string; note?: string }[] | null; // <-- Schedule property
 }
 
 export interface CartItem {
@@ -95,15 +94,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         category: product.category as ProductCategory,
         tax: product.tax,
         stock: product.stock,
-        schedule: Array.isArray(product.schedule)
-          ? product.schedule.filter(
-              s =>
-                s &&
-                typeof s === 'object' &&
-                typeof s.day === 'string' &&
-                typeof s.time === 'string'
-            )
-          : null
       }));
 
       setProducts(formattedProducts);
