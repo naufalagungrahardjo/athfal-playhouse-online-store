@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -24,6 +23,7 @@ const DesktopNavigation = () => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="bg-white">
+          {/* categories are now ordered by order_num in useCategories hook */}
           {categories.map(category => (
             <DropdownMenuItem key={category.id}>
               <Link to={`/products/${category.slug}`} className="w-full">

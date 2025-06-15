@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { useCategories } from "@/hooks/useCategories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { X, Edit2, PlusCircle } from "lucide-react";
+import { X, Edit2, PlusCircle, ArrowUp, ArrowDown } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -12,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 const emptyForm = { title: "", slug: "", image: "", bg_color: "#e9c873" };
 
 export default function AdminCategories() {
-  const { categories, loading, addCategory, updateCategory, deleteCategory } = useCategories();
+  const { categories, loading, addCategory, updateCategory, deleteCategory, moveCategory } = useCategories();
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -143,7 +142,7 @@ export default function AdminCategories() {
       {/* Categories list/table */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {loading && <div>Loading...</div>}
-        {categories.map((cat) => (
+        {categories.map((cat, idx) => (
           <Card key={cat.id} className="flex flex-col justify-between">
             <CardHeader className="flex flex-row items-center gap-3">
               <div
@@ -163,7 +162,25 @@ export default function AdminCategories() {
               <div>
                 <CardTitle className="text-lg">{cat.title}</CardTitle>
                 <div className="text-xs text-gray-500">{cat.slug}</div>
-                <div className="text-xs font-mono">{cat.bg_color}</div>
+                <div className="text-xs font-mono">Order: {cat.order_num}</div>
+                <div className="flex gap-2 mt-1">
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    disabled={idx === 0}
+                    onClick={() => moveCategory(cat.id, "up")}
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    disabled={idx === categories.length - 1}
+                    onClick={() => moveCategory(cat.id, "down")}
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="flex gap-2 items-center pb-4">
@@ -184,4 +201,3 @@ export default function AdminCategories() {
     </div>
   );
 }
-

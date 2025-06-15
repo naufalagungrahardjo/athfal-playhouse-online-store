@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -9,6 +8,7 @@ export interface Category {
   slug: string;
   image: string;
   bg_color: string;
+  order_num: number; // new!
 }
 
 export function useCategories() {
@@ -21,7 +21,7 @@ export function useCategories() {
     const { data, error } = await supabase
       .from("categories")
       .select("*")
-      .order("created_at", { ascending: true });
+      .order("order_num", { ascending: true }); // now ordered by order_num!
     if (error) {
       toast({
         variant: "destructive",
@@ -83,5 +83,44 @@ export function useCategories() {
     }
   };
 
-  return { categories, loading, fetchCategories, addCategory, updateCategory, deleteCategory };
+  // Move a category up/down
+  const moveCategory = async (categoryId: string, direction: "up" | "down") => {
+    // Find category and neighbor to swap with
+    const idx = categories.findIndex((c) => c.id === categoryId);
+    if (idx === -1) return;
+    let swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= categories.length) return;
+
+    const current = categories[idx];
+    const neighbor = categories[swapIdx];
+
+    // Swap their order_num in DB
+    const { error } = await supabase
+      .from("categories")
+      .upsert([
+        { id: current.id, order_num: neighbor.order_num },
+        { id: neighbor.id, order_num: current.order_num }
+      ]);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Reorder Error",
+        description: "Could not move category.",
+      });
+    } else {
+      toast({ variant: "default", title: "Category reordered" });
+      fetchCategories();
+    }
+  };
+
+  return { 
+    categories, 
+    loading, 
+    fetchCategories, 
+    addCategory, 
+    updateCategory, 
+    deleteCategory,
+    moveCategory // export for admin UI
+  };
 }

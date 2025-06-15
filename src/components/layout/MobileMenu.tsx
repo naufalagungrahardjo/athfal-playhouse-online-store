@@ -1,4 +1,3 @@
-
 import { Link, useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -33,6 +32,7 @@ const MobileMenu = () => {
           <div className="py-2">
             <h3 className="font-medium text-athfal-pink mb-2">{t('products')}</h3>
             <div className="pl-4 flex flex-col space-y-2">
+              {/* categories now shown in the correct custom order */}
               {categories.map(category => (
                 <Link 
                   key={category.id}

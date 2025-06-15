@@ -1,4 +1,3 @@
-
 import { useCategories } from '@/hooks/useCategories';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CategoryCard } from './CategoryCard';
