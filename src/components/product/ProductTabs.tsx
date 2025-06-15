@@ -74,31 +74,31 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ product, language, formatCurr
         </div>
       </TabsContent>
       <TabsContent value="schedule" className="py-6">
-        {product.category.includes('class') ? (
+        {Array.isArray(product.schedule) && product.schedule.length > 0 ? (
           <div className="space-y-4">
             <h3 className="font-semibold text-lg mb-3 text-athfal-pink">{language === 'id' ? 'Jadwal Kelas' : 'Class Schedule'}</h3>
-            <div className="bg-athfal-peach/10 rounded-xl p-4 flex items-start">
-              <Calendar className="text-athfal-pink mr-3 mt-1" />
-              <div>
-                <p className="font-medium">{language === 'id' ? 'Hari' : 'Day'}: Senin & Rabu</p>
-                <p className="text-gray-600">{language === 'id' ? 'Waktu' : 'Time'}: 10:00 - 11:30 WIB</p>
+            {product.schedule.map((sched: { day?: string; time?: string; note?: string }, idx: number) => (
+              <div key={idx} className="bg-athfal-peach/10 rounded-xl p-4 flex items-start">
+                <div>
+                  <p className="font-medium">
+                    {sched.day ? `${language === 'id' ? 'Hari' : 'Day'}: ${sched.day}` : null}
+                  </p>
+                  <p className="text-gray-600">
+                    {sched.time ? `${language === 'id' ? 'Waktu' : 'Time'}: ${sched.time}` : null}
+                  </p>
+                  {sched.note ? (
+                    <p className="text-gray-500">{sched.note}</p>
+                  ) : null}
+                </div>
               </div>
-            </div>
-            <div className="bg-athfal-peach/10 rounded-xl p-4 flex items-start">
-              <Calendar className="text-athfal-pink mr-3 mt-1" />
-              <div>
-                <p className="font-medium">{language === 'id' ? 'Hari' : 'Day'}: Selasa & Kamis</p>
-                <p className="text-gray-600">{language === 'id' ? 'Waktu' : 'Time'}: 15:00 - 16:30 WIB</p>
-              </div>
-            </div>
-            <div className="bg-athfal-peach/10 rounded-xl p-4 flex items-start">
-              <Clock className="text-athfal-pink mr-3 mt-1" />
-              <div>
-                <p className="font-medium">{language === 'id' ? 'Durasi' : 'Duration'}: 8 {language === 'id' ? 'pertemuan' : 'meetings'}</p>
-                <p className="text-gray-600">{language === 'id' ? 'Mulai' : 'Starts'}: 1 Juni 2023</p>
-              </div>
-            </div>
+            ))}
           </div>
+        ) : product.category.includes('class') ? (
+          <p className="text-gray-500">
+            {language === 'id'
+              ? 'Tidak ada informasi jadwal untuk produk ini.'
+              : 'No schedule information for this product.'}
+          </p>
         ) : (
           <p className="text-gray-500">
             {language === 'id'
@@ -112,3 +112,4 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ product, language, formatCurr
 );
 
 export default ProductTabs;
+

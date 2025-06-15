@@ -398,6 +398,7 @@ export type Database = {
           name: string
           price: number
           product_id: string
+          schedule: Json | null
           stock: number
           tax: number
           updated_at: string | null
@@ -411,6 +412,7 @@ export type Database = {
           name: string
           price: number
           product_id: string
+          schedule?: Json | null
           stock?: number
           tax?: number
           updated_at?: string | null
@@ -424,6 +426,7 @@ export type Database = {
           name?: string
           price?: number
           product_id?: string
+          schedule?: Json | null
           stock?: number
           tax?: number
           updated_at?: string | null
