@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product, ProductCategory } from '@/contexts/CartContext';
@@ -47,11 +48,9 @@ export const useProducts = () => {
     }
   };
 
-  // Add real-time subscription for products
   useEffect(() => {
     fetchProducts();
 
-    // Set up real-time subscription
     const channel = supabase
       .channel('products-changes')
       .on(
@@ -90,3 +89,5 @@ export const useProducts = () => {
     getProductById
   };
 };
+
+// ... end of file

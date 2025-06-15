@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ProductCategory } from '@/contexts/CartContext';
 import { ImageUpload } from '@/components/ImageUpload';
 
+// NO SCHEDULE FIELD in ProductFormData type!
 interface ProductFormData {
   id?: string;
   product_id: string;
@@ -44,7 +46,6 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
     stock: 0,
   });
 
-  // Update form data when editingProduct changes
   useEffect(() => {
     if (editingProduct) {
       setFormData({
@@ -258,3 +259,5 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
     </Dialog>
   );
 };
+
+// ... end of file

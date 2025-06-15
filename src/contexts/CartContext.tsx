@@ -1,8 +1,10 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export type ProductCategory = 'pop-up-class' | 'bumi-class' | 'tahsin-class' | 'play-kit' | 'consultation' | 'merchandise';
 
+// NOTE: schedule property has been fully removed from Product interface
 export interface Product {
   id: string;
   name: string;
@@ -55,7 +57,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
 
-  // Load cart from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem('cart');
     if (savedCart) {
@@ -69,12 +70,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     fetchProducts();
   }, []);
 
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(items));
   }, [items]);
 
-  // Fetch products from database
   const fetchProducts = async () => {
     try {
       const { data, error } = await supabase
@@ -84,7 +83,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
 
-      // Convert database products to our Product interface
+      // schedule property completely removed here
       const formattedProducts: Product[] = (data || []).map(product => ({
         id: product.product_id,
         name: product.name,
@@ -105,7 +104,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const addToCart = (product: Product, quantity: number = 1) => {
     setItems(prev => {
       const existingItem = prev.find(item => item.product.id === product.id);
-      
       if (existingItem) {
         return prev.map(item =>
           item.product.id === product.id
@@ -113,25 +111,23 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             : item
         );
       } else {
-        return [...prev, { 
-          id: product.id, 
-          name: product.name, 
-          price: product.price, 
-          product, 
-          quantity 
+        return [...prev, {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          product,
+          quantity
         }];
       }
     });
   };
 
-  // Alias for addToCart
   const addItem = addToCart;
 
   const removeFromCart = (productId: string) => {
     setItems(prev => prev.filter(item => item.product.id !== productId));
   };
 
-  // Alias for removeFromCart
   const removeItem = removeFromCart;
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -211,3 +207,5 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     </CartContext.Provider>
   );
 };
+
+// ... end of file
