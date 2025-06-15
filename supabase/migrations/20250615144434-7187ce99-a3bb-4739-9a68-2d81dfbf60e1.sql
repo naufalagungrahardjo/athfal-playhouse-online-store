@@ -1,4 +1,3 @@
-
 -- 1. Allow "order_staff" to update orders in RLS (policy already broad)
 DROP POLICY IF EXISTS "Orders - Update status for order_staff" ON public.orders;
 CREATE POLICY "Orders - Update for order_staff (all fields, trigger restricts)" ON public.orders
@@ -41,7 +40,8 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public;
 
 -- 3. Attach the trigger to the orders table
 DROP TRIGGER IF EXISTS restrict_order_staff_update ON public.orders;
