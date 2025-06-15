@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -9,44 +10,45 @@ const DesktopNavigation = () => {
   const { t } = useLanguage();
   const { categories } = useCategories();
 
+  // Apply consistent and large font-size ('text-2xl' for header menu)
+  const navItemClass = "text-athfal-pink font-medium hover:text-athfal-pink/80 text-2xl";
+
   return (
-    <nav className="hidden md:flex items-center space-x-6">
-      <Link to="/" className="text-athfal-pink font-medium hover:text-athfal-pink/80">
+    <nav className="hidden md:flex items-center space-x-8">
+      <Link to="/" className={navItemClass}>
         {t('home')}
       </Link>
 
       {/* Products Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="link" className="text-athfal-pink font-medium p-0 hover:text-athfal-pink/80">
-            {t('products')} <ChevronDown className="ml-1 h-4 w-4" />
+          <Button variant="link" 
+                  className={`p-0 ${navItemClass} !font-medium !bg-transparent !shadow-none flex items-center gap-1`}>
+            {t('products')} <ChevronDown className="ml-1 h-5 w-5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="bg-white">
-          {/* categories are now ordered by order_num in useCategories hook */}
           {categories.map(category => (
             <DropdownMenuItem key={category.id}>
-              <Link to={`/products/${category.slug}`} className="w-full">
-                {category.title}
-              </Link>
+              <Link to={`/products/${category.slug}`} className="w-full text-athfal-pink text-base">{category.title}</Link>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Link to="/gallery" className="text-athfal-pink font-medium hover:text-athfal-pink/80">
+      <Link to="/gallery" className={navItemClass}>
         {t('gallery')}
       </Link>
       
-      <Link to="/about" className="text-athfal-pink font-medium hover:text-athfal-pink/80">
+      <Link to="/about" className={navItemClass}>
         {t('about')}
       </Link>
       
-      <Link to="/blog" className="text-athfal-pink font-medium hover:text-athfal-pink/80">
+      <Link to="/blog" className={navItemClass}>
         {t('blog')}
       </Link>
       
-      <Link to="/faq" className="text-athfal-pink font-medium hover:text-athfal-pink/80">
+      <Link to="/faq" className={navItemClass}>
         {t('faq')}
       </Link>
     </nav>
