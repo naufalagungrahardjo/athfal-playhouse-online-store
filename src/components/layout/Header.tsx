@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -17,13 +18,11 @@ import { BlogSearchBar } from "./BlogSearchBar";
 
 const Header = () => {
   console.log('[Header] Rendering');
-  const { t, /*language, setLanguage*/ } = useLanguage();
+  const { t } = useLanguage();
   const { user, logout, isAdmin } = useAuth();
-  // const { getTotalItems } = useCart();
   const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
 
-  // Check if the page has been scrolled
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -41,7 +40,8 @@ const Header = () => {
         isScrolled ? 'bg-white shadow-md' : 'bg-transparent'
       }`}
     >
-      <div className="athfal-container py-4">
+      {/* Responsive container with capped width and controlled padding */}
+      <div className="w-full max-w-[1280px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 athfal-container py-4">
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Logo />
@@ -50,9 +50,9 @@ const Header = () => {
           <DesktopNavigation />
 
           {/* User Actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4 overflow-x-auto max-w-full relative">
             {/* Search bar placed to left of LanguageSwitcher */}
-            <BlogSearchBar /> {/* Should now display correctly */}
+            <BlogSearchBar />
             <LanguageSwitcher />
             <CartButton />
             <UserMenu />
