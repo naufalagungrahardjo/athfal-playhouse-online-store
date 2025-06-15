@@ -46,6 +46,7 @@ const AdminPayments = lazy(() => import("./pages/admin/AdminPayments"));
 const AdminWebsiteCopy = lazy(() => import("./pages/admin/AdminWebsiteCopy"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
+const AdminAccounts = lazy(() => import("./pages/admin/AdminAccounts"));
 
 const queryClient = new QueryClient();
 
@@ -96,6 +97,7 @@ const App = () => (
                         <Route path="website-copy" element={<AdminWebsiteCopy />} />
                         <Route path="settings" element={<AdminSettings />} />
                         <Route path="categories" element={<AdminCategories />} />
+                        <Route path="accounts" element={<AdminAccounts />} />
                       </Route>
                       
                       <Route path="*" element={<NotFound />} />

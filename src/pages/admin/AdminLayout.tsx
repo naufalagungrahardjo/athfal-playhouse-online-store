@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -39,24 +38,97 @@ const AdminLayout = () => {
     return <Navigate to="/" replace />;
   }
 
+  // Helper: map role to admin CMS routes
+  const getAdminRole = (): string | null => {
+    // Return the user's CMS role for route filtering. Assuming 'user' has email.
+    const email = user?.email;
+    const roleMapping = {
+      "super_admin": [
+        "/admin",
+        "/admin/accounts",
+        "/admin/products",
+        "/admin/orders",
+        "/admin/blogs",
+        "/admin/banners",
+        "/admin/testimonials",
+        "/admin/users",
+        "/admin/faq",
+        "/admin/promo-codes",
+        "/admin/payments",
+        "/admin/website-copy",
+        "/admin/settings",
+        "/admin/categories"
+      ],
+      "orders_manager": [
+        "/admin",
+        "/admin/products",
+        "/admin/orders",
+        "/admin/promo-codes",
+        "/admin/payments"
+      ],
+      "order_staff": [
+        "/admin/orders"
+      ],
+      "content_manager": [
+        "/admin/blogs",
+        "/admin/banners",
+        "/admin/website-copy",
+        "/admin/categories",
+        "/admin/faq",
+        "/admin/testimonials"
+      ],
+      "content_staff": [
+        "/admin/blogs"
+      ]
+    };
+    // TODO: Fetch admin role for email dynamically.
+    // For now, fallback to isAdmin() for legacy support.
+    if (email === "athfalplayhouse@gmail.com") return "super_admin";
+    return null;
+  };
+
+  const adminRole = getAdminRole();
+
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+    { name: 'Admin Accounts', href: '/admin/accounts', icon: Users },
     { name: 'Products', href: '/admin/products', icon: Package },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Blogs', href: '/admin/blogs', icon: FileText },
     { name: 'Banners', href: '/admin/banners', icon: Image },
     { name: 'Testimonials', href: '/admin/testimonials', icon: MessageSquare },
-    // { name: 'Content', href: '/admin/content', icon: Copy }, // removed
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'FAQ', href: '/admin/faq', icon: HelpCircle },
     { name: 'Promo Codes', href: '/admin/promo-codes', icon: CreditCard },
     { name: 'Payments', href: '/admin/payments', icon: CreditCard },
-    // { name: 'Website Copy', href: '/admin/website-copy', icon: Copy }, // removed
-    // Combine both menus into one
     { name: 'Website Content', href: '/admin/website-copy', icon: Copy },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
     { name: 'Categories', href: '/admin/categories', icon: Package },
   ];
+
+  const filteredNavigation = navigation.filter(item => {
+    if (adminRole === "super_admin") return true;
+    if (adminRole === "orders_manager") {
+      return ["/admin", "/admin/products", "/admin/orders", "/admin/promo-codes", "/admin/payments"].includes(item.href);
+    }
+    if (adminRole === "order_staff") {
+      return ["/admin/orders"].includes(item.href);
+    }
+    if (adminRole === "content_manager") {
+      return [
+        "/admin/blogs", 
+        "/admin/banners", 
+        "/admin/website-copy", 
+        "/admin/categories", 
+        "/admin/faq", 
+        "/admin/testimonials"
+      ].includes(item.href);
+    }
+    if (adminRole === "content_staff") {
+      return ["/admin/blogs"].includes(item.href);
+    }
+    return false;
+  });
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -76,7 +148,7 @@ const AdminLayout = () => {
             </div>
             <div className="flex-1 overflow-y-auto">
               <ul className="space-y-1">
-                {navigation.map((item) => (
+                {filteredNavigation.map((item) => (
                   <li key={item.name}>
                     <Link
                       to={item.href}
@@ -106,7 +178,7 @@ const AdminLayout = () => {
         </div>
         <div className="flex-1 overflow-y-auto">
           <ul className="space-y-1">
-            {navigation.map((item) => (
+            {filteredNavigation.map((item) => (
               <li key={item.name}>
                 <Link
                   to={item.href}
