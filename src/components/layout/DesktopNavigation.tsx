@@ -5,26 +5,28 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ChevronDown } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCategories } from "@/hooks/useCategories";
+import { useWebsiteCopy } from "@/hooks/useWebsiteCopy";
 
 const DesktopNavigation = () => {
-  const { t } = useLanguage();
+  const { language } = useLanguage();
+  const { copy } = useWebsiteCopy();
   const { categories } = useCategories();
+  const nav = copy.navigation;
 
-  // Match menu font size to the "Login" button (text-sm, font-medium)
   const navItemClass = "text-athfal-pink font-medium hover:text-athfal-pink/80 text-sm";
 
   return (
     <nav className="hidden md:flex items-center space-x-8">
       <Link to="/" className={navItemClass}>
-        {t('home')}
+        {language === "id" ? nav.home.id : nav.home.en}
       </Link>
-
       {/* Products Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="link" 
+          <Button variant="link"
                   className={`p-0 ${navItemClass} !font-medium !bg-transparent !shadow-none flex items-center gap-1`}>
-            {t('products')} <ChevronDown className="ml-1 h-5 w-5" />
+            {language === "id" ? nav.products.id : nav.products.en}
+            <ChevronDown className="ml-1 h-5 w-5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="bg-white">
@@ -37,21 +39,17 @@ const DesktopNavigation = () => {
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-
       <Link to="/gallery" className={navItemClass}>
-        {t('gallery')}
+        {language === "id" ? nav.gallery?.id || "Galeri" : nav.gallery?.en || "Gallery"}
       </Link>
-      
       <Link to="/about" className={navItemClass}>
-        {t('about')}
+        {language === "id" ? nav.about.id : nav.about.en}
       </Link>
-      
       <Link to="/blog" className={navItemClass}>
-        {t('blog')}
+        {language === "id" ? nav.blog.id : nav.blog.en}
       </Link>
-      
       <Link to="/faq" className={navItemClass}>
-        {t('faq')}
+        {language === "id" ? nav.faq.id : nav.faq.en}
       </Link>
     </nav>
   );

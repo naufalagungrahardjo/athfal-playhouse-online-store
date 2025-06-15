@@ -4,11 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useWebsiteCopy } from "@/hooks/useWebsiteCopy";
 import { useCategories } from "@/hooks/useCategories";
 import { useState } from "react";
 
 const MobileMenu = () => {
-  const { t } = useLanguage();
+  const { language } = useLanguage();
+  const { copy } = useWebsiteCopy();
+  const nav = copy.navigation;
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { categories } = useCategories();
@@ -29,11 +32,13 @@ const MobileMenu = () => {
       <SheetContent side="right">
         <div className="flex flex-col space-y-4 mt-8">
           <Link to="/" className={navItemClass}>
-            {t('home')}
+            {language === "id" ? nav.home.id : nav.home.en}
           </Link>
 
           <div className="py-2">
-            <h3 className="font-medium text-athfal-pink mb-2 text-base">{t('products')}</h3>
+            <h3 className="font-medium text-athfal-pink mb-2 text-base">
+              {language === "id" ? nav.products.id : nav.products.en}
+            </h3>
             <div className="pl-4 flex flex-col space-y-2">
               {categories.map(category => (
                 <Link 
@@ -48,19 +53,19 @@ const MobileMenu = () => {
           </div>
           
           <Link to="/gallery" className={navItemClass}>
-            {t('gallery')}
+            {language === "id" ? nav.gallery?.id || "Galeri" : nav.gallery?.en || "Gallery"}
           </Link>
           
           <Link to="/about" className={navItemClass}>
-            {t('about')}
+            {language === "id" ? nav.about.id : nav.about.en}
           </Link>
           
           <Link to="/blog" className={navItemClass}>
-            {t('blog')}
+            {language === "id" ? nav.blog.id : nav.blog.en}
           </Link>
           
           <Link to="/faq" className={navItemClass}>
-            {t('faq')}
+            {language === "id" ? nav.faq.id : nav.faq.en}
           </Link>
 
           {!user && (
