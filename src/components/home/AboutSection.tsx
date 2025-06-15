@@ -1,11 +1,15 @@
+
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useWebsiteCopy } from '@/hooks/useWebsiteCopy';
+import { useAboutContent } from '@/hooks/useAboutContent';
+import { AboutSectionImage } from './AboutSectionImage';
 
 export const AboutSection = () => {
   const { language } = useLanguage();
   const { copy } = useWebsiteCopy();
+  const { content: aboutContent } = useAboutContent();
 
   return (
     <section className="py-16 bg-gradient-to-br from-athfal-light-pink/20 to-athfal-peach/30">
@@ -32,22 +36,10 @@ export const AboutSection = () => {
             </a>
           </div>
           <div className="md:w-1/2 mt-6 md:mt-0">
-            <div className="relative">
-              <div className="rounded-3xl overflow-hidden shadow-xl">
-                <img
-                  src={copy.homePage.heroImage}
-                  alt="Children playing"
-                  className="w-full h-auto object-cover"
-                />
-              </div>
-              <div className="absolute -bottom-6 -left-6 bg-athfal-yellow rounded-full p-4 shadow-lg animate-bounce-slow">
-                <img
-                  src={copy.homePage.aboutDecorativeImage || "/lovable-uploads/4e490da3-e092-4eec-b20b-d66ed04832e7.png"}
-                  alt="Decorative element"
-                  className="w-16 h-16"
-                />
-              </div>
-            </div>
+            <AboutSectionImage
+              heroImage={aboutContent.heroImage}
+              aboutDecorativeImage={copy.homePage.aboutDecorativeImage}
+            />
           </div>
         </div>
       </div>
