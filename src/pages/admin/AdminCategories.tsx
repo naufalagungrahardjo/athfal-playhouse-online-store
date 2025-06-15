@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X, Edit2, PlusCircle } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 
-const emptyForm = { title: "", slug: "", image: "", bg_color: "" };
+const emptyForm = { title: "", slug: "", image: "", bg_color: "#e9c873" }; // default color
 
 export default function AdminCategories() {
   const { categories, loading, addCategory, updateCategory, deleteCategory } = useCategories();
@@ -18,7 +18,11 @@ export default function AdminCategories() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Form submission for add or edit
+  // Color picker change
+  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, bg_color: e.target.value });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editId) {
@@ -71,18 +75,26 @@ export default function AdminCategories() {
               onChange={handleChange}
               required
             />
-            {/* Changed: Use ImageUpload instead of text input for image */}
             <ImageUpload
               value={form.image}
               onChange={(url) => setForm({ ...form, image: url })}
               label="Category Image"
             />
-            <Input
-              name="bg_color"
-              placeholder="BG Color class (e.g. bg-athfal-yellow/20)"
-              value={form.bg_color}
-              onChange={handleChange}
-            />
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Background Color
+              </label>
+              <input
+                type="color"
+                name="bg_color"
+                value={form.bg_color}
+                onChange={handleColorChange}
+                className="w-12 h-10 p-0 border-0 cursor-pointer"
+                style={{ background: "none" }}
+                title="Pick background color"
+              />
+              <span className="ml-3 text-xs">{form.bg_color}</span>
+            </div>
             <div className="flex gap-2">
               <Button type="submit">{editId ? "Update" : "Add"} Category</Button>
               {editId && (
@@ -100,11 +112,20 @@ export default function AdminCategories() {
         {categories.map((cat) => (
           <Card key={cat.id} className="flex flex-col justify-between">
             <CardHeader className="flex flex-row items-center gap-3">
-              <img
-                src={cat.image}
-                alt={cat.title}
-                className="rounded-full w-12 h-12 object-cover bg-gray-100"
-              />
+              <div
+                className="rounded-full w-12 h-12 flex items-center justify-center"
+                style={{
+                  background: cat.bg_color,
+                  opacity: 0.2,
+                }}
+              >
+                <img
+                  src={cat.image}
+                  alt={cat.title}
+                  className="rounded-full w-10 h-10 object-cover bg-gray-100"
+                  style={{ background: "#fff" }}
+                />
+              </div>
               <div>
                 <CardTitle className="text-lg">{cat.title}</CardTitle>
                 <div className="text-xs text-gray-500">{cat.slug}</div>
@@ -121,6 +142,10 @@ export default function AdminCategories() {
             </CardContent>
           </Card>
         ))}
+      </div>
+      <div className="text-xs text-athfal-pink mt-4">
+        <strong>Note:</strong>
+        Categories created before June 2025 may still have the old <code>bg_color</code> value (like <code>bg-athfal-yellow/20</code>). Please edit them and pick a color to make the background visible.
       </div>
     </div>
   );
