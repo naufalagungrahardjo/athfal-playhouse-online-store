@@ -14,7 +14,7 @@ export const useAuthState = () => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('[AuthStateChange] event:', event, 'session:', session);
+        console.log('Auth state changed:', event, session);
         setSession(session);
         
         if (session?.user) {
@@ -24,7 +24,6 @@ export const useAuthState = () => {
           setUser(null);
         }
         setLoading(false);
-        console.log('[AuthStateChange] setLoading(false)');
       }
     );
 
@@ -32,25 +31,14 @@ export const useAuthState = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
-        loadUserProfile(session.user).then(userData => {
-          setUser(userData);
-          setLoading(false);
-          console.log('[GetSession] Got user, setLoading(false)');
-        });
+        loadUserProfile(session.user).then(setUser);
       } else {
-        setUser(null);
         setLoading(false);
-        console.log('[GetSession] No user, setLoading(false)');
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    console.log('[useAuthState] user:', user, 'session:', session, 'loading:', loading);
-  }, [user, session, loading]);
-
   return { user, session, loading, setUser, setSession };
 };
-

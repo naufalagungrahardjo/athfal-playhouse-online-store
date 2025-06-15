@@ -22,24 +22,12 @@ const AuthPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const { login, signup, resetPassword, user, loading } = useAuth();
+  const { login, signup, resetPassword, user } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
 
-  // Add a fail-safe to prevent infinite submitting/loading
-  useEffect(() => {
-    let timeout: number | null = null;
-    if (isSubmitting) {
-      timeout = window.setTimeout(() => setIsSubmitting(false), 15_000); // auto-reset after 15s
-    }
-    return () => {
-      if (timeout) clearTimeout(timeout);
-    };
-  }, [isSubmitting]);
-
   useEffect(() => {
     if (user) {
-      setIsSubmitting(false); // Stop loader immediately on redirect
       navigate('/profile');
     }
   }, [user, navigate]);
@@ -53,7 +41,6 @@ const AuthPage = () => {
       switch (authMode) {
         case 'login':
           await login(email, password);
-          // Do NOT manually navigate here; will auto-redirect via useEffect on user change
           break;
         case 'signup':
           if (password !== confirmPassword) {
@@ -70,21 +57,10 @@ const AuthPage = () => {
     } catch (error) {
       console.error('Auth error:', error);
       setError(error instanceof Error ? error.message : 'An error occurred');
-      setIsSubmitting(false); // Always reset submitting on error
+    } finally {
+      setIsSubmitting(false);
     }
-    // Do NOT set isSubmitting(false) here, let it auto-redirect or be handled above!
   };
-
-  // Optional: Show full-page loading indicator
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-lg font-semibold text-athfal-pink">
-          {language === 'id' ? 'Memuat...' : 'Loading...'}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
