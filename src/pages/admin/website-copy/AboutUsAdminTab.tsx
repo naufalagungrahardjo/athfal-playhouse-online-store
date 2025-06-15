@@ -54,6 +54,7 @@ const AboutUsAdminTab = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* --- Hero Title/Subtitle fields --- */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Hero Title (Indonesian)</Label>
@@ -70,37 +71,19 @@ const AboutUsAdminTab = () => {
               />
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Hero Subtitle (Indonesian)</Label>
-              <Textarea
-                rows={3}
-                value={aboutContent.heroSubtitle.id}
-                onChange={(e) => handleAboutContentChange('heroSubtitle', 'id', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Hero Subtitle (English)</Label>
-              <Textarea
-                rows={3}
-                value={aboutContent.heroSubtitle.en}
-                onChange={(e) => handleAboutContentChange('heroSubtitle', 'en', e.target.value)}
-              />
-            </div>
-          </div>
+          {/* --- Hero Image Upload --- */}
           <ImageUpload
             value={aboutContent.heroImage}
             onChange={(url) => handleAboutImageChange('heroImage', url)}
-            label="Hero Image"
+            label="Hero Image (Main Large Image)"
           />
-          {/* NEW FIELD FOR THE LITTLE YELLOW CIRCLE */}
-          <div className="mt-5">
-            <ImageUpload
-              value={aboutContent.aboutDecorativeImage || ""}
-              onChange={(url) => handleAboutImageChange('aboutDecorativeImage', url)}
-              label='Decorative Image (Yellow Circle - Small Image)'
-            />
-          </div>
+          {/* --- Decorative Image Upload --- */}
+          <ImageUpload
+            value={aboutContent.aboutDecorativeImage || ""}
+            onChange={(url) => handleAboutImageChange('aboutDecorativeImage', url)}
+            label="Decorative Image (Yellow Circle - Small Image)"
+            className="mt-6"
+          />
         </CardContent>
       </Card>
       <Card>
