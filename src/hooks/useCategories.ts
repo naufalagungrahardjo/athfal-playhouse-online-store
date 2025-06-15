@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +9,7 @@ export interface Category {
   slug: string;
   image: string;
   bg_color: string;
-  order_num: number; // new!
+  order_num: number;
 }
 
 export function useCategories() {
@@ -21,7 +22,7 @@ export function useCategories() {
     const { data, error } = await supabase
       .from("categories")
       .select("*")
-      .order("order_num", { ascending: true }); // now ordered by order_num!
+      .order("order_num", { ascending: true });
     if (error) {
       toast({
         variant: "destructive",
@@ -56,7 +57,10 @@ export function useCategories() {
   }, [fetchCategories]);
 
   // Mutations
-  const addCategory = async (category: Omit<Category, "id">) => {
+  // Allow order_num to be optional for added category
+  const addCategory = async (
+    category: Omit<Category, "id" | "order_num"> & { order_num?: number }
+  ) => {
     const { error } = await supabase.from("categories").insert([category]);
     if (error) {
       toast({ variant: "destructive", title: "Add Error", description: error.message });
@@ -83,9 +87,8 @@ export function useCategories() {
     }
   };
 
-  // Move a category up/down
+  // Move a category up/down (swap order_num with neighbor)
   const moveCategory = async (categoryId: string, direction: "up" | "down") => {
-    // Find category and neighbor to swap with
     const idx = categories.findIndex((c) => c.id === categoryId);
     if (idx === -1) return;
     let swapIdx = direction === "up" ? idx - 1 : idx + 1;
@@ -94,13 +97,22 @@ export function useCategories() {
     const current = categories[idx];
     const neighbor = categories[swapIdx];
 
-    // Swap their order_num in DB
-    const { error } = await supabase
+    // Swap their order_num in DB: Do two `update` calls (not upsert with missing fields)
+    let error = null;
+
+    const { error: err1 } = await supabase
       .from("categories")
-      .upsert([
-        { id: current.id, order_num: neighbor.order_num },
-        { id: neighbor.id, order_num: current.order_num }
-      ]);
+      .update({ order_num: neighbor.order_num })
+      .eq("id", current.id);
+
+    if (err1) error = err1;
+
+    const { error: err2 } = await supabase
+      .from("categories")
+      .update({ order_num: current.order_num })
+      .eq("id", neighbor.id);
+
+    if (err2) error = err2;
 
     if (error) {
       toast({
@@ -114,13 +126,13 @@ export function useCategories() {
     }
   };
 
-  return { 
-    categories, 
-    loading, 
-    fetchCategories, 
-    addCategory, 
-    updateCategory, 
+  return {
+    categories,
+    loading,
+    fetchCategories,
+    addCategory,
+    updateCategory,
     deleteCategory,
-    moveCategory // export for admin UI
+    moveCategory
   };
 }

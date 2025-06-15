@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useCategories } from "@/hooks/useCategories";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,8 @@ export default function AdminCategories() {
       await updateCategory(editId, form);
       setEditId(null);
     } else {
-      await addCategory(form);
+      // Add undefined order_num so default is assigned in DB
+      await addCategory({ ...form, order_num: undefined });
     }
     setForm(emptyForm);
   };
@@ -51,20 +53,17 @@ export default function AdminCategories() {
     setForm(emptyForm);
   };
 
-  // NEW: When deleting a category, first update all products using this category to "merchandise"
+  // When deleting a category, move products to 'merchandise'
   const handleDelete = async (categoryId: string, categorySlug: string) => {
     if (!window.confirm("Are you sure you want to delete this category? Products in this category will be moved to 'Merchandise & Others'.")) {
       return;
     }
     try {
-      // Step 1: Update products that reference this category (via slug) to "merchandise"
-      // The 'category' field in products contains the slug used for category routing
       await supabase
         .from("products")
         .update({ category: "merchandise" })
         .eq("category", categorySlug);
 
-      // Step 2: Delete the category as usual
       await deleteCategory(categoryId);
 
       toast({
