@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X, Edit2, PlusCircle } from "lucide-react";
+import { ImageUpload } from "@/components/ImageUpload";
 
 const emptyForm = { title: "", slug: "", image: "", bg_color: "" };
 
@@ -70,12 +71,11 @@ export default function AdminCategories() {
               onChange={handleChange}
               required
             />
-            <Input
-              name="image"
-              placeholder="Image URL"
+            {/* Changed: Use ImageUpload instead of text input for image */}
+            <ImageUpload
               value={form.image}
-              onChange={handleChange}
-              required
+              onChange={(url) => setForm({ ...form, image: url })}
+              label="Category Image"
             />
             <Input
               name="bg_color"
