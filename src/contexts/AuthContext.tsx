@@ -39,6 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('[LOGIN_ATTEMPT]', { email });
       const data = await signInWithEmail(email, password);
 
       if (data.user) {
@@ -48,6 +49,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           title: "Login berhasil",
           description: `Selamat datang`,
         });
+        console.log('[LOGIN_SUCCESS]', data.user);
+      } else {
+        console.log('[LOGIN_FAIL_NO_USER_OBJECT]', data);
+        toast({
+          variant: "destructive",
+          title: "Login gagal",
+          description: "Tidak ditemukan user",
+        });
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -56,6 +65,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: "Login gagal",
         description: error instanceof Error ? error.message : "Email atau password salah",
       });
+      // Additional debugging for unexpected error response
+      if (typeof error === "object" && error !== null) {
+        console.error('[LOGIN_ERROR_OBJECT]', JSON.stringify(error));
+      }
       throw error;
     }
   };
