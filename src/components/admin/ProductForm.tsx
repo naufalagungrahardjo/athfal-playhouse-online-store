@@ -78,6 +78,11 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
     e.preventDefault();
     setLoading(true);
 
+    // Add diagnostic logging
+    const user = supabase.auth.getUser && (await supabase.auth.getUser()).data.user;
+    console.log('[ProductForm] Attempting to save product. Auth user:', user);
+    console.log('[ProductForm] Data being saved:', formData);
+
     try {
       if (editingProduct) {
         // Update existing product
@@ -116,8 +121,12 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             tax: formData.tax,
             stock: formData.stock
           }]);
-
-        if (error) throw error;
+        
+        if (error) {
+          // More detailed error log if row insertion fails
+          console.error('[ProductForm] Error inserting new product:', error);
+          throw error;
+        }
 
         toast({
           title: "Success",
