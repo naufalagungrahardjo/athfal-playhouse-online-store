@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -29,21 +28,11 @@ export const TestimonialDialog = ({
   setSaving,
 }: TestimonialDialogProps) => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState<Testimonial>({
-    id: "",
-    name: "",
-    text: "",
-    rating: 5,
-    avatar: "",
-    active: true,
-    order_num: 1,
-  });
 
-  useEffect(() => {
-    if (initialTestimonial) {
-      setFormData({ ...initialTestimonial });
-    } else {
-      setFormData({
+  // Set up an initialFormData object to use for resets only.
+  const initialFormData: Testimonial = initialTestimonial
+    ? { ...initialTestimonial }
+    : {
         id: "",
         name: "",
         text: "",
@@ -51,9 +40,17 @@ export const TestimonialDialog = ({
         avatar: "",
         active: true,
         order_num: 1,
-      });
+      };
+
+  const [formData, setFormData] = useState<Testimonial>(initialFormData);
+
+  // Only reset form data when a completely NEW testimonial is being edited OR when dialog is just opened to blank.
+  useEffect(() => {
+    if (open) {
+      setFormData(initialFormData);
     }
-  }, [initialTestimonial, open]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialTestimonial?.id]); // important: only reset on id change or dialog open
 
   const handleSave = async () => {
     try {
@@ -86,7 +83,7 @@ export const TestimonialDialog = ({
       <DialogContent className="w-full max-w-md sm:max-w-lg p-4 sm:p-6 overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>
-            {initialTestimonial ? "Edit Testimonial" : "Create New Testimonial"}
+            {initialTestimonial && initialTestimonial.id ? "Edit Testimonial" : "Create New Testimonial"}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
@@ -132,7 +129,12 @@ export const TestimonialDialog = ({
           </div>
           <ImageUpload
             value={formData.avatar || ""}
-            onChange={(url) => setFormData({ ...formData, avatar: url })}
+            onChange={(url) =>
+              setFormData((prev) => ({
+                ...prev,
+                avatar: url,
+              }))
+            }
             label="Customer Avatar (Optional)"
           />
           <div>
@@ -166,7 +168,7 @@ export const TestimonialDialog = ({
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? "Saving..." : initialTestimonial ? "Update" : "Create"}
+              {saving ? "Saving..." : initialTestimonial && initialTestimonial.id ? "Update" : "Create"}
             </Button>
           </div>
         </div>
