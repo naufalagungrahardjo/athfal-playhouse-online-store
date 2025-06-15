@@ -1,3 +1,4 @@
+
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react';
@@ -107,75 +108,72 @@ const Footer = () => {
           </div>
 
           {/* Contact Info & Location */}
-          <div className="col-span-1">
-            <div className="flex flex-col md:flex-row md:justify-between">
-              <div className="w-full">
-                <h3 className="text-lg font-semibold text-athfal-pink mb-4">
-                  {t('contactUs')}
-                </h3>
-                <ul className="space-y-3">
-                  <li className="flex items-start">
-                    <MapPin className="w-5 h-5 text-athfal-pink mr-2 mt-0.5" />
-                    <span className="text-gray-700">
-                      {contact?.address || "Apartemen Park View Depok Town Square Lt. 1, Jl. Margonda Daya, Depok, 16424"}
-                    </span>
-                  </li>
-                  <li>
-                    <a 
-                      href={`mailto:${contact?.email || "athfalplayhouse@gmail.com"}`} 
-                      className="flex items-center text-gray-700 hover:text-athfal-pink"
-                    >
-                      <Mail className="w-5 h-5 text-athfal-pink mr-2" />
-                      {contact?.email || "athfalplayhouse@gmail.com"}
-                    </a>
-                  </li>
-                  <li>
-                    <a 
-                      href={`https://wa.me/${(contact?.whatsapp ?? "082120614748").replace(/[^0-9]/g, '')}`} 
-                      className="flex items-center text-gray-700 hover:text-athfal-pink"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Phone className="w-5 h-5 text-athfal-pink mr-2" />
-                      {contact?.whatsapp || "082120614748"}
-                    </a>
-                  </li>
-                  <li className="pt-2">
-                    <div className="flex space-x-3">
-                      <a
-                        href={contact?.instagram || "https://instagram.com/athfalplayhouse/"}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-white p-2 rounded-full text-athfal-pink hover:bg-athfal-pink hover:text-white transition-colors"
-                      >
-                        <Instagram className="w-5 h-5" />
-                      </a>
-                      <a
-                        href={contact?.youtube || "https://www.youtube.com/@AthfalPlayhouse"}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-white p-2 rounded-full text-athfal-pink hover:bg-athfal-pink hover:text-white transition-colors"
-                      >
-                        <Youtube className="w-5 h-5" />
-                      </a>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-              {/* Google Maps Location: Shown on right, top beside Contact Info, responsive below on mobile */}
-              <div className="w-full mt-6 md:mt-0 md:w-auto md:ml-6 flex items-start">
-                <a
-                  href={googleMapsUrl}
+          <div className="col-span-1 flex flex-col h-full">
+            {/* Header row: Contact Us + Location button */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-athfal-pink">
+                {t('contactUs')}
+              </h3>
+              <a
+                href={googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center bg-white/80 shadow px-3 py-2 rounded-lg transition hover:bg-athfal-pink hover:text-white border border-athfal-pink ml-3 whitespace-nowrap"
+                aria-label="View our location on Google Maps"
+                title="View our location on Google Maps"
+              >
+                <MapPin className="w-5 h-5 mr-2 text-athfal-pink group-hover:text-white" />
+                <span className="font-medium">{language === 'id' ? 'Lokasi' : 'Location'}</span>
+              </a>
+            </div>
+            <ul className="space-y-3">
+              <li className="flex items-start">
+                <MapPin className="w-5 h-5 text-athfal-pink mr-2 mt-0.5" />
+                <span className="text-gray-700">
+                  {contact?.address || "Apartemen Park View Depok Town Square Lt. 1, Jl. Margonda Daya, Depok, 16424"}
+                </span>
+              </li>
+              <li>
+                <a 
+                  href={`mailto:${contact?.email || "athfalplayhouse@gmail.com"}`} 
+                  className="flex items-center text-gray-700 hover:text-athfal-pink"
+                >
+                  <Mail className="w-5 h-5 text-athfal-pink mr-2" />
+                  {contact?.email || "athfalplayhouse@gmail.com"}
+                </a>
+              </li>
+              <li>
+                <a 
+                  href={`https://wa.me/${(contact?.whatsapp ?? "082120614748").replace(/[^0-9]/g, '')}`} 
+                  className="flex items-center text-gray-700 hover:text-athfal-pink"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center bg-white/80 shadow px-3 py-2 rounded-lg transition hover:bg-athfal-pink hover:text-white border border-athfal-pink ml-0 md:ml-4"
-                  aria-label="View our location on Google Maps"
                 >
-                  <MapPin className="w-5 h-5 mr-2 text-athfal-pink group-hover:text-white" />
-                  <span className="font-medium">Location</span>
+                  <Phone className="w-5 h-5 text-athfal-pink mr-2" />
+                  {contact?.whatsapp || "082120614748"}
                 </a>
-              </div>
-            </div>
+              </li>
+              <li className="pt-2">
+                <div className="flex space-x-3">
+                  <a
+                    href={contact?.instagram || "https://instagram.com/athfalplayhouse/"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white p-2 rounded-full text-athfal-pink hover:bg-athfal-pink hover:text-white transition-colors"
+                  >
+                    <Instagram className="w-5 h-5" />
+                  </a>
+                  <a
+                    href={contact?.youtube || "https://www.youtube.com/@AthfalPlayhouse"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white p-2 rounded-full text-athfal-pink hover:bg-athfal-pink hover:text-white transition-colors"
+                  >
+                    <Youtube className="w-5 h-5" />
+                  </a>
+                </div>
+              </li>
+            </ul>
           </div>
         </div>
 
