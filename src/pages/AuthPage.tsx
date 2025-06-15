@@ -26,9 +26,22 @@ const AuthPage = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
 
+  // When user is logged in, determine redirection by role
   useEffect(() => {
     if (user) {
-      navigate('/profile');
+      if (
+        user.role === 'admin' ||
+        user.role === 'super_admin' ||
+        user.role === 'orders_manager' ||
+        user.role === 'order_staff' ||
+        user.role === 'content_manager' ||
+        user.role === 'content_staff'
+      ) {
+        navigate('/admin', { replace: true });
+      } else {
+        // Default user: go to orders tab on profile page
+        navigate('/profile?tab=orders', { replace: true });
+      }
     }
   }, [user, navigate]);
 
