@@ -241,17 +241,19 @@ const AdminSettings = () => {
                   />
                 </div>
                 
-                {/* New: Google Maps Location URL */}
+                {/* New: Google Maps Location Embed URL */}
                 <div className="space-y-2">
-                  <Label htmlFor="googleMapsUrl">Google Maps Location URL</Label>
+                  <Label htmlFor="googleMapsUrl">Google Maps Location <span className="font-normal text-xs">(Embed Link Only)</span></Label>
                   <Input
                     id="googleMapsUrl"
                     value={localContact.googleMapsUrl || ""}
                     onChange={(e) => handleContactChange('googleMapsUrl', e.target.value)}
-                    placeholder="https://g.co/kgs/jaPrJtj"
+                    placeholder="https://www.google.com/maps/embed?pb=..."
                   />
                   <p className="text-xs text-gray-500">
-                    This location will appear in the website footer for customers to open in Google Maps.
+                    <strong>To show a map, paste the "Embed a map" URL from Google Maps (not a short link or place link).<br />
+                    <span className="text-athfal-pink">How to get it?</span> Go to Google Maps &rarr; Search your place &rarr; Click "Share" &rarr; "Embed a map" &rarr; Copy only the <span className="font-mono">src=""</span> link.<br />
+                    Example: <span className="font-mono">https://www.google.com/maps/embed?pb=...</span></strong>
                   </p>
                 </div>
               </div>

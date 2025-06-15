@@ -4,29 +4,12 @@ import { Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 
 function getGoogleMapsEmbedUrl(rawUrl?: string) {
-  // If no URL, fallback to a default location embed
-  if (!rawUrl) {
-    return "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.566656536656!2d106.8199630758761!3d-6.186486960569591!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69ec3aeb818273%3A0x8b6adf1b88bf2b14!2sApartemen%20Park%20View%20Depok%20Town%20Square%2C%20Jl.%20Margonda%20Daya%2C%20Depok%2C%2016424!5e0!3m2!1sen!2sid!4v1682329286740!5m2!1sen!2sid";
-  }
-  // Convert Google short link to embed (or fallback if not possible)
-  // If admin provides a direct embed link, use it
-  if (rawUrl.includes('google.com/maps/embed')) {
-    return rawUrl;
-  }
-  // If admin provides a place/maps url (not embed), attempt to convert it
-  if (rawUrl.startsWith('https://goo.gl') || rawUrl.startsWith('https://g.co') || rawUrl.startsWith('http://g.co')) {
-    // The g.co/kgs... short links cannot be directly embedded.
-    // Recommend admin to input EMBED link, but for now, default to fallback embed
-    return "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.566656536656!2d106.8199630758761!3d-6.186486960569591!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69ec3aeb818273%3A0x8b6adf1b88bf2b14!2sApartemen%20Park%20View%20Depok%20Town%20Square%2C%20Jl.%20Margonda%20Daya%2C%20Depok%2C%2016424!5e0!3m2!1sen!2sid!4v1682329286740!5m2!1sen!2sid";
-  }
-  if (rawUrl.startsWith("https://www.google.com/maps/place/")) {
-    // Convert place URL to embed by replacing /place/ with /embed?pb=
-    // But best is for admin to copy the iframe src from Google Maps > Share > Embed a map
-    // For now, fallback
-    return "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.566656536656!2d106.8199630758761!3d-6.186486960569591!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69ec3aeb818273%3A0x8b6adf1b88bf2b14!2sApartemen%20Park%20View%20Depok%20Town%20Square%2C%20Jl.%20Margonda%20Daya%2C%20Depok%2C%2016424!5e0!3m2!1sen!2sid!4v1682329286740!5m2!1sen!2sid";
-  }
-  // Otherwise, fallback
-  return "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.566656536656!2d106.8199630758761!3d-6.186486960569591!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69ec3aeb818273%3A0x8b6adf1b88bf2b14!2sApartemen%20Park%20View%20Depok%20Town%20Square%2C%20Jl.%20Margonda%20Daya%2C%20Depok%2C%2016424!5e0!3m2!1sen!2sid!4v1682329286740!5m2!1sen!2sid";
+  // Accept only valid embed links or fallback to default
+  // New default: Athfal Playhouse (as per user screenshot)
+  const DEFAULT_EMBED = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3965.1658746816265!2d106.8316653!3d-6.3725749!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69ed337688c9cd%3A0xebc6ccbe5d6dc60a!2sAthfal%20Playhouse!5e0!3m2!1sen!2sid!4v1749961998009!5m2!1sen!2sid";
+  if (!rawUrl) return DEFAULT_EMBED;
+  if (rawUrl.includes("google.com/maps/embed?pb=")) return rawUrl;
+  return DEFAULT_EMBED;
 }
 
 const Footer = () => {
@@ -191,20 +174,20 @@ const Footer = () => {
             {/* Embedded Google Map */}
             <div className="w-full mt-5 border rounded-lg overflow-hidden shadow-xl bg-white">
               <iframe
-                src={googleMapsEmbedUrl}
+                src={getGoogleMapsEmbedUrl(contact?.googleMapsUrl)}
                 title="Google Map Location"
                 width="100%"
-                height="200"
+                height="240"
                 loading="lazy"
-                style={{ border: 0 }}
+                style={{ border: 0, minHeight: 200 }}
                 allowFullScreen
                 referrerPolicy="no-referrer-when-downgrade"
               ></iframe>
             </div>
             <p className="text-xs text-gray-400 mt-2">
               {language === "id"
-                ? "Lokasi di Google Maps sesuai pengaturan admin."
-                : "Location as set in admin settings."}
+                ? "Arahkan lokasi di Google Maps setting admin (gunakan link embed, bukan link biasa)."
+                : "Location set in admin settings with embed URL (not regular map link)."}
             </p>
           </div>
         </div>
