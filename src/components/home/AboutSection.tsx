@@ -38,7 +38,7 @@ export const AboutSection = () => {
           <div className="md:w-1/2 mt-6 md:mt-0">
             <AboutSectionImage
               heroImage={aboutContent.heroImage}
-              aboutDecorativeImage={copy.homePage.aboutDecorativeImage}
+              aboutDecorativeImage={aboutContent.aboutDecorativeImage} // <-- CHANGE: now uses aboutContent, not copy.
             />
           </div>
         </div>

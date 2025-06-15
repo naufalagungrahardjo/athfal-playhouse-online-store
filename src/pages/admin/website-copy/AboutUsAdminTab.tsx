@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -94,6 +93,14 @@ const AboutUsAdminTab = () => {
             onChange={(url) => handleAboutImageChange('heroImage', url)}
             label="Hero Image"
           />
+          {/* NEW FIELD FOR THE LITTLE YELLOW CIRCLE */}
+          <div className="mt-5">
+            <ImageUpload
+              value={aboutContent.aboutDecorativeImage || ""}
+              onChange={(url) => handleAboutImageChange('aboutDecorativeImage', url)}
+              label='Decorative Image (Yellow Circle - Small Image)'
+            />
+          </div>
         </CardContent>
       </Card>
       <Card>
@@ -292,4 +299,3 @@ const AboutUsAdminTab = () => {
 };
 
 export default AboutUsAdminTab;
-

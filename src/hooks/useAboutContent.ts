@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +22,7 @@ export interface AboutContent {
   teamTitle: { id: string; en: string };
   teamDescription: { id: string; en: string };
   heroImage: string;
+  aboutDecorativeImage?: string;
   teamMembers: TeamMember[];
 }
 
@@ -48,6 +48,7 @@ const DEFAULT_CONTENT: AboutContent = {
   teamTitle: { id: "Tim Kami", en: "Our Team" },
   teamDescription: { id: "Tim profesional yang berpengalaman dan berdedikasi dalam pendidikan anak.", en: "Professional team experienced and dedicated in children's education." },
   heroImage: "https://images.unsplash.com/photo-1635107510862-53886e926b74?w=800&h=600&fit=crop&auto=format",
+  aboutDecorativeImage: "/lovable-uploads/4e490da3-e092-4eec-b20b-d66ed04832e7.png",
   teamMembers: [
     { id: "1", name: "Fadhilah Ramadhannisa", title: "Founder & CEO", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80", linkedin: "https://linkedin.com/in/fadhilahramadhannisa" },
     { id: "2", name: "Ahmad Rifqi", title: "Head of Curriculum", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e", linkedin: "https://linkedin.com" },
