@@ -37,7 +37,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
   const [formData, setFormData] = useState<ProductFormData>({
     product_id: '',
     name: '',
-    description: '',
+    description: '', // <-- NO default 'Athfal Playhouse' string, just empty
     price: 0,
     image: '',
     category: 'pop-up-class',
@@ -52,7 +52,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         id: editingProduct.id,
         product_id: editingProduct.product_id,
         name: editingProduct.name,
-        description: editingProduct.description,
+        description: editingProduct.description, // use only the product's own description
         price: editingProduct.price,
         image: editingProduct.image,
         category: editingProduct.category,
@@ -60,11 +60,11 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         stock: editingProduct.stock,
       });
     } else {
-      // Reset form for new product
+      // Reset form for new product, but no default description!
       setFormData({
         product_id: '',
         name: '',
-        description: '',
+        description: '', // Make sure to keep it blank
         price: 0,
         image: '',
         category: 'pop-up-class',
