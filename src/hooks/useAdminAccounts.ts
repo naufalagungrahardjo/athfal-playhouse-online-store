@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { logAdminAction } from "@/utils/logAdminAction";
 
 export type AdminRole = "super_admin" | "orders_manager" | "order_staff" | "content_manager" | "content_staff";
 export interface AdminAccount {
@@ -15,6 +17,7 @@ export function useAdminAccounts() {
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth(); // Get current user to log actions
 
   const fetchAccounts = async () => {
     setLoading(true);
@@ -35,6 +38,10 @@ export function useAdminAccounts() {
       return false;
     }
     toast({ title: "Success", description: "Admin updated" });
+    await logAdminAction({
+      user,
+      action: `Added or updated admin: ${email} (role: ${role})`,
+    });
     fetchAccounts();
     return true;
   };
@@ -46,6 +53,10 @@ export function useAdminAccounts() {
       return false;
     }
     toast({ title: "Success", description: "Admin deleted" });
+    await logAdminAction({
+      user,
+      action: `Deleted admin: ${email}`,
+    });
     fetchAccounts();
     return true;
   };

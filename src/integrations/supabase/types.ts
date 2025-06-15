@@ -48,6 +48,30 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          email: string
+          id: string
+          role: Database["public"]["Enums"]["admin_role"]
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          email: string
+          id?: string
+          role: Database["public"]["Enums"]["admin_role"]
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          role?: Database["public"]["Enums"]["admin_role"]
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           created_at: string | null

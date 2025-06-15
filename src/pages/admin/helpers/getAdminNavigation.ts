@@ -1,6 +1,6 @@
 
 import {
-  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Menu, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare
+  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Menu, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks
 } from 'lucide-react';
 
 export type NavigationItem = {
@@ -23,6 +23,7 @@ export function getAdminNavigation(role: string | null) : NavigationItem[] {
     { name: 'Promo Codes', href: '/admin/promo-codes', icon: CreditCard },
     { name: 'Payments', href: '/admin/payments', icon: CreditCard },
     { name: 'Website Content', href: '/admin/website-copy', icon: Copy },
+    { name: 'Logs', href: '/admin/logs', icon: ListChecks }, // Add Admin Logs page
     { name: 'Settings', href: '/admin/settings', icon: Settings },
     { name: 'Categories', href: '/admin/categories', icon: Package },
   ];
@@ -30,12 +31,12 @@ export function getAdminNavigation(role: string | null) : NavigationItem[] {
   if (role === "super_admin") return navigation;
   if (role === "orders_manager") {
     return navigation.filter(item =>
-      ["/admin", "/admin/products", "/admin/orders", "/admin/promo-codes", "/admin/payments"].includes(item.href)
+      ["/admin", "/admin/products", "/admin/orders", "/admin/promo-codes", "/admin/payments", "/admin/logs"].includes(item.href)
     );
   }
   if (role === "order_staff") {
     return navigation.filter(item =>
-      ["/admin/orders"].includes(item.href)
+      ["/admin/orders", "/admin/logs"].includes(item.href)
     );
   }
   if (role === "content_manager") {
@@ -46,11 +47,12 @@ export function getAdminNavigation(role: string | null) : NavigationItem[] {
       "/admin/categories",
       "/admin/faq",
       "/admin/testimonials",
+      "/admin/logs"
     ].includes(item.href));
   }
   if (role === "content_staff") {
     return navigation.filter(item =>
-      ["/admin/blogs"].includes(item.href)
+      ["/admin/blogs", "/admin/logs"].includes(item.href)
     );
   }
   return [];
