@@ -20,7 +20,10 @@ const Footer = () => {
   return (
     <footer className="bg-athfal-peach/30 pt-12 pb-6">
       <div className="athfal-container">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* 
+          Even column spacing between all menus for cleaner look.
+        */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-x-8 gap-y-6">
           {/* Logo and Info */}
           <div className="col-span-1">
             <Link to="/" className="flex items-center">
@@ -170,7 +173,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Google Map Column (far right) */}
+          {/* Google Map Column */}
           <div className="col-span-1">
             <h4 className="text-base font-semibold text-athfal-pink mb-2">
               {language === "id" ? "Lokasi di Google Maps" : "Google Maps Location"}
