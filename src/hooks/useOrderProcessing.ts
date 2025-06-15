@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -28,6 +27,25 @@ export const useOrderProcessing = () => {
       setProcessing(true);
       console.log('Processing order:', orderData);
 
+      // Validate required fields for guest orders
+      if (
+        !orderData.customerName ||
+        !orderData.customerEmail ||
+        !orderData.customerPhone ||
+        !orderData.paymentMethod ||
+        typeof orderData.subtotal !== "number" ||
+        typeof orderData.taxAmount !== "number" ||
+        typeof orderData.totalAmount !== "number"
+      ) {
+        toast({
+          variant: "destructive",
+          title: "Order Error",
+          description: "One or more required fields are missing! Please check your checkout form."
+        });
+        setProcessing(false);
+        return { success: false };
+      }
+
       // Create the order with all required fields
       const orderInsert = {
         customer_name: orderData.customerName,
@@ -44,7 +62,7 @@ export const useOrderProcessing = () => {
         discount_amount: orderData.discountAmount || 0
       };
 
-      console.log('Order insert data:', orderInsert);
+      console.log('Order insert data (before submit):', orderInsert);
 
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -54,7 +72,12 @@ export const useOrderProcessing = () => {
 
       if (orderError) {
         console.error('Order creation error:', orderError);
-        throw orderError;
+        toast({
+          variant: "destructive",
+          title: "Order Failed",
+          description: orderError.message || "An error occurred while processing your order. Please try again."
+        });
+        return { success: false };
       }
 
       console.log('Order created successfully:', order);
