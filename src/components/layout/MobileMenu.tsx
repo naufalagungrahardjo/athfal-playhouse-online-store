@@ -6,20 +6,22 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useWebsiteCopy } from "@/hooks/useWebsiteCopy";
 import { useCategories } from "@/hooks/useCategories";
+import { useNavigationCopy } from "@/hooks/useNavigationCopy";
+import { NavigationLinks } from "./NavigationLinks";
 import { useState } from "react";
 
 const MobileMenu = () => {
   const { language, t } = useLanguage();
+  const nav = useNavigationCopy();
   const { copy } = useWebsiteCopy();
-  const nav = copy.navigation;
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { categories } = useCategories();
+
   const handleProfileClick = () => {
     navigate('/profile');
   };
 
-  // Match mobile nav items to Login button font (text-sm font-medium)
   const navItemClass = "text-athfal-pink font-medium hover:text-athfal-pink/80 py-2 text-sm";
 
   return (
@@ -31,9 +33,7 @@ const MobileMenu = () => {
       </SheetTrigger>
       <SheetContent side="right">
         <div className="flex flex-col space-y-4 mt-8">
-          <Link to="/" className={navItemClass}>
-            {language === "id" ? nav.home.id : nav.home.en}
-          </Link>
+          <NavigationLinks language={language} nav={nav} extraClass={navItemClass} includeLinks={["home"]} />
           <div className="py-2">
             <h3 className="font-medium text-athfal-pink mb-2 text-base">
               {language === "id" ? nav.products.id : nav.products.en}
@@ -50,19 +50,7 @@ const MobileMenu = () => {
               ))}
             </div>
           </div>
-          <Link to="/gallery" className={navItemClass}>
-            {language === "id" ? nav.gallery.id : nav.gallery.en}
-          </Link>
-          <Link to="/about" className={navItemClass}>
-            {language === "id" ? nav.about.id : nav.about.en}
-          </Link>
-          <Link to="/blog" className={navItemClass}>
-            {language === "id" ? nav.blog.id : nav.blog.en}
-          </Link>
-          <Link to="/faq" className={navItemClass}>
-            {language === "id" ? nav.faq.id : nav.faq.en}
-          </Link>
-
+          <NavigationLinks language={language} nav={nav} extraClass={navItemClass} includeLinks={["gallery","about","blog","faq"]} />
           {!user && (
             <div className="pt-4">
               <Link to="/auth/login">
@@ -72,7 +60,6 @@ const MobileMenu = () => {
               </Link>
             </div>
           )}
-
           {user && (
             <div className="pt-4 space-y-2">
               <Button 

@@ -5,20 +5,19 @@ import { ChevronDown } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCategories } from "@/hooks/useCategories";
 import { useWebsiteCopy } from "@/hooks/useWebsiteCopy";
+import { useNavigationCopy } from "@/hooks/useNavigationCopy";
+import { NavigationLinks } from "./NavigationLinks";
 
 const DesktopNavigation = () => {
   const { language } = useLanguage();
-  const { copy } = useWebsiteCopy();
+  const nav = useNavigationCopy();
   const { categories } = useCategories();
-  const nav = copy.navigation;
 
   const navItemClass = "text-athfal-pink font-medium hover:text-athfal-pink/80 text-sm";
 
   return (
     <nav className="hidden md:flex items-center space-x-8">
-      <Link to="/" className={navItemClass}>
-        {language === "id" ? nav.home.id : nav.home.en}
-      </Link>
+      <NavigationLinks language={language} nav={nav} extraClass={navItemClass} includeLinks={["home"]} />
       {/* Products Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -38,18 +37,7 @@ const DesktopNavigation = () => {
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-      <Link to="/gallery" className={navItemClass}>
-        {language === "id" ? nav.gallery.id : nav.gallery.en}
-      </Link>
-      <Link to="/about" className={navItemClass}>
-        {language === "id" ? nav.about.id : nav.about.en}
-      </Link>
-      <Link to="/blog" className={navItemClass}>
-        {language === "id" ? nav.blog.id : nav.blog.en}
-      </Link>
-      <Link to="/faq" className={navItemClass}>
-        {language === "id" ? nav.faq.id : nav.faq.en}
-      </Link>
+      <NavigationLinks language={language} nav={nav} extraClass={navItemClass} includeLinks={["gallery","about","blog","faq"]} />
     </nav>
   );
 };
