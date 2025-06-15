@@ -10,6 +10,23 @@ export const useProducts = () => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  // Util for safely parsing/validating the schedule field
+  function parseSchedule(input: any): { day: string; time: string; note?: string }[] | null {
+    if (Array.isArray(input)) {
+      // Only accept array items that are objects (not string, etc)
+      const arr = input.filter(
+        s =>
+          s &&
+          typeof s === 'object' &&
+          typeof s.day === 'string' &&
+          typeof s.time === 'string'
+      );
+      return arr.length > 0 ? arr : null;
+    }
+    // If it's explicitly null or empty, pass through
+    return null;
+  }
+
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -31,7 +48,7 @@ export const useProducts = () => {
         category: product.category as ProductCategory,
         tax: product.tax,
         stock: product.stock,
-        schedule: product.schedule ?? null // <-- MAP SCHEDULE PROPERTY
+        schedule: parseSchedule(product.schedule)
       }));
 
       setProducts(formattedProducts);
