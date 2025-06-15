@@ -81,6 +81,14 @@ const WEBSITE_COPY = {
   }
 };
 
+// Import subcomponents
+import HeroSectionEditor from "./website-copy/HeroSectionEditor";
+import CTASectionEditor from "./website-copy/CTASectionEditor";
+import SloganSectionEditor from "./website-copy/SloganSectionEditor";
+import AboutSectionEditor from "./website-copy/AboutSectionEditor";
+import NavigationEditor from "./website-copy/NavigationEditor";
+import ProductCategoriesEditor from "./website-copy/ProductCategoriesEditor";
+
 const AdminWebsiteCopy = () => {
   const { toast } = useToast();
   const [copy, setCopy] = useState(WEBSITE_COPY);
@@ -94,14 +102,49 @@ const AdminWebsiteCopy = () => {
     });
   };
 
-  const updateText = (section: string, field: string, language: string, value: string) => {
+  const handleHomePageChange = (field: string, lang: "id" | "en", value: string) => {
     setCopy(prev => ({
       ...prev,
-      [section]: {
-        ...prev[section as keyof typeof prev],
+      homePage: {
+        ...prev.homePage,
         [field]: {
-          ...(prev[section as keyof typeof prev][field as keyof typeof prev[keyof typeof prev]] as any),
-          [language]: value
+          ...(prev.homePage as any)[field],
+          [lang]: value,
+        }
+      }
+    }));
+  };
+
+  const handleAboutChange = (field: string, lang: "id" | "en", value: string) => {
+    handleHomePageChange(field, lang, value);
+  };
+
+  const handleNavigationChange = (key: string, lang: "id" | "en", value: string) => {
+    setCopy(prev => ({
+      ...prev,
+      navigation: {
+        ...prev.navigation,
+        [key]: {
+          ...prev.navigation[key],
+          [lang]: value
+        }
+      }
+    }));
+  };
+
+  const handleProductCategoriesChange = (path: string, lang: "id" | "en", value: string) => {
+    // path format: `${key}.title` or `${key}.description`
+    const [key, sub] = path.split(".");
+    setCopy(prev => ({
+      ...prev,
+      productCategories: {
+        ...prev.productCategories,
+        [key]: {
+          ...prev.productCategories[key],
+          [sub]: {
+            ...prev.productCategories[key][sub],
+            [lang]: value
+          }
         }
       }
     }));
@@ -131,312 +174,43 @@ const AdminWebsiteCopy = () => {
         
         {/* Home Page Content */}
         <TabsContent value="home" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Hero Section
-              </CardTitle>
-              <CardDescription>
-                Main banner text and call-to-action on the homepage
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Hero Title (Indonesian)</Label>
-                  <Input
-                    value={copy.homePage.heroTitle.id}
-                    onChange={(e) => updateText('homePage', 'heroTitle', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Hero Title (English)</Label>
-                  <Input
-                    value={copy.homePage.heroTitle.en}
-                    onChange={(e) => updateText('homePage', 'heroTitle', 'en', e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Hero Subtitle (Indonesian)</Label>
-                  <Textarea
-                    rows={3}
-                    value={copy.homePage.heroSubtitle.id}
-                    onChange={(e) => updateText('homePage', 'heroSubtitle', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Hero Subtitle (English)</Label>
-                  <Textarea
-                    rows={3}
-                    value={copy.homePage.heroSubtitle.en}
-                    onChange={(e) => updateText('homePage', 'heroSubtitle', 'en', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Call-to-Action Button (Indonesian)</Label>
-                  <Input
-                    value={copy.homePage.ctaButton.id}
-                    onChange={(e) => updateText('homePage', 'ctaButton', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Call-to-Action Button (English)</Label>
-                  <Input
-                    value={copy.homePage.ctaButton.en}
-                    onChange={(e) => updateText('homePage', 'ctaButton', 'en', e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* ✦ NEW: CTA Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                Call-to-Action Section
-              </CardTitle>
-              <CardDescription>
-                CTA block at the bottom of homepage (e.g. "Join Now")
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>CTA Section Title (Indonesian)</Label>
-                  <Input
-                    value={copy.homePage.ctaSectionTitle.id}
-                    onChange={(e) =>
-                      updateText('homePage', 'ctaSectionTitle', 'id', e.target.value)
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>CTA Section Title (English)</Label>
-                  <Input
-                    value={copy.homePage.ctaSectionTitle.en}
-                    onChange={(e) =>
-                      updateText('homePage', 'ctaSectionTitle', 'en', e.target.value)
-                    }
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>CTA Subtitle (Indonesian)</Label>
-                  <Textarea
-                    rows={3}
-                    value={copy.homePage.ctaSectionSubtitle.id}
-                    onChange={(e) =>
-                      updateText('homePage', 'ctaSectionSubtitle', 'id', e.target.value)
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>CTA Subtitle (English)</Label>
-                  <Textarea
-                    rows={3}
-                    value={copy.homePage.ctaSectionSubtitle.en}
-                    onChange={(e) =>
-                      updateText('homePage', 'ctaSectionSubtitle', 'en', e.target.value)
-                    }
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* ✦ NEW: Home Slogan */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Homepage Slogan</CardTitle>
-              <CardDescription>
-                Slogan shown with logo at the top of homepage.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Slogan (Indonesian)</Label>
-                  <Input
-                    value={copy.homePage.homeSlogan.id}
-                    onChange={(e) => updateText('homePage', 'homeSlogan', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Slogan (English)</Label>
-                  <Input
-                    value={copy.homePage.homeSlogan.en}
-                    onChange={(e) => updateText('homePage', 'homeSlogan', 'en', e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>About Section</CardTitle>
-              <CardDescription>
-                About us content on the homepage
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>About Title (Indonesian)</Label>
-                  <Input
-                    value={copy.homePage.aboutTitle.id}
-                    onChange={(e) => updateText('homePage', 'aboutTitle', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>About Title (English)</Label>
-                  <Input
-                    value={copy.homePage.aboutTitle.en}
-                    onChange={(e) => updateText('homePage', 'aboutTitle', 'en', e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>About Description (Indonesian)</Label>
-                  <Textarea
-                    rows={4}
-                    value={copy.homePage.aboutDescription.id}
-                    onChange={(e) => updateText('homePage', 'aboutDescription', 'id', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>About Description (English)</Label>
-                  <Textarea
-                    rows={4}
-                    value={copy.homePage.aboutDescription.en}
-                    onChange={(e) => updateText('homePage', 'aboutDescription', 'en', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* ✦ NEW: Additional About Paragraph */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Extra Paragraph (Indonesian)</Label>
-                  <Textarea
-                    rows={4}
-                    value={copy.homePage.aboutExtraParagraph.id}
-                    onChange={(e) =>
-                      updateText('homePage', 'aboutExtraParagraph', 'id', e.target.value)
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Extra Paragraph (English)</Label>
-                  <Textarea
-                    rows={4}
-                    value={copy.homePage.aboutExtraParagraph.en}
-                    onChange={(e) =>
-                      updateText('homePage', 'aboutExtraParagraph', 'en', e.target.value)
-                    }
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <HeroSectionEditor
+            heroTitle={copy.homePage.heroTitle}
+            heroSubtitle={copy.homePage.heroSubtitle}
+            ctaButton={copy.homePage.ctaButton}
+            onChange={handleHomePageChange}
+          />
+          <CTASectionEditor
+            ctaSectionTitle={copy.homePage.ctaSectionTitle}
+            ctaSectionSubtitle={copy.homePage.ctaSectionSubtitle}
+            onChange={handleHomePageChange}
+          />
+          <SloganSectionEditor
+            homeSlogan={copy.homePage.homeSlogan}
+            onChange={handleHomePageChange}
+          />
+          <AboutSectionEditor
+            aboutTitle={copy.homePage.aboutTitle}
+            aboutDescription={copy.homePage.aboutDescription}
+            aboutExtraParagraph={copy.homePage.aboutExtraParagraph}
+            onChange={handleAboutChange}
+          />
         </TabsContent>
         
         {/* Navigation Content */}
         <TabsContent value="navigation" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Navigation Menu</CardTitle>
-              <CardDescription>
-                Text for main navigation menu items
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {Object.entries(copy.navigation).map(([key, value]) => (
-                <div key={key} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg">
-                  <div className="space-y-2">
-                    <Label className="capitalize">{key} (Indonesian)</Label>
-                    <Input
-                      value={value.id}
-                      onChange={(e) => updateText('navigation', key, 'id', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="capitalize">{key} (English)</Label>
-                    <Input
-                      value={value.en}
-                      onChange={(e) => updateText('navigation', key, 'en', e.target.value)}
-                    />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <NavigationEditor
+            navigation={copy.navigation}
+            onChange={handleNavigationChange}
+          />
         </TabsContent>
         
         {/* Product Categories Content */}
         <TabsContent value="categories" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Product Categories</CardTitle>
-              <CardDescription>
-                Titles and descriptions for product category pages
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {Object.entries(copy.productCategories).map(([key, category]) => (
-                <div key={key} className="border rounded-lg p-4 space-y-4">
-                  <h3 className="text-lg font-medium capitalize">{key.replace(/([A-Z])/g, ' $1')}</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Title (Indonesian)</Label>
-                      <Input
-                        value={category.title.id}
-                        onChange={(e) => updateText('productCategories', `${key}.title`, 'id', e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Title (English)</Label>
-                      <Input
-                        value={category.title.en}
-                        onChange={(e) => updateText('productCategories', `${key}.title`, 'en', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Description (Indonesian)</Label>
-                      <Textarea
-                        rows={3}
-                        value={category.description.id}
-                        onChange={(e) => updateText('productCategories', `${key}.description`, 'id', e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Description (English)</Label>
-                      <Textarea
-                        rows={3}
-                        value={category.description.en}
-                        onChange={(e) => updateText('productCategories', `${key}.description`, 'en', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <ProductCategoriesEditor
+            productCategories={copy.productCategories}
+            onChange={handleProductCategoriesChange}
+          />
         </TabsContent>
       </Tabs>
     </div>
