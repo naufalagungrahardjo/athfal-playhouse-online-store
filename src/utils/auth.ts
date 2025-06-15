@@ -5,14 +5,14 @@ import { User, UserRole } from '@/types/auth';
 
 export const loadUserProfile = async (supabaseUser: SupabaseUser): Promise<User> => {
   try {
-    // Check if user is admin by checking admin_users table
-    const { data: adminData } = await supabase
-      .from('admin_users')
+    // Check if user is admin by checking admin_accounts table by email
+    const { data: adminAccount, error } = await supabase
+      .from('admin_accounts')
       .select('*')
-      .eq('user_id', supabaseUser.id)
-      .single();
+      .eq('email', supabaseUser.email)
+      .maybeSingle();
 
-    const userRole: UserRole = adminData ? 'admin' : 'user';
+    const userRole: UserRole = adminAccount ? 'admin' : 'user';
     
     const userData: User = {
       id: supabaseUser.id,
