@@ -20,15 +20,7 @@ const Footer = () => {
   return (
     <footer className="bg-athfal-peach/30 pt-12 pb-6">
       <div className="athfal-container">
-        {/* 
-          Adjust grid to have:
-          1. Logo + Info
-          2. Quick Links (Pages)
-          3. Product Categories
-          4. Contact Us
-          5. Google Maps Location
-        */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Logo and Info */}
           <div className="col-span-1">
             <Link to="/" className="flex items-center">
@@ -46,7 +38,7 @@ const Footer = () => {
           </div>
 
           {/* Quick Links (Pages) */}
-          <div className="col-span-1 lg:pl-4">
+          <div className="col-span-1">
             <h3 className="text-lg font-semibold text-athfal-pink mb-4">
               {language === 'id' ? 'Halaman' : 'Pages'}
             </h3>
@@ -85,7 +77,7 @@ const Footer = () => {
           </div>
 
           {/* Product Categories */}
-          <div className="col-span-1 lg:pl-2">
+          <div className="col-span-1">
             <h3 className="text-lg font-semibold text-athfal-pink mb-4">
               {language === 'id' ? 'Kategori Produk' : 'Product Categories'}
             </h3>
@@ -123,8 +115,8 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact Us (moved between Product Categories and Google Maps) */}
-          <div className="col-span-1 lg:pl-2">
+          {/* Contact Us */}
+          <div className="col-span-1">
             <h3 className="text-lg font-semibold text-athfal-pink flex items-center mb-4">
               <span>{t('contactUs')}</span>
             </h3>
