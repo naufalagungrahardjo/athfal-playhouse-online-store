@@ -61,7 +61,13 @@ export function useCategories() {
   const addCategory = async (
     category: Omit<Category, "id" | "order_num"> & { order_num?: number }
   ) => {
-    const { error } = await supabase.from("categories").insert([category]);
+    // If no order_num provided, set it to the next available number
+    const categoryData = {
+      ...category,
+      order_num: category.order_num ?? (categories.length + 1)
+    };
+    
+    const { error } = await supabase.from("categories").insert([categoryData]);
     if (error) {
       toast({ variant: "destructive", title: "Add Error", description: error.message });
     } else {
