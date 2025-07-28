@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
+import { usePromoCodes } from '@/hooks/usePromoCodes';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,8 +37,7 @@ type PromoCode = {
 };
 
 const AdminPromoCodes = () => {
-  const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { promoCodes, loading, savePromoCode, deletePromoCode } = usePromoCodes();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentPromo, setCurrentPromo] = useState<PromoCode | null>(null);
   const [formData, setFormData] = useState({
@@ -51,32 +51,6 @@ const AdminPromoCodes = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const fetchPromoCodes = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('promo_codes')
-        .select('*')
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      
-      setPromoCodes(data as PromoCode[] || []);
-    } catch (error) {
-      console.error('Error fetching promo codes:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load promo codes",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPromoCodes();
-  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -132,69 +106,24 @@ const AdminPromoCodes = () => {
     e.preventDefault();
     
     try {
-      if (currentPromo) {
-        // Update existing promo code
-        const { error } = await supabase
-          .from('promo_codes')
-          .update({
-            code: formData.code,
-            discount_percentage: formData.discount_percentage,
-            description: formData.description,
-            is_active: formData.is_active,
-            valid_from: formData.valid_from ? new Date(formData.valid_from).toISOString() : null,
-            valid_until: formData.valid_until ? new Date(formData.valid_until).toISOString() : null,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', currentPromo.id);
-          
-        if (error) throw error;
-        
-        toast({
-          title: "Success",
-          description: "Promo code updated successfully",
-        });
-
-        await logAdminAction({
-          user,
-          action: `Updated promo code (id: ${currentPromo.id}, code: ${formData.code})`,
-        });
-      } else {
-        // Create new promo code
-        const { data, error } = await supabase
-          .from('promo_codes')
-          .insert([{
-            code: formData.code,
-            discount_percentage: formData.discount_percentage,
-            description: formData.description,
-            is_active: formData.is_active,
-            valid_from: formData.valid_from ? new Date(formData.valid_from).toISOString() : null,
-            valid_until: formData.valid_until ? new Date(formData.valid_until).toISOString() : null
-          }])
-          .select()
-          .single();
-          
-        if (error) throw error;
-        
-        toast({
-          title: "Success",
-          description: "Promo code created successfully",
-        });
-
-        await logAdminAction({
-          user,
-          action: `Created new promo code (id: ${data.id}, code: ${data.code})`,
-        });
-      }
+      const promoData = {
+        ...formData,
+        id: currentPromo?.id
+      };
+      
+      await savePromoCode(promoData);
+      
+      await logAdminAction({
+        user,
+        action: currentPromo 
+          ? `Updated promo code (id: ${currentPromo.id}, code: ${formData.code})`
+          : `Created new promo code (code: ${formData.code})`,
+      });
       
       handleCloseDialog();
-      fetchPromoCodes();
     } catch (error: any) {
-      console.error('Error saving promo code:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to save promo code",
-      });
+      // Error handling is done in the hook
+      console.error('Error in handleSubmit:', error);
     }
   };
 
@@ -202,31 +131,15 @@ const AdminPromoCodes = () => {
     if (!confirm("Are you sure you want to delete this promo code?")) return;
     
     try {
-      const { error } = await supabase
-        .from('promo_codes')
-        .delete()
-        .eq('id', id);
-        
-      if (error) throw error;
+      await deletePromoCode(id);
       
-      toast({
-        title: "Success",
-        description: "Promo code deleted successfully",
-      });
-
       await logAdminAction({
         user,
         action: `Deleted promo code (id: ${id})`,
       });
-      
-      fetchPromoCodes();
     } catch (error) {
-      console.error('Error deleting promo code:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete promo code",
-      });
+      // Error handling is done in the hook
+      console.error('Error in handleDeletePromo:', error);
     }
   };
 

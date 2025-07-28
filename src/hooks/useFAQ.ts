@@ -69,12 +69,39 @@ export const useFAQ = () => {
       setLoading(true);
       setError(null);
       
-      // For now, we'll use the default FAQ data
-      // In the future, this can be connected to a database table
-      setFAQs(DEFAULT_FAQ);
+      console.log('Fetching FAQs from database...');
+      const { data, error } = await supabase
+        .from('faqs')
+        .select('*')
+        .order('order_num');
+
+      if (error) {
+        console.error('Error fetching FAQs:', error);
+        throw error;
+      }
+      
+      console.log('FAQs fetched:', data);
+      
+      // Transform database format to component format
+      const transformedFAQs: FAQ[] = (data || []).map(faq => ({
+        id: faq.id,
+        question: {
+          id: faq.question_id,
+          en: faq.question_en
+        },
+        answer: {
+          id: faq.answer_id,
+          en: faq.answer_en
+        },
+        category: faq.category,
+        order: faq.order_num
+      }));
+      
+      setFAQs(transformedFAQs.length > 0 ? transformedFAQs : DEFAULT_FAQ);
     } catch (err) {
       console.error('Error fetching FAQs:', err);
       setError('Failed to fetch FAQs');
+      setFAQs(DEFAULT_FAQ); // Fallback to default
     } finally {
       setLoading(false);
     }
