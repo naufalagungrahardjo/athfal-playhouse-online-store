@@ -11,6 +11,11 @@ const UserMenu = () => {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
+  // Debug logging to see what's happening with user data
+  console.log('[UserMenu] Current user:', user);
+  console.log('[UserMenu] User role:', user?.role);
+  console.log('[UserMenu] isAdmin():', isAdmin());
+
   const handleProfileClick = () => {
     navigate('/profile');
   };

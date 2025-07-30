@@ -24,6 +24,7 @@ export const useAuthState = () => {
           // Always fetch user profile asynchronously
           loadUserProfile(session.user)
             .then((userData) => {
+              console.log('[useAuthState] Loaded user profile:', userData);
               if (!canceled) setUser(userData);
             })
             .catch((err) => {
@@ -48,6 +49,7 @@ export const useAuthState = () => {
       if (session?.user) {
         loadUserProfile(session.user)
           .then((userData) => {
+            console.log('[useAuthState] Loaded user profile (init):', userData);
             if (!canceled) setUser(userData);
           })
           .catch((err) => {

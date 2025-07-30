@@ -5,6 +5,8 @@ import { User, UserRole } from '@/types/auth';
 
 export const loadUserProfile = async (supabaseUser: SupabaseUser): Promise<User> => {
   try {
+    console.log('[loadUserProfile] Loading profile for:', supabaseUser.email);
+    
     // Check if user is admin by checking admin_accounts table by email
     const { data: adminAccount, error } = await supabase
       .from('admin_accounts')
@@ -12,8 +14,11 @@ export const loadUserProfile = async (supabaseUser: SupabaseUser): Promise<User>
       .eq('email', supabaseUser.email)
       .maybeSingle();
 
+    console.log('[loadUserProfile] Admin account query result:', { adminAccount, error });
+
     // Set the admin role from the DB, otherwise fallback to 'user'
     const userRole: UserRole = adminAccount?.role || 'user';
+    console.log('[loadUserProfile] Final user role:', userRole);
     
     const userData: User = {
       id: supabaseUser.id,
