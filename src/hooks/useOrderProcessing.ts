@@ -47,8 +47,13 @@ export const useOrderProcessing = () => {
         return { success: false };
       }
 
+      // Check current user status
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log(`[${errorId}] Current user:`, user);
+
       // Create the order with all required fields
       const orderInsert = {
+        user_id: user?.id || null, // Explicitly set user_id
         customer_name: orderData.customerName,
         customer_email: orderData.customerEmail,
         customer_phone: orderData.customerPhone,
@@ -64,6 +69,8 @@ export const useOrderProcessing = () => {
       };
 
       console.log(`[${errorId}] Order insert data (before submit):`, orderInsert);
+      console.log(`[${errorId}] User authenticated:`, !!user);
+      console.log(`[${errorId}] User ID:`, user?.id || 'null');
 
       const { data: order, error: orderError } = await supabase
         .from('orders')
