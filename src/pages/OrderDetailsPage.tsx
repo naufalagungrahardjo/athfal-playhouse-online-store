@@ -24,7 +24,7 @@ const OrderDetailsPage = () => {
   const { paymentMethods } = useDatabase();
   const { orderId } = useParams();
   const { order, loading } = useOrderDetails(orderId);
-  const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes in seconds
   const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<any>(null);
 
@@ -44,7 +44,7 @@ const OrderDetailsPage = () => {
       const orderTime = new Date(order.created_at).getTime();
       const currentTime = Date.now();
       const elapsed = Math.floor((currentTime - orderTime) / 1000);
-      const remaining = Math.max(0, (25 * 60) - elapsed);
+      const remaining = Math.max(0, (30 * 60) - elapsed);
       setTimeLeft(remaining);
     }
   }, [order?.created_at]);
