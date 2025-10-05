@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -34,7 +34,7 @@ export const useOrderDetails = (orderId?: string) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
     if (!orderId) {
       setLoading(false);
       return;
@@ -93,11 +93,11 @@ export const useOrderDetails = (orderId?: string) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [orderId, toast]);
 
   useEffect(() => {
     fetchOrderDetails();
-  }, [orderId]);
+  }, [fetchOrderDetails]);
 
   return {
     order,
