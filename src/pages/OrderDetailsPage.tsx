@@ -22,8 +22,8 @@ const formatCurrency = (amount: number) => {
 const OrderDetailsPage = () => {
   const { language } = useLanguage();
   const { paymentMethods } = useDatabase();
-  const { orderId } = useParams();
-  const { order, loading } = useOrderDetails(orderId);
+  const { id } = useParams();
+  const { order, loading } = useOrderDetails(id);
   const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes in seconds
   const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<any>(null);
