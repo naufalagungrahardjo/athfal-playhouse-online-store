@@ -9,6 +9,8 @@ export interface DashboardStats {
   totalProducts: number;
   totalCustomers: number;
   pendingOrders: number;
+  processingOrders: number;
+  shippedOrders: number;
   completedOrders: number;
   cancelledOrders: number;
 }
@@ -21,6 +23,8 @@ export const useDashboard = () => {
     totalProducts: 0,
     totalCustomers: 0,
     pendingOrders: 0,
+    processingOrders: 0,
+    shippedOrders: 0,
     completedOrders: 0,
     cancelledOrders: 0,
   });
@@ -52,6 +56,8 @@ export const useDashboard = () => {
       const totalCustomers = new Set(orders?.map(order => order.customer_email)).size || 0;
       
       const pendingOrders = orders?.filter(order => order.status === 'pending').length || 0;
+      const processingOrders = orders?.filter(order => order.status === 'processing').length || 0;
+      const shippedOrders = orders?.filter(order => order.status === 'shipped').length || 0;
       const completedOrders = orders?.filter(order => order.status === 'completed').length || 0;
       const cancelledOrders = orders?.filter(order => order.status === 'cancelled').length || 0;
 
@@ -62,6 +68,8 @@ export const useDashboard = () => {
         totalProducts,
         totalCustomers,
         pendingOrders,
+        processingOrders,
+        shippedOrders,
         completedOrders,
         cancelledOrders,
       });

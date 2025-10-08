@@ -12,7 +12,9 @@ import {
   Clock, 
   CheckCircle, 
   XCircle,
-  TrendingUp
+  TrendingUp,
+  PackageCheck,
+  Truck
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -68,7 +70,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Order Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <ClickableStatsCard
           title="Total Orders"
           value={stats.totalOrders}
@@ -81,6 +83,20 @@ const AdminDashboard = () => {
           icon={Clock}
           onClick={() => setSelectedView('orders')}
           className="border-yellow-200 bg-yellow-50"
+        />
+        <ClickableStatsCard
+          title="Processing Orders"
+          value={stats.processingOrders}
+          icon={PackageCheck}
+          onClick={() => setSelectedView('orders')}
+          className="border-blue-200 bg-blue-50"
+        />
+        <ClickableStatsCard
+          title="Shipped Orders"
+          value={stats.shippedOrders}
+          icon={Truck}
+          onClick={() => setSelectedView('orders')}
+          className="border-purple-200 bg-purple-50"
         />
         <ClickableStatsCard
           title="Completed Orders"
