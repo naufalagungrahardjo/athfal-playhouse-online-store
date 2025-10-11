@@ -120,6 +120,33 @@ export const useOrderProcessing = () => {
 
       console.log(`[${errorId}] Order items created successfully`);
 
+      // Reduce stock for each product
+      for (const item of orderData.items) {
+        const { data: product, error: productFetchError } = await supabase
+          .from('products')
+          .select('stock, product_id')
+          .eq('product_id', item.product.id)
+          .single();
+
+        if (productFetchError) {
+          console.error(`[${errorId}] Error fetching product stock:`, productFetchError);
+          continue; // Continue with other products even if one fails
+        }
+
+        const newStock = product.stock - item.quantity;
+        
+        const { error: stockUpdateError } = await supabase
+          .from('products')
+          .update({ stock: Math.max(0, newStock) }) // Ensure stock doesn't go negative
+          .eq('product_id', item.product.id);
+
+        if (stockUpdateError) {
+          console.error(`[${errorId}] Error updating product stock:`, stockUpdateError);
+        } else {
+          console.log(`[${errorId}] Stock updated for product ${item.product.id}: ${product.stock} -> ${newStock}`);
+        }
+      }
+
       // Store selected payment method in localStorage for order details page
       localStorage.setItem('selectedPaymentMethodId', orderData.paymentMethod);
 
