@@ -308,6 +308,7 @@ export type Database = {
           payment_method: string
           promo_code: string | null
           status: string
+          stock_deducted: boolean
           subtotal: number
           tax_amount: number
           total_amount: number
@@ -326,6 +327,7 @@ export type Database = {
           payment_method: string
           promo_code?: string | null
           status?: string
+          stock_deducted?: boolean
           subtotal: number
           tax_amount: number
           total_amount: number
@@ -344,6 +346,7 @@ export type Database = {
           payment_method?: string
           promo_code?: string | null
           status?: string
+          stock_deducted?: boolean
           subtotal?: number
           tax_amount?: number
           total_amount?: number

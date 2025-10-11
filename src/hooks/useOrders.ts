@@ -91,19 +91,69 @@ export const useOrders = () => {
 
   const updateOrderStatus = async (orderId: string, status: string) => {
     try {
+      // 1) Load current order (including stock_deducted flag)
+      const { data: order, error: orderFetchError }: any = await supabase
+        .from('orders')
+        .select('id, status, stock_deducted')
+        .eq('id', orderId)
+        .single();
+
+      if (orderFetchError) throw orderFetchError;
+
+      // 2) If moving to processing AND stock has not yet been deducted, decrement product stocks
+      const shouldDeductStock = status === 'processing' && order && !order.stock_deducted;
+
+      if (shouldDeductStock) {
+        const { data: items, error: itemsError } = await supabase
+          .from('order_items')
+          .select('product_id, quantity')
+          .eq('order_id', orderId);
+
+        if (itemsError) throw itemsError;
+
+        for (const item of items || []) {
+          const { data: product, error: productError } = await supabase
+            .from('products')
+            .select('stock, product_id')
+            .eq('product_id', item.product_id)
+            .single();
+
+          if (productError) {
+            console.error('Product fetch error:', item.product_id, productError);
+            continue;
+          }
+
+          const newStock = Math.max(0, (product?.stock ?? 0) - item.quantity);
+          const { error: updateError } = await supabase
+            .from('products')
+            .update({ stock: newStock })
+            .eq('product_id', item.product_id);
+
+          if (updateError) {
+            console.error('Product stock update error:', item.product_id, updateError);
+          }
+        }
+      }
+
+      // 3) Update order status (and mark stock_deducted if we just deducted)
+      const updatePayload: any = {
+        status,
+        updated_at: new Date().toISOString(),
+      };
+      if (shouldDeductStock) {
+        updatePayload.stock_deducted = true;
+      }
+
       const { error } = await supabase
         .from('orders')
-        .update({ 
-          status, 
-          updated_at: new Date().toISOString() 
-        })
+        .update(updatePayload)
         .eq('id', orderId);
 
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Order status updated successfully"
+        title: 'Success',
+        description: 'Order status updated successfully',
       });
 
       await logAdminAction({
@@ -115,9 +165,9 @@ export const useOrders = () => {
     } catch (error) {
       console.error('Error updating order status:', error);
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update order status"
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update order status',
       });
     }
   };
