@@ -12,9 +12,10 @@ import { formatCurrency } from '@/lib/utils';
 
 interface OrderManagementProps {
   onClose?: () => void;
+  onOrderUpdate?: () => void;
 }
 
-export const OrderManagement = ({ onClose }: OrderManagementProps) => {
+export const OrderManagement = ({ onClose, onOrderUpdate }: OrderManagementProps) => {
   const { orders, loading, updateOrderStatus } = useOrders();
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
@@ -58,6 +59,7 @@ export const OrderManagement = ({ onClose }: OrderManagementProps) => {
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     await updateOrderStatus(orderId, newStatus);
+    onOrderUpdate?.();
   };
 
   if (loading) {

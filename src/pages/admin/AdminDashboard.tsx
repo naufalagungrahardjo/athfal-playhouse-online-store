@@ -19,7 +19,7 @@ import {
 import { formatCurrency } from '@/lib/utils';
 
 const AdminDashboard = () => {
-  const { stats, loading } = useDashboard();
+  const { stats, loading, fetchDashboardStats } = useDashboard();
   const [selectedView, setSelectedView] = useState<string | null>(null);
 
   const handleCloseDialog = () => {
@@ -120,7 +120,7 @@ const AdminDashboard = () => {
           <DialogHeader>
             <DialogTitle>Order Management</DialogTitle>
           </DialogHeader>
-          <OrderManagement onClose={handleCloseDialog} />
+          <OrderManagement onClose={handleCloseDialog} onOrderUpdate={fetchDashboardStats} />
         </DialogContent>
       </Dialog>
     </div>
