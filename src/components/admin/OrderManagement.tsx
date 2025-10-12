@@ -1,12 +1,13 @@
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, Package, Truck, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Eye, Package, Truck, CheckCircle, XCircle, Clock, Search } from 'lucide-react';
 import { useOrders } from '@/hooks/useOrders';
 import { formatCurrency } from '@/lib/utils';
 
@@ -18,6 +19,7 @@ interface OrderManagementProps {
 export const OrderManagement = ({ onClose, onOrderUpdate }: OrderManagementProps) => {
   const { orders, loading, updateOrderStatus } = useOrders();
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
@@ -57,6 +59,26 @@ export const OrderManagement = ({ onClose, onOrderUpdate }: OrderManagementProps
     selectedStatus === 'all' || order.status.toLowerCase() === selectedStatus
   );
 
+  // Search functionality
+  const searchedOrders = useMemo(() => {
+    if (!searchQuery.trim()) return filteredOrders;
+    
+    const query = searchQuery.toLowerCase();
+    return filteredOrders.filter(order => {
+      // Search by order ID
+      if (order.id.toLowerCase().includes(query)) return true;
+      
+      // Search by product name in order items
+      if (order.items?.some((item: any) => item.product_name.toLowerCase().includes(query))) return true;
+      
+      // Search by date
+      const orderDate = new Date(order.created_at).toLocaleDateString();
+      if (orderDate.toLowerCase().includes(query)) return true;
+      
+      return false;
+    });
+  }, [filteredOrders, searchQuery]);
+
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     await updateOrderStatus(orderId, newStatus);
     onOrderUpdate?.();
@@ -68,32 +90,44 @@ export const OrderManagement = ({ onClose, onOrderUpdate }: OrderManagementProps
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Order Management</h2>
-        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Orders</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="processing">Processing</SelectItem>
-            <SelectItem value="shipped">Shipped</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Order Management</h2>
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Orders</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="processing">Processing</SelectItem>
+              <SelectItem value="shipped">Shipped</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search by Order ID, Product Name, or Date..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
       </div>
 
       <div className="grid gap-4">
-        {filteredOrders.length === 0 ? (
+        {searchedOrders.length === 0 ? (
           <Card>
             <CardContent className="p-6 text-center">
               <p className="text-gray-500">No orders found</p>
             </CardContent>
           </Card>
         ) : (
-          filteredOrders.map((order) => (
+          searchedOrders.map((order) => (
             <Card key={order.id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
