@@ -53,8 +53,19 @@ export function OrderListItem({
             <div><span className="font-medium">Phone:</span> {order.customer_phone}</div>
             <div><span className="font-medium">Payment:</span> {order.payment_method}</div>
             <div><span className="font-medium">Total:</span> {formatCurrency(order.total_amount)}</div>
-            <div><span className="font-medium">Items:</span> {order.items?.length || 0} products</div>
           </div>
+          {order.items && order.items.length > 0 && (
+            <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+              <p className="font-medium text-sm text-gray-700 mb-2">Products Ordered:</p>
+              <ul className="space-y-1 text-sm text-gray-600">
+                {order.items.map((item) => (
+                  <li key={item.id}>
+                    • {item.product_name} <span className="font-medium">x{item.quantity}</span> - {formatCurrency(item.product_price * item.quantity)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="text-xs text-gray-500 mt-2">
             Created: {new Date(order.created_at).toLocaleString()}
           </div>
