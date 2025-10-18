@@ -83,6 +83,15 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
 
     try {
       if (editingProduct) {
+        // Add cache-busting parameter to image URL if it's been updated
+        let imageUrl = formData.image;
+        if (formData.image && formData.image !== editingProduct.image) {
+          // If the image URL is from Supabase storage and doesn't already have a timestamp
+          if (imageUrl.includes('supabase.co') && !imageUrl.includes('?t=')) {
+            imageUrl = `${imageUrl}?t=${Date.now()}`;
+          }
+        }
+
         const { error } = await supabase
           .from('products')
           .update({
@@ -90,7 +99,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             name: formData.name,
             description: formData.description,
             price: formData.price,
-            image: formData.image,
+            image: imageUrl,
             category: formData.category,
             tax: formData.tax,
             stock: formData.stock,
