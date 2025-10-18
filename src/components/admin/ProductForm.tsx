@@ -83,13 +83,12 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
 
     try {
       if (editingProduct) {
-        // Add cache-busting parameter to image URL if it's been updated
+        // Ensure new images always bypass cache by appending a fresh query param
         let imageUrl = formData.image;
-        if (formData.image && formData.image !== editingProduct.image) {
-          // If the image URL is from Supabase storage and doesn't already have a timestamp
-          if (imageUrl.includes('supabase.co') && !imageUrl.includes('?t=')) {
-            imageUrl = `${imageUrl}?t=${Date.now()}`;
-          }
+        const isChanged = formData.image !== editingProduct.image;
+        if (formData.image && isChanged) {
+          const separator = imageUrl.includes('?') ? '&' : '?';
+          imageUrl = `${imageUrl}${separator}v=${Date.now()}`;
         }
 
         const { error } = await supabase
