@@ -25,7 +25,7 @@ const AdminProducts = () => {
     const data = await fetchProducts();
     const formatted: StrictProductFormData[] = (data || []).map((p: any) => ({
       // Make sure 'id' is always present and 'category' is typed correctly
-      id: p.id ?? p.product_id, // fallback to product_id, just in case
+      id: p.id,
       product_id: p.product_id,
       name: p.name,
       description: p.description,

@@ -92,7 +92,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
           }
         }
 
-        const { error } = await supabase
+        const { error, data: updated } = await supabase
           .from('products')
           .update({
             product_id: formData.product_id,
@@ -105,9 +105,12 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             stock: formData.stock,
             updated_at: new Date().toISOString()
           })
-          .eq('id', editingProduct.id);
+          .eq('id', editingProduct.id)
+          .select('id')
+          .maybeSingle();
 
         if (error) throw error;
+        if (!updated) throw new Error('No product was updated. Please try again.');
 
         toast({
           title: "Success",
