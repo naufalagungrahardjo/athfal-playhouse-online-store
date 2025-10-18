@@ -66,10 +66,10 @@ export const useOrderDetails = (orderId?: string) => {
 
       console.log('Order fetched:', orderData);
 
-      // Fetch order items with product images
+      // Fetch order items
       const { data: itemsData, error: itemsError } = await supabase
         .from('order_items')
-        .select('*, products(image)')
+        .select('*')
         .eq('order_id', orderId);
 
       if (itemsError) {
@@ -79,15 +79,25 @@ export const useOrderDetails = (orderId?: string) => {
 
       console.log('Order items fetched:', itemsData);
 
-      // Map items to include product image
-      const itemsWithImages = itemsData?.map(item => ({
-        id: item.id,
-        product_id: item.product_id,
-        product_name: item.product_name,
-        product_price: item.product_price,
-        quantity: item.quantity,
-        product_image: (item.products as any)?.image || ''
-      })) || [];
+      // Fetch product images separately for each product
+      const itemsWithImages = await Promise.all(
+        (itemsData || []).map(async (item) => {
+          const { data: productData } = await supabase
+            .from('products')
+            .select('image')
+            .eq('product_id', item.product_id)
+            .maybeSingle();
+
+          return {
+            id: item.id,
+            product_id: item.product_id,
+            product_name: item.product_name,
+            product_price: item.product_price,
+            quantity: item.quantity,
+            product_image: productData?.image || ''
+          };
+        })
+      );
 
       setOrder({
         ...orderData,
