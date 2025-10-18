@@ -92,7 +92,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
           }
         }
 
-        const { error, data: updated } = await supabase
+        const { error } = await supabase
           .from('products')
           .update({
             product_id: formData.product_id,
@@ -105,12 +105,9 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             stock: formData.stock,
             updated_at: new Date().toISOString()
           })
-          .eq('id', editingProduct.id)
-          .select('id')
-          .maybeSingle();
+          .eq('id', editingProduct.id);
 
         if (error) throw error;
-        if (!updated) throw new Error('No product was updated. Please try again.');
 
         toast({
           title: "Success",
@@ -143,12 +140,12 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
 
       onProductSaved();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving product:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to save product"
+        description: error?.message ? String(error.message) : "Failed to save product"
       });
     } finally {
       setLoading(false);
