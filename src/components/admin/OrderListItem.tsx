@@ -42,7 +42,7 @@ export function OrderListItem({
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
-            <h3 className="font-semibold">#{order.id.slice(0, 8)}</h3>
+            <h3 className="font-semibold">Order ID: {order.id}</h3>
             <Badge className={getStatusColor(order.status)}>
               {order.status.toUpperCase()}
             </Badge>

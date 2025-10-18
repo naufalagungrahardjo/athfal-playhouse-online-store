@@ -9,6 +9,7 @@ interface OrderItem {
   product_name: string;
   product_price: number;
   quantity: number;
+  product_image?: string;
 }
 
 interface OrderDetails {
@@ -65,10 +66,10 @@ export const useOrderDetails = (orderId?: string) => {
 
       console.log('Order fetched:', orderData);
 
-      // Fetch order items
+      // Fetch order items with product images
       const { data: itemsData, error: itemsError } = await supabase
         .from('order_items')
-        .select('*')
+        .select('*, products(image)')
         .eq('order_id', orderId);
 
       if (itemsError) {
@@ -78,9 +79,19 @@ export const useOrderDetails = (orderId?: string) => {
 
       console.log('Order items fetched:', itemsData);
 
+      // Map items to include product image
+      const itemsWithImages = itemsData?.map(item => ({
+        id: item.id,
+        product_id: item.product_id,
+        product_name: item.product_name,
+        product_price: item.product_price,
+        quantity: item.quantity,
+        product_image: (item.products as any)?.image || ''
+      })) || [];
+
       setOrder({
         ...orderData,
-        items: itemsData || []
+        items: itemsWithImages
       });
     } catch (error) {
       console.error('Error fetching order details:', error);

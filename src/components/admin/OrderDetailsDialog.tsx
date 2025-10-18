@@ -100,7 +100,7 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            <span>Order Details - {order.id.slice(0, 8)}</span>
+            <span>Order Details - {order.id}</span>
             <Badge className={getStatusColor(order.status)}>
               {order.status.toUpperCase()}
             </Badge>

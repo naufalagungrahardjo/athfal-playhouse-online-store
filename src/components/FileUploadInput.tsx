@@ -44,9 +44,12 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
         .from('images')
         .getPublicUrl(filePath);
 
-      console.log('Public URL:', publicUrl);
+      // Add cache-busting parameter to ensure fresh image loads
+      const urlWithCacheBust = `${publicUrl}?t=${Date.now()}`;
 
-      onUpload(publicUrl);
+      console.log('Public URL:', urlWithCacheBust);
+
+      onUpload(urlWithCacheBust);
       
       toast({
         title: "Success",

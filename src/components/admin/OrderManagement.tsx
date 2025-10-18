@@ -131,7 +131,7 @@ export const OrderManagement = ({ onClose, onOrderUpdate }: OrderManagementProps
             <Card key={order.id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Order #{order.id.slice(-8)}</CardTitle>
+                  <CardTitle className="text-lg">Order ID: {order.id}</CardTitle>
                   <Badge className={getStatusColor(order.status)}>
                     <div className="flex items-center gap-1">
                       {getStatusIcon(order.status)}

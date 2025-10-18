@@ -86,7 +86,7 @@ const OrderDetailsPage = () => {
     const message = `
 *${language === 'id' ? 'KONFIRMASI PEMBAYARAN ATHFAL PLAYHOUSE' : 'ATHFAL PLAYHOUSE PAYMENT CONFIRMATION'}*
 
-*Order ID: ${order.id.slice(0, 8)}*
+*Order ID: ${order.id}*
 
 *${language === 'id' ? 'Detail Pesanan' : 'Order Details'}:*
 ${itemsList}
@@ -177,10 +177,20 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                 <div className="space-y-4 mb-6">
                   {order.items.map((item) => (
                     <div key={item.id} className="flex items-start gap-3">
-                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
-                        <span className="text-xs text-gray-500">
-                          {language === 'id' ? 'Gambar' : 'Image'}
-                        </span>
+                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200">
+                        {item.product_image ? (
+                          <img 
+                            src={item.product_image} 
+                            alt={item.product_name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <span className="text-xs text-gray-500">
+                              {language === 'id' ? 'Gambar' : 'Image'}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div className="flex-grow">
                         <h4 className="font-medium text-gray-800">{item.product_name}</h4>
@@ -313,7 +323,7 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
               <div className="space-y-2 mb-6">
                 <div className="flex justify-between">
                   <span className="text-gray-600">{language === 'id' ? 'Order ID' : 'Order ID'}</span>
-                  <span className="font-mono text-sm">{order.id.slice(0, 8)}</span>
+                  <span className="font-mono text-sm">{order.id}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">{language === 'id' ? 'Status' : 'Status'}</span>
