@@ -45,12 +45,20 @@ export const useProductActions = (onProductsUpdated: () => void, editingProduct:
     }
 
     try {
-      const { error } = await supabase
+      console.log('Attempting to delete product with id:', productId);
+      
+      const { error, data } = await supabase
         .from('products')
         .delete()
-        .eq('id', productId);
+        .eq('id', productId)
+        .select();
 
-      if (error) throw error;
+      console.log('Delete result:', { error, data });
+
+      if (error) {
+        console.error('Delete error:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",
@@ -63,11 +71,12 @@ export const useProductActions = (onProductsUpdated: () => void, editingProduct:
       });
 
       await onProductsUpdated();
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Failed to delete product:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete product"
+        description: error?.message || "Failed to delete product"
       });
     }
   };
