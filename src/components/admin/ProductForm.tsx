@@ -233,7 +233,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
                 id="tax"
                 type="number"
                 value={formData.tax === 0 ? '' : formData.tax}
-                onChange={(e) => setFormData({...formData, tax: e.target.value ? Number(e.target.value) : 11})}
+                onChange={(e) => setFormData({...formData, tax: e.target.value ? Number(e.target.value) : 0})}
                 placeholder="Enter tax percentage"
                 required
                 min="0"
