@@ -1,6 +1,8 @@
 
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import PromoCodeInput from "./PromoCodeInput";
 
 type OrderSummaryProps = {
   items: {
@@ -23,6 +25,8 @@ type OrderSummaryProps = {
   taxAmount: number;
   total: number;
   formatCurrency: (amount: number) => string;
+  onApplyPromo: (promo: any) => void;
+  onRemovePromo: () => void;
 };
 
 const OrderSummary = ({
@@ -33,6 +37,8 @@ const OrderSummary = ({
   taxAmount,
   total,
   formatCurrency,
+  onApplyPromo,
+  onRemovePromo,
 }: OrderSummaryProps) => (
   <Card>
     <CardHeader>
@@ -49,7 +55,20 @@ const OrderSummary = ({
             <p className="font-medium">{formatCurrency(item.price * item.quantity)}</p>
           </div>
         ))}
-        <hr className="my-4" />
+        
+        <Separator className="my-4" />
+        
+        {/* Promo Code Input */}
+        <div className="mb-4">
+          <PromoCodeInput
+            appliedPromo={appliedPromo}
+            onApplyPromo={onApplyPromo}
+            onRemovePromo={onRemovePromo}
+          />
+        </div>
+
+        <Separator className="my-4" />
+        
         <div className="space-y-2">
           <div className="flex justify-between">
             <span>Subtotal:</span>

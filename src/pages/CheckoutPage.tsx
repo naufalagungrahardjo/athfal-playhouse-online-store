@@ -39,6 +39,14 @@ const CheckoutPage = () => {
 
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
 
+  const handleApplyPromo = (promo: PromoCode) => {
+    setAppliedPromo(promo);
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+  };
+
   useEffect(() => {
     if (items.length === 0) {
       navigate('/cart');
@@ -176,6 +184,8 @@ const CheckoutPage = () => {
               taxAmount={taxAmount}
               total={total}
               formatCurrency={formatCurrency}
+              onApplyPromo={handleApplyPromo}
+              onRemovePromo={handleRemovePromo}
             />
           </div>
         </div>
