@@ -34,6 +34,8 @@ type PromoCode = {
   is_active: boolean;
   valid_from: string | null;
   valid_until: string | null;
+  usage_limit: number | null;
+  usage_count: number;
 };
 
 const AdminPromoCodes = () => {
@@ -46,7 +48,9 @@ const AdminPromoCodes = () => {
     description: '',
     is_active: true,
     valid_from: '',
-    valid_until: ''
+    valid_until: '',
+    usage_limit: null as number | null,
+    usage_count: 0
   });
   const { toast } = useToast();
   const { user } = useAuth();
@@ -75,7 +79,9 @@ const AdminPromoCodes = () => {
       description: '',
       is_active: true,
       valid_from: '',
-      valid_until: ''
+      valid_until: '',
+      usage_limit: null as number | null,
+      usage_count: 0
     });
     setCurrentPromo(null);
   };
@@ -89,7 +95,9 @@ const AdminPromoCodes = () => {
         description: promo.description || '',
         is_active: promo.is_active,
         valid_from: promo.valid_from ? new Date(promo.valid_from).toISOString().split('T')[0] : '',
-        valid_until: promo.valid_until ? new Date(promo.valid_until).toISOString().split('T')[0] : ''
+        valid_until: promo.valid_until ? new Date(promo.valid_until).toISOString().split('T')[0] : '',
+        usage_limit: promo.usage_limit,
+        usage_count: promo.usage_count
       });
     } else {
       resetForm();
@@ -194,6 +202,7 @@ const AdminPromoCodes = () => {
               <TableHead>Discount (%)</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Usage</TableHead>
               <TableHead>Valid From</TableHead>
               <TableHead>Valid Until</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -202,11 +211,11 @@ const AdminPromoCodes = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-4">Loading...</TableCell>
+                <TableCell colSpan={8} className="text-center py-4">Loading...</TableCell>
               </TableRow>
             ) : promoCodes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-4">No promo codes found</TableCell>
+                <TableCell colSpan={8} className="text-center py-4">No promo codes found</TableCell>
               </TableRow>
             ) : (
               promoCodes.map((promo) => {
@@ -219,6 +228,11 @@ const AdminPromoCodes = () => {
                     <TableCell>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
                         {statusInfo.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">
+                        {promo.usage_count} / {promo.usage_limit ?? '∞'}
                       </span>
                     </TableCell>
                     <TableCell>{formatDate(promo.valid_from)}</TableCell>
@@ -315,6 +329,22 @@ const AdminPromoCodes = () => {
                 />
                 <p className="text-xs text-gray-500 mt-1">Leave empty for no expiration</p>
               </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="usage_limit">Usage Quota</Label>
+              <Input
+                id="usage_limit"
+                name="usage_limit"
+                type="number"
+                min="0"
+                value={formData.usage_limit ?? ''}
+                onChange={(e) => setFormData({...formData, usage_limit: e.target.value === '' ? null : Number(e.target.value)})}
+                placeholder="Leave empty for unlimited uses"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Maximum number of times this code can be used. Currently used: {currentPromo?.usage_count || 0} times
+              </p>
             </div>
             
             <div className="flex items-center space-x-2">

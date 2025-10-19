@@ -442,6 +442,8 @@ export type Database = {
           id: string
           is_active: boolean | null
           updated_at: string | null
+          usage_count: number
+          usage_limit: number | null
           valid_from: string | null
           valid_until: string | null
         }
@@ -453,6 +455,8 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           updated_at?: string | null
+          usage_count?: number
+          usage_limit?: number | null
           valid_from?: string | null
           valid_until?: string | null
         }
@@ -464,6 +468,8 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           updated_at?: string | null
+          usage_count?: number
+          usage_limit?: number | null
           valid_from?: string | null
           valid_until?: string | null
         }

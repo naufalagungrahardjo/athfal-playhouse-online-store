@@ -13,6 +13,8 @@ type PromoCode = {
   is_active: boolean;
   valid_from: string | null;
   valid_until: string | null;
+  usage_limit: number | null;
+  usage_count: number;
 };
 
 interface PromoCodeInputProps {
@@ -75,6 +77,16 @@ export default function PromoCodeInput({ appliedPromo, onApplyPromo, onRemovePro
           variant: "destructive",
           title: "Expired",
           description: "This promo code has expired"
+        });
+        return;
+      }
+
+      // Check usage limit
+      if (data.usage_limit !== null && data.usage_count >= data.usage_limit) {
+        toast({
+          variant: "destructive",
+          title: "Limit Reached",
+          description: "This promo code has reached its usage limit"
         });
         return;
       }

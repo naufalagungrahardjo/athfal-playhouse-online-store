@@ -19,6 +19,8 @@ type OrderSummaryProps = {
     is_active: boolean;
     valid_from: string | null;
     valid_until: string | null;
+    usage_limit: number | null;
+    usage_count: number;
   };
   getTotalPrice: () => number;
   getDiscountAmount: () => number;

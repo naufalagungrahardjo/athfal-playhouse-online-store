@@ -16,6 +16,7 @@ interface OrderData {
   totalAmount: number;
   promoCode?: string | null;
   discountAmount?: number;
+  promoCodeId?: string | null;
 }
 
 export const useOrderProcessing = () => {
@@ -120,6 +121,29 @@ export const useOrderProcessing = () => {
 
       console.log(`[${errorId}] Order items created successfully`);
 
+      // Increment promo code usage count if promo was applied
+      if (orderData.promoCodeId) {
+        console.log(`[${errorId}] Incrementing promo code usage for ID:`, orderData.promoCodeId);
+        
+        // First get current usage_count
+        const { data: promoData, error: fetchError } = await supabase
+          .from('promo_codes')
+          .select('usage_count')
+          .eq('id', orderData.promoCodeId)
+          .single();
+          
+        if (!fetchError && promoData) {
+          const { error: promoError } = await supabase
+            .from('promo_codes')
+            .update({ usage_count: promoData.usage_count + 1 })
+            .eq('id', orderData.promoCodeId);
+          
+          if (promoError) {
+            console.error(`[${errorId}] Error updating promo code usage:`, promoError);
+            // Don't fail the order if promo update fails
+          }
+        }
+      }
 
       // Store selected payment method in localStorage for order details page
       localStorage.setItem('selectedPaymentMethodId', orderData.paymentMethod);

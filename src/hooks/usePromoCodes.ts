@@ -10,6 +10,8 @@ export interface PromoCode {
   is_active: boolean;
   valid_from: string | null;
   valid_until: string | null;
+  usage_limit: number | null;
+  usage_count: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -66,6 +68,8 @@ export const usePromoCodes = () => {
         is_active: promoCode.is_active,
         valid_from: promoCode.valid_from ? new Date(promoCode.valid_from).toISOString() : null,
         valid_until: promoCode.valid_until ? new Date(promoCode.valid_until).toISOString() : null,
+        usage_limit: promoCode.usage_limit,
+        usage_count: promoCode.usage_count || 0,
         updated_at: new Date().toISOString(),
       };
 

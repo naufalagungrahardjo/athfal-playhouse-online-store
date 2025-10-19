@@ -20,6 +20,8 @@ type PromoCode = {
   is_active: boolean;
   valid_from: string | null;
   valid_until: string | null;
+  usage_limit: number | null;
+  usage_count: number;
 };
 
 const CheckoutPage = () => {
@@ -98,7 +100,8 @@ const CheckoutPage = () => {
       taxAmount: Math.round(taxAmount),
       totalAmount: Math.round(totalAmount),
       promoCode: appliedPromo?.code || null,
-      discountAmount: Math.round(discountAmount)
+      discountAmount: Math.round(discountAmount),
+      promoCodeId: appliedPromo?.id || null
     });
 
     if (result.success) {
