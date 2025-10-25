@@ -125,23 +125,51 @@ export const useOrderProcessing = () => {
       if (orderData.promoCodeId) {
         console.log(`[${errorId}] Incrementing promo code usage for ID:`, orderData.promoCodeId);
         
-        // First get current usage_count
-        const { data: promoData, error: fetchError } = await supabase
-          .from('promo_codes')
-          .select('usage_count')
-          .eq('id', orderData.promoCodeId)
-          .single();
-          
-        if (!fetchError && promoData) {
-          const { error: promoError } = await supabase
+        try {
+          // First get current promo code data
+          const { data: promoData, error: fetchError } = await supabase
             .from('promo_codes')
-            .update({ usage_count: promoData.usage_count + 1 })
-            .eq('id', orderData.promoCodeId);
-          
-          if (promoError) {
-            console.error(`[${errorId}] Error updating promo code usage:`, promoError);
-            // Don't fail the order if promo update fails
+            .select('usage_count, usage_limit, code')
+            .eq('id', orderData.promoCodeId)
+            .single();
+            
+          if (fetchError) {
+            console.error(`[${errorId}] Error fetching promo code:`, fetchError);
+            throw fetchError;
           }
+          
+          if (!promoData) {
+            console.error(`[${errorId}] Promo code not found`);
+            throw new Error('Promo code not found');
+          }
+
+          console.log(`[${errorId}] Current promo usage: ${promoData.usage_count}/${promoData.usage_limit || 'unlimited'}`);
+          
+          // Check if usage limit would be exceeded
+          if (promoData.usage_limit !== null && promoData.usage_count >= promoData.usage_limit) {
+            console.warn(`[${errorId}] Promo code ${promoData.code} has reached its limit`);
+            // Don't increment - the limit has been reached
+            // The order still completes successfully
+          } else {
+            // Increment usage count only if under limit
+            const { data: updateData, error: promoError } = await supabase
+              .from('promo_codes')
+              .update({ usage_count: promoData.usage_count + 1 })
+              .eq('id', orderData.promoCodeId)
+              .select('usage_count')
+              .single();
+            
+            if (promoError) {
+              console.error(`[${errorId}] Error updating promo code usage:`, promoError);
+              throw promoError;
+            }
+            
+            console.log(`[${errorId}] Promo code usage updated successfully. New count: ${updateData?.usage_count}`);
+          }
+        } catch (error) {
+          console.error(`[${errorId}] Failed to increment promo code usage:`, error);
+          // Don't fail the entire order if promo update fails
+          // But log it clearly for debugging
         }
       }
 
