@@ -48,6 +48,72 @@ export const useOrderProcessing = () => {
         return { success: false };
       }
 
+      // Enforce promo code usage limit BEFORE creating order
+      if (orderData.promoCodeId) {
+        console.log(`[${errorId}] Pre-validating and incrementing promo usage for ID:`, orderData.promoCodeId);
+        // Validate promo and attempt to increment usage to reserve the quota slot
+        const { data: promoCheck, error: promoCheckError } = await supabase
+          .from('promo_codes')
+          .select('usage_count, usage_limit, code, is_active, valid_from, valid_until')
+          .eq('id', orderData.promoCodeId)
+          .single();
+
+        if (promoCheckError) {
+          console.error(`[${errorId}] Promo pre-check failed:`, promoCheckError);
+          toast({
+            variant: "destructive",
+            title: "Promo unavailable",
+            description: `Promo validation failed. Please try again. [${errorId}]`
+          });
+          setProcessing(false);
+          return { success: false };
+        }
+
+        const now = new Date();
+        const validFromOk = !promoCheck.valid_from || new Date(promoCheck.valid_from) <= now;
+        const validUntilOk = !promoCheck.valid_until || new Date(promoCheck.valid_until) >= now;
+        if (!promoCheck.is_active || !validFromOk || !validUntilOk) {
+          toast({
+            variant: "destructive",
+            title: "Promo expired",
+            description: `The promo code is not active anymore. [${errorId}]`
+          });
+          setProcessing(false);
+          return { success: false };
+        }
+
+        if (promoCheck.usage_limit !== null && promoCheck.usage_count >= promoCheck.usage_limit) {
+          toast({
+            variant: "destructive",
+            title: "Promo quota reached",
+            description: `Promo ${promoCheck.code} has reached its usage limit.`
+          });
+          setProcessing(false);
+          return { success: false };
+        }
+
+        // Reserve the usage slot by incrementing now
+        const { data: updatedPromo, error: promoIncError } = await supabase
+          .from('promo_codes')
+          .update({ usage_count: promoCheck.usage_count + 1 })
+          .eq('id', orderData.promoCodeId)
+          .select('usage_count')
+          .single();
+
+        if (promoIncError || !updatedPromo) {
+          console.error(`[${errorId}] Failed to reserve promo usage:`, promoIncError);
+          toast({
+            variant: "destructive",
+            title: "Promo quota reached",
+            description: `Sorry, this promo has just reached its limit. [${errorId}]`
+          });
+          setProcessing(false);
+          return { success: false };
+        }
+
+        console.log(`[${errorId}] Promo usage reserved. New count: ${updatedPromo.usage_count}`);
+      }
+
       // Check current user status
       const { data: { user } } = await supabase.auth.getUser();
       console.log(`[${errorId}] Current user:`, user);
@@ -122,56 +188,9 @@ export const useOrderProcessing = () => {
       console.log(`[${errorId}] Order items created successfully`);
 
       // Increment promo code usage count if promo was applied
-      if (orderData.promoCodeId) {
-        console.log(`[${errorId}] Incrementing promo code usage for ID:`, orderData.promoCodeId);
-        
-        try {
-          // First get current promo code data
-          const { data: promoData, error: fetchError } = await supabase
-            .from('promo_codes')
-            .select('usage_count, usage_limit, code')
-            .eq('id', orderData.promoCodeId)
-            .single();
-            
-          if (fetchError) {
-            console.error(`[${errorId}] Error fetching promo code:`, fetchError);
-            throw fetchError;
-          }
-          
-          if (!promoData) {
-            console.error(`[${errorId}] Promo code not found`);
-            throw new Error('Promo code not found');
-          }
+      // Promo code usage is now validated and incremented BEFORE order creation to strictly enforce quota.
+      // No action needed here.
 
-          console.log(`[${errorId}] Current promo usage: ${promoData.usage_count}/${promoData.usage_limit || 'unlimited'}`);
-          
-          // Check if usage limit would be exceeded
-          if (promoData.usage_limit !== null && promoData.usage_count >= promoData.usage_limit) {
-            console.warn(`[${errorId}] Promo code ${promoData.code} has reached its limit`);
-            // Don't increment - the limit has been reached
-            // The order still completes successfully
-          } else {
-            // Increment usage count only if under limit
-            const { data: updateData, error: promoError } = await supabase
-              .from('promo_codes')
-              .update({ usage_count: promoData.usage_count + 1 })
-              .eq('id', orderData.promoCodeId)
-              .select('usage_count')
-              .single();
-            
-            if (promoError) {
-              console.error(`[${errorId}] Error updating promo code usage:`, promoError);
-              throw promoError;
-            }
-            
-            console.log(`[${errorId}] Promo code usage updated successfully. New count: ${updateData?.usage_count}`);
-          }
-        } catch (error) {
-          console.error(`[${errorId}] Failed to increment promo code usage:`, error);
-          // Don't fail the entire order if promo update fails
-          // But log it clearly for debugging
-        }
-      }
 
       // Store selected payment method in localStorage for order details page
       localStorage.setItem('selectedPaymentMethodId', orderData.paymentMethod);
