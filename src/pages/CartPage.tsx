@@ -61,74 +61,112 @@ const CartPage = () => {
     localStorage.removeItem('appliedPromo');
   };
 
-  const handleCheckout = () => {
-    if (items.length > 0) {
-      // Store the applied promo in localStorage to use in checkout only if one is applied
-      if (appliedPromo) {
-        localStorage.setItem('appliedPromo', JSON.stringify(appliedPromo));
-      } else {
-        localStorage.removeItem('appliedPromo');
+  const handleCheckout = async () => {
+    if (items.length === 0) return;
+
+    // Re-validate applied promo before navigating
+    if (appliedPromo) {
+      try {
+        const { data: promo, error } = await supabase
+          .from('promo_codes')
+          .select('id, code, is_active, valid_from, valid_until, usage_limit, usage_count')
+          .eq('id', appliedPromo.id)
+          .maybeSingle();
+
+        const now = new Date();
+        const validFromOk = !promo?.valid_from || new Date(promo.valid_from) <= now;
+        const validUntilOk = !promo?.valid_until || new Date(promo.valid_until) >= now;
+
+        if (error || !promo || !promo.is_active || !validFromOk || !validUntilOk || (promo.usage_limit !== null && promo.usage_count >= promo.usage_limit)) {
+          // Invalidate promo and notify user
+          setAppliedPromo(null);
+          localStorage.removeItem('appliedPromo');
+          toast({
+            variant: 'destructive',
+            title: language === 'id' ? 'Kode promo tidak tersedia' : 'Promo unavailable',
+            description: language === 'id' ? 'Kuota promo telah habis atau sudah tidak aktif.' : 'Promo quota reached or inactive.'
+          });
+          return; // Block navigation
+        }
+      } catch (e) {
+        console.error('Promo revalidation failed before checkout:', e);
+        toast({
+          variant: 'destructive',
+          title: language === 'id' ? 'Gagal memeriksa promo' : 'Failed to validate promo',
+          description: language === 'id' ? 'Silakan coba lagi.' : 'Please try again.'
+        });
+        return;
       }
-      navigate('/checkout');
     }
+
+    // Persist valid promo for checkout
+    if (appliedPromo) {
+      localStorage.setItem('appliedPromo', JSON.stringify(appliedPromo));
+    } else {
+      localStorage.removeItem('appliedPromo');
+    }
+
+    navigate('/checkout');
   };
 
   const applyCoupon = async () => {
-    if (couponCode.trim() === '') {
-      return;
-    }
-    
+    if (couponCode.trim() === '') return;
+
     setIsCheckingPromo(true);
-    
     try {
-      // Check if promo code exists and is active
+      const code = couponCode.trim().toUpperCase();
+      // Fetch full promo info
       const { data, error } = await supabase
         .from('promo_codes')
-        .select('*')
-        .eq('code', couponCode.trim())
-        .eq('is_active', true)
-        .single();
-      
+        .select('id, code, discount_percentage, description, is_active, valid_from, valid_until, usage_limit, usage_count')
+        .eq('code', code)
+        .maybeSingle();
+
       if (error || !data) {
         toast({
-          variant: "destructive",
-          title: language === 'id' ? "Kode promo tidak valid" : "Invalid promo code",
-          description: language === 'id' 
-            ? "Silakan masukkan kode promo yang valid" 
-            : "Please enter a valid promo code"
+          variant: 'destructive',
+          title: language === 'id' ? 'Kode promo tidak valid' : 'Invalid promo code',
+          description: language === 'id' ? 'Silakan masukkan kode promo yang valid' : 'Please enter a valid promo code'
         });
         return;
       }
-      
-      // Check if promo is still valid (not expired)
-      if (data.valid_until && new Date(data.valid_until) < new Date()) {
+
+      const now = new Date();
+      const validFromOk = !data.valid_from || new Date(data.valid_from) <= now;
+      const validUntilOk = !data.valid_until || new Date(data.valid_until) >= now;
+
+      if (!data.is_active || !validFromOk || !validUntilOk) {
         toast({
-          variant: "destructive",
-          title: language === 'id' ? "Kode promo kadaluarsa" : "Expired promo code",
-          description: language === 'id'
-            ? "Kode promo ini sudah tidak berlaku"
-            : "This promo code has expired"
+          variant: 'destructive',
+          title: language === 'id' ? 'Kode promo tidak aktif' : 'Promo not active',
+          description: language === 'id' ? 'Kode promo ini belum/tidak aktif.' : 'This promo is not active.'
         });
         return;
       }
-      
+
+      // Check usage limit
+      if (data.usage_limit !== null && data.usage_count >= data.usage_limit) {
+        toast({
+          variant: 'destructive',
+          title: language === 'id' ? 'Kuota promo habis' : 'Promo quota reached',
+          description: language === 'id' ? 'Kode promo ini sudah tidak dapat digunakan.' : 'This promo can no longer be used.'
+        });
+        return;
+      }
+
       // Apply the promo code
       setAppliedPromo(data as PromoCode);
-      
       toast({
-        title: language === 'id' ? "Kode promo diterapkan" : "Promo code applied",
-        description: `${data.discount_percentage}% ${language === 'id' ? 'diskon diterapkan' : 'discount applied'}`,
+        title: language === 'id' ? 'Kode promo diterapkan' : 'Promo code applied',
+        description: `${data.discount_percentage}% ${language === 'id' ? 'diskon diterapkan' : 'discount applied'}`
       });
-      
       setCouponCode('');
     } catch (error) {
       console.error('Error applying promo code:', error);
       toast({
-        variant: "destructive",
-        title: language === 'id' ? "Error" : "Error",
-        description: language === 'id'
-          ? "Terjadi kesalahan saat menerapkan kode promo"
-          : "An error occurred while applying the promo code"
+        variant: 'destructive',
+        title: language === 'id' ? 'Error' : 'Error',
+        description: language === 'id' ? 'Terjadi kesalahan saat menerapkan kode promo' : 'An error occurred while applying the promo code'
       });
     } finally {
       setIsCheckingPromo(false);

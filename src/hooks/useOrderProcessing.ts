@@ -92,13 +92,14 @@ export const useOrderProcessing = () => {
           return { success: false };
         }
 
-        // Reserve the usage slot by incrementing now
+        // Reserve the usage slot by incrementing now (atomic guard on previous usage_count)
         const { data: updatedPromo, error: promoIncError } = await supabase
           .from('promo_codes')
           .update({ usage_count: promoCheck.usage_count + 1 })
           .eq('id', orderData.promoCodeId)
+          .eq('usage_count', promoCheck.usage_count)
           .select('usage_count')
-          .single();
+          .maybeSingle();
 
         if (promoIncError || !updatedPromo) {
           console.error(`[${errorId}] Failed to reserve promo usage:`, promoIncError);
