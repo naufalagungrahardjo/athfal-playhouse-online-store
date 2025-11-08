@@ -32,14 +32,9 @@ export const useBanners = () => {
         console.error('Supabase banners error:', error);
         throw error;
       }
-      // Only include banners with no expiry, or expiry_date in the future
-      const now = new Date();
-      const filtered = (data || []).filter((b: any) => {
-        if (!b.expiry_date) return true;
-        return new Date(b.expiry_date) > now;
-      });
-      setBanners(filtered || []);
-      console.log('Banners fetched:', filtered);
+      // Admin view: show ALL banners including expired ones
+      setBanners(data || []);
+      console.log('Banners fetched:', data);
     } catch (error) {
       console.error('Error fetching banners:', error);
       toast({
@@ -141,7 +136,13 @@ export const useBanners = () => {
   };
 
   const getActiveBanner = () => {
-    return banners.find(banner => banner.active);
+    // For public display: filter out expired banners
+    const now = new Date();
+    const validBanners = banners.filter((b) => {
+      if (!b.expiry_date) return true;
+      return new Date(b.expiry_date) > now;
+    });
+    return validBanners.find(banner => banner.active);
   };
 
   useEffect(() => {

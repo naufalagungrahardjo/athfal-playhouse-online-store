@@ -179,13 +179,13 @@ const AdminBanners = () => {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingBanner ? 'Edit Banner' : 'Create New Banner'}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 pb-4">
             <div>
               <Label htmlFor="title">Title *</Label>
               <Input
