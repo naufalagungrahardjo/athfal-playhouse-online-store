@@ -28,6 +28,8 @@ interface Order {
   subtotal: number;
   tax_amount: number;
   total_amount: number;
+  promo_code?: string;
+  discount_amount?: number;
   notes?: string;
   created_at: string;
   items?: OrderItem[];
@@ -175,6 +177,12 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
                 <span>Subtotal:</span>
                 <span>{formatCurrency(order.subtotal)}</span>
               </div>
+              {order.promo_code && order.discount_amount && order.discount_amount > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span>Discount ({order.promo_code}):</span>
+                  <span>-{formatCurrency(order.discount_amount)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Tax:</span>
                 <span>{formatCurrency(order.tax_amount)}</span>
