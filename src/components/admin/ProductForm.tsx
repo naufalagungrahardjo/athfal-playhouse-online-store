@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ProductCategory } from '@/contexts/CartContext';
 import { ImageUpload } from '@/components/ImageUpload';
+import { useCategories } from '@/hooks/useCategories';
 
 // NO SCHEDULE FIELD in ProductFormData type!
 interface ProductFormData {
@@ -34,6 +35,7 @@ interface ProductFormProps {
 export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }: ProductFormProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { categories } = useCategories();
 
   const [formData, setFormData] = useState<ProductFormData>({
     product_id: '',
@@ -177,12 +179,11 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pop-up-class">Pop Up Class</SelectItem>
-                  <SelectItem value="bumi-class">Bumi Class</SelectItem>
-                  <SelectItem value="tahsin-class">Tahsin Class</SelectItem>
-                  <SelectItem value="play-kit">Play Kit</SelectItem>
-                  <SelectItem value="consultation">Consultation</SelectItem>
-                  <SelectItem value="merchandise">Merchandise</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.slug}>
+                      {cat.title}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
