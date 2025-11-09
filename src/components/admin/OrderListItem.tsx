@@ -42,16 +42,16 @@ export function OrderListItem({
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
-            <h3 className="font-semibold">Order ID: {order.id}</h3>
+            <h3 className="font-semibold truncate max-w-md">Order ID: {order.id}</h3>
             <Badge className={getStatusColor(order.status)}>
               {order.status.toUpperCase()}
             </Badge>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-            <div><span className="font-medium">Customer:</span> {order.customer_name}</div>
-            <div><span className="font-medium">Email:</span> {order.customer_email}</div>
-            <div><span className="font-medium">Phone:</span> {order.customer_phone}</div>
-            <div><span className="font-medium">Payment:</span> {order.payment_method}</div>
+            <div className="truncate"><span className="font-medium">Customer:</span> {order.customer_name}</div>
+            <div className="truncate"><span className="font-medium">Email:</span> {order.customer_email}</div>
+            <div className="truncate"><span className="font-medium">Phone:</span> {order.customer_phone}</div>
+            <div className="truncate"><span className="font-medium">Payment:</span> {order.payment_method}</div>
             <div><span className="font-medium">Total:</span> {formatCurrency(order.total_amount)}</div>
           </div>
           {order.items && order.items.length > 0 && (

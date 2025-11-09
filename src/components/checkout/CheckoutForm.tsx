@@ -96,8 +96,12 @@ const CheckoutForm = ({
           </SelectTrigger>
           <SelectContent>
             {activePaymentMethods.map((method) => (
-              <SelectItem key={method.id} value={method.id}>
-                {method.bank_name} - {method.account_number} ({method.account_name})
+              <SelectItem key={method.id} value={method.id} className="max-w-full">
+                <div className="flex items-center gap-2 max-w-full overflow-hidden">
+                  <span className="font-medium truncate">{method.bank_name}</span>
+                  <span className="text-muted-foreground truncate">- {method.account_number}</span>
+                  <span className="text-sm truncate">({method.account_name})</span>
+                </div>
               </SelectItem>
             ))}
           </SelectContent>
