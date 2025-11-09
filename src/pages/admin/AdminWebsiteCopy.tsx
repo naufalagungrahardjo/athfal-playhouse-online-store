@@ -122,6 +122,8 @@ const AdminWebsiteCopy = () => {
 
   // Handlers for Website Copy editors
   const handleSave = () => {
+    // Save to localStorage so useWebsiteCopy hook can read it
+    localStorage.setItem("websiteCopy", JSON.stringify(copy));
     toast({
       title: "Website copy updated",
       description: "Your changes have been saved successfully.",
@@ -244,13 +246,13 @@ const AdminWebsiteCopy = () => {
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-6 mb-6">
-          <TabsTrigger value="website-copy">Website Copy</TabsTrigger>
-          <TabsTrigger value="about-us">About Us</TabsTrigger>
-          <TabsTrigger value="gallery">Gallery</TabsTrigger>
-          <TabsTrigger value="navigation">Navigation</TabsTrigger>
-          <TabsTrigger value="categories">Product Categories</TabsTrigger>
-          <TabsTrigger value="collaborators">Partners</TabsTrigger>
+        <TabsList className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-6 h-auto">
+          <TabsTrigger value="website-copy" className="whitespace-nowrap">Website Copy</TabsTrigger>
+          <TabsTrigger value="about-us" className="whitespace-nowrap">About Us</TabsTrigger>
+          <TabsTrigger value="gallery" className="whitespace-nowrap">Gallery</TabsTrigger>
+          <TabsTrigger value="navigation" className="whitespace-nowrap">Navigation</TabsTrigger>
+          <TabsTrigger value="categories" className="whitespace-nowrap">Product Categories</TabsTrigger>
+          <TabsTrigger value="collaborators" className="whitespace-nowrap">Partners</TabsTrigger>
         </TabsList>
 
         {/* Website Copy Section (Home page copy, Call to action, Slogan, About block) */}
