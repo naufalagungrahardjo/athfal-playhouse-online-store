@@ -193,10 +193,10 @@ const AdminSettings = () => {
       </div>
       
       <Tabs defaultValue="contact" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="contact">Contact Details</TabsTrigger>
-          <TabsTrigger value="payment">Payment Methods</TabsTrigger>
-          <TabsTrigger value="tax">Tax Settings</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-2 h-auto">
+          <TabsTrigger value="contact" className="whitespace-normal">Contact Details</TabsTrigger>
+          <TabsTrigger value="payment" className="whitespace-normal">Payment Methods</TabsTrigger>
+          <TabsTrigger value="tax" className="whitespace-normal">Tax Settings</TabsTrigger>
         </TabsList>
         
         {/* Contact Details Tab */}

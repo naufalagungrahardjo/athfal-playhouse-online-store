@@ -98,6 +98,8 @@ export const useSettings = () => {
   const saveContactSettings = (newContact: ContactSettings) => {
     setContact(newContact);
     localStorage.setItem('athfal_contact_settings', JSON.stringify(newContact));
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('athfal-settings-updated'));
   };
 
   const savePaymentSettings = (newPayments: PaymentMethod[]) => {
@@ -112,6 +114,17 @@ export const useSettings = () => {
 
   useEffect(() => {
     fetchSettings();
+    
+    // Listen for settings updates from other components
+    const handleSettingsUpdate = () => {
+      fetchSettings();
+    };
+    
+    window.addEventListener('athfal-settings-updated', handleSettingsUpdate);
+    
+    return () => {
+      window.removeEventListener('athfal-settings-updated', handleSettingsUpdate);
+    };
   }, []);
 
   return {
