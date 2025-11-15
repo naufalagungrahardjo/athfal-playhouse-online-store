@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Props {
   initialName: string;
@@ -28,17 +30,43 @@ const ProfileDetailsForm = ({
   const [address, setAddress] = useState(initialAddress);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleUpdateProfile = () => {
+  const handleUpdateProfile = async () => {
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('users')
+        .update({
+          name,
+          email,
+          phone,
+          address,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
       toast({
         title: language === 'id' ? 'Profil diperbarui' : 'Profile updated',
         description: language === 'id'
           ? 'Informasi profil Anda telah diperbarui'
           : 'Your profile information has been updated',
       });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: language === 'id' ? 'Kesalahan' : 'Error',
+        description: language === 'id'
+          ? 'Gagal memperbarui profil'
+          : 'Failed to update profile',
+        variant: 'destructive',
+      });
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   return (
@@ -57,7 +85,7 @@ const ProfileDetailsForm = ({
       </div>
       <div className="space-y-2">
         <Label htmlFor="address">{language === 'id' ? 'Alamat' : 'Address'}</Label>
-        <Input id="address" value={address} onChange={e => setAddress(e.target.value)} />
+        <Textarea id="address" value={address} onChange={e => setAddress(e.target.value)} rows={3} />
       </div>
       <Button 
         className="bg-athfal-pink hover:bg-athfal-pink/80 text-white"

@@ -9,6 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCart } from '@/contexts/CartContext';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useOrderProcessing } from '@/hooks/useOrderProcessing';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import CheckoutForm from "@/components/checkout/CheckoutForm";
 import OrderSummary from "@/components/checkout/OrderSummary";
 
@@ -29,6 +31,7 @@ const CheckoutPage = () => {
   const { items, getTotalPrice, getTotalTax, clearCart } = useCart();
   const { paymentMethods } = useDatabase();
   const { processOrder, processing } = useOrderProcessing();
+  const { user } = useAuth();
   
   const [formData, setFormData] = useState({
     customerName: '',
@@ -40,6 +43,50 @@ const CheckoutPage = () => {
   });
 
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
+  const [autofillEnabled, setAutofillEnabled] = useState(false);
+
+  // Load user profile data when autofill is enabled
+  const loadUserProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('name, email, phone, address')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      
+      if (data) {
+        setFormData(prev => ({
+          ...prev,
+          customerName: data.name || '',
+          customerEmail: data.email || '',
+          customerPhone: data.phone || '',
+          customerAddress: data.address || ''
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    }
+  };
+
+  const handleAutofillToggle = (enabled: boolean) => {
+    setAutofillEnabled(enabled);
+    if (enabled) {
+      loadUserProfile();
+    } else {
+      // Clear form when autofill is disabled
+      setFormData(prev => ({
+        ...prev,
+        customerName: '',
+        customerEmail: '',
+        customerPhone: '',
+        customerAddress: ''
+      }));
+    }
+  };
 
   const handleApplyPromo = (promo: PromoCode) => {
     setAppliedPromo(promo);
@@ -173,6 +220,9 @@ const CheckoutPage = () => {
                   activePaymentMethods={activePaymentMethods}
                   formatCurrency={formatCurrency}
                   total={total}
+                  autofillEnabled={autofillEnabled}
+                  onAutofillToggle={handleAutofillToggle}
+                  isLoggedIn={!!user}
                 />
               </CardContent>
             </Card>
