@@ -1,6 +1,6 @@
 
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,16 +33,14 @@ const ProfileSidebar = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid grid-cols-2 w-full">
-            <TabsTrigger value="profile">
-              {language === 'id' ? 'Profil' : 'Profile'}
-            </TabsTrigger>
-            <TabsTrigger value="orders">
-              {language === 'id' ? 'Pesanan' : 'Orders'}
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <TabsList className="grid grid-cols-2 w-full">
+          <TabsTrigger value="profile">
+            {language === 'id' ? 'Profil' : 'Profile'}
+          </TabsTrigger>
+          <TabsTrigger value="orders">
+            {language === 'id' ? 'Pesanan' : 'Orders'}
+          </TabsTrigger>
+        </TabsList>
         <Separator className="my-4" />
         <Button 
           variant="outline" 

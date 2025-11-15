@@ -109,14 +109,14 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen">
       <div className="athfal-container py-12">
-        <div className="flex flex-col md:flex-row items-start gap-8">
+        <Tabs defaultValue="profile" className="w-full">
+          <div className="flex flex-col md:flex-row items-start gap-8">
           {/* Sidebar */}
           <div className="w-full md:w-1/4">
             <ProfileSidebar />
           </div>
           {/* Main content */}
           <div className="w-full md:w-3/4">
-            <Tabs defaultValue="profile" className="w-full">
               <TabsContent value="profile">
                 <Card>
                   <CardHeader>
@@ -156,9 +156,10 @@ const ProfilePage = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
-            </Tabs>
+            
           </div>
         </div>
+        </Tabs>
       </div>
     </div>
   );
