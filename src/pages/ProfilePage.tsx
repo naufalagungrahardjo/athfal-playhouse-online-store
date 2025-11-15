@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
 import { User, ShoppingBag, CreditCard } from 'lucide-react';
 import DeleteAccountButton from "@/components/profile/DeleteAccountButton";
 import ProfileDetailsForm from "@/components/profile/ProfileDetailsForm";
@@ -61,6 +62,38 @@ const ProfilePage = () => {
   const { user } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const [userProfile, setUserProfile] = useState<{
+    phone: string;
+    address: string;
+  }>({ phone: '', address: '' });
+
+  // Load user profile data
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('phone, address')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+        
+        if (data) {
+          setUserProfile({
+            phone: data.phone || '',
+            address: data.address || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+      }
+    };
+
+    loadUserProfile();
+  }, [user]);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -95,8 +128,8 @@ const ProfilePage = () => {
                     <ProfileDetailsForm
                       initialName={user.name}
                       initialEmail={user.email}
-                      initialPhone={""}
-                      initialAddress={""}
+                      initialPhone={userProfile.phone}
+                      initialAddress={userProfile.address}
                     />
                   </CardContent>
                 </Card>

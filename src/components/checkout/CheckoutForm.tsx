@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 
 type CheckoutFormProps = {
   formData: {
@@ -27,6 +28,9 @@ type CheckoutFormProps = {
   }[];
   formatCurrency: (amount: number) => string;
   total: number;
+  autofillEnabled: boolean;
+  onAutofillToggle: (enabled: boolean) => void;
+  isLoggedIn: boolean;
 };
 
 const CheckoutForm = ({
@@ -36,9 +40,29 @@ const CheckoutForm = ({
   processing,
   activePaymentMethods,
   formatCurrency,
-  total
+  total,
+  autofillEnabled,
+  onAutofillToggle,
+  isLoggedIn
 }: CheckoutFormProps) => (
   <form onSubmit={handleSubmit} className="space-y-4">
+    {isLoggedIn && (
+      <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+        <div className="space-y-0.5">
+          <Label htmlFor="autofill" className="text-base">
+            Use Profile Information
+          </Label>
+          <p className="text-sm text-muted-foreground">
+            Automatically fill form with your saved profile data
+          </p>
+        </div>
+        <Switch
+          id="autofill"
+          checked={autofillEnabled}
+          onCheckedChange={onAutofillToggle}
+        />
+      </div>
+    )}
     <div>
       <Label htmlFor="customerName">Full Name *</Label>
       <Input
