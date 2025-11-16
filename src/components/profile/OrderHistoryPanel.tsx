@@ -93,6 +93,14 @@ const OrderHistoryPanel = () => {
               <p className="text-sm text-muted-foreground">
                 {language === 'id' ? 'Tanggal' : 'Date'}: {formatDate(order.created_at || '')}
               </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {language === 'id' ? 'Nama' : 'Name'}: {order.customer_name}
+              </p>
+              {order.customer_address && (
+                <p className="text-sm text-muted-foreground">
+                  {language === 'id' ? 'Alamat' : 'Address'}: {order.customer_address}
+                </p>
+              )}
             </div>
             <Badge className={getStatusColor(order.status)}>
               {getStatusLabel(order.status, language)}
