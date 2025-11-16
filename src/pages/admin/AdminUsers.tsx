@@ -6,20 +6,37 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Search, Trash2, Users, Download } from "lucide-react";
+import { CalendarIcon, Search, Trash2, Users, Download, KeyRound } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useUserManagement } from "@/hooks/useUserManagement";
+import { useAuth } from "@/contexts/AuthContext";
+import { ResetPasswordDialog } from "@/components/admin/ResetPasswordDialog";
 
 const AdminUsers = () => {
-  const { users, loading, deleteUser } = useUserManagement();
+  const { users, loading, deleteUser, resetPassword } = useUserManagement();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string; email: string } | null>(null);
+
+  const isSuperAdmin = user?.role === 'super_admin';
 
   const handleDeleteUser = async (userId: string, userName: string) => {
     if (!confirm(`Are you sure you want to delete user "${userName}"?`)) return;
     await deleteUser(userId);
+  };
+
+  const handleResetPassword = (userId: string, userName: string, userEmail: string) => {
+    setSelectedUser({ id: userId, name: userName, email: userEmail });
+    setResetPasswordDialogOpen(true);
+  };
+
+  const handleConfirmResetPassword = async (newPassword: string) => {
+    if (!selectedUser) return;
+    await resetPassword(selectedUser.id, newPassword);
   };
 
   const filteredUsers = users.filter(user => {
@@ -220,14 +237,26 @@ const AdminUsers = () => {
                       {format(new Date(user.created_at), "PPP")}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteUser(user.id, user.name)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-2">
+                        {isSuperAdmin && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleResetPassword(user.id, user.name, user.email)}
+                            className="text-primary hover:text-primary"
+                          >
+                            <KeyRound className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteUser(user.id, user.name)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -236,6 +265,16 @@ const AdminUsers = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {selectedUser && (
+        <ResetPasswordDialog
+          open={resetPasswordDialogOpen}
+          onOpenChange={setResetPasswordDialogOpen}
+          userName={selectedUser.name}
+          userEmail={selectedUser.email}
+          onConfirm={handleConfirmResetPassword}
+        />
+      )}
     </div>
   );
 };
