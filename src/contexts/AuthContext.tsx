@@ -84,21 +84,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     try {
       await signOut();
-      
-      setUser(null);
-      setSession(null);
-      toast({
-        title: "Logout berhasil",
-        description: "Anda telah keluar dari akun",
-      });
     } catch (error) {
-      console.error('Logout error:', error);
-      toast({
-        variant: "destructive",
-        title: "Logout gagal",
-        description: "Terjadi kesalahan saat logout",
-      });
+      // If session is already missing, that's fine - we'll still clear local state
+      if (error instanceof Error && error.message !== 'Auth session missing!') {
+        console.error('Logout error:', error);
+      }
     }
+    
+    // Always clear local state regardless of Supabase response
+    setUser(null);
+    setSession(null);
+    toast({
+      title: "Logout berhasil",
+      description: "Anda telah keluar dari akun",
+    });
   };
 
   const resetPassword = async (email: string) => {
