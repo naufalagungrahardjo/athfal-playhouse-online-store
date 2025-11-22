@@ -6,45 +6,31 @@ import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Edit, FileText } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import TeamMemberForm from "../team/TeamMemberForm";
-import { useAboutContent, TeamMember } from "@/hooks/useAboutContent";
+import { TeamMember } from "@/hooks/useAboutContent";
 import { useState } from "react";
 import AboutSectionHeroImageUpload from "./AboutSectionHeroImageUpload";
 import AboutSectionDecorativeImageUpload from "./AboutSectionDecorativeImageUpload";
 
-const AboutUsAdminTab = () => {
-  const {
-    content: aboutContent,
-    saveContent: saveAboutContent,
-    addTeamMember,
-    updateTeamMember,
-    deleteTeamMember
-  } = useAboutContent();
+interface AboutUsAdminTabProps {
+  content: any;
+  onContentChange: (section: string, language: 'id' | 'en', value: string) => void;
+  onImageChange: (field: string, value: string) => void;
+  onAddTeamMember: (member: Omit<TeamMember, 'id'>) => void;
+  onUpdateTeamMember: (id: string, member: Partial<TeamMember>) => void;
+  onDeleteTeamMember: (id: string) => void;
+}
+
+const AboutUsAdminTab = ({
+  content: aboutContent,
+  onContentChange,
+  onImageChange,
+  onAddTeamMember,
+  onUpdateTeamMember,
+  onDeleteTeamMember
+}: AboutUsAdminTabProps) => {
 
   const [editingTeamMember, setEditingTeamMember] = useState<TeamMember | null>(null);
   const [showAddTeamForm, setShowAddTeamForm] = useState(false);
-
-  // Handle section-level changes for about content (for both "id" and "en" fields)
-  const handleAboutContentChange = (section: keyof typeof aboutContent, language: 'id' | 'en', value: string) => {
-    const currentSection = aboutContent[section];
-    if (typeof currentSection === 'object' && currentSection !== null && 'id' in currentSection && 'en' in currentSection) {
-      const updatedContent = {
-        ...aboutContent,
-        [section]: {
-          ...currentSection,
-          [language]: value
-        }
-      };
-      saveAboutContent(updatedContent);
-    }
-  };
-
-  const handleAboutImageChange = (field: string, value: string) => {
-    const updatedContent = {
-      ...aboutContent,
-      [field]: value
-    };
-    saveAboutContent(updatedContent);
-  };
 
   return (
     <div className="space-y-6">
@@ -64,24 +50,24 @@ const AboutUsAdminTab = () => {
               <Label>Hero Title (Indonesian)</Label>
               <Input
                 value={aboutContent.heroTitle.id}
-                onChange={(e) => handleAboutContentChange('heroTitle', 'id', e.target.value)}
+                onChange={(e) => onContentChange('heroTitle', 'id', e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label>Hero Title (English)</Label>
               <Input
                 value={aboutContent.heroTitle.en}
-                onChange={(e) => handleAboutContentChange('heroTitle', 'en', e.target.value)}
+                onChange={(e) => onContentChange('heroTitle', 'en', e.target.value)}
               />
             </div>
           </div>
           <AboutSectionHeroImageUpload
             value={aboutContent.heroImage}
-            onChange={(url) => handleAboutImageChange('heroImage', url)}
+            onChange={(url) => onImageChange('heroImage', url)}
           />
           <AboutSectionDecorativeImageUpload
             value={aboutContent.aboutDecorativeImage || ""}
-            onChange={(url) => handleAboutImageChange('aboutDecorativeImage', url)}
+            onChange={(url) => onImageChange('aboutDecorativeImage', url)}
           />
         </CardContent>
       </Card>
@@ -95,14 +81,14 @@ const AboutUsAdminTab = () => {
               <Label>Mission Title (Indonesian)</Label>
               <Input
                 value={aboutContent.missionTitle.id}
-                onChange={(e) => handleAboutContentChange('missionTitle', 'id', e.target.value)}
+                onChange={(e) => onContentChange('missionTitle', 'id', e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label>Mission Title (English)</Label>
               <Input
                 value={aboutContent.missionTitle.en}
-                onChange={(e) => handleAboutContentChange('missionTitle', 'en', e.target.value)}
+                onChange={(e) => onContentChange('missionTitle', 'en', e.target.value)}
               />
             </div>
           </div>
@@ -112,7 +98,7 @@ const AboutUsAdminTab = () => {
               <Textarea
                 rows={4}
                 value={aboutContent.missionDescription.id}
-                onChange={(e) => handleAboutContentChange('missionDescription', 'id', e.target.value)}
+                onChange={(e) => onContentChange('missionDescription', 'id', e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -120,7 +106,7 @@ const AboutUsAdminTab = () => {
               <Textarea
                 rows={4}
                 value={aboutContent.missionDescription.en}
-                onChange={(e) => handleAboutContentChange('missionDescription', 'en', e.target.value)}
+                onChange={(e) => onContentChange('missionDescription', 'en', e.target.value)}
               />
             </div>
           </div>
@@ -136,14 +122,14 @@ const AboutUsAdminTab = () => {
               <Label>Vision Title (Indonesian)</Label>
               <Input
                 value={aboutContent.visionTitle.id}
-                onChange={(e) => handleAboutContentChange('visionTitle', 'id', e.target.value)}
+                onChange={(e) => onContentChange('visionTitle', 'id', e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label>Vision Title (English)</Label>
               <Input
                 value={aboutContent.visionTitle.en}
-                onChange={(e) => handleAboutContentChange('visionTitle', 'en', e.target.value)}
+                onChange={(e) => onContentChange('visionTitle', 'en', e.target.value)}
               />
             </div>
           </div>
@@ -153,7 +139,7 @@ const AboutUsAdminTab = () => {
               <Textarea
                 rows={4}
                 value={aboutContent.visionDescription.id}
-                onChange={(e) => handleAboutContentChange('visionDescription', 'id', e.target.value)}
+                onChange={(e) => onContentChange('visionDescription', 'id', e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -161,7 +147,7 @@ const AboutUsAdminTab = () => {
               <Textarea
                 rows={4}
                 value={aboutContent.visionDescription.en}
-                onChange={(e) => handleAboutContentChange('visionDescription', 'en', e.target.value)}
+                onChange={(e) => onContentChange('visionDescription', 'en', e.target.value)}
               />
             </div>
           </div>
@@ -177,14 +163,14 @@ const AboutUsAdminTab = () => {
               <Label>Values Title (Indonesian)</Label>
               <Input
                 value={aboutContent.valuesTitle.id}
-                onChange={(e) => handleAboutContentChange('valuesTitle', 'id', e.target.value)}
+                onChange={(e) => onContentChange('valuesTitle', 'id', e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label>Values Title (English)</Label>
               <Input
                 value={aboutContent.valuesTitle.en}
-                onChange={(e) => handleAboutContentChange('valuesTitle', 'en', e.target.value)}
+                onChange={(e) => onContentChange('valuesTitle', 'en', e.target.value)}
               />
             </div>
           </div>
@@ -194,7 +180,7 @@ const AboutUsAdminTab = () => {
               <Textarea
                 rows={4}
                 value={aboutContent.valuesDescription.id}
-                onChange={(e) => handleAboutContentChange('valuesDescription', 'id', e.target.value)}
+                onChange={(e) => onContentChange('valuesDescription', 'id', e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -202,7 +188,7 @@ const AboutUsAdminTab = () => {
               <Textarea
                 rows={4}
                 value={aboutContent.valuesDescription.en}
-                onChange={(e) => handleAboutContentChange('valuesDescription', 'en', e.target.value)}
+                onChange={(e) => onContentChange('valuesDescription', 'en', e.target.value)}
               />
             </div>
           </div>
@@ -225,7 +211,7 @@ const AboutUsAdminTab = () => {
               <h4 className="font-medium mb-3">Add New Team Member</h4>
               <TeamMemberForm
                 onSave={(member) => {
-                  addTeamMember(member);
+                  onAddTeamMember(member);
                   setShowAddTeamForm(false);
                 }}
                 onCancel={() => setShowAddTeamForm(false)}
@@ -251,7 +237,7 @@ const AboutUsAdminTab = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => deleteTeamMember(member.id)}
+                    onClick={() => onDeleteTeamMember(member.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -266,7 +252,7 @@ const AboutUsAdminTab = () => {
                 <TeamMemberForm
                   initialData={editingTeamMember}
                   onSave={(member) => {
-                    updateTeamMember(editingTeamMember.id, member);
+                    onUpdateTeamMember(editingTeamMember.id, member);
                     setEditingTeamMember(null);
                   }}
                   onCancel={() => setEditingTeamMember(null)}

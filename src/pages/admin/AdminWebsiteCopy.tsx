@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Save, Globe, FileText, Image } from "lucide-react";
@@ -109,25 +109,63 @@ const WEBSITE_COPY = {
 const AdminWebsiteCopy = () => {
   // Website Copy
   const { toast } = useToast();
-  const [copy, setCopy] = useState(WEBSITE_COPY);
+  const [copy, setCopy] = useState(() => {
+    // Load from localStorage on mount
+    const stored = localStorage.getItem("websiteCopy");
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return WEBSITE_COPY;
+      }
+    }
+    return WEBSITE_COPY;
+  });
   const [activeTab, setActiveTab] = useState("website-copy");
 
   // About & Gallery Content (Content Management)
-  const { content: aboutContent, saveContent: saveAboutContent, addTeamMember, updateTeamMember, deleteTeamMember } = useAboutContent();
+  const { content: aboutContent, loading: aboutLoading, saveContent: saveAboutContent, addTeamMember, updateTeamMember, deleteTeamMember } = useAboutContent();
   const { content: galleryContent, saveContent: saveGalleryContent, addGalleryItem, updateGalleryItem, deleteGalleryItem } = useGalleryContent();
   const [editingTeamMember, setEditingTeamMember] = useState<TeamMember | null>(null);
   const [showAddTeamForm, setShowAddTeamForm] = useState(false);
   const [editingGalleryItem, setEditingGalleryItem] = useState<GalleryItem | null>(null);
   const [showAddGalleryForm, setShowAddGalleryForm] = useState(false);
+  
+  // Track unsaved changes for About Us
+  const [aboutContentDraft, setAboutContentDraft] = useState(aboutContent);
+  const [hasAboutChanges, setHasAboutChanges] = useState(false);
+  
+  // Update draft when aboutContent loads from DB
+  useEffect(() => {
+    if (!aboutLoading) {
+      setAboutContentDraft(aboutContent);
+      setHasAboutChanges(false);
+    }
+  }, [aboutContent, aboutLoading]);
 
   // Handlers for Website Copy editors
-  const handleSave = () => {
-    // Save to localStorage so useWebsiteCopy hook can read it
-    localStorage.setItem("websiteCopy", JSON.stringify(copy));
-    toast({
-      title: "Website copy updated",
-      description: "Your changes have been saved successfully.",
-    });
+  const handleSave = async () => {
+    try {
+      // Save to localStorage so useWebsiteCopy hook can read it
+      localStorage.setItem("websiteCopy", JSON.stringify(copy));
+      
+      // Save About Us changes to Supabase if there are any
+      if (hasAboutChanges) {
+        await saveAboutContent(aboutContentDraft);
+        setHasAboutChanges(false);
+      }
+      
+      toast({
+        title: "Website copy updated",
+        description: "Your changes have been saved successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error saving changes",
+        description: "Some changes could not be saved. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleHomePageChange = (field: string, lang: "id" | "en", value: string) => {
@@ -190,24 +228,26 @@ const AdminWebsiteCopy = () => {
 
   // Handlers for Content Management (About, Gallery)
   const handleAboutContentChange = (section: keyof typeof aboutContent, language: 'id' | 'en', value: string) => {
-    const currentSection = aboutContent[section];
+    const currentSection = aboutContentDraft[section];
     if (typeof currentSection === 'object' && currentSection !== null && 'id' in currentSection && 'en' in currentSection) {
       const updatedContent = {
-        ...aboutContent,
+        ...aboutContentDraft,
         [section]: {
           ...currentSection,
           [language]: value
         }
       };
-      saveAboutContent(updatedContent);
+      setAboutContentDraft(updatedContent);
+      setHasAboutChanges(true);
     }
   };
   const handleAboutImageChange = (field: string, value: string) => {
     const updatedContent = {
-      ...aboutContent,
+      ...aboutContentDraft,
       [field]: value
     };
-    saveAboutContent(updatedContent);
+    setAboutContentDraft(updatedContent);
+    setHasAboutChanges(true);
   };
   const handleGalleryContentChange = (field: keyof typeof galleryContent, language: 'id' | 'en', value: string) => {
     const currentField = galleryContent[field];
@@ -284,7 +324,14 @@ const AdminWebsiteCopy = () => {
         
         {/* About Us Section (Content Management - About) */}
         <TabsContent value="about-us" className="space-y-6">
-          <AboutUsAdminTab />
+          <AboutUsAdminTab 
+            content={aboutContentDraft}
+            onContentChange={handleAboutContentChange}
+            onImageChange={handleAboutImageChange}
+            onAddTeamMember={addTeamMember}
+            onUpdateTeamMember={updateTeamMember}
+            onDeleteTeamMember={deleteTeamMember}
+          />
         </TabsContent>
         
         {/* Gallery Section (Content Management - Gallery) */}
