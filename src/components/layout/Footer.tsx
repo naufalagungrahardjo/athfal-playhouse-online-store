@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
+import { useCategories } from '@/hooks/useCategories';
 
 function getGoogleMapsEmbedUrl(rawUrl?: string) {
   // Accept only valid embed links or fallback to default
@@ -15,6 +16,7 @@ function getGoogleMapsEmbedUrl(rawUrl?: string) {
 const Footer = () => {
   const { t, language } = useLanguage();
   const { contact } = useSettings();
+  const { categories } = useCategories();
   const googleMapsEmbedUrl = getGoogleMapsEmbedUrl(contact?.googleMapsUrl);
 
   return (
@@ -85,36 +87,16 @@ const Footer = () => {
               {language === 'id' ? 'Kategori Produk' : 'Product Categories'}
             </h3>
             <ul className="space-y-2">
-              <li>
-                <Link to="/products/pop-up-class" className="text-gray-700 hover:text-athfal-pink">
-                  Pop Up Class
-                </Link>
-              </li>
-              <li>
-                <Link to="/products/bumi-class" className="text-gray-700 hover:text-athfal-pink">
-                  Bumi Class
-                </Link>
-              </li>
-              <li>
-                <Link to="/products/tahsin-class" className="text-gray-700 hover:text-athfal-pink">
-                  Tahsin Class
-                </Link>
-              </li>
-              <li>
-                <Link to="/products/play-kit" className="text-gray-700 hover:text-athfal-pink">
-                  Play Kit
-                </Link>
-              </li>
-              <li>
-                <Link to="/products/consultation" className="text-gray-700 hover:text-athfal-pink">
-                  Psychological Consultation
-                </Link>
-              </li>
-              <li>
-                <Link to="/products/merchandise" className="text-gray-700 hover:text-athfal-pink">
-                  Merchandise & Others
-                </Link>
-              </li>
+              {categories.map((category) => (
+                <li key={category.id}>
+                  <Link 
+                    to={`/products/${category.slug}`} 
+                    className="text-gray-700 hover:text-athfal-pink"
+                  >
+                    {category.title}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
