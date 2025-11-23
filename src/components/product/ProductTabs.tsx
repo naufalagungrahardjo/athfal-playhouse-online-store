@@ -20,9 +20,10 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ product, language, formatCurr
         </TabsTrigger>
       </TabsList>
       <TabsContent value="description" className="py-6">
-        <div className="prose max-w-none">
-          <p className="mb-4">{product.description}</p>
-        </div>
+        <div 
+          className="prose prose-sm max-w-none text-gray-700"
+          dangerouslySetInnerHTML={{ __html: product.description }}
+        />
       </TabsContent>
       <TabsContent value="details" className="py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

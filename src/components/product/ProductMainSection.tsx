@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Minus, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import { Product } from "@/contexts/CartContext";
+import { ProductMediaCarousel, ProductMedia } from "@/components/product/ProductMediaCarousel";
 
 interface ProductMainSectionProps {
   product: Product;
@@ -34,25 +35,20 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
     if (quantity > 1) setQuantity(quantity - 1);
   };
 
+  // Prepare media for carousel
+  const media: ProductMedia[] = (product as any).media && (product as any).media.length > 0
+    ? (product as any).media
+    : [{ url: product.image, type: 'image' as const }];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-      {/* Product image */}
-      <div className="rounded-3xl overflow-hidden shadow-lg">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-auto object-cover"
-          onError={e => {
-            (e.target as HTMLImageElement).src =
-              'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=600&h=400&fit=crop';
-          }}
-        />
-      </div>
+      {/* Product media carousel */}
+      <ProductMediaCarousel media={media} productName={product.name} />
+      
       {/* Product info */}
       <div>
         <h1 className="text-3xl font-bold text-athfal-pink mb-2">{product.name}</h1>
         <p className="text-2xl font-bold text-athfal-green mb-4">{formatCurrency(product.price)}</p>
-        <p className="text-gray-700 mb-6">{product.description}</p>
         <div className="border-t border-b border-gray-200 py-4 my-6">
           <div className="flex items-center mb-4">
             <span className="font-medium text-gray-700 w-24">{language === 'id' ? 'Kategori' : 'Category'}:</span>
