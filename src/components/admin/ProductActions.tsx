@@ -12,6 +12,7 @@ export interface ProductFormData {
   description: string;
   price: number;
   image: string;
+  media?: Array<{url: string; type: 'image' | 'video'}>;
   category: ProductCategory;
   tax: number;
   stock: number;

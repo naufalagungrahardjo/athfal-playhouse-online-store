@@ -4,15 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ProductCategory } from '@/contexts/CartContext';
-import { ImageUpload } from '@/components/ImageUpload';
 import { useCategories } from '@/hooks/useCategories';
+import { ProductMediaUpload, ProductMedia } from '@/components/admin/ProductMediaUpload';
+import { RichTextEditor } from '@/components/admin/RichTextEditor';
 
-// NO SCHEDULE FIELD in ProductFormData type!
 interface ProductFormData {
   id?: string;
   product_id: string;
@@ -20,6 +19,7 @@ interface ProductFormData {
   description: string;
   price: number;
   image: string;
+  media?: ProductMedia[];
   category: ProductCategory;
   tax: number;
   stock: number;
@@ -43,6 +43,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
     description: '',
     price: 0,
     image: '',
+    media: [],
     category: 'pop-up-class',
     tax: 11,
     stock: 0,
@@ -57,6 +58,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         description: editingProduct.description,
         price: editingProduct.price,
         image: editingProduct.image,
+        media: editingProduct.media || [],
         category: editingProduct.category,
         tax: editingProduct.tax,
         stock: editingProduct.stock,
@@ -68,6 +70,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         description: '',
         price: 0,
         image: '',
+        media: [],
         category: 'pop-up-class',
         tax: 11,
         stock: 0,
@@ -101,6 +104,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             description: formData.description,
             price: formData.price,
             image: imageUrl,
+            media: formData.media as any,
             category: formData.category,
             tax: formData.tax,
             stock: formData.stock,
@@ -123,6 +127,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             description: formData.description,
             price: formData.price,
             image: formData.image,
+            media: formData.media as any,
             category: formData.category,
             tax: formData.tax,
             stock: formData.stock
@@ -200,19 +205,16 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
+            <RichTextEditor
               value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
-              required
+              onChange={(description) => setFormData({...formData, description})}
+              label="Description"
             />
           </div>
 
-          <ImageUpload
-            value={formData.image}
-            onChange={(url) => setFormData({...formData, image: url})}
-            label="Product Image"
+          <ProductMediaUpload
+            value={formData.media}
+            onChange={(media) => setFormData({...formData, media})}
           />
 
           <div className="grid grid-cols-3 gap-4">

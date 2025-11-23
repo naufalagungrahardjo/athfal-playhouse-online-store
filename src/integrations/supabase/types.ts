@@ -395,6 +395,7 @@ export type Database = {
           description: string
           id: string
           image: string
+          media: Json | null
           name: string
           price: number
           product_id: string
@@ -409,6 +410,7 @@ export type Database = {
           description: string
           id?: string
           image: string
+          media?: Json | null
           name: string
           price: number
           product_id: string
@@ -423,6 +425,7 @@ export type Database = {
           description?: string
           id?: string
           image?: string
+          media?: Json | null
           name?: string
           price?: number
           product_id?: string
