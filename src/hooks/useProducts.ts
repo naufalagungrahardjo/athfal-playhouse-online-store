@@ -31,6 +31,7 @@ export const useProducts = () => {
         category: product.category as ProductCategory,
         tax: product.tax,
         stock: product.stock,
+        media: product.media as any,
       }));
 
       setProducts(formattedProducts);

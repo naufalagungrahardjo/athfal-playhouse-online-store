@@ -14,6 +14,7 @@ export interface Product {
   category: ProductCategory;
   tax: number;
   stock: number;
+  media?: Array<{ url: string; type: 'image' | 'video' }>;
 }
 
 export interface CartItem {

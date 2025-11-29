@@ -8,23 +8,35 @@ interface ProductTabsProps {
   formatCurrency: (amount: number) => string;
 }
 
-const ProductTabs: React.FC<ProductTabsProps> = ({ product, language, formatCurrency }) => (
-  <div className="mt-16">
-    <Tabs defaultValue="description">
-      <TabsList className="w-full justify-start border-b">
-        <TabsTrigger value="description" className="px-8">
-          {language === 'id' ? 'Deskripsi' : 'Description'}
-        </TabsTrigger>
-        <TabsTrigger value="details" className="px-8">
-          {language === 'id' ? 'Detail' : 'Details'}
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent value="description" className="py-6">
-        <div 
-          className="prose prose-sm max-w-none text-gray-700"
-          dangerouslySetInnerHTML={{ __html: product.description }}
-        />
-      </TabsContent>
+const ProductTabs: React.FC<ProductTabsProps> = ({ product, language, formatCurrency }) => {
+  // Convert plain text with newlines to HTML paragraphs
+  const formatDescription = (text: string) => {
+    // If already contains HTML tags, return as-is
+    if (text.includes('<p>') || text.includes('<div>') || text.includes('<br')) {
+      return text;
+    }
+    // Convert double newlines to paragraph breaks
+    const paragraphs = text.split('\n\n').filter(p => p.trim());
+    return paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+  };
+
+  return (
+    <div className="mt-16">
+      <Tabs defaultValue="description">
+        <TabsList className="w-full justify-start border-b">
+          <TabsTrigger value="description" className="px-8">
+            {language === 'id' ? 'Deskripsi' : 'Description'}
+          </TabsTrigger>
+          <TabsTrigger value="details" className="px-8">
+            {language === 'id' ? 'Detail' : 'Details'}
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="description" className="py-6">
+          <div 
+            className="prose prose-sm max-w-none text-gray-700"
+            dangerouslySetInnerHTML={{ __html: formatDescription(product.description) }}
+          />
+        </TabsContent>
       <TabsContent value="details" className="py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -72,6 +84,7 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ product, language, formatCurr
       </TabsContent>
     </Tabs>
   </div>
-);
+  );
+};
 
 export default ProductTabs;
