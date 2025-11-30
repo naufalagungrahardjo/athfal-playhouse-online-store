@@ -31,6 +31,7 @@ const AdminProducts = () => {
       description: p.description,
       price: p.price,
       image: p.image,
+      media: p.media,
       category: p.category as ProductCategory,
       tax: p.tax,
       stock: p.stock,
