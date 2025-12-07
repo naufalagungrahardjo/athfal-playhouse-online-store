@@ -114,6 +114,17 @@ const AdminBanners = () => {
         </Button>
       </div>
 
+      <div className="bg-muted/50 border border-border rounded-lg p-4 text-sm text-muted-foreground">
+        <p className="font-medium text-foreground mb-1">📐 Recommended Banner Size</p>
+        <p>For best display without cropping, use images with:</p>
+        <ul className="list-disc list-inside mt-1 space-y-0.5">
+          <li><strong>Width:</strong> 1920px (minimum 1200px)</li>
+          <li><strong>Height:</strong> 600px - 800px</li>
+          <li><strong>Aspect Ratio:</strong> 2.4:1 to 3:1 (landscape/wide)</li>
+        </ul>
+        <p className="mt-2 text-xs">Images will be scaled to fit the banner area. Using the recommended size ensures your banner displays fully on all devices.</p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {banners.length === 0 ? (
           <div className="col-span-full text-center py-12">
