@@ -29,13 +29,15 @@ interface OrderListItemProps {
   getStatusColor: (status: string) => string;
   onViewDetails: (order: Order) => void;
   onDelete: (id: string) => void;
+  canDelete?: boolean;
 }
 
 export function OrderListItem({
   order,
   getStatusColor,
   onViewDetails,
-  onDelete
+  onDelete,
+  canDelete = true
 }: OrderListItemProps) {
   return (
     <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
@@ -82,15 +84,17 @@ export function OrderListItem({
             <Eye className="h-4 w-4 mr-1" />
             View Details
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onDelete(order.id)}
-            className="text-red-600 hover:text-red-700 w-full sm:w-auto"
-          >
-            <Trash2 className="h-4 w-4 mr-1" />
-            Delete
-          </Button>
+          {canDelete && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onDelete(order.id)}
+              className="text-destructive hover:text-destructive w-full sm:w-auto"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Delete
+            </Button>
+          )}
         </div>
       </div>
     </div>
