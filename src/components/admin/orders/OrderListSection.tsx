@@ -2,17 +2,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrderListItem } from "@/components/admin/OrderListItem";
 
+interface OrderListSectionProps {
+  filteredOrders: any[];
+  getStatusColor: (status: string) => string;
+  handleViewDetails: (o: any) => void;
+  handleDeleteOrder: (id: string) => void;
+  canDelete?: boolean;
+}
+
 export const OrderListSection = ({
   filteredOrders,
   getStatusColor,
   handleViewDetails,
   handleDeleteOrder,
-}: {
-  filteredOrders: any[];
-  getStatusColor: (status: string) => string;
-  handleViewDetails: (o: any) => void;
-  handleDeleteOrder: (id: string) => void;
-}) => (
+  canDelete = true,
+}: OrderListSectionProps) => (
   <Card>
     <CardHeader>
       <CardTitle>Recent Orders</CardTitle>
@@ -32,6 +36,7 @@ export const OrderListSection = ({
                 getStatusColor={getStatusColor}
                 onViewDetails={handleViewDetails}
                 onDelete={handleDeleteOrder}
+                canDelete={canDelete}
               />
             ) : null
           )}

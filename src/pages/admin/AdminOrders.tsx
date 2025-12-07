@@ -10,9 +10,15 @@ import { exportOrdersToCSV } from "@/components/admin/orders/orderExportUtils";
 import { OrderListSection } from "@/components/admin/orders/OrderListSection";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
+import { getAdminRole } from './helpers/getAdminRole';
 
 const AdminOrders = () => {
   const { orders, loading, fetchOrders, deleteOrder } = useOrders();
+  const { user } = useAuth();
+  const adminRole = getAdminRole(user);
+  const canDelete = adminRole === 'super_admin' || adminRole === 'orders_manager';
+  
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
@@ -108,6 +114,7 @@ const AdminOrders = () => {
         getStatusColor={getStatusColor}
         handleViewDetails={handleViewDetails}
         handleDeleteOrder={handleDeleteOrder}
+        canDelete={canDelete}
       />
       {selectedOrder && selectedOrder.id && (
         <OrderDetailsDialog
