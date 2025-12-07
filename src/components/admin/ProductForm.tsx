@@ -51,14 +51,22 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
 
   useEffect(() => {
     if (editingProduct) {
+      const media = editingProduct.media || [];
+      // If no cover image set but media exists, use the first image
+      let coverImage = editingProduct.image;
+      if (!coverImage && media.length > 0) {
+        const firstImage = media.find(m => m.type === 'image');
+        coverImage = firstImage?.url || '';
+      }
+      
       setFormData({
         id: editingProduct.id,
         product_id: editingProduct.product_id,
         name: editingProduct.name,
         description: editingProduct.description,
         price: editingProduct.price,
-        image: editingProduct.image,
-        media: editingProduct.media || [],
+        image: coverImage,
+        media: media,
         category: editingProduct.category,
         tax: editingProduct.tax,
         stock: editingProduct.stock,
@@ -213,8 +221,19 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
           </div>
 
           <ProductMediaUpload
-            value={formData.media}
-            onChange={(media) => setFormData({...formData, media})}
+            value={formData.media || []}
+            onChange={(media) => {
+              // If cover image is removed from media, update it
+              const coverStillExists = media.some(m => m.url === formData.image);
+              if (!coverStillExists && media.length > 0) {
+                const firstImage = media.find(m => m.type === 'image');
+                setFormData({...formData, media, image: firstImage?.url || ''});
+              } else {
+                setFormData({...formData, media});
+              }
+            }}
+            coverImage={formData.image}
+            onCoverChange={(url) => setFormData({...formData, image: url})}
           />
 
           <div className="grid grid-cols-3 gap-4">

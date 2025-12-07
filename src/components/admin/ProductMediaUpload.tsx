@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { X, Plus, Image as ImageIcon, Video } from 'lucide-react';
+import { X, Image as ImageIcon, Video, Star } from 'lucide-react';
 import { FileUploadInput } from '@/components/FileUploadInput';
 import { VideoUrlInput } from '@/components/admin/VideoUrlInput';
 
@@ -13,14 +13,21 @@ export interface ProductMedia {
 interface ProductMediaUploadProps {
   value: ProductMedia[];
   onChange: (media: ProductMedia[]) => void;
+  coverImage?: string;
+  onCoverChange?: (url: string) => void;
 }
 
-export const ProductMediaUpload = ({ value, onChange }: ProductMediaUploadProps) => {
+export const ProductMediaUpload = ({ value, onChange, coverImage, onCoverChange }: ProductMediaUploadProps) => {
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [showVideoUpload, setShowVideoUpload] = useState(false);
 
   const handleAddImage = (url: string) => {
-    onChange([...value, { url, type: 'image' }]);
+    const newMedia = [...value, { url, type: 'image' as const }];
+    onChange(newMedia);
+    // If no cover is set yet, set the first image as cover
+    if (!coverImage && onCoverChange) {
+      onCoverChange(url);
+    }
     setShowImageUpload(false);
   };
 
@@ -30,12 +37,27 @@ export const ProductMediaUpload = ({ value, onChange }: ProductMediaUploadProps)
   };
 
   const handleRemove = (index: number) => {
-    onChange(value.filter((_, i) => i !== index));
+    const removed = value[index];
+    const newMedia = value.filter((_, i) => i !== index);
+    onChange(newMedia);
+    
+    // If removed item was the cover, set new cover from remaining images
+    if (removed.url === coverImage && onCoverChange) {
+      const firstImage = newMedia.find(m => m.type === 'image');
+      onCoverChange(firstImage?.url || '');
+    }
+  };
+
+  const handleSetCover = (url: string) => {
+    if (onCoverChange) {
+      onCoverChange(url);
+    }
   };
 
   return (
     <div className="space-y-4">
       <Label>Product Images & Videos</Label>
+      <p className="text-sm text-muted-foreground">Click the star icon to set as cover image for homepage</p>
       
       {/* Display existing media */}
       <div className="grid grid-cols-3 gap-4">
@@ -45,17 +67,34 @@ export const ProductMediaUpload = ({ value, onChange }: ProductMediaUploadProps)
               <img
                 src={media.url}
                 alt={`Product media ${index + 1}`}
-                className="w-full h-32 object-cover rounded-lg border"
+                className={`w-full h-32 object-cover rounded-lg border-2 ${coverImage === media.url ? 'border-primary ring-2 ring-primary' : 'border-border'}`}
               />
             ) : (
-              <div className="w-full h-32 bg-gray-100 rounded-lg border flex items-center justify-center">
-                <Video className="w-8 h-8 text-gray-400" />
+              <div className="w-full h-32 bg-muted rounded-lg border flex items-center justify-center">
+                <Video className="w-8 h-8 text-muted-foreground" />
               </div>
+            )}
+            {/* Cover indicator */}
+            {media.type === 'image' && coverImage === media.url && (
+              <div className="absolute top-2 left-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs font-medium">
+                Cover
+              </div>
+            )}
+            {/* Set as cover button (only for images) */}
+            {media.type === 'image' && coverImage !== media.url && (
+              <button
+                type="button"
+                onClick={() => handleSetCover(media.url)}
+                className="absolute top-2 left-2 bg-background/80 text-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Set as cover"
+              >
+                <Star className="w-4 h-4" />
+              </button>
             )}
             <button
               type="button"
               onClick={() => handleRemove(index)}
-              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <X className="w-4 h-4" />
             </button>
