@@ -23,7 +23,7 @@ export const useOrderProcessing = () => {
   const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
 
-  const processOrder = async (orderData: OrderData): Promise<{ success: boolean; orderId?: string }> => {
+  const processOrder = async (orderData: OrderData): Promise<{ success: boolean; orderId?: string; lookupToken?: string }> => {
     try {
       setProcessing(true);
       const errorId = `ORD-${Date.now()}`;
@@ -202,7 +202,7 @@ export const useOrderProcessing = () => {
       });
 
       setProcessing(false);
-      return { success: true, orderId: order.id };
+      return { success: true, orderId: order.id, lookupToken: order.lookup_token };
     } catch (error: any) {
       const errorId = `ORD-${Date.now()}`;
       console.error(`[${errorId}] Error processing order:`, error);

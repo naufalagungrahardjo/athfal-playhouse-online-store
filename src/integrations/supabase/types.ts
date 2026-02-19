@@ -304,6 +304,7 @@ export type Database = {
           customer_phone: string
           discount_amount: number | null
           id: string
+          lookup_token: string | null
           notes: string | null
           payment_method: string
           promo_code: string | null
@@ -323,6 +324,7 @@ export type Database = {
           customer_phone: string
           discount_amount?: number | null
           id?: string
+          lookup_token?: string | null
           notes?: string | null
           payment_method: string
           promo_code?: string | null
@@ -342,6 +344,7 @@ export type Database = {
           customer_phone?: string
           discount_amount?: number | null
           id?: string
+          lookup_token?: string | null
           notes?: string | null
           payment_method?: string
           promo_code?: string | null
@@ -521,7 +524,7 @@ export type Database = {
           email: string
           id: string
           name: string
-          password: string
+          password: string | null
           phone: string | null
           updated_at: string | null
         }
@@ -531,7 +534,7 @@ export type Database = {
           email: string
           id?: string
           name: string
-          password: string
+          password?: string | null
           phone?: string | null
           updated_at?: string | null
         }
@@ -541,7 +544,7 @@ export type Database = {
           email?: string
           id?: string
           name?: string
-          password?: string
+          password?: string | null
           phone?: string | null
           updated_at?: string | null
         }
@@ -552,6 +555,41 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_order_by_token: {
+        Args: { p_order_id: string; p_token: string }
+        Returns: {
+          created_at: string
+          customer_address: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          discount_amount: number
+          id: string
+          lookup_token: string
+          notes: string
+          payment_method: string
+          promo_code: string
+          status: string
+          stock_deducted: boolean
+          subtotal: number
+          tax_amount: number
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }[]
+      }
+      get_order_items_by_token: {
+        Args: { p_order_id: string; p_token: string }
+        Returns: {
+          created_at: string
+          id: string
+          order_id: string
+          product_id: string
+          product_name: string
+          product_price: number
+          quantity: number
+        }[]
+      }
       is_admin_account: { Args: { email: string }; Returns: boolean }
       is_admin_user: { Args: { user_id: string }; Returns: boolean }
       is_super_admin: { Args: { email: string }; Returns: boolean }
