@@ -593,6 +593,15 @@ export type Database = {
       is_admin_account: { Args: { email: string }; Returns: boolean }
       is_admin_user: { Args: { user_id: string }; Returns: boolean }
       is_super_admin: { Args: { email: string }; Returns: boolean }
+      validate_promo_code: {
+        Args: { code_input: string }
+        Returns: {
+          code: string
+          discount_percentage: number
+          id: string
+          is_valid: boolean
+        }[]
+      }
     }
     Enums: {
       admin_role:
