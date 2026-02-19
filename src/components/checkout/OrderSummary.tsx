@@ -21,6 +21,9 @@ type OrderSummaryProps = {
     valid_until: string | null;
     usage_limit: number | null;
     usage_count: number;
+    applies_to: string;
+    applicable_product_ids: string[];
+    applicable_category_slugs: string[];
   };
   getTotalPrice: () => number;
   getDiscountAmount: () => number;

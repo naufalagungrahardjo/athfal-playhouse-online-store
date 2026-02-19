@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { usePromoCodes } from '@/hooks/usePromoCodes';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Table,
   TableBody,
@@ -25,6 +27,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { PlusCircle, Pencil, Trash2, Calendar } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { logAdminAction } from "@/utils/logAdminAction";
+import { useCategories } from "@/hooks/useCategories";
+import { useCart } from "@/contexts/CartContext";
 
 type PromoCode = {
   id: string;
@@ -36,6 +40,9 @@ type PromoCode = {
   valid_until: string | null;
   usage_limit: number | null;
   usage_count: number;
+  applies_to: string;
+  applicable_product_ids: string[];
+  applicable_category_slugs: string[];
 };
 
 const AdminPromoCodes = () => {
@@ -50,10 +57,15 @@ const AdminPromoCodes = () => {
     valid_from: '',
     valid_until: '',
     usage_limit: null as number | null,
-    usage_count: 0
+    usage_count: 0,
+    applies_to: 'all' as string,
+    applicable_product_ids: [] as string[],
+    applicable_category_slugs: [] as string[],
   });
   const { toast } = useToast();
   const { user } = useAuth();
+  const { categories } = useCategories();
+  const { products } = useCart();
 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,7 +93,10 @@ const AdminPromoCodes = () => {
       valid_from: '',
       valid_until: '',
       usage_limit: null as number | null,
-      usage_count: 0
+      usage_count: 0,
+      applies_to: 'all',
+      applicable_product_ids: [],
+      applicable_category_slugs: [],
     });
     setCurrentPromo(null);
   };
@@ -97,7 +112,10 @@ const AdminPromoCodes = () => {
         valid_from: promo.valid_from ? new Date(promo.valid_from).toISOString().split('T')[0] : '',
         valid_until: promo.valid_until ? new Date(promo.valid_until).toISOString().split('T')[0] : '',
         usage_limit: promo.usage_limit,
-        usage_count: promo.usage_count
+        usage_count: promo.usage_count,
+        applies_to: promo.applies_to || 'all',
+        applicable_product_ids: promo.applicable_product_ids || [],
+        applicable_category_slugs: promo.applicable_category_slugs || [],
       });
     } else {
       resetForm();
@@ -347,6 +365,86 @@ const AdminPromoCodes = () => {
               </p>
             </div>
             
+            {/* Applicability Section */}
+            <div className="space-y-3 border rounded-lg p-4">
+              <Label className="text-base font-semibold">Applies To</Label>
+              <RadioGroup
+                value={formData.applies_to}
+                onValueChange={(value) => setFormData({ ...formData, applies_to: value, applicable_product_ids: [], applicable_category_slugs: [] })}
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="all" id="applies_all" />
+                  <Label htmlFor="applies_all">All Products & Categories</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="specific_products" id="applies_products" />
+                  <Label htmlFor="applies_products">Specific Products Only</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="specific_categories" id="applies_categories" />
+                  <Label htmlFor="applies_categories">Specific Categories Only</Label>
+                </div>
+              </RadioGroup>
+
+              {formData.applies_to === 'specific_products' && (
+                <div className="mt-3 space-y-2 max-h-48 overflow-y-auto border rounded p-3">
+                  <p className="text-sm text-muted-foreground mb-2">Select products this promo applies to:</p>
+                  {products.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No products found</p>
+                  ) : (
+                    products.map((product) => (
+                      <div key={product.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`product-${product.id}`}
+                          checked={formData.applicable_product_ids.includes(product.id)}
+                          onCheckedChange={(checked) => {
+                            setFormData(prev => ({
+                              ...prev,
+                              applicable_product_ids: checked
+                                ? [...prev.applicable_product_ids, product.id]
+                                : prev.applicable_product_ids.filter(id => id !== product.id)
+                            }));
+                          }}
+                        />
+                        <Label htmlFor={`product-${product.id}`} className="text-sm font-normal">
+                          {product.name}
+                        </Label>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {formData.applies_to === 'specific_categories' && (
+                <div className="mt-3 space-y-2 max-h-48 overflow-y-auto border rounded p-3">
+                  <p className="text-sm text-muted-foreground mb-2">Select categories this promo applies to:</p>
+                  {categories.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No categories found</p>
+                  ) : (
+                    categories.map((category) => (
+                      <div key={category.slug} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`category-${category.slug}`}
+                          checked={formData.applicable_category_slugs.includes(category.slug)}
+                          onCheckedChange={(checked) => {
+                            setFormData(prev => ({
+                              ...prev,
+                              applicable_category_slugs: checked
+                                ? [...prev.applicable_category_slugs, category.slug]
+                                : prev.applicable_category_slugs.filter(s => s !== category.slug)
+                            }));
+                          }}
+                        />
+                        <Label htmlFor={`category-${category.slug}`} className="text-sm font-normal">
+                          {category.title}
+                        </Label>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center space-x-2">
               <Switch
                 id="is_active"
