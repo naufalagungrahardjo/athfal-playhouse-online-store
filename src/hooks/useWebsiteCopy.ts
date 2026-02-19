@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 type CopyField = { id: string; en: string };
 type HomePageCopy = {
@@ -21,7 +21,7 @@ type NavigationCopy = {
   blog: CopyField;
   contact: CopyField;
   faq: CopyField;
-  gallery: CopyField; // <--- Added gallery field!
+  gallery: CopyField;
 };
 
 type ProductCategoryCopy = {
@@ -57,29 +57,38 @@ const DEFAULT_COPY: WebsiteCopy = {
     blog: { id: "Blog", en: "Blog" },
     contact: { id: "Kontak", en: "Contact" },
     faq: { id: "FAQ", en: "FAQ" },
-    gallery: { id: "Galeri", en: "Gallery" }, // <--- Added gallery field!
+    gallery: { id: "Galeri", en: "Gallery" },
   },
   productCategories: {}
 };
 
-export function useWebsiteCopy() {
-  const [copy, setCopy] = useState<WebsiteCopy>(DEFAULT_COPY);
-
-  const loadFromStorage = () => {
+function readFromStorage(): WebsiteCopy {
+  try {
     const stored = localStorage.getItem("websiteCopy");
     if (stored) {
-      try {
-        setCopy(JSON.parse(stored));
-      } catch {
-        setCopy(DEFAULT_COPY);
-      }
+      const parsed = JSON.parse(stored);
+      // Deep merge with defaults to ensure all fields exist
+      return {
+        homePage: { ...DEFAULT_COPY.homePage, ...parsed.homePage },
+        navigation: { ...DEFAULT_COPY.navigation, ...parsed.navigation },
+        productCategories: { ...DEFAULT_COPY.productCategories, ...parsed.productCategories },
+      };
     }
-  };
+  } catch {
+    // ignore
+  }
+  return DEFAULT_COPY;
+}
+
+export function useWebsiteCopy() {
+  // Initialize synchronously from localStorage so first render has correct data
+  const [copy, setCopy] = useState<WebsiteCopy>(readFromStorage);
+
+  const loadFromStorage = useCallback(() => {
+    setCopy(readFromStorage());
+  }, []);
 
   useEffect(() => {
-    loadFromStorage();
-
-    // Listen for changes from the CMS admin
     const handleUpdate = () => loadFromStorage();
     window.addEventListener("websiteCopyUpdated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
@@ -87,7 +96,7 @@ export function useWebsiteCopy() {
       window.removeEventListener("websiteCopyUpdated", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
     };
-  }, []);
+  }, [loadFromStorage]);
 
   return { copy };
 }
