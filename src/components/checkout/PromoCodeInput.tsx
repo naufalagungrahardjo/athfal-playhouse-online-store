@@ -15,6 +15,9 @@ type PromoCode = {
   valid_until: string | null;
   usage_limit: number | null;
   usage_count: number;
+  applies_to: string;
+  applicable_product_ids: string[];
+  applicable_category_slugs: string[];
 };
 
 interface PromoCodeInputProps {
@@ -87,6 +90,9 @@ export default function PromoCodeInput({ appliedPromo, onApplyPromo, onRemovePro
         valid_until: null,
         usage_limit: null,
         usage_count: 0,
+        applies_to: (promo as any).applies_to || 'all',
+        applicable_product_ids: (promo as any).applicable_product_ids || [],
+        applicable_category_slugs: (promo as any).applicable_category_slugs || [],
       };
 
       onApplyPromo(appliedPromo);

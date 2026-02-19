@@ -441,6 +441,9 @@ export type Database = {
       }
       promo_codes: {
         Row: {
+          applicable_category_slugs: string[] | null
+          applicable_product_ids: string[] | null
+          applies_to: string
           code: string
           created_at: string | null
           description: string | null
@@ -454,6 +457,9 @@ export type Database = {
           valid_until: string | null
         }
         Insert: {
+          applicable_category_slugs?: string[] | null
+          applicable_product_ids?: string[] | null
+          applies_to?: string
           code: string
           created_at?: string | null
           description?: string | null
@@ -467,6 +473,9 @@ export type Database = {
           valid_until?: string | null
         }
         Update: {
+          applicable_category_slugs?: string[] | null
+          applicable_product_ids?: string[] | null
+          applies_to?: string
           code?: string
           created_at?: string | null
           description?: string | null
@@ -611,6 +620,9 @@ export type Database = {
       validate_promo_code: {
         Args: { code_input: string }
         Returns: {
+          applicable_category_slugs: string[]
+          applicable_product_ids: string[]
+          applies_to: string
           code: string
           discount_percentage: number
           id: string
