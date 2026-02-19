@@ -154,7 +154,8 @@ const CheckoutPage = () => {
     if (result.success) {
       clearCart();
       localStorage.removeItem('appliedPromo'); // Clear promo after successful order
-      navigate(`/order-details/${result.orderId}`);
+      const tokenParam = result.lookupToken ? `?token=${result.lookupToken}` : '';
+      navigate(`/order-details/${result.orderId}${tokenParam}`);
     }
   };
 

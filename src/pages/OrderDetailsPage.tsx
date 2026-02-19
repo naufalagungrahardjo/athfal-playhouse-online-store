@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -23,7 +23,9 @@ const OrderDetailsPage = () => {
   const { language } = useLanguage();
   const { paymentMethods } = useDatabase();
   const { id } = useParams();
-  const { order, loading } = useOrderDetails(id);
+  const [searchParams] = useSearchParams();
+  const lookupToken = searchParams.get('token') || undefined;
+  const { order, loading } = useOrderDetails(id, lookupToken);
   const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes in seconds
   const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<any>(null);

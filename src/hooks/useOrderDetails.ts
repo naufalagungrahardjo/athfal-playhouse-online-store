@@ -30,7 +30,7 @@ interface OrderDetails {
   items: OrderItem[];
 }
 
-export const useOrderDetails = (orderId?: string) => {
+export const useOrderDetails = (orderId?: string, lookupToken?: string) => {
   const [order, setOrder] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -43,18 +43,58 @@ export const useOrderDetails = (orderId?: string) => {
 
     try {
       setLoading(true);
-      console.log('Fetching order details for:', orderId);
+      console.log('Fetching order details for:', orderId, 'with token:', lookupToken ? 'yes' : 'no');
       
-      // Fetch order
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', orderId)
-        .maybeSingle();
+      let orderData: any = null;
+      let itemsData: any[] = [];
 
-      if (orderError) {
-        console.error('Order fetch error:', orderError);
-        throw orderError;
+      if (lookupToken) {
+        // Guest order lookup via secure RPC
+        const { data: rpcOrder, error: rpcError } = await supabase
+          .rpc('get_order_by_token', { p_order_id: orderId, p_token: lookupToken });
+
+        if (rpcError) {
+          console.error('RPC order fetch error:', rpcError);
+          throw rpcError;
+        }
+        orderData = rpcOrder?.[0] || null;
+
+        if (orderData) {
+          const { data: rpcItems, error: rpcItemsError } = await supabase
+            .rpc('get_order_items_by_token', { p_order_id: orderId, p_token: lookupToken });
+
+          if (rpcItemsError) {
+            console.error('RPC order items fetch error:', rpcItemsError);
+            throw rpcItemsError;
+          }
+          itemsData = rpcItems || [];
+        }
+      } else {
+        // Authenticated user order lookup via RLS
+        const { data, error: orderError } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', orderId)
+          .maybeSingle();
+
+        if (orderError) {
+          console.error('Order fetch error:', orderError);
+          throw orderError;
+        }
+        orderData = data;
+
+        if (orderData) {
+          const { data: items, error: itemsError } = await supabase
+            .from('order_items')
+            .select('*')
+            .eq('order_id', orderId);
+
+          if (itemsError) {
+            console.error('Order items fetch error:', itemsError);
+            throw itemsError;
+          }
+          itemsData = items || [];
+        }
       }
 
       if (!orderData) {
@@ -66,22 +106,9 @@ export const useOrderDetails = (orderId?: string) => {
 
       console.log('Order fetched:', orderData);
 
-      // Fetch order items
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('order_items')
-        .select('*')
-        .eq('order_id', orderId);
-
-      if (itemsError) {
-        console.error('Order items fetch error:', itemsError);
-        throw itemsError;
-      }
-
-      console.log('Order items fetched:', itemsData);
-
       // Fetch product images separately for each product
       const itemsWithImages = await Promise.all(
-        (itemsData || []).map(async (item) => {
+        itemsData.map(async (item: any) => {
           const { data: productData } = await supabase
             .from('products')
             .select('image')
@@ -114,7 +141,7 @@ export const useOrderDetails = (orderId?: string) => {
     } finally {
       setLoading(false);
     }
-  }, [orderId, toast]);
+  }, [orderId, lookupToken, toast]);
 
   useEffect(() => {
     fetchOrderDetails();
