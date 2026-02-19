@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Save, Globe, FileText, Image } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { DEFAULT_COPY } from "@/hooks/useWebsiteCopy";
 
 // Website copy sections
 import HeroSectionEditor from "./website-copy/HeroSectionEditor";
@@ -32,97 +34,35 @@ import GalleryAdminTab from "./website-copy/GalleryAdminTab";
 // Add new import:
 import CollaboratorsEditor from "./website-copy/CollaboratorsEditor";
 
-// Initial Website Copy State
-const WEBSITE_COPY = {
-  homePage: {
-    heroTitle: {
-      id: "Belajar Sambil Bermain dengan Athfal Playhouse",
-      en: "Learn Through Play with Athfal Playhouse",
-    },
-    heroSubtitle: {
-      id: "Mengembangkan potensi anak melalui pendekatan Islami yang menyenangkan",
-      en: "Developing your child's potential through a fun Islamic approach",
-    },
-    ctaButton: {
-      id: "Jelajahi Kelas Kami",
-      en: "Explore Our Classes",
-    },
-    aboutTitle: {
-      id: "Tentang Athfal Playhouse",
-      en: "About Athfal Playhouse",
-    },
-    aboutDescription: {
-      id: "Athfal Playhouse adalah pusat edukasi anak yang menggabungkan metode bermain sambil belajar dengan nilai-nilai Islam.",
-      en: "Athfal Playhouse is a children's education center that combines play-based learning methods with Islamic values.",
-    },
-    aboutExtraParagraph: {
-      id: "Dengan metode pembelajaran yang interaktif dan menyenangkan, kami membantu anak-anak untuk mengembangkan kreativitas dan kemampuan berpikir kritis mereka sejak dini.",
-      en: "With interactive and fun learning methods, we help children develop their creativity and critical thinking skills from an early age.",
-    },
-    ctaSectionTitle: {
-      id: "Bergabung Sekarang",
-      en: "Join Now",
-    },
-    ctaSectionSubtitle: {
-      id: "Temukan berbagai kegiatan menyenangkan dan edukatif untuk anak-anak Anda di Athfal Playhouse!",
-      en: "Discover various fun and educational activities for your children at Athfal Playhouse!",
-    },
-    homeSlogan: {
-      id: "Tempat bermain dan belajar yang menyenangkan untuk anak-anak.",
-      en: "A fun and educational play and learning space for children.",
-    },
-    aboutDecorativeImage: "",
-  },
-  navigation: {
-    home: { id: "Beranda", en: "Home" },
-    about: { id: "Tentang Kami", en: "About Us" },
-    products: { id: "Produk", en: "Products" },
-    blog: { id: "Blog", en: "Blog" },
-    contact: { id: "Kontak", en: "Contact" },
-    faq: { id: "FAQ", en: "FAQ" },
-    gallery: { id: "Galeri", en: "Gallery" }
-  },
-  productCategories: {
-    popUpClass: {
-      title: { id: "Pop Up Class", en: "Pop Up Class" },
-      description: {
-        id: "Kelas one-time untuk anak-anak dengan tema yang menarik dan aktivitas yang menyenangkan.",
-        en: "One-time classes for children with exciting themes and fun activities.",
-      }
-    },
-    bumiClass: {
-      title: { id: "Bumi Class", en: "Bumi Class" },
-      description: {
-        id: "Program reguler yang berfokus pada pembelajaran tentang alam dan lingkungan.",
-        en: "Regular program focused on learning about nature and the environment.",
-      }
-    },
-    tahsinClass: {
-      title: { id: "Tahsin Class", en: "Tahsin Class" },
-      description: {
-        id: "Program pembelajaran Al-Quran dengan metode yang menyenangkan.",
-        en: "Quran learning program with fun methods.",
-      }
-    }
-  }
-};
+// Use DEFAULT_COPY from shared hook
 
 const AdminWebsiteCopy = () => {
   // Website Copy
   const { toast } = useToast();
-  const [copy, setCopy] = useState(() => {
-    // Load from localStorage on mount
-    const stored = localStorage.getItem("websiteCopy");
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return WEBSITE_COPY;
-      }
-    }
-    return WEBSITE_COPY;
-  });
+  const [copy, setCopy] = useState(DEFAULT_COPY);
   const [activeTab, setActiveTab] = useState("website-copy");
+  const [copyLoading, setCopyLoading] = useState(true);
+
+  // Load website copy from Supabase on mount
+  useEffect(() => {
+    const loadCopy = async () => {
+      const { data } = await supabase
+        .from('website_copy')
+        .select('content')
+        .eq('id', 'main')
+        .maybeSingle();
+      if (data?.content && typeof data.content === 'object' && Object.keys(data.content as object).length > 0) {
+        const stored = data.content as any;
+        setCopy({
+          homePage: { ...DEFAULT_COPY.homePage, ...stored.homePage },
+          navigation: { ...DEFAULT_COPY.navigation, ...stored.navigation },
+          productCategories: { ...DEFAULT_COPY.productCategories, ...stored.productCategories },
+        });
+      }
+      setCopyLoading(false);
+    };
+    loadCopy();
+  }, []);
 
   // About & Gallery Content (Content Management)
   const { content: aboutContent, loading: aboutLoading, saveContent: saveAboutContent, addTeamMember, updateTeamMember, deleteTeamMember } = useAboutContent();
@@ -147,9 +87,15 @@ const AdminWebsiteCopy = () => {
   // Handlers for Website Copy editors
   const handleSave = async () => {
     try {
-      // Save to localStorage so useWebsiteCopy hook can read it
-      localStorage.setItem("websiteCopy", JSON.stringify(copy));
-      // Notify all consuming components to re-read
+      // Save website copy to Supabase
+      const { error } = await supabase
+        .from('website_copy')
+        .update({ content: copy as any, updated_at: new Date().toISOString() })
+        .eq('id', 'main');
+
+      if (error) throw error;
+
+      // Notify in-app components to refresh
       window.dispatchEvent(new Event("websiteCopyUpdated"));
       
       // Save About Us changes to Supabase if there are any

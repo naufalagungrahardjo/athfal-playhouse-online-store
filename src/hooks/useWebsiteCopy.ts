@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 type CopyField = { id: string; en: string };
 type HomePageCopy = {
@@ -31,7 +32,7 @@ type ProductCategoryCopy = {
   }
 };
 
-type WebsiteCopy = {
+export type WebsiteCopy = {
   homePage: HomePageCopy;
   navigation: NavigationCopy;
   productCategories: ProductCategoryCopy;
@@ -62,41 +63,69 @@ const DEFAULT_COPY: WebsiteCopy = {
   productCategories: {}
 };
 
-function readFromStorage(): WebsiteCopy {
-  try {
-    const stored = localStorage.getItem("websiteCopy");
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      // Deep merge with defaults to ensure all fields exist
-      return {
-        homePage: { ...DEFAULT_COPY.homePage, ...parsed.homePage },
-        navigation: { ...DEFAULT_COPY.navigation, ...parsed.navigation },
-        productCategories: { ...DEFAULT_COPY.productCategories, ...parsed.productCategories },
-      };
-    }
-  } catch {
-    // ignore
-  }
-  return DEFAULT_COPY;
+function mergeCopy(stored: any): WebsiteCopy {
+  if (!stored) return DEFAULT_COPY;
+  return {
+    homePage: { ...DEFAULT_COPY.homePage, ...stored.homePage },
+    navigation: { ...DEFAULT_COPY.navigation, ...stored.navigation },
+    productCategories: { ...DEFAULT_COPY.productCategories, ...stored.productCategories },
+  };
 }
 
 export function useWebsiteCopy() {
-  // Initialize synchronously from localStorage so first render has correct data
-  const [copy, setCopy] = useState<WebsiteCopy>(readFromStorage);
+  const [copy, setCopy] = useState<WebsiteCopy>(DEFAULT_COPY);
+  const [loading, setLoading] = useState(true);
 
-  const loadFromStorage = useCallback(() => {
-    setCopy(readFromStorage());
+  const fetchCopy = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('website_copy')
+        .select('content')
+        .eq('id', 'main')
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching website copy:', error);
+        return;
+      }
+
+      if (data?.content && typeof data.content === 'object' && Object.keys(data.content as object).length > 0) {
+        setCopy(mergeCopy(data.content));
+      }
+    } catch (err) {
+      console.error('Error fetching website copy:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    const handleUpdate = () => loadFromStorage();
-    window.addEventListener("websiteCopyUpdated", handleUpdate);
-    window.addEventListener("storage", handleUpdate);
-    return () => {
-      window.removeEventListener("websiteCopyUpdated", handleUpdate);
-      window.removeEventListener("storage", handleUpdate);
-    };
-  }, [loadFromStorage]);
+    fetchCopy();
 
-  return { copy };
+    // Listen for real-time updates
+    const channel = supabase
+      .channel('website_copy_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'website_copy',
+        filter: 'id=eq.main'
+      }, () => {
+        fetchCopy();
+      })
+      .subscribe();
+
+    // Also listen for in-app event (for same-tab updates)
+    const handleUpdate = () => fetchCopy();
+    window.addEventListener("websiteCopyUpdated", handleUpdate);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener("websiteCopyUpdated", handleUpdate);
+    };
+  }, [fetchCopy]);
+
+  return { copy, loading };
 }
+
+export { DEFAULT_COPY };
