@@ -29,7 +29,8 @@ export default function PromoCodeInput({ appliedPromo, onApplyPromo, onRemovePro
   const { toast } = useToast();
 
   const handleApplyPromo = async () => {
-    if (!promoCode.trim()) {
+    const trimmed = promoCode.trim().toUpperCase();
+    if (!trimmed) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -38,21 +39,35 @@ export default function PromoCodeInput({ appliedPromo, onApplyPromo, onRemovePro
       return;
     }
 
+    if (trimmed.length > 50) {
+      toast({
+        variant: "destructive",
+        title: "Code too long",
+        description: "Promo code must be 50 characters or less"
+      });
+      return;
+    }
+
+    if (!/^[A-Z0-9]+$/.test(trimmed)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid format",
+        description: "Use only letters and numbers"
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('promo_codes')
-        .select('*')
-        .eq('code', promoCode.trim().toUpperCase())
-        .eq('is_active', true)
-        .maybeSingle();
+        .rpc('validate_promo_code', { code_input: trimmed });
 
       if (error) {
-        console.error('Error fetching promo code:', error);
+        console.error('Error validating promo code:', error);
         throw error;
       }
 
-      if (!data) {
+      if (!data || data.length === 0) {
         toast({
           variant: "destructive",
           title: "Invalid Code",
@@ -61,44 +76,26 @@ export default function PromoCodeInput({ appliedPromo, onApplyPromo, onRemovePro
         return;
       }
 
-      // Validate date range
-      const now = new Date();
-      if (data.valid_from && new Date(data.valid_from) > now) {
-        toast({
-          variant: "destructive",
-          title: "Not Active Yet",
-          description: "This promo code is not active yet"
-        });
-        return;
-      }
+      const promo = data[0];
+      const appliedPromo: PromoCode = {
+        id: promo.id,
+        code: promo.code,
+        discount_percentage: promo.discount_percentage,
+        description: null,
+        is_active: true,
+        valid_from: null,
+        valid_until: null,
+        usage_limit: null,
+        usage_count: 0,
+      };
 
-      if (data.valid_until && new Date(data.valid_until) < now) {
-        toast({
-          variant: "destructive",
-          title: "Expired",
-          description: "This promo code has expired"
-        });
-        return;
-      }
-
-      // Check usage limit
-      if (data.usage_limit !== null && data.usage_count >= data.usage_limit) {
-        toast({
-          variant: "destructive",
-          title: "Limit Reached",
-          description: "This promo code has reached its usage limit"
-        });
-        return;
-      }
-
-      // Apply the promo code
-      onApplyPromo(data);
-      localStorage.setItem('appliedPromo', JSON.stringify(data));
+      onApplyPromo(appliedPromo);
+      localStorage.setItem('appliedPromo', JSON.stringify(appliedPromo));
       setPromoCode('');
       
       toast({
         title: "Success!",
-        description: `${data.discount_percentage}% discount applied`
+        description: `${promo.discount_percentage}% discount applied`
       });
     } catch (error) {
       console.error('Error applying promo code:', error);

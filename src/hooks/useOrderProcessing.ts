@@ -152,7 +152,7 @@ export const useOrderProcessing = () => {
         toast({
           variant: "destructive",
           title: "Order Failed",
-          description: `Supabase error: ${orderError.message || JSON.stringify(orderError)} [${errorId}]`
+          description: `An error occurred while placing your order. Please try again. [${errorId}]`
         });
         setProcessing(false);
         return { success: false };
@@ -180,7 +180,7 @@ export const useOrderProcessing = () => {
         toast({
           variant: "destructive",
           title: "Order Item Failed",
-          description: `Supabase error: ${itemsError.message || "Unknown error!"} [${errorId}]`
+          description: `An error occurred while saving order items. Please try again. [${errorId}]`
         });
         setProcessing(false);
         return { success: false };
@@ -209,7 +209,7 @@ export const useOrderProcessing = () => {
       toast({
         variant: "destructive",
         title: "Order Failed",
-        description: `JS Error: ${(error && error.message) || JSON.stringify(error)} [${errorId}]`
+        description: `An unexpected error occurred. Please try again. [${errorId}]`
       });
       setProcessing(false);
       return { success: false };
