@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock } from "lucide-react";
 import { Product } from "@/contexts/CartContext";
+import DOMPurify from "dompurify";
 
 interface ProductTabsProps {
   product: Product;
@@ -34,7 +35,7 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ product, language, formatCurr
         <TabsContent value="description" className="py-6">
           <div 
             className="prose prose-sm max-w-none text-gray-700"
-            dangerouslySetInnerHTML={{ __html: formatDescription(product.description) }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formatDescription(product.description), { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'a', 'div', 'span', 'blockquote', 'pre', 'code', 'hr'], ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'style', 'target', 'rel'] }) }}
           />
         </TabsContent>
       <TabsContent value="details" className="py-6">
