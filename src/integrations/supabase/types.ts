@@ -547,6 +547,24 @@ export type Database = {
         }
         Relationships: []
       }
+      website_copy: {
+        Row: {
+          content: Json
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
