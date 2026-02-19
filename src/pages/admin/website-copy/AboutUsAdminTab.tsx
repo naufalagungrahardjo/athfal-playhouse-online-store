@@ -43,9 +43,7 @@ const AboutUsAdminTab = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* --- Hero Title/Subtitle fields --- */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* ... keep hero title inputs ... */}
             <div className="space-y-2">
               <Label>Hero Title (Indonesian)</Label>
               <Input
@@ -71,47 +69,8 @@ const AboutUsAdminTab = ({
           />
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Mission Section</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Mission Title (Indonesian)</Label>
-              <Input
-                value={aboutContent.missionTitle.id}
-                onChange={(e) => onContentChange('missionTitle', 'id', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Mission Title (English)</Label>
-              <Input
-                value={aboutContent.missionTitle.en}
-                onChange={(e) => onContentChange('missionTitle', 'en', e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Mission Description (Indonesian)</Label>
-              <Textarea
-                rows={4}
-                value={aboutContent.missionDescription.id}
-                onChange={(e) => onContentChange('missionDescription', 'id', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Mission Description (English)</Label>
-              <Textarea
-                rows={4}
-                value={aboutContent.missionDescription.en}
-                onChange={(e) => onContentChange('missionDescription', 'en', e.target.value)}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+
+      {/* Vision Section (before Mission) */}
       <Card>
         <CardHeader>
           <CardTitle>Vision Section</CardTitle>
@@ -153,6 +112,51 @@ const AboutUsAdminTab = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* Mission Section (after Vision) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Mission Section</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Mission Title (Indonesian)</Label>
+              <Input
+                value={aboutContent.missionTitle.id}
+                onChange={(e) => onContentChange('missionTitle', 'id', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Mission Title (English)</Label>
+              <Input
+                value={aboutContent.missionTitle.en}
+                onChange={(e) => onContentChange('missionTitle', 'en', e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Mission Description (Indonesian)</Label>
+              <Textarea
+                rows={4}
+                value={aboutContent.missionDescription.id}
+                onChange={(e) => onContentChange('missionDescription', 'id', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Mission Description (English)</Label>
+              <Textarea
+                rows={4}
+                value={aboutContent.missionDescription.en}
+                onChange={(e) => onContentChange('missionDescription', 'en', e.target.value)}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Values Section */}
       <Card>
         <CardHeader>
           <CardTitle>Values Section</CardTitle>
@@ -194,6 +198,7 @@ const AboutUsAdminTab = ({
           </div>
         </CardContent>
       </Card>
+
       {/* Team Management */}
       <Card>
         <CardHeader>
@@ -219,12 +224,12 @@ const AboutUsAdminTab = ({
             </div>
           )}
           <div className="grid gap-4">
-            {aboutContent.teamMembers.map((member) => (
+            {aboutContent.teamMembers.map((member: TeamMember) => (
               <div key={member.id} className="flex items-center gap-4 p-4 border rounded-lg">
                 <img src={member.image} alt={member.name} className="w-16 h-16 rounded-full object-cover" />
                 <div className="flex-1">
                   <h4 className="font-medium">{member.name}</h4>
-                  <p className="text-sm text-gray-500">{member.title}</p>
+                  <p className="text-sm text-muted-foreground">{member.title}</p>
                 </div>
                 <div className="flex gap-2">
                   <Button
