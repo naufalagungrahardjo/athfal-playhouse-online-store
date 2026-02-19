@@ -65,8 +65,7 @@ const DEFAULT_COPY: WebsiteCopy = {
 export function useWebsiteCopy() {
   const [copy, setCopy] = useState<WebsiteCopy>(DEFAULT_COPY);
 
-  useEffect(() => {
-    // Pull from localStorage (AdminWebsiteCopy writes here);
+  const loadFromStorage = () => {
     const stored = localStorage.getItem("websiteCopy");
     if (stored) {
       try {
@@ -75,6 +74,19 @@ export function useWebsiteCopy() {
         setCopy(DEFAULT_COPY);
       }
     }
+  };
+
+  useEffect(() => {
+    loadFromStorage();
+
+    // Listen for changes from the CMS admin
+    const handleUpdate = () => loadFromStorage();
+    window.addEventListener("websiteCopyUpdated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener("websiteCopyUpdated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
   }, []);
 
   return { copy };

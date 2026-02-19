@@ -79,7 +79,8 @@ const WEBSITE_COPY = {
     products: { id: "Produk", en: "Products" },
     blog: { id: "Blog", en: "Blog" },
     contact: { id: "Kontak", en: "Contact" },
-    faq: { id: "FAQ", en: "FAQ" }
+    faq: { id: "FAQ", en: "FAQ" },
+    gallery: { id: "Galeri", en: "Gallery" }
   },
   productCategories: {
     popUpClass: {
@@ -148,6 +149,8 @@ const AdminWebsiteCopy = () => {
     try {
       // Save to localStorage so useWebsiteCopy hook can read it
       localStorage.setItem("websiteCopy", JSON.stringify(copy));
+      // Notify all consuming components to re-read
+      window.dispatchEvent(new Event("websiteCopyUpdated"));
       
       // Save About Us changes to Supabase if there are any
       if (hasAboutChanges) {
