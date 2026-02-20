@@ -73,6 +73,9 @@ export const usePromoCodes = () => {
         valid_until: promoCode.valid_until ? new Date(promoCode.valid_until).toISOString() : null,
         usage_limit: promoCode.usage_limit,
         usage_count: promoCode.usage_count || 0,
+        applies_to: promoCode.applies_to || 'all',
+        applicable_product_ids: promoCode.applicable_product_ids || [],
+        applicable_category_slugs: promoCode.applicable_category_slugs || [],
         updated_at: new Date().toISOString(),
       };
 
