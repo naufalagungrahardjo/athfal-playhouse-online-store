@@ -27,6 +27,9 @@ type PromoCode = {
   is_active: boolean;
   valid_from: string | null;
   valid_until: string | null;
+  applies_to?: string;
+  applicable_product_ids?: string[];
+  applicable_category_slugs?: string[];
 };
 
 const CartPage = () => {
@@ -156,12 +159,27 @@ const CartPage = () => {
     }
   };
 
-  // Calculate discount amount
+  // Check if a cart item is eligible for the applied promo
+  const isItemEligible = (item: typeof items[0]) => {
+    if (!appliedPromo) return false;
+    const appliesTo = appliedPromo.applies_to || 'all';
+    if (appliesTo === 'all') return true;
+    if (appliesTo === 'specific_products') {
+      return (appliedPromo.applicable_product_ids || []).includes(item.product.id);
+    }
+    if (appliesTo === 'specific_categories') {
+      return (appliedPromo.applicable_category_slugs || []).includes(item.product.category);
+    }
+    return false;
+  };
+
+  // Calculate discount amount (only on eligible items)
   const getDiscountAmount = () => {
     if (!appliedPromo) return 0;
-    
-    const subtotal = getSubtotal();
-    return subtotal * (appliedPromo.discount_percentage / 100);
+    const eligibleSubtotal = items
+      .filter(isItemEligible)
+      .reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    return eligibleSubtotal * (appliedPromo.discount_percentage / 100);
   };
   
   // Get discounted subtotal
@@ -174,8 +192,10 @@ const CartPage = () => {
     if (!appliedPromo) return getTaxAmount();
     
     return items.reduce((total, item) => {
-      const discountedPrice = item.product.price * (1 - (appliedPromo.discount_percentage / 100));
-      const itemTax = (discountedPrice * item.quantity) * (item.product.tax / 100);
+      const price = isItemEligible(item)
+        ? item.product.price * (1 - (appliedPromo.discount_percentage / 100))
+        : item.product.price;
+      const itemTax = (price * item.quantity) * (item.product.tax / 100);
       return total + itemTax;
     }, 0);
   };
