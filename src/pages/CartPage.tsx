@@ -67,17 +67,11 @@ const CartPage = () => {
     // Re-validate applied promo before navigating
     if (appliedPromo) {
       try {
-        const { data: promo, error } = await supabase
-          .from('promo_codes')
-          .select('id, code, is_active, valid_from, valid_until, usage_limit, usage_count')
-          .eq('id', appliedPromo.id)
-          .maybeSingle();
+        const { data, error } = await supabase
+          .rpc('validate_promo_code', { code_input: appliedPromo.code });
+        const promo = data && data.length > 0 ? data[0] : null;
 
-        const now = new Date();
-        const validFromOk = !promo?.valid_from || new Date(promo.valid_from) <= now;
-        const validUntilOk = !promo?.valid_until || new Date(promo.valid_until) >= now;
-
-        if (error || !promo || !promo.is_active || !validFromOk || !validUntilOk || (promo.usage_limit !== null && promo.usage_count >= promo.usage_limit)) {
+        if (error || !promo || !promo.is_valid) {
           // Invalidate promo and notify user
           setAppliedPromo(null);
           localStorage.removeItem('appliedPromo');
@@ -115,14 +109,11 @@ const CartPage = () => {
     setIsCheckingPromo(true);
     try {
       const code = couponCode.trim().toUpperCase();
-      // Fetch full promo info
-      const { data, error } = await supabase
-        .from('promo_codes')
-        .select('id, code, discount_percentage, description, is_active, valid_from, valid_until, usage_limit, usage_count')
-        .eq('code', code)
-        .maybeSingle();
+      // Validate promo via RPC
+      const { data: rpcData, error } = await supabase
+        .rpc('validate_promo_code', { code_input: code });
 
-      if (error || !data) {
+      if (error || !rpcData || rpcData.length === 0) {
         toast({
           variant: 'destructive',
           title: language === 'id' ? 'Kode promo tidak valid' : 'Invalid promo code',
@@ -131,28 +122,20 @@ const CartPage = () => {
         return;
       }
 
-      const now = new Date();
-      const validFromOk = !data.valid_from || new Date(data.valid_from) <= now;
-      const validUntilOk = !data.valid_until || new Date(data.valid_until) >= now;
-
-      if (!data.is_active || !validFromOk || !validUntilOk) {
-        toast({
-          variant: 'destructive',
-          title: language === 'id' ? 'Kode promo tidak aktif' : 'Promo not active',
-          description: language === 'id' ? 'Kode promo ini belum/tidak aktif.' : 'This promo is not active.'
-        });
-        return;
-      }
-
-      // Check usage limit
-      if (data.usage_limit !== null && data.usage_count >= data.usage_limit) {
-        toast({
-          variant: 'destructive',
-          title: language === 'id' ? 'Kuota promo habis' : 'Promo quota reached',
-          description: language === 'id' ? 'Kode promo ini sudah tidak dapat digunakan.' : 'This promo can no longer be used.'
-        });
-        return;
-      }
+      const data = {
+        id: rpcData[0].id,
+        code: rpcData[0].code,
+        discount_percentage: rpcData[0].discount_percentage,
+        description: null,
+        is_active: true,
+        valid_from: null,
+        valid_until: null,
+        usage_limit: null,
+        usage_count: 0,
+        applies_to: rpcData[0].applies_to || 'all',
+        applicable_product_ids: rpcData[0].applicable_product_ids || [],
+        applicable_category_slugs: rpcData[0].applicable_category_slugs || [],
+      };
 
       // Apply the promo code
       setAppliedPromo(data as PromoCode);
