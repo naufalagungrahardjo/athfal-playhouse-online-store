@@ -29,11 +29,7 @@ export const DeleteAccountButton = () => {
   const handleDelete = async () => {
     setLoading(true);
     try {
-      // 1. Delete from Supabase Auth (must be logged in)
-      const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
-      if (authError) throw authError;
-
-      // 2. Delete from public.users via current auth (RLS handles user-only delete)
+      // Delete from public.users via RLS (user can delete own account)
       const { error: dbError } = await supabase.from("users").delete().eq("id", user.id);
       if (dbError) throw dbError;
 
