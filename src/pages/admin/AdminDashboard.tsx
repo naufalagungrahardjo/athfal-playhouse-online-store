@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useDashboard } from '@/hooks/useDashboard';
 import { ClickableStatsCard } from '@/components/admin/ClickableStatsCard';
 import { OrderManagement } from '@/components/admin/OrderManagement';
@@ -17,10 +18,19 @@ import {
   Truck
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { getAdminRole } from './helpers/getAdminRole';
 
 const AdminDashboard = () => {
   const { stats, loading, fetchDashboardStats } = useDashboard();
   const [selectedView, setSelectedView] = useState<string | null>(null);
+  const { user } = useAuth();
+  const adminRole = getAdminRole(user);
+
+  // Content manager & content staff should go directly to blogs
+  if (adminRole === 'content_manager' || adminRole === 'content_staff') {
+    return <Navigate to="/admin/blogs" replace />;
+  }
 
   const handleCloseDialog = () => {
     setSelectedView(null);
@@ -34,6 +44,8 @@ const AdminDashboard = () => {
     );
   }
 
+  const showRevenue = adminRole !== 'order_staff';
+
   return (
     <div className="space-y-6">
       <div>
@@ -43,20 +55,24 @@ const AdminDashboard = () => {
         </p>
       </div>
 
-      {/* Revenue Stats */}
+      {/* Revenue & Summary Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <ClickableStatsCard
-          title="Revenue (Before Tax)"
-          value={formatCurrency(stats.revenueBeforeTax)}
-          icon={DollarSign}
-          onClick={() => setSelectedView('orders')}
-        />
-        <ClickableStatsCard
-          title="Revenue (After Tax)"
-          value={formatCurrency(stats.revenueAfterTax)}
-          icon={TrendingUp}
-          onClick={() => setSelectedView('orders')}
-        />
+        {showRevenue && (
+          <>
+            <ClickableStatsCard
+              title="Revenue (Before Tax)"
+              value={formatCurrency(stats.revenueBeforeTax)}
+              icon={DollarSign}
+              onClick={() => setSelectedView('orders')}
+            />
+            <ClickableStatsCard
+              title="Revenue (After Tax)"
+              value={formatCurrency(stats.revenueAfterTax)}
+              icon={TrendingUp}
+              onClick={() => setSelectedView('orders')}
+            />
+          </>
+        )}
         <ClickableStatsCard
           title="Total Products"
           value={stats.totalProducts}
