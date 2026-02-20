@@ -103,8 +103,14 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
     const whatsappNumber = '082120614748';
     const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/^0/, '62')}?text=${encodedMessage}`;
     
-    // Redirect to WhatsApp
-    window.open(whatsappUrl, '_blank');
+    // Redirect to WhatsApp - use a temporary anchor element for reliable opening
+    const link = document.createElement('a');
+    link.href = whatsappUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (loading) {
