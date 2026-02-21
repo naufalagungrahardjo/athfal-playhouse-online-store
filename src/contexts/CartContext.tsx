@@ -71,6 +71,36 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     fetchProducts();
   }, []);
 
+  // Realtime stock sync: update cart items when product stock changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('cart-stock-sync')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'products' },
+        (payload) => {
+          const updated = payload.new as any;
+          // Update the stock in cart items that match this product
+          setItems(prev => prev.map(item =>
+            item.product.id === updated.product_id
+              ? { ...item, product: { ...item.product, stock: updated.stock } }
+              : item
+          ));
+          // Also update products list
+          setProducts(prev => prev.map(p =>
+            p.id === updated.product_id
+              ? { ...p, stock: updated.stock }
+              : p
+          ));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(items));
   }, [items]);

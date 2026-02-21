@@ -64,8 +64,61 @@ const CartPage = () => {
     localStorage.removeItem('appliedPromo');
   };
 
+  // Check if any cart item is sold out
+  const hasSoldOutItems = items.some(item => item.product.stock <= 0);
+  // Check if any item exceeds available stock
+  const hasOverStockItems = items.some(item => item.quantity > item.product.stock && item.product.stock > 0);
+
   const handleCheckout = async () => {
     if (items.length === 0) return;
+
+    // Block checkout if any item is sold out
+    if (hasSoldOutItems) {
+      toast({
+        variant: 'destructive',
+        title: language === 'id' ? 'Produk habis' : 'Product sold out',
+        description: language === 'id' 
+          ? 'Beberapa produk di keranjang Anda sudah habis. Silakan hapus terlebih dahulu.'
+          : 'Some products in your cart are sold out. Please remove them first.'
+      });
+      return;
+    }
+
+    // Validate stock from database before proceeding
+    const productIds = items.map(item => item.product.id);
+    const { data: freshStock, error: stockError } = await supabase
+      .from('products')
+      .select('product_id, stock, name')
+      .in('product_id', productIds);
+
+    if (stockError || !freshStock) {
+      toast({
+        variant: 'destructive',
+        title: language === 'id' ? 'Gagal memeriksa stok' : 'Stock check failed',
+        description: language === 'id' ? 'Silakan coba lagi.' : 'Please try again.'
+      });
+      return;
+    }
+
+    for (const item of items) {
+      const fresh = freshStock.find(p => p.product_id === item.product.id);
+      if (!fresh || fresh.stock <= 0) {
+        toast({
+          variant: 'destructive',
+          title: language === 'id' ? 'Produk habis' : 'Product sold out',
+          description: `${fresh?.name || item.product.name} ${language === 'id' ? 'sudah habis' : 'is sold out'}.`
+        });
+        return;
+      }
+      if (item.quantity > fresh.stock) {
+        toast({
+          variant: 'destructive',
+          title: language === 'id' ? 'Stok tidak cukup' : 'Insufficient stock',
+          description: `${fresh.name}: ${language === 'id' ? `hanya tersisa ${fresh.stock}` : `only ${fresh.stock} available`}.`
+        });
+        return;
+      }
+    }
 
     // Re-validate applied promo before navigating
     if (appliedPromo) {
@@ -259,16 +312,23 @@ const CartPage = () => {
               <Card className="bg-white rounded-3xl shadow-md overflow-hidden">
                 <CardContent className="p-6">
                   <div className="space-y-6">
-                    {items.map((item) => (
+                    {items.map((item) => {
+                      const isSoldOut = item.product.stock <= 0;
+                      return (
                       <div key={item.product.id}>
-                        <div className="flex flex-col sm:flex-row items-start gap-4">
+                        <div className={`flex flex-col sm:flex-row items-start gap-4 ${isSoldOut ? 'opacity-60' : ''}`}>
                           {/* Product image */}
-                          <div className="w-full sm:w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
+                          <div className={`w-full sm:w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative ${isSoldOut ? 'grayscale' : ''}`}>
                             <img 
                               src={item.product.image} 
                               alt={item.product.name} 
                               className="w-full h-full object-cover"
                             />
+                            {isSoldOut && (
+                              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                <span className="bg-red-600 text-white font-bold px-2 py-1 rounded text-xs">SOLD OUT</span>
+                              </div>
+                            )}
                           </div>
                           
                           {/* Product details */}
@@ -281,9 +341,13 @@ const CartPage = () => {
                               </Link>
                               
                               <div className="mt-2 sm:mt-0">
-                                <p className="font-bold text-athfal-green">
-                                  {formatCurrency(item.product.price * item.quantity)}
-                                </p>
+                                {isSoldOut ? (
+                                  <p className="font-bold text-red-600">SOLD OUT</p>
+                                ) : (
+                                  <p className="font-bold text-athfal-green">
+                                    {formatCurrency(item.product.price * item.quantity)}
+                                  </p>
+                                )}
                               </div>
                             </div>
                             
@@ -296,48 +360,68 @@ const CartPage = () => {
                               'Merchandise & Others'}
                             </p>
                             
-                            <div className="flex justify-between items-center">
-                              {/* Quantity selector */}
-                              <div className="flex items-center">
+                            {isSoldOut ? (
+                              <div className="flex justify-between items-center">
+                                <p className="text-red-600 text-sm font-medium">
+                                  {language === 'id' ? 'Produk ini sudah habis' : 'This product is sold out'}
+                                </p>
                                 <Button
-                                  variant="outline" 
-                                  size="icon"
-                                  onClick={() => handleDecreaseQuantity(item.product.id, item.quantity)}
-                                  disabled={item.quantity <= 1}
-                                  className="h-8 w-8"
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => handleRemoveItem(item.product.id)}
+                                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
                                 >
-                                  <Minus className="h-3 w-3" />
-                                </Button>
-                                <span className="mx-3 w-6 text-center">{item.quantity}</span>
-                                <Button
-                                  variant="outline" 
-                                  size="icon"
-                                  onClick={() => handleIncreaseQuantity(item.product.id, item.quantity, item.product.stock)}
-                                  disabled={item.product.stock <= item.quantity}
-                                  className="h-8 w-8"
-                                >
-                                  <Plus className="h-3 w-3" />
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  <span className="hidden sm:inline">
+                                    {language === 'id' ? 'Hapus' : 'Remove'}
+                                  </span>
                                 </Button>
                               </div>
-                              
-                              {/* Remove button */}
-                              <Button
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => handleRemoveItem(item.product.id)}
-                                className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-4 w-4 mr-1" />
-                                <span className="hidden sm:inline">
-                                  {language === 'id' ? 'Hapus' : 'Remove'}
-                                </span>
-                              </Button>
-                            </div>
+                            ) : (
+                              <div className="flex justify-between items-center">
+                                {/* Quantity selector */}
+                                <div className="flex items-center">
+                                  <Button
+                                    variant="outline" 
+                                    size="icon"
+                                    onClick={() => handleDecreaseQuantity(item.product.id, item.quantity)}
+                                    disabled={item.quantity <= 1}
+                                    className="h-8 w-8"
+                                  >
+                                    <Minus className="h-3 w-3" />
+                                  </Button>
+                                  <span className="mx-3 w-6 text-center">{item.quantity}</span>
+                                  <Button
+                                    variant="outline" 
+                                    size="icon"
+                                    onClick={() => handleIncreaseQuantity(item.product.id, item.quantity, item.product.stock)}
+                                    disabled={item.product.stock <= item.quantity}
+                                    className="h-8 w-8"
+                                  >
+                                    <Plus className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                                
+                                {/* Remove button */}
+                                <Button
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => handleRemoveItem(item.product.id)}
+                                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  <span className="hidden sm:inline">
+                                    {language === 'id' ? 'Hapus' : 'Remove'}
+                                  </span>
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <Separator className="mt-6" />
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   <div className="mt-6 flex justify-between">
@@ -443,10 +527,22 @@ const CartPage = () => {
                     </div>
                   </div>
 
+                  {/* Sold out warning */}
+                  {hasSoldOutItems && (
+                    <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+                      <p className="text-red-600 text-sm font-medium">
+                        {language === 'id' 
+                          ? 'Beberapa produk di keranjang sudah habis. Hapus terlebih dahulu untuk melanjutkan.'
+                          : 'Some products in your cart are sold out. Remove them to proceed.'}
+                      </p>
+                    </div>
+                  )}
+
                   {/* Checkout button */}
                   <Button 
                     onClick={handleCheckout}
                     className="w-full bg-athfal-pink hover:bg-athfal-pink/80 text-white text-lg py-6"
+                    disabled={hasSoldOutItems || hasOverStockItems}
                   >
                     {language === 'id' ? 'Lanjutkan ke Pembayaran' : 'Proceed to Checkout'}
                   </Button>
