@@ -29,6 +29,31 @@ export const useOrderProcessing = () => {
       const errorId = `ORD-${Date.now()}`;
       console.log(`[${errorId}] Processing order:`, orderData);
 
+      // Validate stock from database before proceeding
+      for (const item of orderData.items) {
+        const { data: productData, error: stockError } = await supabase
+          .from('products')
+          .select('stock, name')
+          .eq('product_id', item.product.id)
+          .single();
+
+        if (stockError || !productData) {
+          toast({ variant: "destructive", title: "Stock Error", description: `Could not verify stock for ${item.product.name}. [${errorId}]` });
+          setProcessing(false);
+          return { success: false };
+        }
+        if (productData.stock <= 0) {
+          toast({ variant: "destructive", title: "Product Sold Out", description: `${productData.name} is sold out. Please remove it from your cart.` });
+          setProcessing(false);
+          return { success: false };
+        }
+        if (item.quantity > productData.stock) {
+          toast({ variant: "destructive", title: "Insufficient Stock", description: `Only ${productData.stock} of ${productData.name} available.` });
+          setProcessing(false);
+          return { success: false };
+        }
+      }
+
       // Validate required fields for guest orders
       if (
         !orderData.customerName ||

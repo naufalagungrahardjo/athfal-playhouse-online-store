@@ -103,12 +103,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addToCart = (product: Product, quantity: number = 1) => {
+    if (product.stock <= 0) {
+      return; // Cannot add out-of-stock products
+    }
     setItems(prev => {
       const existingItem = prev.find(item => item.product.id === product.id);
+      const currentQty = existingItem ? existingItem.quantity : 0;
+      const newQty = Math.min(currentQty + quantity, product.stock);
+      if (newQty <= currentQty) {
+        return prev; // Already at max stock
+      }
       if (existingItem) {
         return prev.map(item =>
           item.product.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: newQty }
             : item
         );
       } else {
@@ -117,7 +125,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           name: product.name,
           price: product.price,
           product,
-          quantity
+          quantity: Math.min(quantity, product.stock)
         }];
       }
     });
