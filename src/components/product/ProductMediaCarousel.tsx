@@ -55,13 +55,13 @@ export const ProductMediaCarousel = ({ media, productName }: ProductMediaCarouse
   return (
     <div className="space-y-4">
       {/* Main media display - fixed 450x450 */}
-      <div className="relative rounded-3xl overflow-hidden shadow-lg mx-auto" style={{ width: 450, height: 450, maxWidth: '100%' }}>
+      <div className="relative rounded-3xl overflow-hidden shadow-lg mx-auto bg-muted" style={{ width: 450, height: 450, maxWidth: '100%', aspectRatio: '1/1' }}>
         {currentMedia.type === 'image' ? (
           <img
             src={currentMedia.url}
             alt={`${productName} - Image ${currentIndex + 1}`}
-            className="w-full h-full object-cover cursor-pointer"
-            style={{ width: 450, height: 450 }}
+            className="w-full h-full object-contain cursor-pointer"
+            style={{ maxWidth: 450, maxHeight: 450 }}
             onClick={() => {
               const imgIdx = imageMedia.findIndex(m => m.url === currentMedia.url);
               openLightbox(imgIdx >= 0 ? imgIdx : 0);
@@ -141,7 +141,7 @@ export const ProductMediaCarousel = ({ media, productName }: ProductMediaCarouse
                 src={imageMedia[lightboxIndex]?.url}
                 alt={`${productName} - Full size`}
                 className="object-contain rounded-lg"
-                style={{ width: 800, height: 800, maxWidth: '100%', maxHeight: '80vh' }}
+                style={{ maxWidth: 800, maxHeight: '80vh' }}
               />
             )}
 
