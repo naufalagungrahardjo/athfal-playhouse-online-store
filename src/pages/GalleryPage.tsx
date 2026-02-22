@@ -1,8 +1,42 @@
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGalleryContent } from "@/hooks/useGalleryContent";
 import { getVideoSource } from "@/components/admin/VideoUrlInput";
+
+const InstagramEmbed = ({ url, title }: { url: string; title: string }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Extract the reel/post ID from embed URL
+  const getPostUrl = (embedUrl: string) => {
+    const match = embedUrl.match(/instagram\.com\/(?:reel|p|tv)\/([A-Za-z0-9_-]+)/);
+    if (match) return `https://www.instagram.com/reel/${match[1]}/`;
+    return embedUrl.replace('/embed/', '/').replace('/embed', '/');
+  };
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const postUrl = getPostUrl(url);
+    
+    containerRef.current.innerHTML = `
+      <blockquote class="instagram-media" data-instgrm-captioned data-instgrm-permalink="${postUrl}" data-instgrm-version="14" style="width:100%;max-width:540px;margin:0 auto;">
+        <a href="${postUrl}" target="_blank">${title}</a>
+      </blockquote>
+    `;
+
+    // Load or re-process Instagram embed script
+    if ((window as any).instgrm) {
+      (window as any).instgrm.Embeds.process();
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://www.instagram.com/embed.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, [url, title]);
+
+  return <div ref={containerRef} className="w-full flex justify-center" />;
+};
 
 const GalleryPage = () => {
   const { language } = useLanguage();
@@ -15,16 +49,7 @@ const GalleryPage = () => {
     const source = getVideoSource(url);
 
     if (source === 'instagram') {
-      return (
-        <div className="relative w-full" style={{ paddingBottom: "125%" }}>
-          <iframe
-            src={url}
-            title={title}
-            allowFullScreen
-            className="absolute top-0 left-0 w-full h-full rounded-xl border-0"
-          />
-        </div>
-      );
+      return <InstagramEmbed url={url} title={title} />;
     }
 
     // YouTube or other (default 16:9)
