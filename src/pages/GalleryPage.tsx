@@ -2,6 +2,7 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGalleryContent } from "@/hooks/useGalleryContent";
+import { getVideoSource } from "@/components/admin/VideoUrlInput";
 
 const GalleryPage = () => {
   const { language } = useLanguage();
@@ -9,6 +10,36 @@ const GalleryPage = () => {
 
   const videoItems = content.items.filter(item => item.type === 'video');
   const imageItems = content.items.filter(item => item.type === 'image');
+
+  const renderVideoEmbed = (url: string, title: string) => {
+    const source = getVideoSource(url);
+
+    if (source === 'instagram') {
+      return (
+        <div className="relative w-full" style={{ paddingBottom: "125%" }}>
+          <iframe
+            src={url}
+            title={title}
+            allowFullScreen
+            className="absolute top-0 left-0 w-full h-full rounded-xl border-0"
+          />
+        </div>
+      );
+    }
+
+    // YouTube or other (default 16:9)
+    return (
+      <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+        <iframe
+          src={url}
+          title={title}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="absolute top-0 left-0 w-full h-full rounded-xl"
+        />
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen">
@@ -41,15 +72,7 @@ const GalleryPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {videoItems.map((video) => (
                 <div key={video.id} className="space-y-2">
-                  <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-                    <iframe 
-                      src={video.url} 
-                      title={video.title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                      allowFullScreen
-                      className="absolute top-0 left-0 w-full h-full rounded-xl"
-                    ></iframe>
-                  </div>
+                  {renderVideoEmbed(video.url, video.title)}
                   <h3 className="font-semibold text-athfal-pink">{video.title}</h3>
                   <p className="text-sm text-gray-600">{video.description}</p>
                 </div>
@@ -87,7 +110,6 @@ const GalleryPage = () => {
           </div>
         )}
 
-        {/* Fallback message if no content */}
         {content.items.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500">
