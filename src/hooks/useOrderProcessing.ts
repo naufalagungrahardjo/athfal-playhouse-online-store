@@ -117,14 +117,14 @@ export const useOrderProcessing = () => {
           return { success: false };
         }
 
-        // Reserve the usage slot by incrementing now (atomic guard on previous usage_count)
-        const { data: updatedPromo, error: promoIncError } = await supabase
-          .from('promo_codes')
-          .update({ usage_count: promoCheck.usage_count + 1 })
-          .eq('id', orderData.promoCodeId)
-          .eq('usage_count', promoCheck.usage_count)
-          .select('usage_count')
-          .maybeSingle();
+        // Reserve the usage slot atomically via secure RPC
+        const { data: reserved, error: promoIncError } = await supabase
+          .rpc('increment_promo_usage', {
+            promo_id: orderData.promoCodeId,
+            expected_count: promoCheck.usage_count
+          });
+
+        const updatedPromo = reserved ? { usage_count: promoCheck.usage_count + 1 } : null;
 
         if (promoIncError || !updatedPromo) {
           console.error(`[${errorId}] Failed to reserve promo usage:`, promoIncError);
