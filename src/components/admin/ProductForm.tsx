@@ -58,11 +58,21 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
   useEffect(() => {
     if (editingProduct) {
       const media = editingProduct.media || [];
-      // If no cover image set but media exists, use the first image
+      // Strip cache-busting params from cover image for comparison
       let coverImage = editingProduct.image;
+      const stripCacheBuster = (url: string) => url.replace(/[?&]v=\d+$/, '');
+      const strippedCover = coverImage ? stripCacheBuster(coverImage) : '';
+      
+      // Check if the cover image exists in media (with or without cache buster)
+      const coverInMedia = media.some(m => m.type === 'image' && (m.url === coverImage || stripCacheBuster(m.url) === strippedCover));
+      
       if (!coverImage && media.length > 0) {
         const firstImage = media.find(m => m.type === 'image');
         coverImage = firstImage?.url || '';
+      } else if (coverImage && !coverInMedia && media.length >= 0) {
+        // Cover image exists but isn't in media array — use stripped version as cover
+        // and ensure it's visible in the media list
+        coverImage = strippedCover || coverImage;
       }
       
       setFormData({
@@ -108,13 +118,9 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
 
     try {
       if (editingProduct) {
-        // Ensure new images always bypass cache by appending a fresh query param
         let imageUrl = formData.image;
-        const isChanged = formData.image !== editingProduct.image;
-        if (formData.image && isChanged) {
-          const separator = imageUrl.includes('?') ? '&' : '?';
-          imageUrl = `${imageUrl}${separator}v=${Date.now()}`;
-        }
+        // Strip any existing cache-busting params to keep URL clean
+        imageUrl = imageUrl.replace(/[?&]v=\d+$/, '');
 
         const { error } = await supabase
           .from('products')

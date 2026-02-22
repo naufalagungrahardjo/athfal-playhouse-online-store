@@ -21,6 +21,12 @@ export const ProductMediaUpload = ({ value, onChange, coverImage, onCoverChange 
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [showVideoUpload, setShowVideoUpload] = useState(false);
 
+  const stripCacheBuster = (url: string) => url?.replace(/[?&]v=\d+$/, '') || '';
+  const isCover = (url: string) => {
+    if (!coverImage) return false;
+    return url === coverImage || stripCacheBuster(url) === stripCacheBuster(coverImage);
+  };
+
   const handleAddImage = (url: string) => {
     const newMedia = [...value, { url, type: 'image' as const }];
     onChange(newMedia);
@@ -42,7 +48,7 @@ export const ProductMediaUpload = ({ value, onChange, coverImage, onCoverChange 
     onChange(newMedia);
     
     // If removed item was the cover, set new cover from remaining images
-    if (removed.url === coverImage && onCoverChange) {
+    if (isCover(removed.url) && onCoverChange) {
       const firstImage = newMedia.find(m => m.type === 'image');
       onCoverChange(firstImage?.url || '');
     }
@@ -67,7 +73,7 @@ export const ProductMediaUpload = ({ value, onChange, coverImage, onCoverChange 
               <img
                 src={media.url}
                 alt={`Product media ${index + 1}`}
-                className={`w-full h-32 object-cover rounded-lg border-2 ${coverImage === media.url ? 'border-primary ring-2 ring-primary' : 'border-border'}`}
+                className={`w-full h-32 object-cover rounded-lg border-2 ${isCover(media.url) ? 'border-primary ring-2 ring-primary' : 'border-border'}`}
               />
             ) : (
               <div className="w-full h-32 bg-muted rounded-lg border flex items-center justify-center">
@@ -75,13 +81,13 @@ export const ProductMediaUpload = ({ value, onChange, coverImage, onCoverChange 
               </div>
             )}
             {/* Cover indicator */}
-            {media.type === 'image' && coverImage === media.url && (
+            {media.type === 'image' && isCover(media.url) && (
               <div className="absolute top-2 left-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs font-medium">
                 Cover
               </div>
             )}
             {/* Set as cover button (only for images) */}
-            {media.type === 'image' && coverImage !== media.url && (
+            {media.type === 'image' && !isCover(media.url) && (
               <button
                 type="button"
                 onClick={() => handleSetCover(media.url)}
