@@ -17,7 +17,7 @@ export const TestimonialsSection = () => {
     if (!emblaApi || activeTestimonials.length <= 1) return;
     const interval = setInterval(() => {
       emblaApi.scrollNext();
-    }, 3000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [emblaApi, activeTestimonials.length]);
 
