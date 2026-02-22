@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export type ProductCategory = 'pop-up-class' | 'bumi-class' | 'tahsin-class' | 'play-kit' | 'consultation' | 'merchandise';
+export type ProductCategory = string;
 
 // NOTE: schedule property has been fully removed from Product interface
 export interface Product {
