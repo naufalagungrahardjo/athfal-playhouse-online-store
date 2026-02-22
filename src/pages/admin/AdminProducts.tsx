@@ -24,7 +24,6 @@ const AdminProducts = () => {
     setLoading(true);
     const data = await fetchProducts();
     const formatted: StrictProductFormData[] = (data || []).map((p: any) => ({
-      // Make sure 'id' is always present and 'category' is typed correctly
       id: p.id,
       product_id: p.product_id,
       name: p.name,
@@ -35,6 +34,8 @@ const AdminProducts = () => {
       category: p.category as ProductCategory,
       tax: p.tax,
       stock: p.stock,
+      first_payment: p.first_payment ?? 0,
+      installment: p.installment ?? 0,
     }));
     setProducts(formatted);
     setLoading(false);

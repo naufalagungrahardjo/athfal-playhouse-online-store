@@ -23,6 +23,8 @@ interface ProductFormData {
   category: ProductCategory;
   tax: number;
   stock: number;
+  first_payment: number;
+  installment: number;
 }
 
 interface ProductFormProps {
@@ -47,6 +49,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
     category: 'pop-up-class',
     tax: 11,
     stock: 0,
+    first_payment: 0,
+    installment: 0,
   });
 
   useEffect(() => {
@@ -70,6 +74,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         category: editingProduct.category,
         tax: editingProduct.tax,
         stock: editingProduct.stock,
+        first_payment: (editingProduct as any).first_payment || 0,
+        installment: (editingProduct as any).installment || 0,
       });
     } else {
       setFormData({
@@ -82,6 +88,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         category: 'pop-up-class',
         tax: 11,
         stock: 0,
+        first_payment: 0,
+        installment: 0,
       });
     }
   }, [editingProduct, isOpen]);
@@ -116,6 +124,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             category: formData.category,
             tax: formData.tax,
             stock: formData.stock,
+            first_payment: formData.first_payment,
+            installment: formData.installment,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingProduct.id);
@@ -138,7 +148,9 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             media: formData.media as any,
             category: formData.category,
             tax: formData.tax,
-            stock: formData.stock
+            stock: formData.stock,
+            first_payment: formData.first_payment,
+            installment: formData.installment
           }]);
         
         if (error) {
@@ -271,6 +283,31 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
                 onChange={(e) => setFormData({...formData, stock: e.target.value ? Number(e.target.value) : 0})}
                 placeholder="Enter stock quantity"
                 required
+                min="0"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="first_payment">First Payment (IDR)</Label>
+              <Input
+                id="first_payment"
+                type="number"
+                value={formData.first_payment === 0 ? '' : formData.first_payment}
+                onChange={(e) => setFormData({...formData, first_payment: e.target.value ? Number(e.target.value) : 0})}
+                placeholder="Enter first payment amount"
+                min="0"
+              />
+            </div>
+            <div>
+              <Label htmlFor="installment">Installment (IDR)</Label>
+              <Input
+                id="installment"
+                type="number"
+                value={formData.installment === 0 ? '' : formData.installment}
+                onChange={(e) => setFormData({...formData, installment: e.target.value ? Number(e.target.value) : 0})}
+                placeholder="Enter installment amount"
                 min="0"
               />
             </div>

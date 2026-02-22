@@ -16,6 +16,8 @@ export interface ProductFormData {
   category: ProductCategory;
   tax: number;
   stock: number;
+  first_payment: number;
+  installment: number;
 }
 
 export const useProductActions = (onProductsUpdated: () => void, editingProduct: ProductFormData | null) => {

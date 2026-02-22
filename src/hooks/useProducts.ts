@@ -31,6 +31,8 @@ export const useProducts = () => {
         category: product.category as ProductCategory,
         tax: product.tax,
         stock: product.stock,
+        first_payment: product.first_payment,
+        installment: product.installment,
         media: product.media as any,
       }));
 

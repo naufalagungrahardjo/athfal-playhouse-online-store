@@ -396,8 +396,10 @@ export type Database = {
           category: string
           created_at: string | null
           description: string
+          first_payment: number
           id: string
           image: string
+          installment: number
           media: Json | null
           name: string
           price: number
@@ -411,8 +413,10 @@ export type Database = {
           category: string
           created_at?: string | null
           description: string
+          first_payment?: number
           id?: string
           image: string
+          installment?: number
           media?: Json | null
           name: string
           price: number
@@ -426,8 +430,10 @@ export type Database = {
           category?: string
           created_at?: string | null
           description?: string
+          first_payment?: number
           id?: string
           image?: string
+          installment?: number
           media?: Json | null
           name?: string
           price?: number

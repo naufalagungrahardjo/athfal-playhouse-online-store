@@ -77,6 +77,18 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
             <span className="font-medium text-gray-700 w-24">{language === 'id' ? 'Pajak' : 'Tax'}:</span>
             <span className="text-gray-600">{product.tax}%</span>
           </div>
+          {product.first_payment > 0 && (
+            <div className="flex items-center mt-4">
+              <span className="font-medium text-gray-700 w-24">{language === 'id' ? 'DP' : 'First Payment'}:</span>
+              <span className="text-gray-600">{formatCurrency(product.first_payment)}</span>
+            </div>
+          )}
+          {product.installment > 0 && (
+            <div className="flex items-center mt-4">
+              <span className="font-medium text-gray-700 w-24">{language === 'id' ? 'Cicilan' : 'Installment'}:</span>
+              <span className="text-gray-600">{formatCurrency(product.installment)}</span>
+            </div>
+          )}
         </div>
         {/* Quantity selector */}
         <div className="mb-6">

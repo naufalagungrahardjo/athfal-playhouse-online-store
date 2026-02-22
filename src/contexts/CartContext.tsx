@@ -14,6 +14,8 @@ export interface Product {
   category: ProductCategory;
   tax: number;
   stock: number;
+  first_payment: number;
+  installment: number;
   media?: Array<{ url: string; type: 'image' | 'video' }>;
 }
 
@@ -124,6 +126,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         category: product.category as ProductCategory,
         tax: product.tax,
         stock: product.stock,
+        first_payment: product.first_payment,
+        installment: product.installment,
       }));
 
       setProducts(formattedProducts);
