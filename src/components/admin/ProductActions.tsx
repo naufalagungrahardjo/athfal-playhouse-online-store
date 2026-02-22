@@ -18,6 +18,7 @@ export interface ProductFormData {
   stock: number;
   first_payment: number;
   installment: number;
+  installment_months: number;
 }
 
 export const useProductActions = (onProductsUpdated: () => void, editingProduct: ProductFormData | null) => {

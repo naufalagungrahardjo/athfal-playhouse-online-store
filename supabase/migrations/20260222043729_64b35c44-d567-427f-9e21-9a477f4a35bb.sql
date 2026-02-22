@@ -1,0 +1,1 @@
+ALTER TABLE public.products ADD COLUMN installment_months integer NOT NULL DEFAULT 0;

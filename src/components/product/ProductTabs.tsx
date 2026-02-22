@@ -88,7 +88,12 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ product, language, formatCurr
               {product.installment > 0 && (
                 <li className="flex items-start">
                   <span className="font-medium text-gray-700 w-32">{language === 'id' ? 'Cicilan' : 'Installment'}:</span>
-                  <span className="text-gray-600">{formatCurrency(product.installment)}</span>
+                  <span className="text-gray-600">
+                    {formatCurrency(product.installment)}
+                    {product.installment_months > 0 && (
+                      <span> x{product.installment_months} {language === 'id' ? 'bulan' : 'months'}</span>
+                    )}
+                  </span>
                 </li>
               )}
             </ul>

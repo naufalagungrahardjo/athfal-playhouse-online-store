@@ -16,6 +16,7 @@ export interface Product {
   stock: number;
   first_payment: number;
   installment: number;
+  installment_months: number;
   media?: Array<{ url: string; type: 'image' | 'video' }>;
 }
 
@@ -128,6 +129,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         stock: product.stock,
         first_payment: product.first_payment,
         installment: product.installment,
+        installment_months: product.installment_months,
       }));
 
       setProducts(formattedProducts);

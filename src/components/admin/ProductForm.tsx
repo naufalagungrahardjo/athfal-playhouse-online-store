@@ -25,6 +25,7 @@ interface ProductFormData {
   stock: number;
   first_payment: number;
   installment: number;
+  installment_months: number;
 }
 
 interface ProductFormProps {
@@ -51,6 +52,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
     stock: 0,
     first_payment: 0,
     installment: 0,
+    installment_months: 0,
   });
 
   useEffect(() => {
@@ -76,6 +78,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         stock: editingProduct.stock,
         first_payment: (editingProduct as any).first_payment || 0,
         installment: (editingProduct as any).installment || 0,
+        installment_months: (editingProduct as any).installment_months || 0,
       });
     } else {
       setFormData({
@@ -90,6 +93,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         stock: 0,
         first_payment: 0,
         installment: 0,
+        installment_months: 0,
       });
     }
   }, [editingProduct, isOpen]);
@@ -126,6 +130,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             stock: formData.stock,
             first_payment: formData.first_payment,
             installment: formData.installment,
+            installment_months: formData.installment_months,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingProduct.id);
@@ -150,7 +155,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             tax: formData.tax,
             stock: formData.stock,
             first_payment: formData.first_payment,
-            installment: formData.installment
+            installment: formData.installment,
+            installment_months: formData.installment_months
           }]);
         
         if (error) {
@@ -288,7 +294,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <Label htmlFor="first_payment">First Payment (IDR)</Label>
               <Input
@@ -308,6 +314,17 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
                 value={formData.installment === 0 ? '' : formData.installment}
                 onChange={(e) => setFormData({...formData, installment: e.target.value ? Number(e.target.value) : 0})}
                 placeholder="Enter installment amount"
+                min="0"
+              />
+            </div>
+            <div>
+              <Label htmlFor="installment_months">Installment Months</Label>
+              <Input
+                id="installment_months"
+                type="number"
+                value={formData.installment_months === 0 ? '' : formData.installment_months}
+                onChange={(e) => setFormData({...formData, installment_months: e.target.value ? Number(e.target.value) : 0})}
+                placeholder="e.g. 3"
                 min="0"
               />
             </div>
