@@ -1,7 +1,7 @@
-
-import { useState, useEffect, useCallback } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export interface Category {
   id: string;
@@ -12,66 +12,56 @@ export interface Category {
   order_num: number;
 }
 
+const fetchCategoriesFromDb = async (): Promise<Category[]> => {
+  const { data, error } = await supabase
+    .from("categories")
+    .select("*")
+    .order("order_num", { ascending: true });
+  if (error) throw error;
+  return data || [];
+};
+
 export function useCategories() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const fetchCategories = useCallback(async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("categories")
-      .select("*")
-      .order("order_num", { ascending: true });
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Load Error",
-        description: "Unable to fetch categories.",
-      });
-      setLoading(false);
-      return;
-    }
-    setCategories(data || []);
-    setLoading(false);
-  }, [toast]);
+  const { data: categories = [], isLoading: loading } = useQuery({
+    queryKey: ["categories"],
+    queryFn: fetchCategoriesFromDb,
+  });
 
-  // Real-time subscription
+  // Real-time subscription to invalidate cache
   useEffect(() => {
-    fetchCategories();
     const channel = supabase
-      .channel("categories-changes")
+      .channel("categories-realtime")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "categories",
-        },
-        fetchCategories
+        { event: "*", schema: "public", table: "categories" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["categories"] });
+        }
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchCategories]);
+  }, [queryClient]);
 
-  // Mutations
-  // Allow order_num to be optional for added category
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["categories"] });
+
   const addCategory = async (
     category: Omit<Category, "id" | "order_num"> & { order_num?: number }
   ) => {
-    // If no order_num provided, set it to the next available number
     const categoryData = {
       ...category,
-      order_num: category.order_num ?? (categories.length + 1)
+      order_num: category.order_num ?? (categories.length + 1),
     };
-    
     const { error } = await supabase.from("categories").insert([categoryData]);
     if (error) {
       toast({ variant: "destructive", title: "Add Error", description: error.message });
     } else {
       toast({ variant: "default", title: "Category added" });
+      invalidate();
     }
   };
 
@@ -81,6 +71,7 @@ export function useCategories() {
       toast({ variant: "destructive", title: "Update Error", description: error.message });
     } else {
       toast({ variant: "default", title: "Category updated" });
+      invalidate();
     }
   };
 
@@ -90,55 +81,44 @@ export function useCategories() {
       toast({ variant: "destructive", title: "Delete Error", description: error.message });
     } else {
       toast({ variant: "default", title: "Category deleted" });
+      invalidate();
     }
   };
 
-  // Move a category up/down (swap order_num with neighbor)
   const moveCategory = async (categoryId: string, direction: "up" | "down") => {
     const idx = categories.findIndex((c) => c.id === categoryId);
     if (idx === -1) return;
-    let swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
     if (swapIdx < 0 || swapIdx >= categories.length) return;
 
     const current = categories[idx];
     const neighbor = categories[swapIdx];
-
-    // Swap their order_num in DB: Do two `update` calls (not upsert with missing fields)
-    let error = null;
 
     const { error: err1 } = await supabase
       .from("categories")
       .update({ order_num: neighbor.order_num })
       .eq("id", current.id);
 
-    if (err1) error = err1;
-
     const { error: err2 } = await supabase
       .from("categories")
       .update({ order_num: current.order_num })
       .eq("id", neighbor.id);
 
-    if (err2) error = err2;
-
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Reorder Error",
-        description: "Could not move category.",
-      });
+    if (err1 || err2) {
+      toast({ variant: "destructive", title: "Reorder Error", description: "Could not move category." });
     } else {
       toast({ variant: "default", title: "Category reordered" });
-      fetchCategories();
+      invalidate();
     }
   };
 
   return {
     categories,
     loading,
-    fetchCategories,
+    fetchCategories: invalidate,
     addCategory,
     updateCategory,
     deleteCategory,
-    moveCategory
+    moveCategory,
   };
 }
