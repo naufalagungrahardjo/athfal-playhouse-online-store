@@ -59,6 +59,24 @@ const AboutUsAdminTab = ({
               />
             </div>
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Hero Subtitle (Indonesian)</Label>
+              <Textarea
+                rows={3}
+                value={aboutContent.heroSubtitle?.id || ""}
+                onChange={(e) => onContentChange('heroSubtitle', 'id', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Hero Subtitle (English)</Label>
+              <Textarea
+                rows={3}
+                value={aboutContent.heroSubtitle?.en || ""}
+                onChange={(e) => onContentChange('heroSubtitle', 'en', e.target.value)}
+              />
+            </div>
+          </div>
           <AboutSectionHeroImageUpload
             value={aboutContent.heroImage}
             onChange={(url) => onImageChange('heroImage', url)}
