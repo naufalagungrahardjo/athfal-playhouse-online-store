@@ -107,12 +107,13 @@ const BlogDetailPage = () => {
 
           {/* Featured image */}
           <div className="mb-8 flex justify-center">
-            <img
-              src={blog.image}
-              alt={blog.title}
-              className="object-cover rounded-3xl"
-              style={{ width: 450, height: 450 }}
-            />
+            <div className="bg-accent rounded-3xl flex items-center justify-center" style={{ width: 450, height: 450 }}>
+              <img
+                src={blog.image}
+                alt={blog.title}
+                className="object-contain max-w-full max-h-full rounded-3xl"
+              />
+            </div>
           </div>
 
           {/* Blog content - Support HTML content */}

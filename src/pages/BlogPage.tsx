@@ -60,12 +60,13 @@ const BlogPage = () => {
           <Link to={`/blog/${publishedBlogs[0].id}`}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-athfal-peach/10 rounded-3xl overflow-hidden hover:shadow-md transition-all">
               <div className="flex items-center justify-center p-4">
-                <img
-                  src={publishedBlogs[0].image}
-                  alt={publishedBlogs[0].title}
-                  className="object-cover rounded-2xl"
-                  style={{ width: 450, height: 450 }}
-                />
+                <div className="bg-accent rounded-2xl flex items-center justify-center" style={{ width: 450, height: 450 }}>
+                  <img
+                    src={publishedBlogs[0].image}
+                    alt={publishedBlogs[0].title}
+                    className="object-contain max-w-full max-h-full"
+                  />
+                </div>
               </div>
               <div className="p-6 flex flex-col justify-center">
                 <div className="flex items-center text-sm text-gray-500 mb-2">
@@ -95,12 +96,13 @@ const BlogPage = () => {
             <Link to={`/blog/${blog.id}`} key={blog.id}>
               <Card className="overflow-hidden h-full hover:shadow-md transition-all">
                 <div className="flex items-center justify-center overflow-hidden">
-                  <img
-                    src={blog.image}
-                    alt={blog.title}
-                    className="object-cover hover:scale-105 transition-transform duration-300"
-                    style={{ width: 450, height: 450 }}
-                  />
+                  <div className="bg-accent flex items-center justify-center" style={{ width: 450, height: 450 }}>
+                    <img
+                      src={blog.image}
+                      alt={blog.title}
+                      className="object-contain max-w-full max-h-full hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
                 </div>
                 <CardContent className="p-4">
                   <div className="flex items-center text-sm text-gray-500 mb-2">
