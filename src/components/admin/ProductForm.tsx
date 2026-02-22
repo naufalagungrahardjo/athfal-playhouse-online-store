@@ -56,6 +56,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
   });
 
   useEffect(() => {
+    console.log('[ProductForm] useEffect fired. editingProduct:', editingProduct, 'isOpen:', isOpen);
     if (editingProduct) {
       const media = editingProduct.media || [];
       // Strip cache-busting params from cover image for comparison
