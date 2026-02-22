@@ -10,6 +10,9 @@ interface OrderItem {
   product_price: number;
   quantity: number;
   product_image?: string;
+  first_payment?: number;
+  installment?: number;
+  installment_months?: number;
 }
 
 interface OrderDetails {
@@ -111,7 +114,7 @@ export const useOrderDetails = (orderId?: string, lookupToken?: string) => {
         itemsData.map(async (item: any) => {
           const { data: productData } = await supabase
             .from('products')
-            .select('image')
+            .select('image, first_payment, installment, installment_months')
             .eq('product_id', item.product_id)
             .maybeSingle();
 
@@ -121,7 +124,10 @@ export const useOrderDetails = (orderId?: string, lookupToken?: string) => {
             product_name: item.product_name,
             product_price: item.product_price,
             quantity: item.quantity,
-            product_image: productData?.image || ''
+            product_image: productData?.image || '',
+            first_payment: productData?.first_payment || 0,
+            installment: productData?.installment || 0,
+            installment_months: productData?.installment_months || 0,
           };
         })
       );
