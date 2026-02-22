@@ -101,16 +101,11 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
     // Encode the message for WhatsApp
     const encodedMessage = encodeURIComponent(message.trim());
     const whatsappNumber = '082120614748';
-    const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/^0/, '62')}?text=${encodedMessage}`;
+    const formattedNumber = whatsappNumber.replace(/^0/, '62');
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedNumber}&text=${encodedMessage}`;
     
-    // Redirect to WhatsApp - use a temporary anchor element for reliable opening
-    const link = document.createElement('a');
-    link.href = whatsappUrl;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Use window.open for reliable cross-browser/iframe support
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
   if (loading) {
@@ -210,6 +205,19 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                             {formatCurrency(item.product_price * item.quantity)}
                           </p>
                         </div>
+                        {(item.first_payment != null && item.first_payment > 0) && (
+                          <p className="text-sm text-gray-600 mt-1">
+                            {language === 'id' ? 'DP' : 'First Payment'}: {formatCurrency(item.first_payment)}
+                          </p>
+                        )}
+                        {(item.installment != null && item.installment > 0) && (
+                          <p className="text-sm text-gray-600 mt-1">
+                            {language === 'id' ? 'Cicilan' : 'Installment'}: {formatCurrency(item.installment)}
+                            {(item.installment_months != null && item.installment_months > 0) && (
+                              <span> x{item.installment_months} {language === 'id' ? 'bulan' : 'months'}</span>
+                            )}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}
