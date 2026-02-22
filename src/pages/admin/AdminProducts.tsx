@@ -48,6 +48,7 @@ const AdminProducts = () => {
   }, []);
 
   const handleEdit = (product: StrictProductFormData) => {
+    console.log('[AdminProducts] handleEdit called with product:', JSON.stringify(product));
     setEditingProduct(product);
     setIsDialogOpen(true);
   };
