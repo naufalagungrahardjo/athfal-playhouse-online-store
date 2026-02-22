@@ -55,7 +55,7 @@ export default function GalleryItemForm({ initialData, onSave, onCancel }: Props
           <VideoUrlInput
             value={item.url}
             onChange={url => setItem({ ...item, url })}
-            label="YouTube Video URL"
+            label="Video URL (YouTube or Instagram Reel)"
           />
         ) : (
           <ImageUpload
