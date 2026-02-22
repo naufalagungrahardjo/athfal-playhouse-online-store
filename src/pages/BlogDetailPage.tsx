@@ -106,12 +106,12 @@ const BlogDetailPage = () => {
           </div>
 
           {/* Featured image */}
-          <div className="mb-8 rounded-3xl overflow-hidden max-w-[680px] mx-auto">
+          <div className="mb-8 flex justify-center">
             <img
               src={blog.image}
               alt={blog.title}
-              className="w-full h-auto object-cover"
-              style={{ maxHeight: "420px", objectFit: "cover" }}
+              className="object-cover rounded-3xl"
+              style={{ width: 450, height: 450 }}
             />
           </div>
 

@@ -59,11 +59,12 @@ const BlogPage = () => {
         <div className="mb-12">
           <Link to={`/blog/${publishedBlogs[0].id}`}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-athfal-peach/10 rounded-3xl overflow-hidden hover:shadow-md transition-all">
-              <div className="h-64 md:h-auto">
+              <div className="flex items-center justify-center p-4">
                 <img
                   src={publishedBlogs[0].image}
                   alt={publishedBlogs[0].title}
-                  className="w-full h-full object-cover"
+                  className="object-cover rounded-2xl"
+                  style={{ width: 450, height: 450 }}
                 />
               </div>
               <div className="p-6 flex flex-col justify-center">
@@ -93,11 +94,12 @@ const BlogPage = () => {
           {publishedBlogs.slice(1).map((blog) => (
             <Link to={`/blog/${blog.id}`} key={blog.id}>
               <Card className="overflow-hidden h-full hover:shadow-md transition-all">
-                <div className="aspect-[4/3] overflow-hidden">
+                <div className="flex items-center justify-center overflow-hidden">
                   <img
                     src={blog.image}
                     alt={blog.title}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    className="object-cover hover:scale-105 transition-transform duration-300"
+                    style={{ width: 450, height: 450 }}
                   />
                 </div>
                 <CardContent className="p-4">
