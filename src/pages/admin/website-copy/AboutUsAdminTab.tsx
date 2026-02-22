@@ -230,7 +230,7 @@ const AboutUsAdminTab = ({
         </CardHeader>
         <CardContent>
           {showAddTeamForm && (
-            <div className="border rounded-lg p-4 mb-4 bg-blue-50">
+            <div className="border rounded-lg p-4 mb-4 bg-blue-50 max-h-[70vh] overflow-y-auto">
               <h4 className="font-medium mb-3">Add New Team Member</h4>
               <TeamMemberForm
                 onSave={(member) => {
@@ -269,8 +269,8 @@ const AboutUsAdminTab = ({
             ))}
           </div>
           {editingTeamMember && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
                 <h4 className="font-medium mb-3">Edit Team Member</h4>
                 <TeamMemberForm
                   initialData={editingTeamMember}
