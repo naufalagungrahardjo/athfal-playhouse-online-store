@@ -86,7 +86,12 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
           {product.installment > 0 && (
             <div className="flex items-center mt-4">
               <span className="font-medium text-gray-700 w-24">{language === 'id' ? 'Cicilan' : 'Installment'}:</span>
-              <span className="text-gray-600">{formatCurrency(product.installment)}</span>
+              <span className="text-gray-600">
+                {formatCurrency(product.installment)}
+                {product.installment_months > 0 && (
+                  <span> x{product.installment_months} {language === 'id' ? 'bulan' : 'months'}</span>
+                )}
+              </span>
             </div>
           )}
         </div>

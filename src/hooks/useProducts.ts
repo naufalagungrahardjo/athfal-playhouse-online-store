@@ -33,6 +33,7 @@ export const useProducts = () => {
         stock: product.stock,
         first_payment: product.first_payment,
         installment: product.installment,
+        installment_months: product.installment_months,
         media: product.media as any,
       }));
 

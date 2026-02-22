@@ -36,6 +36,7 @@ const AdminProducts = () => {
       stock: p.stock,
       first_payment: p.first_payment ?? 0,
       installment: p.installment ?? 0,
+      installment_months: p.installment_months ?? 0,
     }));
     setProducts(formatted);
     setLoading(false);

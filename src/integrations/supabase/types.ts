@@ -400,6 +400,7 @@ export type Database = {
           id: string
           image: string
           installment: number
+          installment_months: number
           media: Json | null
           name: string
           price: number
@@ -417,6 +418,7 @@ export type Database = {
           id?: string
           image: string
           installment?: number
+          installment_months?: number
           media?: Json | null
           name: string
           price: number
@@ -434,6 +436,7 @@ export type Database = {
           id?: string
           image?: string
           installment?: number
+          installment_months?: number
           media?: Json | null
           name?: string
           price?: number
