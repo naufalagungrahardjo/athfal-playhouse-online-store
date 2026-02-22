@@ -79,6 +79,18 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ product, language, formatCurr
                 <span className="font-medium text-gray-700 w-32">{language === 'id' ? 'Total (1 item)' : 'Total (1 item)'}:</span>
                 <span className="text-gray-600">{formatCurrency(product.price + (product.price * product.tax / 100))}</span>
               </li>
+              {product.first_payment > 0 && (
+                <li className="flex items-start">
+                  <span className="font-medium text-gray-700 w-32">{language === 'id' ? 'DP' : 'First Payment'}:</span>
+                  <span className="text-gray-600">{formatCurrency(product.first_payment)}</span>
+                </li>
+              )}
+              {product.installment > 0 && (
+                <li className="flex items-start">
+                  <span className="font-medium text-gray-700 w-32">{language === 'id' ? 'Cicilan' : 'Installment'}:</span>
+                  <span className="text-gray-600">{formatCurrency(product.installment)}</span>
+                </li>
+              )}
             </ul>
           </div>
         </div>
