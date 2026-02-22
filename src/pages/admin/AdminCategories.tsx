@@ -6,7 +6,7 @@ import { CategoryForm } from "./CategoryForm";
 import { CategoryList } from "./CategoryList";
 import { supabase } from "@/integrations/supabase/client";
 
-const emptyForm = { title: "", slug: "", image: "", bg_color: "#e9c873" };
+const emptyForm = { title: "", slug: "", image: "", bg_color: "#e9c873", description: "" };
 
 export default function AdminCategories() {
   const { categories, loading, addCategory, updateCategory, deleteCategory, moveCategory } = useCategories();
@@ -24,13 +24,14 @@ export default function AdminCategories() {
     setForm(emptyForm);
   };
 
-  const handleEdit = (cat: typeof form & { id: string }) => {
+  const handleEdit = (cat: any) => {
     setEditId(cat.id);
     setForm({
       title: cat.title,
       slug: cat.slug,
       image: cat.image,
       bg_color: cat.bg_color,
+      description: cat.description || "",
     });
   };
 

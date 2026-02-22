@@ -1,19 +1,20 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImageUpload } from "@/components/ImageUpload";
 
 interface CategoryFormProps {
-  onSubmit: (form: { title: string; slug: string; image: string; bg_color: string }) => Promise<void>;
-  form: { title: string; slug: string; image: string; bg_color: string };
-  setForm: (form: { title: string; slug: string; image: string; bg_color: string }) => void;
+  onSubmit: (form: { title: string; slug: string; image: string; bg_color: string; description: string }) => Promise<void>;
+  form: { title: string; slug: string; image: string; bg_color: string; description: string };
+  setForm: (form: { title: string; slug: string; image: string; bg_color: string; description: string }) => void;
   editId: string | null;
   onCancelEdit: () => void;
 }
 
 export function CategoryForm({ onSubmit, form, setForm, editId, onCancelEdit }: CategoryFormProps) {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -41,12 +42,24 @@ export function CategoryForm({ onSubmit, form, setForm, editId, onCancelEdit }: 
             onChange={handleChange}
             required
           />
-          <Input
-            name="slug"
-            placeholder="Unique Slug (e.g. play-kit)"
-            value={form.slug}
+          <div>
+            <Input
+              name="slug"
+              placeholder="Unique Slug (e.g. play-kit)"
+              value={form.slug}
+              onChange={handleChange}
+              required
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              The slug is used in the URL (e.g. yoursite.com/products/<strong>{form.slug || 'play-kit'}</strong>). Use lowercase letters and hyphens only.
+            </p>
+          </div>
+          <Textarea
+            name="description"
+            placeholder="Category description shown on the product list page"
+            value={form.description}
             onChange={handleChange}
-            required
+            rows={3}
           />
           <ImageUpload
             value={form.image}

@@ -1,0 +1,1 @@
+ALTER TABLE public.categories ADD COLUMN description text NOT NULL DEFAULT '';

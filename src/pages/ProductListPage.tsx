@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,26 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { ProductCategory } from '@/contexts/CartContext';
 import { Search } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
-
-// Get category titles (for display purposes)
-const getCategoryTitle = (category: string): string => {
-  switch(category) {
-    case 'pop-up-class':
-      return 'Pop Up Class';
-    case 'bumi-class':
-      return 'Bumi Class';
-    case 'tahsin-class':
-      return 'Tahsin Class';
-    case 'play-kit':
-      return 'Play Kit';
-    case 'consultation':
-      return 'Psychological Consultation';
-    case 'merchandise':
-      return 'Merchandise & Others';
-    default:
-      return category;
-  }
-};
+import { useCategories } from '@/hooks/useCategories';
 
 // Format currency
 const formatCurrency = (amount: number) => {
@@ -42,6 +23,7 @@ const ProductListPage = () => {
   const { language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const { products, loading, error, getProductsByCategory } = useProducts();
+  const { categories } = useCategories();
   
   // Get products for the current category
   const categoryProducts = category ? getProductsByCategory(category as ProductCategory) : [];
@@ -54,56 +36,10 @@ const ProductListPage = () => {
            product.description.toLowerCase().includes(query);
   });
 
-  // Get content based on the category
-  const getCategoryDescription = (): string => {
-    switch(category) {
-      case 'pop-up-class':
-        return language === 'id'
-          ? 'Pop Up Class adalah kelas interaktif yang dirancang untuk mengembangkan kreativitas dan keterampilan anak-anak melalui berbagai aktivitas menarik.'
-          : 'Pop Up Class is an interactive class designed to develop children\'s creativity and skills through various engaging activities.';
-      case 'bumi-class':
-        return language === 'id'
-          ? 'Bumi Class mengajarkan anak-anak tentang lingkungan dan pentingnya menjaga alam melalui aktivitas praktis dan menyenangkan.'
-          : 'Bumi Class teaches children about the environment and the importance of preserving nature through practical and fun activities.';
-      case 'tahsin-class':
-        return language === 'id'
-          ? 'Tahsin Class adalah kelas untuk belajar membaca Al-Quran dengan baik dan benar, dengan metode yang menyenangkan untuk anak-anak.'
-          : 'Tahsin Class is a class for learning to read the Quran properly and correctly, with a fun method for children.';
-      case 'play-kit':
-        return language === 'id'
-          ? 'Play Kit adalah kit bermain edukatif yang dirancang untuk membantu anak-anak belajar sambil bermain di rumah.'
-          : 'Play Kit is an educational play kit designed to help children learn while playing at home.';
-      case 'consultation':
-        return language === 'id'
-          ? 'Konsultasi psikologi anak dengan ahli untuk membantu perkembangan dan kesehatan mental anak Anda.'
-          : 'Child psychology consultation with experts to help your child\'s development and mental health.';
-      case 'merchandise':
-        return language === 'id'
-          ? 'Berbagai merchandise Athfal Playhouse yang lucu dan bermanfaat untuk anak-anak.'
-          : 'Various cute and useful Athfal Playhouse merchandise for children.';
-      default:
-        return '';
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex justify-center items-center">
-        <div>Loading products...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex justify-center items-center">
-        <div className="text-red-500">Error: {error}</div>
-      </div>
-    );
-  }
-
-  const categoryTitle = getCategoryTitle(category || '');
-  const categoryDescription = getCategoryDescription();
+  // Get category info from DB
+  const currentCategory = categories.find(c => c.slug === category);
+  const categoryTitle = currentCategory?.title || category || '';
+  const categoryDescription = currentCategory?.description || '';
 
   return (
     <div className="min-h-screen">
