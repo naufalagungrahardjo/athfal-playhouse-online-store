@@ -9,6 +9,7 @@ interface Category {
   slug: string;
   image: string;
   bg_color: string;
+  description: string;
   order_num: number;
 }
 

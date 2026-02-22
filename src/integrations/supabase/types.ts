@@ -171,6 +171,7 @@ export type Database = {
         Row: {
           bg_color: string
           created_at: string | null
+          description: string
           id: string
           image: string
           order_num: number
@@ -181,6 +182,7 @@ export type Database = {
         Insert: {
           bg_color?: string
           created_at?: string | null
+          description?: string
           id?: string
           image: string
           order_num?: number
@@ -191,6 +193,7 @@ export type Database = {
         Update: {
           bg_color?: string
           created_at?: string | null
+          description?: string
           id?: string
           image?: string
           order_num?: number
