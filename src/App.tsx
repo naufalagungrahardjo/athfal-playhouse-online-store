@@ -8,9 +8,11 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import { WhatsAppFloatButton } from "@/components/WhatsAppFloatButton";
 import ScrollToTop from "@/components/layout/ScrollToTop";
+
+// Lazy load below-the-fold layout components
+const Footer = lazy(() => import("@/components/layout/Footer"));
+const WhatsAppFloatButton = lazy(() => import("@/components/WhatsAppFloatButton").then(m => ({ default: m.WhatsAppFloatButton })));
 
 // Lazy load components
 const Index = lazy(() => import("./pages/Index"));
