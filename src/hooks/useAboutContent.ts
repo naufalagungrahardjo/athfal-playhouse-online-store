@@ -60,7 +60,7 @@ const ABOUT_DOC_ID = 'main'; // Use a single-row table, fixed id
 
 export const useAboutContent = () => {
   const [content, setContent] = useState<AboutContent>(DEFAULT_CONTENT);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   // Fetch from Supabase (get "main" only row)

@@ -9,7 +9,9 @@ import { AboutSectionImage } from './AboutSectionImage';
 export const AboutSection = () => {
   const { language } = useLanguage();
   const { copy } = useWebsiteCopy();
-  const { content: aboutContent } = useAboutContent();
+  const { content: aboutContent, loading } = useAboutContent();
+
+  if (loading) return null;
 
   return (
     <section className="py-16 bg-gradient-to-br from-athfal-light-pink/20 to-athfal-peach/30">

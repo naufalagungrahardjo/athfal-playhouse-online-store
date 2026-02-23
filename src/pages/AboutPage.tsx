@@ -7,7 +7,15 @@ import { useAboutContent } from "@/hooks/useAboutContent";
 
 const AboutPage = () => {
   const { language } = useLanguage();
-  const { content } = useAboutContent();
+  const { content, loading } = useAboutContent();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-athfal-pink" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
