@@ -15,6 +15,9 @@ interface ProductCardData {
   category: ProductCategory;
   tax: number;
   stock: number;
+  first_payment: number;
+  installment: number;
+  installment_months: number;
 }
 
 interface ProductCardProps {
@@ -49,6 +52,12 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
                 <span className="font-bold text-green-600">{formatCurrency(product.price)}</span>
                 <span className="text-sm text-muted-foreground">Tax: {product.tax}%</span>
                 <span className="text-sm text-muted-foreground">Stock: {product.stock}</span>
+                {product.first_payment > 0 && (
+                  <span className="text-sm text-muted-foreground">DP: {formatCurrency(product.first_payment)}</span>
+                )}
+                {product.installment > 0 && (
+                  <span className="text-sm text-muted-foreground">Installment: {formatCurrency(product.installment)} x {product.installment_months}mo</span>
+                )}
               </div>
             </div>
           </div>
