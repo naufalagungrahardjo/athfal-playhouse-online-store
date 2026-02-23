@@ -65,7 +65,7 @@ const BlogPage = () => {
           <Link to={`/blog/${publishedBlogs[0].id}`}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-athfal-peach/10 rounded-3xl overflow-hidden hover:shadow-md transition-all">
               <div className="flex items-center justify-center p-4">
-                <div className="bg-accent rounded-2xl flex items-center justify-center" style={{ width: 450, height: 450 }}>
+                <div className="bg-accent rounded-2xl flex items-center justify-center w-full" style={{ aspectRatio: '16/9', maxWidth: 1920 }}>
                   <img
                     src={publishedBlogs[0].image}
                     alt={publishedBlogs[0].title}
@@ -101,7 +101,7 @@ const BlogPage = () => {
             <Link to={`/blog/${blog.id}`} key={blog.id}>
               <Card className="overflow-hidden h-full hover:shadow-md transition-all">
                 <div className="flex items-center justify-center overflow-hidden">
-                  <div className="bg-accent flex items-center justify-center" style={{ width: 450, height: 450 }}>
+                  <div className="bg-accent flex items-center justify-center w-full" style={{ aspectRatio: '16/9' }}>
                     <img
                       src={blog.image}
                       alt={blog.title}
