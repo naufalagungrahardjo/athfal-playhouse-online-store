@@ -432,7 +432,7 @@ const CartPage = () => {
                     >
                       {language === 'id' ? 'Kosongkan Keranjang' : 'Clear Cart'}
                     </Button>
-                    <Link to="/all-products">
+                    <Link to="/products">
                       <Button variant="outline">
                         {language === 'id' ? 'Lanjutkan Belanja' : 'Continue Shopping'}
                       </Button>
