@@ -55,8 +55,31 @@ serve(async (req) => {
       throw new Error("userId and newPassword are required");
     }
 
-    if (newPassword.length < 6) {
-      throw new Error("Password must be at least 6 characters");
+    if (typeof newPassword !== "string" || newPassword.length < 8) {
+      throw new Error("Password must be at least 8 characters");
+    }
+
+    if (newPassword.length > 128) {
+      throw new Error("Password must be less than 128 characters");
+    }
+
+    // Basic complexity: at least 2 of uppercase, lowercase, number, symbol
+    const hasLower = /[a-z]/.test(newPassword);
+    const hasUpper = /[A-Z]/.test(newPassword);
+    const hasNumber = /[0-9]/.test(newPassword);
+    const hasSymbol = /[^a-zA-Z0-9]/.test(newPassword);
+    const complexityCount = [hasLower, hasUpper, hasNumber, hasSymbol].filter(Boolean).length;
+    if (complexityCount < 2) {
+      throw new Error("Password must include at least 2 of: uppercase, lowercase, numbers, symbols");
+    }
+
+    // Block common passwords
+    const commonPasswords = [
+      "password", "123456", "12345678", "qwerty", "abc123",
+      "password123", "admin", "letmein", "welcome", "1234567890",
+    ];
+    if (commonPasswords.includes(newPassword.toLowerCase())) {
+      throw new Error("Password is too common");
     }
 
     // Reset the user's password using admin API
