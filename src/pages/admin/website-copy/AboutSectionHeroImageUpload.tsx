@@ -16,6 +16,7 @@ const AboutSectionHeroImageUpload: React.FC<AboutSectionHeroImageUploadProps> = 
       value={value}
       onChange={onChange}
       label="Hero Image (Main Large Image)"
+      hint="Recommended: 800×600px (4:3). Displays as the main About section image."
     />
   </div>
 );

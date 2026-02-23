@@ -7,5 +7,5 @@ interface BlogImageUploadProps {
   onChange: (url: string) => void;
 }
 export const BlogImageUpload = ({ value, onChange }: BlogImageUploadProps) => (
-  <ImageUpload value={value} onChange={onChange} label="Featured Image" />
+  <ImageUpload value={value} onChange={onChange} label="Featured Image" hint="Recommended: 800×450px (16:9). Used as blog card thumbnail and header." />
 );

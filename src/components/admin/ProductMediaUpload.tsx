@@ -64,6 +64,7 @@ export const ProductMediaUpload = ({ value, onChange, coverImage, onCoverChange 
     <div className="space-y-4">
       <Label>Product Images & Videos</Label>
       <p className="text-sm text-muted-foreground">Click the star icon to set as cover image for homepage</p>
+      <p className="text-xs text-muted-foreground">📐 Recommended image size: 500×500px (1:1 square). Displays at 450×450px on product page.</p>
       
       {/* Display existing media */}
       <div className="grid grid-cols-3 gap-4">

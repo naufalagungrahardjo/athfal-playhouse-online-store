@@ -37,6 +37,7 @@ export default function CollaboratorsEditor() {
           </div>
           <div>
             <Label>Logo Image</Label>
+            <p className="text-xs text-muted-foreground mb-1">Recommended: 300×100px (3:1 landscape). Displays at ~144×48px.</p>
             <FileUploadInput onUpload={setLogo} />
             {logo && (
               <img src={logo} alt="preview" className="h-10 mt-2 bg-white border rounded shadow" />

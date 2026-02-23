@@ -65,6 +65,7 @@ export function CategoryForm({ onSubmit, form, setForm, editId, onCancelEdit }: 
             value={form.image}
             onChange={(url) => setForm({ ...form, image: url })}
             label="Category Image"
+            hint="Recommended: 400×300px (4:3). Displays as category card image."
           />
           <div>
             <label className="block text-sm font-medium mb-1">

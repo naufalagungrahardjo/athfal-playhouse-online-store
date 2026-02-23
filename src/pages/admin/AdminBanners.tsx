@@ -223,6 +223,7 @@ const AdminBanners = () => {
               value={formData.image}
               onChange={(url) => setFormData({...formData, image: url})}
               label="Banner Image *"
+              hint="Recommended: 1920×600–800px (2.4:1 to 3:1 landscape). Min width 1200px."
             />
 
             <div>

@@ -235,6 +235,7 @@ const AdminTestimonials = () => {
               value={formData.avatar || ''}
               onChange={(url) => setFormData({...formData, avatar: url})}
               label="Customer Avatar (Optional)"
+              hint="Recommended: 100×100px (1:1 square). Displays as a small circle."
             />
 
             <div>

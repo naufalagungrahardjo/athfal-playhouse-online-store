@@ -16,6 +16,7 @@ const AboutSectionDecorativeImageUpload: React.FC<AboutSectionDecorativeImageUpl
       value={value}
       onChange={onChange}
       label="Decorative Image (Yellow Circle - Small Image)"
+      hint="Recommended: 300×300px (1:1 square). Displays as a small decorative circle."
     />
   </div>
 );

@@ -92,6 +92,7 @@ const GalleryAdminTab = () => {
             value={galleryContent.heroImage}
             onChange={(url) => handleGalleryImageChange('heroImage', url)}
             label="Hero Image"
+            hint="Recommended: 1200×400px (3:1 landscape). Displays full width × 256px tall."
           />
         </CardContent>
       </Card>

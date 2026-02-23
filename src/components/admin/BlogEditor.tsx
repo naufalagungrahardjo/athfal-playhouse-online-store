@@ -171,6 +171,7 @@ export const BlogEditor = ({ editingBlog, onSave, onCancel, onPublishToggle }: B
           value={blog.image}
           onChange={(url) => setBlog({...blog, image: url})}
           label="Blog Image"
+          hint="Recommended: 800×450px (16:9). Used as blog card thumbnail and header."
         />
         
         <div>
