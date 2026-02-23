@@ -630,6 +630,10 @@ export type Database = {
         Args: { expected_count: number; promo_id: string }
         Returns: boolean
       }
+      increment_promo_usage_by_code: {
+        Args: { promo_code_value: string }
+        Returns: boolean
+      }
       is_admin_account: { Args: { email: string }; Returns: boolean }
       is_admin_user: { Args: { user_id: string }; Returns: boolean }
       is_super_admin: { Args: { email: string }; Returns: boolean }

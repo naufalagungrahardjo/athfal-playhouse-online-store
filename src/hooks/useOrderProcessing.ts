@@ -74,59 +74,31 @@ export const useOrderProcessing = () => {
       }
 
       // Enforce promo code usage limit BEFORE creating order
-      if (orderData.promoCodeId) {
-        console.log(`[${errorId}] Pre-validating and incrementing promo usage for ID:`, orderData.promoCodeId);
-        // Validate promo and attempt to increment usage to reserve the quota slot
-        const { data: promoCheck, error: promoCheckError } = await supabase
-          .from('promo_codes')
-          .select('usage_count, usage_limit, code, is_active, valid_from, valid_until')
-          .eq('id', orderData.promoCodeId)
-          .single();
+      if (orderData.promoCodeId && orderData.promoCode) {
+        console.log(`[${errorId}] Pre-validating and incrementing promo usage for code:`, orderData.promoCode);
+        
+        // Use SECURITY DEFINER RPC to validate (works for anonymous users too)
+        const { data: promoResult, error: promoCheckError } = await supabase
+          .rpc('validate_promo_code', { code_input: orderData.promoCode });
 
-        if (promoCheckError) {
+        if (promoCheckError || !promoResult || promoResult.length === 0) {
           console.error(`[${errorId}] Promo pre-check failed:`, promoCheckError);
           toast({
             variant: "destructive",
             title: "Promo unavailable",
-            description: `Promo validation failed. Please try again. [${errorId}]`
+            description: `The promo code is not valid or has expired. [${errorId}]`
           });
           setProcessing(false);
           return { success: false };
         }
 
-        const now = new Date();
-        const validFromOk = !promoCheck.valid_from || new Date(promoCheck.valid_from) <= now;
-        const validUntilOk = !promoCheck.valid_until || new Date(promoCheck.valid_until) >= now;
-        if (!promoCheck.is_active || !validFromOk || !validUntilOk) {
-          toast({
-            variant: "destructive",
-            title: "Promo expired",
-            description: `The promo code is not active anymore. [${errorId}]`
-          });
-          setProcessing(false);
-          return { success: false };
-        }
-
-        if (promoCheck.usage_limit !== null && promoCheck.usage_count >= promoCheck.usage_limit) {
-          toast({
-            variant: "destructive",
-            title: "Promo quota reached",
-            description: `Promo ${promoCheck.code} has reached its usage limit.`
-          });
-          setProcessing(false);
-          return { success: false };
-        }
-
-        // Reserve the usage slot atomically via secure RPC
+        // Reserve the usage slot atomically via secure RPC (no need to know current count)
         const { data: reserved, error: promoIncError } = await supabase
-          .rpc('increment_promo_usage', {
-            promo_id: orderData.promoCodeId,
-            expected_count: promoCheck.usage_count
+          .rpc('increment_promo_usage_by_code' as any, {
+            promo_code_value: orderData.promoCode
           });
 
-        const updatedPromo = reserved ? { usage_count: promoCheck.usage_count + 1 } : null;
-
-        if (promoIncError || !updatedPromo) {
+        if (promoIncError || !reserved) {
           console.error(`[${errorId}] Failed to reserve promo usage:`, promoIncError);
           toast({
             variant: "destructive",
@@ -137,7 +109,7 @@ export const useOrderProcessing = () => {
           return { success: false };
         }
 
-        console.log(`[${errorId}] Promo usage reserved. New count: ${updatedPromo.usage_count}`);
+        console.log(`[${errorId}] Promo usage reserved successfully.`);
       }
 
       // Check current user status
