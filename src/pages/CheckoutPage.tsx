@@ -42,7 +42,9 @@ const CheckoutPage = () => {
     customerPhone: '',
     customerAddress: '',
     paymentMethod: '',
-    notes: ''
+    notes: '',
+    childAge: '',
+    childBirthdate: ''
   });
 
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
@@ -145,6 +147,8 @@ const CheckoutPage = () => {
 
     const result = await processOrder({
       ...formData,
+      childAge: formData.childAge,
+      childBirthdate: formData.childBirthdate,
       items,
       subtotal: Math.round(subtotal),
       taxAmount: Math.round(taxAmount),

@@ -300,6 +300,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          child_age: string | null
+          child_birthdate: string | null
           created_at: string | null
           customer_address: string | null
           customer_email: string
@@ -320,6 +322,8 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          child_age?: string | null
+          child_birthdate?: string | null
           created_at?: string | null
           customer_address?: string | null
           customer_email: string
@@ -340,6 +344,8 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          child_age?: string | null
+          child_birthdate?: string | null
           created_at?: string | null
           customer_address?: string | null
           customer_email?: string
