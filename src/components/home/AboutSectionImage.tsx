@@ -19,7 +19,7 @@ export const AboutSectionImage: React.FC<AboutSectionImageProps> = ({
     </div>
     <div className="absolute -bottom-6 -left-6 bg-athfal-yellow rounded-full p-4 shadow-lg animate-bounce-slow">
       <img
-        src={aboutDecorativeImage || "/lovable-uploads/4e490da3-e092-4eec-b20b-d66ed04832e7.png"}
+        src={aboutDecorativeImage || "/lovable-uploads/banner_1.png"}
         alt="Decorative element"
         className="w-16 h-16"
       />
