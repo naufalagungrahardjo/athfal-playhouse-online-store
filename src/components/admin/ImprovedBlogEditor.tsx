@@ -8,7 +8,7 @@ import { BlogEditorTabs } from "./BlogEditorTabs";
 import { toast } from "sonner";
 
 const AUTOSAVE_KEY = "blog_autosave_draft";
-const AUTOSAVE_INTERVAL = 15000; // 15 seconds
+const AUTOSAVE_INTERVAL = 5000; // 5 seconds
 
 const saveDraftToLocal = (blog: Blog) => {
   try {
@@ -58,33 +58,38 @@ export const ImprovedBlogEditor = ({
   );
   const [previewMode, setPreviewMode] = useState(false);
   const autosaveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [restoredFromDraft, setRestoredFromDraft] = useState(false);
 
   // Update local state when editingBlog changes
   useEffect(() => {
-    // Check for autosaved draft when opening a blog
+    // Check for autosaved draft when opening a blog - restore silently without interrupting
     if (editingBlog) {
       const draft = loadDraftFromLocal();
       if (draft && draft.blog.id === editingBlog.id) {
         const minutesAgo = Math.round((Date.now() - draft.savedAt) / 60000);
         if (minutesAgo < 60) {
-          const useDraft = confirm(
-            `Ada draft yang tersimpan otomatis (${minutesAgo} menit yang lalu). Apakah Anda ingin memulihkannya?`
-          );
-          if (useDraft) {
-            setBlog(draft.blog);
-            setDate(draft.blog.date ? new Date(draft.blog.date) : new Date());
-            toast.success("Draft berhasil dipulihkan!");
-            return;
-          }
+          setBlog(draft.blog);
+          setDate(draft.blog.date ? new Date(draft.blog.date) : new Date());
+          setRestoredFromDraft(true);
+          toast.info("Draft otomatis berhasil dipulihkan", { duration: 3000 });
+          return;
         }
       }
       clearDraftFromLocal();
     }
     setBlog(editingBlog);
     setDate(editingBlog ? new Date(editingBlog.date) : new Date());
+    setRestoredFromDraft(false);
   }, [editingBlog]);
 
-  // Autosave to localStorage periodically
+  // Save to localStorage on every blog state change
+  useEffect(() => {
+    if (blog) {
+      saveDraftToLocal(blog);
+    }
+  }, [blog]);
+
+  // Also save periodically as a safety net
   useEffect(() => {
     if (autosaveTimer.current) clearInterval(autosaveTimer.current);
     if (blog) {
