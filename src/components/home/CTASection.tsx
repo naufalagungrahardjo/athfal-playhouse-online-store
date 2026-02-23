@@ -22,7 +22,7 @@ export const CTASection = () => {
               ? copy.homePage.ctaSectionSubtitle.id
               : copy.homePage.ctaSectionSubtitle.en}
           </p>
-          <Link to="/products/pop-up-class">
+          <Link to="/products">
             <Button className="bg-athfal-pink hover:bg-athfal-pink/80 text-white py-3 px-8 rounded-full text-lg">
               {language === 'id' ? 'Daftar Kelas' : 'Register for Classes'}
             </Button>

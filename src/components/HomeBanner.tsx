@@ -92,7 +92,7 @@ export const HomeBanner = () => {
               : copy.homePage.heroSubtitle.en}
           </p>
           <div>
-            <a href="#categories">
+            <a href="/products">
               <button className="mt-5 px-7 py-3 bg-athfal-teal hover:bg-athfal-teal/80 text-white font-bold rounded-xl text-lg shadow-md transition">
                 {language === 'id'
                   ? copy.homePage.ctaButton.id
