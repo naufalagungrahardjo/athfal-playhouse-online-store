@@ -164,7 +164,8 @@ const CheckoutPage = () => {
       clearCart();
       localStorage.removeItem('appliedPromo');
       const tokenParam = result.lookupToken ? `?token=${result.lookupToken}` : '';
-      navigate(`/order-details/${result.orderId}${tokenParam}`);
+      // Use replace to prevent back-button returning to empty checkout
+      navigate(`/order-details/${result.orderId}${tokenParam}`, { replace: true });
     }
   };
 
