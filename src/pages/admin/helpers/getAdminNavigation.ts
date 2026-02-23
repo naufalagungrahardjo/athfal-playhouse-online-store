@@ -21,7 +21,6 @@ export function getAdminNavigation(role: string | null) : NavigationItem[] {
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'FAQ', href: '/admin/faq', icon: HelpCircle },
     { name: 'Promo Codes', href: '/admin/promo-codes', icon: CreditCard },
-    { name: 'Payments', href: '/admin/payments', icon: CreditCard },
     { name: 'Website Content', href: '/admin/website-copy', icon: Copy },
     { name: 'Logs', href: '/admin/logs', icon: ListChecks }, // Add Admin Logs page
     { name: 'Settings', href: '/admin/settings', icon: Settings },
@@ -31,7 +30,7 @@ export function getAdminNavigation(role: string | null) : NavigationItem[] {
   if (role === "super_admin") return navigation;
   if (role === "orders_manager") {
     return navigation.filter(item =>
-      ["/admin", "/admin/products", "/admin/orders", "/admin/promo-codes", "/admin/payments", "/admin/logs"].includes(item.href)
+      ["/admin", "/admin/products", "/admin/orders", "/admin/promo-codes", "/admin/logs"].includes(item.href)
     );
   }
   if (role === "order_staff") {
