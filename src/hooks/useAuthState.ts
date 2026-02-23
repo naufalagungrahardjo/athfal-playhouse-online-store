@@ -18,18 +18,19 @@ export const useAuthState = () => {
       (event, session) => {
         console.log('[useAuthState] Auth state changed:', event, session);
 
-        // On token refresh failure, Supabase may return a null session.
-        // If we already have a user, keep them logged in instead of forcing logout.
-        if (!session && event === 'TOKEN_REFRESHED') {
-          console.warn('[useAuthState] Token refresh returned null session, keeping current user');
-          return;
-        }
-
-        // For SIGNED_OUT, always clear. For other events, update normally.
+        // For SIGNED_OUT, always clear.
         if (event === 'SIGNED_OUT') {
           setSession(null);
           setUser(null);
           setLoading(false);
+          return;
+        }
+
+        // If we already have a user and the new session is null (token refresh failure,
+        // server error, transient issue), keep the current user logged in.
+        // Only trust explicit SIGNED_OUT to clear user state.
+        if (!session && user) {
+          console.warn('[useAuthState] Session became null but user exists, keeping current user (event:', event, ')');
           return;
         }
 
@@ -46,14 +47,13 @@ export const useAuthState = () => {
               .catch((err) => {
                 console.error('[useAuthState] Failed to load user profile:', err);
                 // Don't set user to null on profile load failure if we already have a user
-                // This prevents logout on transient errors
               })
               .finally(() => {
                 if (!canceled) setLoading(false);
               });
           }, 0);
         } else if (!session) {
-          // Only clear user if there's genuinely no session (not a transient error)
+          // Only clear user if there's genuinely no session and no existing user
           setUser(null);
           setLoading(false);
         }
