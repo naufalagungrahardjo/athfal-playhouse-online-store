@@ -62,6 +62,7 @@ export default function GalleryItemForm({ initialData, onSave, onCancel }: Props
             value={item.url}
             onChange={url => setItem({ ...item, url })}
             label="Gallery Image"
+            hint="Recommended: 500×500px (1:1 square). Displays as square thumbnails."
           />
         )}
       </div>

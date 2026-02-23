@@ -10,9 +10,10 @@ interface ImageUploadProps {
   onChange: (url: string) => void;
   label?: string;
   className?: string;
+  hint?: string;
 }
 
-export const ImageUpload = ({ value, onChange, label = "Image", className = "" }: ImageUploadProps) => {
+export const ImageUpload = ({ value, onChange, label = "Image", className = "", hint }: ImageUploadProps) => {
   const handleRemoveImage = () => {
     onChange('');
   };
@@ -28,7 +29,7 @@ export const ImageUpload = ({ value, onChange, label = "Image", className = "" }
   return (
     <div className={className}>
       <Label>{label}</Label>
-      
+      {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
       {value ? (
         <ImagePreview imageUrl={value} onRemove={handleRemoveImage} />
       ) : (
