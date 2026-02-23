@@ -1,10 +1,32 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { FileEdit, Eye, Save } from "lucide-react";
 import { Blog } from "@/hooks/useBlogs";
 import { BlogEditorPreview } from "./BlogEditorPreview";
 import { BlogEditorTabs } from "./BlogEditorTabs";
+import { toast } from "sonner";
+
+const AUTOSAVE_KEY = "blog_autosave_draft";
+const AUTOSAVE_INTERVAL = 15000; // 15 seconds
+
+const saveDraftToLocal = (blog: Blog) => {
+  try {
+    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ blog, savedAt: Date.now() }));
+  } catch (e) { /* ignore */ }
+};
+
+const loadDraftFromLocal = (): { blog: Blog; savedAt: number } | null => {
+  try {
+    const raw = localStorage.getItem(AUTOSAVE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { /* ignore */ }
+  return null;
+};
+
+const clearDraftFromLocal = () => {
+  try { localStorage.removeItem(AUTOSAVE_KEY); } catch (e) { /* ignore */ }
+};
 
 // Blog category options
 const BLOG_CATEGORIES = [
@@ -35,12 +57,45 @@ export const ImprovedBlogEditor = ({
     editingBlog ? new Date(editingBlog.date) : new Date()
   );
   const [previewMode, setPreviewMode] = useState(false);
+  const autosaveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Update local state when editingBlog changes
   useEffect(() => {
+    // Check for autosaved draft when opening a blog
+    if (editingBlog) {
+      const draft = loadDraftFromLocal();
+      if (draft && draft.blog.id === editingBlog.id) {
+        const minutesAgo = Math.round((Date.now() - draft.savedAt) / 60000);
+        if (minutesAgo < 60) {
+          const useDraft = confirm(
+            `Ada draft yang tersimpan otomatis (${minutesAgo} menit yang lalu). Apakah Anda ingin memulihkannya?`
+          );
+          if (useDraft) {
+            setBlog(draft.blog);
+            setDate(draft.blog.date ? new Date(draft.blog.date) : new Date());
+            toast.success("Draft berhasil dipulihkan!");
+            return;
+          }
+        }
+      }
+      clearDraftFromLocal();
+    }
     setBlog(editingBlog);
     setDate(editingBlog ? new Date(editingBlog.date) : new Date());
   }, [editingBlog]);
+
+  // Autosave to localStorage periodically
+  useEffect(() => {
+    if (autosaveTimer.current) clearInterval(autosaveTimer.current);
+    if (blog) {
+      autosaveTimer.current = setInterval(() => {
+        saveDraftToLocal(blog);
+      }, AUTOSAVE_INTERVAL);
+    }
+    return () => {
+      if (autosaveTimer.current) clearInterval(autosaveTimer.current);
+    };
+  }, [blog]);
 
   if (!blog) {
     return (
@@ -55,6 +110,7 @@ export const ImprovedBlogEditor = ({
   }
 
   const handleSave = () => {
+    if (!blog) return;
     if (!blog.title.trim()) {
       alert("Blog title is required");
       return;
@@ -67,11 +123,14 @@ export const ImprovedBlogEditor = ({
       alert("Blog author is required");
       return;
     }
+    clearDraftFromLocal();
     onSave(blog);
   };
 
   const handlePublishToggle = async () => {
+    if (!blog) return;
     const updatedBlog = { ...blog, published: !blog.published };
+    clearDraftFromLocal();
     await onSave(updatedBlog);
     onCancel();
   };

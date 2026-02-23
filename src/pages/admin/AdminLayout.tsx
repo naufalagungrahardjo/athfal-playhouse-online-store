@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Outlet, Navigate } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +9,12 @@ import { getAdminNavigation } from "./helpers/getAdminNavigation";
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, isAdmin, loading } = useAuth();
+  const wasAdmin = useRef(false);
+
+  // Track if user was previously authenticated as admin
+  if (user && isAdmin()) {
+    wasAdmin.current = true;
+  }
 
   if (loading) {
     return (
@@ -18,9 +24,17 @@ const AdminLayout = () => {
     );
   }
 
-  // Redirect non-admin users to home page
+  // Only redirect if user was never admin in this session (prevents redirect during token refresh)
   if (!user || !isAdmin()) {
-    return <Navigate to="/" replace />;
+    if (!wasAdmin.current) {
+      return <Navigate to="/" replace />;
+    }
+    // During token refresh, show loading instead of redirecting
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div>Refreshing session...</div>
+      </div>
+    );
   }
 
   const adminRole = getAdminRole(user);
