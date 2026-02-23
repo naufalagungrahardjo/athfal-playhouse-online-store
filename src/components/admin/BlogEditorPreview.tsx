@@ -9,11 +9,13 @@ interface BlogEditorPreviewProps {
 
 export const BlogEditorPreview = ({ blog }: BlogEditorPreviewProps) => (
   <div className="prose prose-lg max-w-none">
-    <img
-      src={blog.image}
-      alt={blog.title}
-      className="w-full h-64 object-cover rounded-lg mb-6"
-    />
+    <div className="bg-accent rounded-lg mb-6 flex items-center justify-center w-full" style={{ aspectRatio: '16/9' }}>
+      <img
+        src={blog.image}
+        alt={blog.title}
+        className="object-contain max-w-full max-h-full rounded-lg"
+      />
+    </div>
     <div className="flex items-center text-sm text-gray-500 mb-4">
       <span>{format(new Date(blog.date), "MMMM d, yyyy")}</span>
       <span className="mx-2">•</span>

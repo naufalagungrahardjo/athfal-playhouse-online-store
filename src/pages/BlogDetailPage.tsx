@@ -107,7 +107,7 @@ const BlogDetailPage = () => {
 
           {/* Featured image */}
           <div className="mb-8 flex justify-center">
-            <div className="bg-accent rounded-3xl flex items-center justify-center" style={{ width: 450, height: 450 }}>
+            <div className="bg-accent rounded-3xl flex items-center justify-center w-full" style={{ aspectRatio: '16/9', maxWidth: 1920 }}>
               <img
                 src={blog.image}
                 alt={blog.title}
