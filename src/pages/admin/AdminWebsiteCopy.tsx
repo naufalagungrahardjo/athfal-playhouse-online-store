@@ -57,6 +57,7 @@ const AdminWebsiteCopy = () => {
           homePage: { ...DEFAULT_COPY.homePage, ...stored.homePage },
           navigation: { ...DEFAULT_COPY.navigation, ...stored.navigation },
           productCategories: { ...DEFAULT_COPY.productCategories, ...stored.productCategories },
+          paymentConfirmation: { ...DEFAULT_COPY.paymentConfirmation, ...stored.paymentConfirmation },
         });
       }
       setCopyLoading(false);

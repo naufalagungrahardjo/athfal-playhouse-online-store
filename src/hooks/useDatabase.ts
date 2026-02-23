@@ -13,14 +13,44 @@ export interface DatabaseFAQ {
   order_num: number;
 }
 
+export interface BilingualStep {
+  id: string;
+  en: string;
+}
+
 export interface DatabasePaymentMethod {
   id: string;
   bank_name: string;
   account_number: string;
   account_name: string;
   active: boolean;
-  payment_steps?: string[];
+  payment_steps?: BilingualStep[];
 }
+
+const DEFAULT_STEPS: BilingualStep[] = [
+  { id: "Buka aplikasi m-banking atau internet banking Anda.", en: "Open your m-banking or internet banking application." },
+  { id: "Pilih menu Transfer.", en: "Select the bank transfer menu." },
+  { id: "Masukan nomor rekening.", en: "Enter the account number." },
+  { id: "Masukan nominal pembayaran.", en: "Enter the transfer amount." },
+  { id: "Selesaikan pembayaran.", en: "Confirm and complete your transfer." },
+  { id: "Simpan bukti pembayaran Anda.", en: "Save your payment receipt." },
+];
+
+// Convert legacy string[] to BilingualStep[]
+function normalizeSteps(steps: any): BilingualStep[] {
+  if (!Array.isArray(steps)) return DEFAULT_STEPS;
+  return steps.map((step: any) => {
+    if (typeof step === 'string') {
+      return { id: step, en: step };
+    }
+    if (step && typeof step === 'object' && 'id' in step && 'en' in step) {
+      return { id: step.id, en: step.en };
+    }
+    return { id: String(step), en: String(step) };
+  });
+}
+
+export { DEFAULT_STEPS };
 
 export const useDatabase = () => {
   const [faqs, setFaqs] = useState<DatabaseFAQ[]>([]);
@@ -63,23 +93,13 @@ export const useDatabase = () => {
       }
       
       console.log('Payment methods fetched:', data);
-      // Parse payment_steps from JSON and ensure proper typing
       const processedData: DatabasePaymentMethod[] = data?.map(method => ({
         id: method.id,
         bank_name: method.bank_name,
         account_number: method.account_number,
         account_name: method.account_name,
         active: method.active,
-        payment_steps: Array.isArray(method.payment_steps) 
-          ? method.payment_steps as string[]
-          : [
-              "Open your m-banking or internet banking application.",
-              "Select the bank transfer menu.",
-              "Enter the account number.",
-              "Enter the transfer amount.",
-              "Confirm and complete your transfer.",
-              "Save your payment receipt."
-            ]
+        payment_steps: normalizeSteps(method.payment_steps),
       })) || [];
       
       setPaymentMethods(processedData);
@@ -158,14 +178,7 @@ export const useDatabase = () => {
         .from('payment_methods')
         .upsert({
           ...paymentMethod,
-          payment_steps: paymentMethod.payment_steps || [
-            "Open your m-banking or internet banking application.",
-            "Select the bank transfer menu.",
-            "Enter the account number.",
-            "Enter the transfer amount.",
-            "Confirm and complete your transfer.",
-            "Save your payment receipt."
-          ],
+          payment_steps: (paymentMethod.payment_steps || DEFAULT_STEPS) as unknown as any,
           updated_at: new Date().toISOString()
         });
 
