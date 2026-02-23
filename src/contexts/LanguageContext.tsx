@@ -120,6 +120,18 @@ const translations: Translations = {
     id: 'WhatsApp',
     en: 'WhatsApp',
   },
+  childAge: {
+    id: 'Usia Anak',
+    en: 'Child Age',
+  },
+  childBirthdate: {
+    id: 'Tanggal Lahir Anak',
+    en: 'Child Birthdate',
+  },
+  childFieldNote: {
+    id: 'Wajib diisi jika membeli produk berkategori kelas',
+    en: 'Required if purchasing class category products',
+  },
 };
 
 type LanguageContextType = {
