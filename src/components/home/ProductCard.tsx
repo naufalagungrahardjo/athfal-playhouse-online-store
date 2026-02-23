@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
+import { getOptimizedImageUrl } from '@/utils/imageOptimizer';
 
 interface Product {
   id: string;
@@ -30,7 +31,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
       <Card className={`athfal-card overflow-hidden h-full hover:scale-[1.02] transition-all ${isSoldOut ? 'grayscale opacity-70' : ''}`}>
         <div className="aspect-square overflow-hidden relative">
           <img 
-            src={product.image} 
+            src={getOptimizedImageUrl(product.image, { width: 400, quality: 75 })} 
             alt={product.name} 
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             loading="lazy"

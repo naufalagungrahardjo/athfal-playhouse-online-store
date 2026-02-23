@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import { useCollaborators } from '@/hooks/useCollaborators';
+import { getOptimizedImageUrl } from '@/utils/imageOptimizer';
 
 export default function CollaboratorsSlider() {
   const { collaborators, loading } = useCollaborators();
@@ -64,7 +65,7 @@ export default function CollaboratorsSlider() {
                 }}
               >
                 <img
-                  src={c.logo}
+                  src={getOptimizedImageUrl(c.logo, { width: 220, quality: 75 })}
                   alt={c.name}
                   title={c.name}
                   className="object-contain transition-all h-[35px] w-[210px] sm:h-[38px] sm:w-[220px] bg-white rounded-lg shadow border border-gray-100 hover:scale-105"

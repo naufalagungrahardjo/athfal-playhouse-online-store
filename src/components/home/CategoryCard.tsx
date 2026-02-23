@@ -1,5 +1,6 @@
 
 import { Link } from 'react-router-dom';
+import { getOptimizedImageUrl } from '@/utils/imageOptimizer';
 
 interface CategoryCardProps {
   title: string;
@@ -30,7 +31,7 @@ export const CategoryCard = ({ title, href, image, bgColor }: CategoryCardProps)
           />
           {/* Image layer, explicitly above */}
           <img
-            src={image}
+            src={getOptimizedImageUrl(image, { width: 80, quality: 75 })}
             alt={title}
             className="relative w-10 h-10 object-cover rounded-full z-10"
             loading="lazy"
