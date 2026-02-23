@@ -42,7 +42,6 @@ const AdminContent = lazy(() => import("./pages/admin/AdminContent"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminFAQ = lazy(() => import("./pages/admin/AdminFAQ"));
 const AdminPromoCodes = lazy(() => import("./pages/admin/AdminPromoCodes"));
-const AdminPayments = lazy(() => import("./pages/admin/AdminPayments"));
 const AdminWebsiteCopy = lazy(() => import("./pages/admin/AdminWebsiteCopy"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
@@ -94,7 +93,6 @@ const App = () => (
                         <Route path="users" element={<AdminUsers />} />
                         <Route path="faq" element={<AdminFAQ />} />
                         <Route path="promo-codes" element={<AdminPromoCodes />} />
-                        <Route path="payments" element={<AdminPayments />} />
                         <Route path="website-copy" element={<AdminWebsiteCopy />} />
                         <Route path="settings" element={<AdminSettings />} />
                         <Route path="categories" element={<AdminCategories />} />
