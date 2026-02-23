@@ -106,8 +106,10 @@ const App = () => (
                     </Routes>
                   </Suspense>
                 </main>
-                <Footer />
-                <WhatsAppFloatButton />
+                <Suspense fallback={null}>
+                  <Footer />
+                  <WhatsAppFloatButton />
+                </Suspense>
               </div>
             </BrowserRouter>
           </CartProvider>
