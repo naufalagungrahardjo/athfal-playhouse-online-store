@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import { useBlogs } from '@/hooks/useBlogs';
 import { Calendar, User } from 'lucide-react';
+import { getOptimizedImageUrl } from '@/utils/imageOptimizer';
 
 export default function BlogSlider() {
   const { blogs, loading } = useBlogs();
@@ -78,7 +79,7 @@ export default function BlogSlider() {
                   <div className="bg-white border border-athfal-pink/15 rounded-2xl shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300 h-full flex flex-col">
                     <div className="w-full aspect-video rounded-t-2xl overflow-hidden">
                       <img
-                        src={blog.image}
+                        src={getOptimizedImageUrl(blog.image, { width: 340, quality: 75 })}
                         alt={blog.title}
                         className="object-cover w-full h-full transition-transform group-hover:scale-105"
                         loading="lazy"

@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useWebsiteCopy } from '@/hooks/useWebsiteCopy';
+import { getOptimizedImageUrl } from '@/utils/imageOptimizer';
 
 export const HomeBanner = () => {
   const { language } = useLanguage();
@@ -103,7 +104,7 @@ export const HomeBanner = () => {
         </div>
         <div className="relative">
           <img
-            src={currentBanner.image}
+            src={getOptimizedImageUrl(currentBanner.image, { width: 600, quality: 80 })}
             alt={currentBanner.title}
             className="w-full h-64 md:h-80 object-cover rounded-3xl shadow-lg"
             width={600}

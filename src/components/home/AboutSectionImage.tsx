@@ -1,4 +1,5 @@
 import React from 'react';
+import { getOptimizedImageUrl } from '@/utils/imageOptimizer';
 
 interface AboutSectionImageProps {
   heroImage: string;
@@ -12,7 +13,7 @@ export const AboutSectionImage: React.FC<AboutSectionImageProps> = ({
   <div className="relative">
     <div className="rounded-3xl overflow-hidden shadow-xl">
       <img
-        src={heroImage}
+        src={getOptimizedImageUrl(heroImage, { width: 665, quality: 80 })}
         alt="Children playing"
         className="w-full h-auto object-cover"
         loading="lazy"
