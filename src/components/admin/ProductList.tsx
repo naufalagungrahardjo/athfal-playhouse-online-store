@@ -13,6 +13,9 @@ interface ProductListData {
   category: ProductCategory;
   tax: number;
   stock: number;
+  first_payment: number;
+  installment: number;
+  installment_months: number;
 }
 
 interface ProductListProps {
