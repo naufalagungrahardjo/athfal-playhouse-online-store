@@ -68,6 +68,9 @@ export default function CollaboratorsSlider() {
                   alt={c.name}
                   title={c.name}
                   className="object-contain transition-all h-[35px] w-[210px] sm:h-[38px] sm:w-[220px] bg-white rounded-lg shadow border border-gray-100 hover:scale-105"
+                  loading="lazy"
+                  width={210}
+                  height={35}
                   style={{
                     minWidth: 120,
                     minHeight: 25,

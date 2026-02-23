@@ -33,6 +33,9 @@ export const CategoryCard = ({ title, href, image, bgColor }: CategoryCardProps)
             src={image}
             alt={title}
             className="relative w-10 h-10 object-cover rounded-full z-10"
+            loading="lazy"
+            width={40}
+            height={40}
             style={{
               display: "block",
               margin: "auto",

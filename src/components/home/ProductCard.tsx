@@ -33,6 +33,9 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             src={product.image} 
             alt={product.name} 
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+            width={400}
+            height={400}
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.src = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop';
