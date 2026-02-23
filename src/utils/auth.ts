@@ -3,6 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { User, UserRole } from '@/types/auth';
 
+/**
+ * Loads user profile including role for UI display purposes only.
+ *
+ * SECURITY WARNING: This role is used solely for UI/UX (showing/hiding menu items).
+ * Never trust this role for authorization decisions.
+ * All authorization is enforced server-side via RLS policies on the database.
+ */
 export const loadUserProfile = async (supabaseUser: SupabaseUser): Promise<User> => {
   try {
     console.log('[loadUserProfile] Loading profile for:', supabaseUser.email);
