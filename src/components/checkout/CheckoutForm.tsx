@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type CheckoutFormProps = {
   formData: {
@@ -46,7 +47,9 @@ const CheckoutForm = ({
   autofillEnabled,
   onAutofillToggle,
   isLoggedIn
-}: CheckoutFormProps) => (
+}: CheckoutFormProps) => {
+  const { t } = useLanguage();
+  return (
   <form onSubmit={handleSubmit} className="space-y-4">
     {isLoggedIn && (
       <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
@@ -105,27 +108,27 @@ const CheckoutForm = ({
       />
     </div>
     <div>
-      <Label htmlFor="childAge">Usia Anak</Label>
+      <Label htmlFor="childAge">{t('childAge')}</Label>
       <Input
         id="childAge"
         type="text"
         value={formData.childAge}
         onChange={(e) => handleInputChange('childAge', e.target.value)}
-        placeholder="Wajib diisi jika membeli produk berkategori kelas"
+        placeholder={t('childFieldNote')}
         className="placeholder:text-muted-foreground/50"
       />
     </div>
     <div>
-      <Label htmlFor="childBirthdate">Tanggal Lahir Anak</Label>
+      <Label htmlFor="childBirthdate">{t('childBirthdate')}</Label>
       <Input
         id="childBirthdate"
         type="date"
         value={formData.childBirthdate}
         onChange={(e) => handleInputChange('childBirthdate', e.target.value)}
-        placeholder="Wajib diisi jika membeli produk berkategori kelas"
+        placeholder={t('childFieldNote')}
         className="placeholder:text-muted-foreground/50"
       />
-      <p className="text-xs text-muted-foreground/50 mt-1">Wajib diisi jika membeli produk berkategori kelas</p>
+      <p className="text-xs text-muted-foreground/50 mt-1">{t('childFieldNote')}</p>
     </div>
     <div>
       <Label htmlFor="paymentMethod">Payment Method *</Label>
@@ -175,6 +178,7 @@ const CheckoutForm = ({
       {processing ? 'Processing...' : `Proceed Order - ${formatCurrency(total)}`}
     </Button>
   </form>
-);
+  );
+};
 
 export default CheckoutForm;
