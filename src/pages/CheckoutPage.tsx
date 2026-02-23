@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +49,7 @@ const CheckoutPage = () => {
 
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
   const [autofillEnabled, setAutofillEnabled] = useState(false);
+  const orderCompletedRef = useRef(false);
 
   // Load user profile data when autofill is enabled
   const loadUserProfile = async () => {
@@ -102,7 +103,7 @@ const CheckoutPage = () => {
   };
 
   useEffect(() => {
-    if (items.length === 0) {
+    if (items.length === 0 && !orderCompletedRef.current) {
       navigate('/cart');
     }
 
@@ -159,8 +160,9 @@ const CheckoutPage = () => {
     });
 
     if (result.success) {
+      orderCompletedRef.current = true;
       clearCart();
-      localStorage.removeItem('appliedPromo'); // Clear promo after successful order
+      localStorage.removeItem('appliedPromo');
       const tokenParam = result.lookupToken ? `?token=${result.lookupToken}` : '';
       navigate(`/order-details/${result.orderId}${tokenParam}`);
     }
