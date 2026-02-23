@@ -81,6 +81,9 @@ export default function BlogSlider() {
                         src={blog.image}
                         alt={blog.title}
                         className="object-cover w-full h-full transition-transform group-hover:scale-105"
+                        loading="lazy"
+                        width={340}
+                        height={191}
                       />
                     </div>
                     <div className="p-4 flex-1 flex flex-col">

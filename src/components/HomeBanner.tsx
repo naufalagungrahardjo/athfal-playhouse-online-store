@@ -106,6 +106,9 @@ export const HomeBanner = () => {
             src={currentBanner.image}
             alt={currentBanner.title}
             className="w-full h-64 md:h-80 object-cover rounded-3xl shadow-lg"
+            width={600}
+            height={320}
+            fetchPriority="high"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.src = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=600&h=400&fit=crop';

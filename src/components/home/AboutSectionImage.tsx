@@ -15,6 +15,9 @@ export const AboutSectionImage: React.FC<AboutSectionImageProps> = ({
         src={heroImage}
         alt="Children playing"
         className="w-full h-auto object-cover"
+        loading="lazy"
+        width={665}
+        height={223}
       />
     </div>
     <div className="absolute -bottom-6 -left-6 bg-athfal-yellow rounded-full p-4 shadow-lg animate-bounce-slow">
