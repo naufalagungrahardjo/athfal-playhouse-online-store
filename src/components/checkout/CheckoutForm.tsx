@@ -15,6 +15,8 @@ type CheckoutFormProps = {
     customerAddress: string;
     paymentMethod: string;
     notes: string;
+    childAge: string;
+    childBirthdate: string;
   };
   handleInputChange: (field: string, value: string) => void;
   handleSubmit: (e: React.FormEvent) => void;
@@ -101,6 +103,29 @@ const CheckoutForm = ({
         onChange={(e) => handleInputChange('customerAddress', e.target.value)}
         rows={3}
       />
+    </div>
+    <div>
+      <Label htmlFor="childAge">Usia Anak</Label>
+      <Input
+        id="childAge"
+        type="text"
+        value={formData.childAge}
+        onChange={(e) => handleInputChange('childAge', e.target.value)}
+        placeholder="Wajib diisi jika membeli produk berkategori kelas"
+        className="placeholder:text-muted-foreground/50"
+      />
+    </div>
+    <div>
+      <Label htmlFor="childBirthdate">Tanggal Lahir Anak</Label>
+      <Input
+        id="childBirthdate"
+        type="date"
+        value={formData.childBirthdate}
+        onChange={(e) => handleInputChange('childBirthdate', e.target.value)}
+        placeholder="Wajib diisi jika membeli produk berkategori kelas"
+        className="placeholder:text-muted-foreground/50"
+      />
+      <p className="text-xs text-muted-foreground/50 mt-1">Wajib diisi jika membeli produk berkategori kelas</p>
     </div>
     <div>
       <Label htmlFor="paymentMethod">Payment Method *</Label>

@@ -10,6 +10,8 @@ interface OrderData {
   customerAddress?: string;
   paymentMethod: string;
   notes?: string;
+  childAge?: string;
+  childBirthdate?: string;
   items: CartItem[];
   subtotal: number;
   taxAmount: number;
@@ -130,7 +132,9 @@ export const useOrderProcessing = () => {
         total_amount: orderData.totalAmount,
         status: 'pending',
         promo_code: orderData.promoCode || null,
-        discount_amount: orderData.discountAmount || 0
+        discount_amount: orderData.discountAmount || 0,
+        child_age: orderData.childAge || null,
+        child_birthdate: orderData.childBirthdate || null
       };
 
       console.log(`[${errorId}] Order insert data (before submit):`, orderInsert);
