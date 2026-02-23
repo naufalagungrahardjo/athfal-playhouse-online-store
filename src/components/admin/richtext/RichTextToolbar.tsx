@@ -9,18 +9,21 @@ import {
   Link as LinkIcon,
   Type,
   AlignLeft,
+  Video,
 } from "lucide-react";
 
 interface RichTextToolbarProps {
   onInsertHtml: (html: string, content?: string) => void;
   onShowImageDialog: () => void;
   onShowLinkDialog: () => void;
+  onShowVideoDialog: () => void;
 }
 
 export const RichTextToolbar = ({
   onInsertHtml,
   onShowImageDialog,
   onShowLinkDialog,
+  onShowVideoDialog,
 }: RichTextToolbarProps) => (
   <div className="flex flex-wrap gap-2 p-2 border rounded-lg bg-gray-50">
     <Button
@@ -130,6 +133,16 @@ export const RichTextToolbar = ({
       title="Insert Link"
     >
       <LinkIcon className="h-4 w-4" />
+    </Button>
+
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={onShowVideoDialog}
+      title="Insert Video"
+    >
+      <Video className="h-4 w-4" />
     </Button>
   </div>
 );
