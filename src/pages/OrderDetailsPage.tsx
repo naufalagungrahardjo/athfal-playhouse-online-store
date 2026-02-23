@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useOrderDetails } from '@/hooks/useOrderDetails';
+import { useWebsiteCopy } from '@/hooks/useWebsiteCopy';
 import { PaymentTimeoutPage } from '@/components/PaymentTimeoutPage';
 import { ArrowLeft, Copy, Check, Clock } from 'lucide-react';
 
@@ -22,6 +23,7 @@ const formatCurrency = (amount: number) => {
 const OrderDetailsPage = () => {
   const { language } = useLanguage();
   const { paymentMethods } = useDatabase();
+  const { copy } = useWebsiteCopy();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const lookupToken = searchParams.get('token') || undefined;
@@ -288,26 +290,27 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                     </h3>
                     
                     <ol className="list-decimal pl-5 space-y-2 text-gray-700 mb-6">
-                      {selectedPaymentMethod.payment_steps?.map((step: string, index: number) => (
-                        <li key={index}>
-                          {step.includes('account number') || step.includes('nomor rekening') 
-                            ? step.replace(/account number/g, selectedPaymentMethod.account_number).replace(/nomor rekening/g, selectedPaymentMethod.account_number)
-                            : step.includes('transfer amount') || step.includes('jumlah transfer')
-                            ? step.replace(/transfer amount/g, formatCurrency(order.total_amount)).replace(/jumlah transfer/g, formatCurrency(order.total_amount))
-                            : step
-                          }
-                        </li>
-                      ))}
+                      {selectedPaymentMethod.payment_steps?.map((step: any, index: number) => {
+                        const stepText = typeof step === 'string' ? step : (step[language] || step.id || '');
+                        return (
+                          <li key={index}>
+                            {stepText.includes('account number') || stepText.includes('nomor rekening') 
+                              ? stepText.replace(/account number/g, selectedPaymentMethod.account_number).replace(/nomor rekening/g, selectedPaymentMethod.account_number)
+                              : stepText.includes('transfer amount') || stepText.includes('jumlah transfer')
+                              ? stepText.replace(/transfer amount/g, formatCurrency(order.total_amount)).replace(/jumlah transfer/g, formatCurrency(order.total_amount))
+                              : stepText
+                            }
+                          </li>
+                        );
+                      })}
                     </ol>
                     
                     <div className="bg-athfal-peach/10 p-4 rounded-lg mb-6">
                       <h3 className="font-semibold text-athfal-pink mb-2">
-                        {language === 'id' ? 'Konfirmasi Pembayaran' : 'Payment Confirmation'}
+                        {copy.paymentConfirmation.title[language]}
                       </h3>
                       <p className="text-gray-700 mb-2">
-                        {language === 'id' 
-                          ? 'Setelah melakukan pembayaran, mohon kirimkan bukti pembayaran Anda ke WhatsApp admin kami dengan menekan tombol di bawah ini.'
-                          : 'After making the payment, please send your payment proof to our admin via WhatsApp by clicking the button below.'}
+                        {copy.paymentConfirmation.description[language]}
                       </p>
                     </div>
                     
