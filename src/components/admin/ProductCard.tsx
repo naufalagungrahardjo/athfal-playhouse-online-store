@@ -44,12 +44,11 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
             />
             <div>
               <h3 className="font-semibold text-lg">{product.name}</h3>
-              <p className="text-sm text-gray-600 mb-2">{product.description}</p>
-              <div className="flex items-center space-x-4">
+              <div className="flex flex-wrap items-center gap-3 mt-1">
                 <Badge variant="secondary">{product.category}</Badge>
                 <span className="font-bold text-green-600">{formatCurrency(product.price)}</span>
-                <span className="text-sm">Tax: {product.tax}%</span>
-                <span className="text-sm">Stock: {product.stock}</span>
+                <span className="text-sm text-muted-foreground">Tax: {product.tax}%</span>
+                <span className="text-sm text-muted-foreground">Stock: {product.stock}</span>
               </div>
             </div>
           </div>
