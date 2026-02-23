@@ -5,12 +5,27 @@ import { Label } from "@/components/ui/label";
 import { RichTextToolbar } from "./richtext/RichTextToolbar";
 import { ImageDialog } from "./richtext/ImageDialog";
 import { LinkDialog } from "./richtext/LinkDialog";
+import { VideoDialog } from "./richtext/VideoDialog";
 
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
   label?: string;
 }
+
+const convertToEmbed = (url: string): string => {
+  // YouTube: various formats
+  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
+  if (ytMatch) {
+    return `https://www.youtube.com/embed/${ytMatch[1]}`;
+  }
+  // Instagram Reel
+  const igMatch = url.match(/instagram\.com\/(?:reel|p)\/([\w-]+)/);
+  if (igMatch) {
+    return `https://www.instagram.com/reel/${igMatch[1]}/embed`;
+  }
+  return url;
+};
 
 export const RichTextEditor = ({
   value,
@@ -21,11 +36,12 @@ export const RichTextEditor = ({
 
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [showVideoDialog, setShowVideoDialog] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [linkText, setLinkText] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
 
-  // Insert HTML/text at cursor position (replacement of selection)
   const insertAtCursor = (insertValue: string) => {
     const textarea = textareaRef.current;
     if (!textarea) {
@@ -45,7 +61,6 @@ export const RichTextEditor = ({
     }, 0);
   };
 
-  // Insert HTML tags at cursor
   const insertHtml = (htmlTag: string, content?: string) => {
     let text = "";
     if (content) {
@@ -57,7 +72,6 @@ export const RichTextEditor = ({
     insertAtCursor(text);
   };
 
-  // Insert Image at cursor
   const insertImage = () => {
     if (imageUrl) {
       const imgTag = `<img src="${imageUrl}" alt="Blog image" class="w-full rounded-lg my-4" />`;
@@ -67,7 +81,6 @@ export const RichTextEditor = ({
     }
   };
 
-  // Insert Link at cursor
   const insertLink = () => {
     if (linkText && linkUrl) {
       const linkTag = `<a href="${linkUrl}" class="text-athfal-pink hover:underline">${linkText}</a>`;
@@ -75,6 +88,16 @@ export const RichTextEditor = ({
       setLinkText("");
       setLinkUrl("");
       setShowLinkDialog(false);
+    }
+  };
+
+  const insertVideo = () => {
+    if (videoUrl) {
+      const embedSrc = convertToEmbed(videoUrl.trim());
+      const iframeTag = `<div class="my-4"><iframe width="100%" height="400" src="${embedSrc}" frameborder="0" allowfullscreen style="border-radius:8px;"></iframe></div>`;
+      insertAtCursor(iframeTag);
+      setVideoUrl("");
+      setShowVideoDialog(false);
     }
   };
 
@@ -86,6 +109,7 @@ export const RichTextEditor = ({
         onInsertHtml={insertHtml}
         onShowImageDialog={() => setShowImageDialog(true)}
         onShowLinkDialog={() => setShowLinkDialog(true)}
+        onShowVideoDialog={() => setShowVideoDialog(true)}
       />
 
       {showImageDialog && (
@@ -115,18 +139,30 @@ export const RichTextEditor = ({
         />
       )}
 
+      {showVideoDialog && (
+        <VideoDialog
+          videoUrl={videoUrl}
+          setVideoUrl={setVideoUrl}
+          onInsertVideo={insertVideo}
+          onCancel={() => {
+            setVideoUrl("");
+            setShowVideoDialog(false);
+          }}
+        />
+      )}
+
       <Textarea
         ref={textareaRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={20}
         className="min-h-[500px] font-mono text-sm"
-        placeholder="Start writing your blog content here... You can use the toolbar above to add formatting, images, and links."
+        placeholder="Start writing your blog content here... You can use the toolbar above to add formatting, images, links, and videos."
       />
 
       <p className="text-xs text-gray-500">
         This editor supports HTML formatting. Use the toolbar buttons to add
-        headers, paragraphs, bold text, lists, images, and links.
+        headers, paragraphs, bold text, lists, images, links, and videos.
       </p>
     </div>
   );
