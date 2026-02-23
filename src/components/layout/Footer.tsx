@@ -54,7 +54,7 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/products/pop-up-class" className="text-gray-700 hover:text-athfal-pink">
+                <Link to="/products" className="text-gray-700 hover:text-athfal-pink">
                   {t('products')}
                 </Link>
               </li>
