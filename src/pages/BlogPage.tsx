@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Calendar, ChevronRight } from "lucide-react";
 import { useBlogs } from "@/hooks/useBlogs";
 
+const stripHtml = (html: string) => {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent || "";
+};
+
 const BlogPage = () => {
   const { language } = useLanguage();
   const { blogs, loading } = useBlogs();
@@ -78,7 +83,7 @@ const BlogPage = () => {
                 <h2 className="text-2xl font-bold text-athfal-green mb-2">
                   {publishedBlogs[0].title}
                 </h2>
-                <p className="text-gray-600 mb-4">{publishedBlogs[0].content.substring(0, 150)}...</p>
+                <p className="text-gray-600 mb-4">{stripHtml(publishedBlogs[0].content).substring(0, 150)}...</p>
                 <div className="flex items-center mt-2">
                   <Button variant="link" className="text-athfal-pink p-0 flex items-center">
                     {language === "id" ? "Baca selengkapnya" : "Read more"}{" "}
@@ -113,7 +118,7 @@ const BlogPage = () => {
                     {blog.title}
                   </h3>
                   <p className="text-gray-600 text-sm line-clamp-3 mb-2">
-                    {blog.content.substring(0, 100)}...
+                    {stripHtml(blog.content).substring(0, 100)}...
                   </p>
                   <div className="flex justify-between items-center mt-2">
                     <span className="text-xs text-athfal-green bg-athfal-green/10 px-2 py-1 rounded-full">
