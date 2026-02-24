@@ -17,22 +17,26 @@ const MobileMenu = () => {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { categories } = useCategories();
+  const [open, setOpen] = useState(false);
+
+  const close = () => setOpen(false);
 
   const handleProfileClick = () => {
+    close();
     navigate('/profile');
   };
 
   const navItemClass = "text-athfal-pink font-medium hover:text-athfal-pink/80 py-2 text-sm";
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="md:hidden">
           <Menu className="h-6 w-6 text-athfal-pink" />
         </Button>
       </SheetTrigger>
       <SheetContent side="right">
-        <div className="flex flex-col space-y-4 mt-8">
+        <div className="flex flex-col space-y-4 mt-8" onClick={close}>
           <NavigationLinks language={language} nav={nav} extraClass={navItemClass} includeLinks={["home"]} />
           <div className="py-2">
             <h3 className="font-medium text-athfal-pink mb-2 text-base">
@@ -79,7 +83,7 @@ const MobileMenu = () => {
               <Button 
                 variant="destructive" 
                 className="w-full text-lg"
-                onClick={logout}
+                onClick={() => { close(); logout(); }}
               >
                 {t('logout')}
               </Button>
