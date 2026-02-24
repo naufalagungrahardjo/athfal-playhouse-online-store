@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -17,6 +17,11 @@ export const ProductMediaCarousel = ({ media, productName }: ProductMediaCarouse
   const [currentIndex, setCurrentIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const thumbnailsRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      node.scrollLeft = 0;
+    }
+  }, []);
 
   if (!media || media.length === 0) {
     return (
@@ -107,7 +112,7 @@ export const ProductMediaCarousel = ({ media, productName }: ProductMediaCarouse
 
       {/* Thumbnails */}
       {media.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2 justify-center">
+        <div ref={thumbnailsRef} className="flex gap-2 overflow-x-auto pb-2 justify-start">
           {media.map((item, index) => (
             <button
               key={index}
@@ -134,14 +139,14 @@ export const ProductMediaCarousel = ({ media, productName }: ProductMediaCarouse
 
       {/* Lightbox Dialog */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-        <DialogContent className="max-w-[900px] p-4 bg-black/95 border-none">
+        <DialogContent className="max-w-[95vw] sm:max-w-[900px] p-2 sm:p-4 bg-black/95 border-none">
           <div className="relative flex items-center justify-center">
             {imageMedia.length > 0 && (
               <img
                 src={imageMedia[lightboxIndex]?.url}
                 alt={`${productName} - Full size`}
-                className="object-contain rounded-lg"
-                style={{ maxWidth: 800, maxHeight: '80vh' }}
+                className="object-contain rounded-lg w-full h-auto"
+                style={{ maxHeight: '80vh' }}
               />
             )}
 
