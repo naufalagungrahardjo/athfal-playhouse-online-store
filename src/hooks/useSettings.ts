@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface ContactSettings {
   email: string;
@@ -23,7 +24,6 @@ export interface VATSettings {
   percentage: number;
 }
 
-// Default settings that can be overridden by admin
 const DEFAULT_CONTACT: ContactSettings = {
   email: "athfalplayhouse@gmail.com",
   whatsapp: "082120614748",
@@ -69,63 +69,95 @@ export const useSettings = () => {
   const [vat, setVat] = useState<VATSettings>(DEFAULT_VAT);
   const [loading, setLoading] = useState(true);
 
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
-      
-      // Load from localStorage if available, otherwise use defaults
-      const savedContact = localStorage.getItem('athfal_contact_settings');
-      const savedPayments = localStorage.getItem('athfal_payment_settings');
-      const savedVat = localStorage.getItem('athfal_vat_settings');
 
-      if (savedContact) {
-        // Merge default with saved in case new fields are added
-        setContact({ ...DEFAULT_CONTACT, ...JSON.parse(savedContact) });
-      }
-      if (savedPayments) {
-        setPayments(JSON.parse(savedPayments));
-      }
-      if (savedVat) {
-        setVat(JSON.parse(savedVat));
+      // Fetch contact settings from Supabase
+      const { data, error } = await supabase
+        .from('website_copy')
+        .select('content')
+        .eq('id', 'contact_settings')
+        .maybeSingle();
+
+      if (!error && data?.content && typeof data.content === 'object') {
+        const stored = data.content as Record<string, unknown>;
+        if (stored.contact) {
+          setContact({ ...DEFAULT_CONTACT, ...(stored.contact as Record<string, unknown>) } as ContactSettings);
+        }
+        if (stored.payments) {
+          setPayments(stored.payments as unknown as PaymentMethod[]);
+        }
+        if (stored.vat) {
+          setVat({ ...DEFAULT_VAT, ...(stored.vat as Record<string, unknown>) } as VATSettings);
+        }
+      } else {
+        // Fallback: try localStorage for migration
+        const savedContact = localStorage.getItem('athfal_contact_settings');
+        const savedPayments = localStorage.getItem('athfal_payment_settings');
+        const savedVat = localStorage.getItem('athfal_vat_settings');
+
+        if (savedContact) setContact({ ...DEFAULT_CONTACT, ...JSON.parse(savedContact) });
+        if (savedPayments) setPayments(JSON.parse(savedPayments));
+        if (savedVat) setVat({ ...DEFAULT_VAT, ...JSON.parse(savedVat) });
       }
     } catch (error) {
       console.error('Error loading settings:', error);
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const saveToSupabase = async (newContact: ContactSettings, newPayments: PaymentMethod[], newVat: VATSettings) => {
+    const content = { contact: newContact, payments: newPayments, vat: newVat };
+    const { error } = await supabase
+      .from('website_copy')
+      .upsert({ id: 'contact_settings', content: content as unknown as Record<string, unknown>, updated_at: new Date().toISOString() } as any);
+
+    if (error) {
+      console.error('Error saving settings to Supabase:', error);
+    }
   };
 
-  const saveContactSettings = (newContact: ContactSettings) => {
+  const saveContactSettings = async (newContact: ContactSettings) => {
     setContact(newContact);
+    // Also keep localStorage as cache
     localStorage.setItem('athfal_contact_settings', JSON.stringify(newContact));
-    // Dispatch custom event to notify other components
-    window.dispatchEvent(new CustomEvent('athfal-settings-updated'));
+    await saveToSupabase(newContact, payments, vat);
   };
 
-  const savePaymentSettings = (newPayments: PaymentMethod[]) => {
+  const savePaymentSettings = async (newPayments: PaymentMethod[]) => {
     setPayments(newPayments);
     localStorage.setItem('athfal_payment_settings', JSON.stringify(newPayments));
+    await saveToSupabase(contact, newPayments, vat);
   };
 
-  const saveVatSettings = (newVat: VATSettings) => {
+  const saveVatSettings = async (newVat: VATSettings) => {
     setVat(newVat);
     localStorage.setItem('athfal_vat_settings', JSON.stringify(newVat));
+    await saveToSupabase(contact, payments, newVat);
   };
 
   useEffect(() => {
     fetchSettings();
-    
-    // Listen for settings updates from other components
-    const handleSettingsUpdate = () => {
-      fetchSettings();
-    };
-    
-    window.addEventListener('athfal-settings-updated', handleSettingsUpdate);
-    
+
+    // Listen for real-time updates from Supabase
+    const channel = supabase
+      .channel('contact_settings_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'website_copy',
+        filter: 'id=eq.contact_settings'
+      }, () => {
+        fetchSettings();
+      })
+      .subscribe();
+
     return () => {
-      window.removeEventListener('athfal-settings-updated', handleSettingsUpdate);
+      supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchSettings]);
 
   return {
     contact,
