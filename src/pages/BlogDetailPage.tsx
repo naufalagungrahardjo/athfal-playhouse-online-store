@@ -5,6 +5,12 @@ import { Calendar, ArrowLeft, User } from "lucide-react";
 import DOMPurify from "dompurify";
 import { Button } from "@/components/ui/button";
 import { useBlogs, Blog } from "@/hooks/useBlogs";
+import { SEOHead } from "@/components/SEOHead";
+
+const stripHtml = (html: string) => {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent || "";
+};
 
 const BlogDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -70,6 +76,13 @@ const BlogDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEOHead
+        title={blog.title}
+        description={blog.meta_description || stripHtml(blog.content).substring(0, 155)}
+        image={blog.image}
+        url={`/blog/${blog.id}`}
+        type="article"
+      />
       <div className="w-full">
         <div className="max-w-[760px] mx-auto px-2 sm:px-6 py-12">
           {/* Breadcrumb */}

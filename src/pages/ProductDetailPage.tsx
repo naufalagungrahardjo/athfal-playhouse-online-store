@@ -10,6 +10,7 @@ import { RelatedProducts } from '@/components/RelatedProducts';
 import ProductBreadcrumb from "@/components/product/ProductBreadcrumb";
 import ProductMainSection from "@/components/product/ProductMainSection";
 import ProductTabs from "@/components/product/ProductTabs";
+import { SEOHead } from '@/components/SEOHead';
 
 // Format currency
 const formatCurrency = (amount: number) => {
@@ -91,6 +92,13 @@ const ProductDetailPage = () => {
 
   return (
     <div className="min-h-screen">
+      <SEOHead
+        title={product.name}
+        description={product.description?.substring(0, 155)}
+        image={product.image}
+        url={`/product/${id}`}
+        type="product"
+      />
       <div className="athfal-container py-12">
         <ProductBreadcrumb
           productName={product.name}

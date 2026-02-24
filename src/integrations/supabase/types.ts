@@ -135,6 +135,7 @@ export type Database = {
           expiry_date: string | null
           id: string
           image: string
+          meta_description: string | null
           published: boolean
           title: string
           updated_at: string
@@ -148,6 +149,7 @@ export type Database = {
           expiry_date?: string | null
           id: string
           image: string
+          meta_description?: string | null
           published?: boolean
           title: string
           updated_at?: string
@@ -161,6 +163,7 @@ export type Database = {
           expiry_date?: string | null
           id?: string
           image?: string
+          meta_description?: string | null
           published?: boolean
           title?: string
           updated_at?: string

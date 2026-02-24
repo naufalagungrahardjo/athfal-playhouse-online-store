@@ -13,6 +13,7 @@ export interface Blog {
   category: string;
   published: boolean;
   expiry_date?: string | null;
+  meta_description?: string | null;
 }
 
 export const useBlogs = () => {
@@ -52,7 +53,8 @@ export const useBlogs = () => {
         date: blog.date || new Date().toISOString().split('T')[0],
         category: blog.category || 'General',
         published: blog.published || false,
-        expiry_date: blog.expiry_date
+        expiry_date: blog.expiry_date,
+        meta_description: blog.meta_description || null
       }));
 
       setBlogs(formattedBlogs);
@@ -87,7 +89,8 @@ export const useBlogs = () => {
         category: blog.category,
         published: blog.published,
         updated_at: new Date().toISOString(),
-        expiry_date: blog.expiry_date ?? null
+        expiry_date: blog.expiry_date ?? null,
+        meta_description: blog.meta_description ?? null
       };
 
       const { error } = await supabase
