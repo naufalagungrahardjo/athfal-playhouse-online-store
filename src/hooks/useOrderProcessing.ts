@@ -29,7 +29,6 @@ export const useOrderProcessing = () => {
     try {
       setProcessing(true);
       const errorId = `ORD-${Date.now()}`;
-      console.log(`[${errorId}] Processing order:`, orderData);
 
       // Validate stock from database before proceeding
       for (const item of orderData.items) {
@@ -77,14 +76,14 @@ export const useOrderProcessing = () => {
 
       // Enforce promo code usage limit BEFORE creating order
       if (orderData.promoCodeId && orderData.promoCode) {
-        console.log(`[${errorId}] Pre-validating and incrementing promo usage for code:`, orderData.promoCode);
+        // Pre-validate and increment promo usage
         
         // Use SECURITY DEFINER RPC to validate (works for anonymous users too)
         const { data: promoResult, error: promoCheckError } = await supabase
           .rpc('validate_promo_code', { code_input: orderData.promoCode });
 
         if (promoCheckError || !promoResult || promoResult.length === 0) {
-          console.error(`[${errorId}] Promo pre-check failed:`, promoCheckError);
+          console.error(`[${errorId}] Promo pre-check failed`);
           toast({
             variant: "destructive",
             title: "Promo unavailable",
@@ -101,7 +100,7 @@ export const useOrderProcessing = () => {
           });
 
         if (promoIncError || !reserved) {
-          console.error(`[${errorId}] Failed to reserve promo usage:`, promoIncError);
+          console.error(`[${errorId}] Failed to reserve promo usage`);
           toast({
             variant: "destructive",
             title: "Promo quota reached",
@@ -111,12 +110,11 @@ export const useOrderProcessing = () => {
           return { success: false };
         }
 
-        console.log(`[${errorId}] Promo usage reserved successfully.`);
+        // Promo usage reserved successfully
       }
 
       // Check current user status
       const { data: { user } } = await supabase.auth.getUser();
-      console.log(`[${errorId}] Current user:`, user);
 
       // Create the order with all required fields
       const orderInsert = {
@@ -137,10 +135,6 @@ export const useOrderProcessing = () => {
         child_birthdate: orderData.childBirthdate || null
       };
 
-      console.log(`[${errorId}] Order insert data (before submit):`, orderInsert);
-      console.log(`[${errorId}] User authenticated:`, !!user);
-      console.log(`[${errorId}] User ID:`, user?.id || 'null');
-
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert(orderInsert)
@@ -148,8 +142,7 @@ export const useOrderProcessing = () => {
         .single();
 
       if (orderError) {
-        // NEW: Expose full error object and SQL error message to the user!
-        console.error(`[${errorId}] Order creation error:`, orderError, orderInsert, orderData);
+        console.error(`[${errorId}] Order creation failed`);
         toast({
           variant: "destructive",
           title: "Order Failed",
@@ -159,7 +152,7 @@ export const useOrderProcessing = () => {
         return { success: false };
       }
 
-      console.log(`[${errorId}] Order created successfully:`, order);
+      // Order created successfully
 
       // Create order items
       const orderItems = orderData.items.map(item => ({
@@ -170,14 +163,14 @@ export const useOrderProcessing = () => {
         quantity: item.quantity
       }));
 
-      console.log(`[${errorId}] Creating order items:`, orderItems);
+      // Creating order items
 
       const { error: itemsError } = await supabase
         .from('order_items')
         .insert(orderItems);
 
       if (itemsError) {
-        console.error(`[${errorId}] Order items creation error:`, itemsError);
+        console.error(`[${errorId}] Order items creation failed`);
         toast({
           variant: "destructive",
           title: "Order Item Failed",
@@ -187,7 +180,7 @@ export const useOrderProcessing = () => {
         return { success: false };
       }
 
-      console.log(`[${errorId}] Order items created successfully`);
+      // Order items created successfully
 
       // Increment promo code usage count if promo was applied
       // Promo code usage is now validated and incremented BEFORE order creation to strictly enforce quota.
@@ -206,7 +199,7 @@ export const useOrderProcessing = () => {
       return { success: true, orderId: order.id, lookupToken: order.lookup_token };
     } catch (error: any) {
       const errorId = `ORD-${Date.now()}`;
-      console.error(`[${errorId}] Error processing order:`, error);
+      console.error(`[${errorId}] Unexpected order error`);
       toast({
         variant: "destructive",
         title: "Order Failed",

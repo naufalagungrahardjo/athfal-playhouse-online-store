@@ -18,11 +18,28 @@ const InstagramEmbed = ({ url, title }: { url: string; title: string }) => {
     if (!containerRef.current) return;
     const postUrl = getPostUrl(url);
     
-    containerRef.current.innerHTML = `
-      <blockquote class="instagram-media" data-instgrm-captioned data-instgrm-permalink="${postUrl}" data-instgrm-version="14" style="width:100%;max-width:540px;margin:0 auto;">
-        <a href="${postUrl}" target="_blank">${title}</a>
-      </blockquote>
-    `;
+    // Validate Instagram URL to prevent XSS
+    if (!/^https:\/\/(www\.)?instagram\.com\//.test(postUrl)) {
+      containerRef.current.textContent = 'Invalid Instagram URL';
+      return;
+    }
+
+    // Use DOM API instead of innerHTML to prevent XSS
+    const blockquote = document.createElement('blockquote');
+    blockquote.className = 'instagram-media';
+    blockquote.setAttribute('data-instgrm-captioned', '');
+    blockquote.setAttribute('data-instgrm-permalink', postUrl);
+    blockquote.setAttribute('data-instgrm-version', '14');
+    blockquote.style.cssText = 'width:100%;max-width:540px;margin:0 auto;';
+    
+    const link = document.createElement('a');
+    link.href = postUrl;
+    link.target = '_blank';
+    link.textContent = title;
+    blockquote.appendChild(link);
+    
+    containerRef.current.innerHTML = '';
+    containerRef.current.appendChild(blockquote);
 
     // Load or re-process Instagram embed script
     if ((window as any).instgrm) {
