@@ -43,6 +43,7 @@ const CheckoutPage = () => {
     customerAddress: '',
     paymentMethod: '',
     notes: '',
+    childName: '',
     childAge: '',
     childBirthdate: ''
   });
@@ -148,6 +149,7 @@ const CheckoutPage = () => {
 
     const result = await processOrder({
       ...formData,
+      childName: formData.childName,
       childAge: formData.childAge,
       childBirthdate: formData.childBirthdate,
       items,

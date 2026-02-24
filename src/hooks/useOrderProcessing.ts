@@ -10,6 +10,7 @@ interface OrderData {
   customerAddress?: string;
   paymentMethod: string;
   notes?: string;
+  childName?: string;
   childAge?: string;
   childBirthdate?: string;
   items: CartItem[];
@@ -131,6 +132,7 @@ export const useOrderProcessing = () => {
         status: 'pending',
         promo_code: orderData.promoCode || null,
         discount_amount: orderData.discountAmount || 0,
+        child_name: orderData.childName || null,
         child_age: orderData.childAge || null,
         child_birthdate: orderData.childBirthdate || null
       };

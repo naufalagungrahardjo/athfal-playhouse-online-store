@@ -16,6 +16,7 @@ type CheckoutFormProps = {
     customerAddress: string;
     paymentMethod: string;
     notes: string;
+    childName: string;
     childAge: string;
     childBirthdate: string;
   };
@@ -105,6 +106,17 @@ const CheckoutForm = ({
         value={formData.customerAddress}
         onChange={(e) => handleInputChange('customerAddress', e.target.value)}
         rows={3}
+      />
+    </div>
+    <div>
+      <Label htmlFor="childName">{t('childName')}</Label>
+      <Input
+        id="childName"
+        type="text"
+        value={formData.childName}
+        onChange={(e) => handleInputChange('childName', e.target.value)}
+        placeholder={t('childFieldNote')}
+        className="placeholder:text-muted-foreground/50"
       />
     </div>
     <div>
