@@ -20,7 +20,27 @@ export const ManagementSlider = ({ members }: ManagementSliderProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
-  const numVisible = 4;
+  const [numVisible, setNumVisible] = useState(4);
+
+  // Responsive visible count
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      if (w < 640) setNumVisible(1);
+      else if (w < 768) setNumVisible(2);
+      else if (w < 1024) setNumVisible(3);
+      else setNumVisible(4);
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  // Clamp index when numVisible changes
+  useEffect(() => {
+    const maxIndex = Math.max(0, members.length - numVisible);
+    if (currentIndex > maxIndex) setCurrentIndex(maxIndex);
+  }, [numVisible, members.length, currentIndex]);
 
   // Auto play functionality
   useEffect(() => {
@@ -93,7 +113,8 @@ export const ManagementSlider = ({ members }: ManagementSliderProps) => {
           {members.map((member, index) => (
             <div 
               key={index}
-              className="w-1/4 flex-shrink-0 px-3"
+              className="flex-shrink-0 px-3"
+              style={{ width: `${100 / numVisible}%` }}
             >
               <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="h-64 overflow-hidden">
