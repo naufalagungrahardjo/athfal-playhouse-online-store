@@ -120,6 +120,10 @@ const translations: Translations = {
     id: 'WhatsApp',
     en: 'WhatsApp',
   },
+  childName: {
+    id: 'Nama Anak',
+    en: 'Child Name',
+  },
   childAge: {
     id: 'Usia Anak',
     en: 'Child Age',

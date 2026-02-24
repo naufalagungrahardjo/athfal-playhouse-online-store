@@ -305,6 +305,7 @@ export type Database = {
         Row: {
           child_age: string | null
           child_birthdate: string | null
+          child_name: string | null
           created_at: string | null
           customer_address: string | null
           customer_email: string
@@ -327,6 +328,7 @@ export type Database = {
         Insert: {
           child_age?: string | null
           child_birthdate?: string | null
+          child_name?: string | null
           created_at?: string | null
           customer_address?: string | null
           customer_email: string
@@ -349,6 +351,7 @@ export type Database = {
         Update: {
           child_age?: string | null
           child_birthdate?: string | null
+          child_name?: string | null
           created_at?: string | null
           customer_address?: string | null
           customer_email?: string
