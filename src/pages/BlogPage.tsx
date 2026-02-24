@@ -1,10 +1,10 @@
-
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, ChevronRight } from "lucide-react";
 import { useBlogs } from "@/hooks/useBlogs";
+import { SEOHead } from "@/components/SEOHead";
 
 const stripHtml = (html: string) => {
   const doc = new DOMParser().parseFromString(html, "text/html");
@@ -55,6 +55,7 @@ const BlogPage = () => {
 
   return (
     <div className="min-h-screen">
+      <SEOHead title="Blog & Artikel" description="Baca artikel terbaru seputar pendidikan anak Islami, tips parenting, dan kegiatan Athfal Playhouse." url="/blog" />
       <div className="athfal-container py-12">
         <h1 className="text-3xl font-bold text-athfal-pink mb-8">
           {language === "id" ? "Blog & Artikel" : "Blog & Articles"}

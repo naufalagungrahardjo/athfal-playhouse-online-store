@@ -4,6 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Linkedin } from "lucide-react";
 import { ManagementSlider } from "@/components/ManagementSlider";
 import { useAboutContent } from "@/hooks/useAboutContent";
+import { SEOHead } from "@/components/SEOHead";
 
 const AboutPage = () => {
   const { language } = useLanguage();
@@ -19,6 +20,7 @@ const AboutPage = () => {
 
   return (
     <div className="min-h-screen">
+      <SEOHead title="Tentang Kami" description="Kenali Athfal Playhouse, pusat edukasi anak dengan pendekatan Islami yang menyenangkan." url="/about" />
       <div className="athfal-container py-12">
         <h1 className="text-3xl font-bold text-athfal-pink mb-8">
           {language === "id" ? content.heroTitle.id : content.heroTitle.en}

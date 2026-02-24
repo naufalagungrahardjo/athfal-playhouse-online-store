@@ -6,10 +6,12 @@ import { TestimonialsSection } from '@/components/home/TestimonialsSection';
 import { CTASection } from '@/components/home/CTASection';
 import CollaboratorsSlider from '@/components/home/CollaboratorsSlider';
 import BlogSlider from '@/components/home/BlogSlider';
+import { SEOHead } from '@/components/SEOHead';
 
 const HomePage = () => {
   return (
     <div className="flex flex-col min-h-screen">
+      <SEOHead url="/" />
       <HomeBanner />
       <CollaboratorsSlider />
       <CategoriesSection />
