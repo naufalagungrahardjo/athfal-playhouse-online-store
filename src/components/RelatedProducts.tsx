@@ -56,8 +56,8 @@ export const RelatedProducts = ({ currentProductId, currentCategory }: RelatedPr
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {relatedProducts.map((product) => (
           <Link to={`/product/${product.id}`} key={product.id}>
-            <Card className="athfal-card overflow-hidden h-full hover:scale-[1.02] transition-all">
-              <div className="aspect-square overflow-hidden">
+            <Card className={`athfal-card overflow-hidden h-full hover:scale-[1.02] transition-all ${product.stock !== undefined && product.stock <= 0 ? 'grayscale opacity-70' : ''}`}>
+              <div className="aspect-square overflow-hidden relative">
                 <img 
                   src={product.image} 
                   alt={product.name} 
@@ -67,6 +67,11 @@ export const RelatedProducts = ({ currentProductId, currentCategory }: RelatedPr
                     target.src = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop';
                   }}
                 />
+                {product.stock !== undefined && product.stock <= 0 && (
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                    <span className="bg-red-600 text-white font-bold px-4 py-2 rounded-lg text-lg">SOLD OUT</span>
+                  </div>
+                )}
               </div>
               <CardContent className="p-4">
                 <h4 className="font-semibold text-lg mb-2 text-athfal-pink line-clamp-2">
@@ -75,9 +80,13 @@ export const RelatedProducts = ({ currentProductId, currentCategory }: RelatedPr
                 <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                   {product.description}
                 </p>
-                <p className="font-bold text-athfal-green">
-                  {formatCurrency(product.price)}
-                </p>
+                {product.stock !== undefined && product.stock <= 0 ? (
+                  <p className="font-bold text-red-600">SOLD OUT</p>
+                ) : (
+                  <p className="font-bold text-athfal-green">
+                    {formatCurrency(product.price)}
+                  </p>
+                )}
               </CardContent>
             </Card>
           </Link>
