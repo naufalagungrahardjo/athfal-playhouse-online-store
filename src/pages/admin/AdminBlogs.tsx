@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FilePlus } from "lucide-react";
 import { format } from "date-fns";
-import { useBlogs, Blog } from "@/hooks/useBlogs";
+import { useBlogs, Blog, generateSlug } from "@/hooks/useBlogs";
 import { BlogList } from "@/components/admin/BlogList";
 import { ImprovedBlogEditor } from "@/components/admin/ImprovedBlogEditor";
 
@@ -22,7 +22,8 @@ const AdminBlogs = () => {
       author: "Admin",
       date: format(new Date(), "yyyy-MM-dd"),
       category: "Tips & Trik",
-      published: false
+      published: false,
+      slug: ''
     };
     
     setEditingBlog(newBlog);

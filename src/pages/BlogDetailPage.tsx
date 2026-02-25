@@ -13,28 +13,28 @@ const stripHtml = (html: string) => {
 };
 
 const BlogDetailPage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const { language } = useLanguage();
   const { blogs, loading } = useBlogs();
   const [blog, setBlog] = useState<Blog | null>(null);
   const [relatedBlogs, setRelatedBlogs] = useState<Blog[]>([]);
 
   useEffect(() => {
-    if (!loading && blogs.length > 0 && id) {
-      // Find the blog with the matching ID
-      const foundBlog = blogs.find((b) => b.id === id);
+    if (!loading && blogs.length > 0 && slug) {
+      // Find blog by slug first, then fall back to id for backward compatibility
+      const foundBlog = blogs.find((b) => b.slug === slug) || blogs.find((b) => b.id === slug);
       if (foundBlog) {
         setBlog(foundBlog);
         
         // Get related blogs (excluding the current one)
         const related = blogs
-          .filter((b) => b.id !== id && b.published)
+          .filter((b) => b.id !== foundBlog.id && b.published)
           .slice(0, 3);
         
         setRelatedBlogs(related);
       }
     }
-  }, [id, blogs, loading]);
+  }, [slug, blogs, loading]);
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -80,7 +80,7 @@ const BlogDetailPage = () => {
         title={blog.title}
         description={blog.meta_description || stripHtml(blog.content).substring(0, 155)}
         image={blog.image}
-        url={`/blog/${blog.id}`}
+        url={`/blog/${blog.slug || blog.id}`}
         type="article"
       />
       <div className="w-full">
@@ -182,7 +182,7 @@ const BlogDetailPage = () => {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {relatedBlogs.map((relatedBlog) => (
-                  <Link to={`/blog/${relatedBlog.id}`} key={relatedBlog.id} className="group">
+                  <Link to={`/blog/${relatedBlog.slug || relatedBlog.id}`} key={relatedBlog.id} className="group">
                     <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all h-full">
                       <div className="aspect-[4/3] overflow-hidden">
                         <img 

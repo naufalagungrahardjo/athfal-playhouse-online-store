@@ -75,7 +75,7 @@ export default function BlogSlider() {
                 className="basis-auto px-2 sm:px-4 flex items-center justify-center"
                 style={{ width: 340, maxWidth: 360 }}
               >
-                <Link to={`/blog/${blog.id}`} className="block w-full h-full group">
+                <Link to={`/blog/${blog.slug || blog.id}`} className="block w-full h-full group">
                   <div className="bg-white border border-athfal-pink/15 rounded-2xl shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300 h-full flex flex-col">
                     <div className="w-full aspect-video rounded-t-2xl overflow-hidden">
                       <img
