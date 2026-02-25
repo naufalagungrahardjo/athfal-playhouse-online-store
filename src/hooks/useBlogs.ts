@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 export interface Blog {
   id: string;
   title: string;
+  slug?: string | null;
   content: string;
   image: string;
   author: string;
@@ -15,6 +16,15 @@ export interface Blog {
   expiry_date?: string | null;
   meta_description?: string | null;
 }
+
+export const generateSlug = (title: string): string => {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+};
 
 export const useBlogs = () => {
   const [blogs, setBlogs] = useState<Blog[]>([]);
@@ -54,7 +64,8 @@ export const useBlogs = () => {
         category: blog.category || 'General',
         published: blog.published || false,
         expiry_date: blog.expiry_date,
-        meta_description: blog.meta_description || null
+        meta_description: blog.meta_description || null,
+        slug: blog.slug || null
       }));
 
       setBlogs(formattedBlogs);
@@ -90,7 +101,8 @@ export const useBlogs = () => {
         published: blog.published,
         updated_at: new Date().toISOString(),
         expiry_date: blog.expiry_date ?? null,
-        meta_description: blog.meta_description ?? null
+        meta_description: blog.meta_description ?? null,
+        slug: blog.slug || generateSlug(blog.title)
       };
 
       const { error } = await supabase

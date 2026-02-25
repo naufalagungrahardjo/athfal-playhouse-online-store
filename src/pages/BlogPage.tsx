@@ -63,7 +63,7 @@ const BlogPage = () => {
 
         {/* Featured blog */}
         <div className="mb-12">
-          <Link to={`/blog/${publishedBlogs[0].id}`}>
+          <Link to={`/blog/${publishedBlogs[0].slug || publishedBlogs[0].id}`}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-athfal-peach/10 rounded-3xl overflow-hidden hover:shadow-md transition-all">
               <div className="flex items-center justify-center p-4">
                 <div className="bg-accent rounded-2xl flex items-center justify-center w-full" style={{ aspectRatio: '16/9', maxWidth: 1920 }}>
@@ -99,7 +99,7 @@ const BlogPage = () => {
         {/* Blog list */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {publishedBlogs.slice(1).map((blog) => (
-            <Link to={`/blog/${blog.id}`} key={blog.id}>
+            <Link to={`/blog/${blog.slug || blog.id}`} key={blog.id}>
               <Card className="overflow-hidden h-full hover:shadow-md transition-all">
                 <div className="flex items-center justify-center overflow-hidden">
                   <div className="bg-accent flex items-center justify-center w-full" style={{ aspectRatio: '16/9' }}>
