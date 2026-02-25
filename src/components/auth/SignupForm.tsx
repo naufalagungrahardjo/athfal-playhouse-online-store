@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
+import GoogleSignInButton from "./GoogleSignInButton";
 
 type SignupFormProps = {
   name: string;
@@ -121,6 +122,17 @@ const SignupForm = ({
         <span>{language === "id" ? "Daftar" : "Sign Up"}</span>
       )}
     </Button>
+    <div className="relative my-4">
+      <div className="absolute inset-0 flex items-center">
+        <span className="w-full border-t" />
+      </div>
+      <div className="relative flex justify-center text-xs uppercase">
+        <span className="bg-background px-2 text-muted-foreground">
+          {language === "id" ? "atau" : "or"}
+        </span>
+      </div>
+    </div>
+    <GoogleSignInButton language={language} label={language === "id" ? "Daftar dengan Google" : "Sign up with Google"} />
   </form>
 );
 
