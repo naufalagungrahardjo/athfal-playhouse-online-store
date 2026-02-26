@@ -106,7 +106,7 @@ export const HomeBanner = () => {
             </a>
           </div>
         </div>
-        <div className="relative">
+        <div className="relative" style={{ minWidth: 300, minHeight: 256 }}>
           <img
             src={getOptimizedImageUrl(currentBanner.image, { width: 600, quality: 80 })}
             alt={currentBanner.title}

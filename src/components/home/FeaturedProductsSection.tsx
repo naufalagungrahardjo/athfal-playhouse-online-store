@@ -22,10 +22,13 @@ export const FeaturedProductsSection = () => {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="animate-pulse">
-                <div className="bg-gray-200 aspect-square rounded-lg mb-4"></div>
-                <div className="bg-gray-200 h-4 rounded mb-2"></div>
-                <div className="bg-gray-200 h-3 rounded"></div>
+              <div key={i} className="animate-pulse rounded-lg border bg-card shadow-sm overflow-hidden">
+                <div className="bg-gray-200 aspect-square"></div>
+                <div className="p-4">
+                  <div className="bg-gray-200 h-5 rounded mb-2 w-3/4"></div>
+                  <div className="bg-gray-200 h-3 rounded mb-3 w-full"></div>
+                  <div className="bg-gray-200 h-5 rounded w-1/3"></div>
+                </div>
               </div>
             ))}
           </div>
