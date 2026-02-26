@@ -16,8 +16,10 @@ export const CategoriesSection = () => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="animate-pulse">
-                <div className="bg-gray-200 rounded-2xl aspect-square mb-2"></div>
-                <div className="bg-gray-200 h-4 rounded w-2/3 mx-auto"></div>
+                <div className="bg-gray-200 rounded-3xl shadow-md p-6 flex flex-col items-center">
+                  <div className="bg-gray-300 rounded-full mb-4" style={{ width: 56, height: 56 }}></div>
+                  <div className="bg-gray-300 h-4 rounded w-2/3"></div>
+                </div>
               </div>
             ))}
           </div>
