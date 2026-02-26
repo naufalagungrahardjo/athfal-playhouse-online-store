@@ -5,4 +5,4 @@ Disallow: /auth/
 Disallow: /checkout
 Disallow: /order-details/
 
-Sitemap: https://athfal-playhouse.lovable.app/sitemap.xml
+Sitemap: https://athfalplayhouse.com/sitemap.xml

@@ -10,8 +10,8 @@ interface SEOHeadProps {
 
 const SITE_NAME = "Athfal Playhouse";
 const DEFAULT_DESCRIPTION = "Pusat edukasi dan bermain anak dengan pendekatan Islami. Temukan kelas, mainan edukatif, dan play kit untuk si kecil.";
-const DEFAULT_IMAGE = "https://athfal-playhouse.lovable.app/lovable-uploads/banner_1.png";
-const BASE_URL = "https://athfal-playhouse.lovable.app";
+const DEFAULT_IMAGE = "https://athfalplayhouse.com/lovable-uploads/banner_1.png";
+const BASE_URL = "https://athfalplayhouse.com";
 
 export const SEOHead = ({
   title,
