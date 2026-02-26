@@ -38,11 +38,15 @@ export const HomeBanner = () => {
 
   if (loading) {
     return (
-      <div className="bg-athfal-peach/20 py-16">
-        <div className="athfal-container">
-          <div className="animate-pulse">
-            <div className="bg-gray-200 h-8 w-64 rounded mb-4"></div>
-            <div className="bg-gray-200 h-4 w-96 rounded"></div>
+      <div className="bg-athfal-pink/5 pt-10 pb-20 md:pt-20 md:pb-28">
+        <div className="athfal-container flex flex-col gap-8 md:flex-row items-center">
+          <div className="flex-1 flex flex-col gap-6 text-center md:text-left animate-pulse">
+            <div className="bg-gray-200 h-10 w-3/4 rounded"></div>
+            <div className="bg-gray-200 h-5 w-full rounded"></div>
+            <div className="bg-gray-200 h-12 w-40 rounded-xl mt-5"></div>
+          </div>
+          <div className="relative">
+            <div className="bg-gray-200 w-full h-64 md:h-80 rounded-3xl" style={{ width: 600, maxWidth: '100%' }}></div>
           </div>
         </div>
       </div>
