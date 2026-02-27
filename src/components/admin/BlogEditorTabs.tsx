@@ -65,11 +65,11 @@ export const BlogEditorTabs = ({
       <TabsContent value="content" className="space-y-4 mt-4">
         <BlogTitleInput
           title={blog.title}
-          setTitle={title => setBlog({ ...blog, title })}
+          setTitle={title => setBlog(prev => prev ? { ...prev, title } : prev)}
         />
         <BlogContentEditor
           value={blog.content}
-          onChange={content => setBlog({ ...blog, content })}
+          onChange={content => setBlog(prev => prev ? { ...prev, content } : prev)}
         />
       </TabsContent>
       
@@ -84,7 +84,7 @@ export const BlogEditorTabs = ({
         <BlogExpiryPicker blog={blog} setBlog={b => setBlog(b)} />
         <BlogImageUpload
           value={blog.image}
-          onChange={url => setBlog({ ...blog, image: url })}
+          onChange={url => setBlog(prev => prev ? { ...prev, image: url } : prev)}
         />
       </TabsContent>
     </Tabs>
