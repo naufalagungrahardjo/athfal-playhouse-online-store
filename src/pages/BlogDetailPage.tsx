@@ -34,19 +34,34 @@ const BlogDetailPage = () => {
 
   // Load Instagram embed script when blog content contains instagram embeds
   useEffect(() => {
-    if (blog?.content?.includes('instagram-media')) {
-      const existing = document.querySelector('script[src*="instagram.com/embed.js"]');
-      if (existing) {
-        // Re-process embeds if script already loaded
+    if (!blog?.content?.includes('instagram-media')) return;
+
+    const processEmbeds = () => {
+      // Small delay to ensure DOM is updated after React render
+      setTimeout(() => {
         (window as any).instgrm?.Embeds?.process();
-      } else {
-        const script = document.createElement('script');
-        script.src = 'https://www.instagram.com/embed.js';
-        script.async = true;
-        script.onload = () => (window as any).instgrm?.Embeds?.process();
-        document.body.appendChild(script);
-      }
+      }, 500);
+    };
+
+    const existing = document.querySelector('script[src*="instagram.com/embed.js"]');
+    if (existing) {
+      // Remove old script and re-add to force re-initialization
+      existing.remove();
+      delete (window as any).instgrm;
     }
+    
+    const script = document.createElement('script');
+    script.src = 'https://www.instagram.com/embed.js';
+    script.async = true;
+    script.onload = processEmbeds;
+    document.body.appendChild(script);
+
+    return () => {
+      // Cleanup on unmount
+      const s = document.querySelector('script[src*="instagram.com/embed.js"]');
+      if (s) s.remove();
+      delete (window as any).instgrm;
+    };
   }, [blog]);
 
   // Format date
