@@ -106,16 +106,20 @@ export const RichTextEditor = ({
 
   const insertInstagram = () => {
     if (instagramUrl) {
-      const match = instagramUrl.match(/instagram\.com\/(?:p|reel|tv)\/([\w-]+)/);
+      // Extract post/reel ID from various Instagram URL formats
+      const match = instagramUrl.match(/instagram\.com\/(?:[\w.]+\/)?(?:p|reel|tv)\/([\w-]+)/);
       if (match) {
         const postId = match[1];
-        const embedHtml = `<div class="instagram-embed my-4" data-instagram-id="${postId}"><blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/${postId}/" data-instgrm-version="14" style="background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:calc(100% - 2px);"><a href="https://www.instagram.com/p/${postId}/">View on Instagram</a></blockquote></div>`;
+        const embedHtml = `<div class="instagram-embed my-4" style="display:flex;justify-content:center;"><iframe src="https://www.instagram.com/p/${postId}/embed" width="400" height="500" frameborder="0" scrolling="no" allowtransparency="true" style="border:none;overflow:hidden;max-width:100%;border-radius:8px;"></iframe></div>`;
         insertAtCursor(embedHtml);
       } else {
-        // Fallback: try to use the URL directly as an embed
-        const cleanUrl = instagramUrl.trim().replace(/\/$/, '');
-        const embedHtml = `<div class="instagram-embed my-4"><blockquote class="instagram-media" data-instgrm-permalink="${cleanUrl}/" data-instgrm-version="14" style="background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:calc(100% - 2px);"><a href="${cleanUrl}/">View on Instagram</a></blockquote></div>`;
-        insertAtCursor(embedHtml);
+        // Fallback: try to extract any path segment after instagram.com
+        const fallbackMatch = instagramUrl.match(/instagram\.com\/.*\/([\w-]+)/);
+        const postId = fallbackMatch ? fallbackMatch[1] : null;
+        if (postId) {
+          const embedHtml = `<div class="instagram-embed my-4" style="display:flex;justify-content:center;"><iframe src="https://www.instagram.com/p/${postId}/embed" width="400" height="500" frameborder="0" scrolling="no" allowtransparency="true" style="border:none;overflow:hidden;max-width:100%;border-radius:8px;"></iframe></div>`;
+          insertAtCursor(embedHtml);
+        }
       }
       setInstagramUrl("");
       setShowInstagramDialog(false);
