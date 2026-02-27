@@ -32,37 +32,15 @@ const BlogDetailPage = () => {
     }
   }, [slug, blogs, loading]);
 
-  // Load Instagram embed script when blog content contains instagram embeds
-  useEffect(() => {
-    if (!blog?.content?.includes('instagram-media')) return;
-
-    const processEmbeds = () => {
-      // Small delay to ensure DOM is updated after React render
-      setTimeout(() => {
-        (window as any).instgrm?.Embeds?.process();
-      }, 500);
-    };
-
-    const existing = document.querySelector('script[src*="instagram.com/embed.js"]');
-    if (existing) {
-      // Remove old script and re-add to force re-initialization
-      existing.remove();
-      delete (window as any).instgrm;
-    }
-    
-    const script = document.createElement('script');
-    script.src = 'https://www.instagram.com/embed.js';
-    script.async = true;
-    script.onload = processEmbeds;
-    document.body.appendChild(script);
-
-    return () => {
-      // Cleanup on unmount
-      const s = document.querySelector('script[src*="instagram.com/embed.js"]');
-      if (s) s.remove();
-      delete (window as any).instgrm;
-    };
-  }, [blog]);
+  // Convert old blockquote-based Instagram embeds to iframe embeds
+  const processInstagramContent = (content: string): string => {
+    if (!content) return content;
+    // Match blockquote-based Instagram embeds and convert to iframe
+    return content.replace(
+      /<div[^>]*class="instagram-embed[^"]*"[^>]*>[\s\S]*?<blockquote[^>]*data-instgrm-permalink="https?:\/\/(?:www\.)?instagram\.com\/(?:[\w.]+\/)?(?:p|reel|tv)\/([\w-]+)\/[^"]*"[^>]*>[\s\S]*?<\/blockquote>[\s\S]*?<\/div>/gi,
+      (_, postId) => `<div class="instagram-embed my-4" style="display:flex;justify-content:center;"><iframe src="https://www.instagram.com/p/${postId}/embed" width="400" height="500" frameborder="0" scrolling="no" allowtransparency="true" style="border:none;overflow:hidden;max-width:100%;border-radius:8px;"></iframe></div>`
+    );
+  };
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -164,7 +142,7 @@ const BlogDetailPage = () => {
               style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.02)" }}
             >
               <div
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blog.content, { ADD_TAGS: ['iframe', 'blockquote'], ADD_ATTR: ['allowfullscreen', 'frameborder', 'allow', 'data-instgrm-permalink', 'data-instgrm-version', 'data-instagram-id'], ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'a', 'div', 'span', 'blockquote', 'pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'sub', 'sup', 'iframe'], ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'style', 'target', 'rel', 'width', 'height', 'frameborder', 'allowfullscreen', 'allow', 'data-instgrm-permalink', 'data-instgrm-version', 'data-instagram-id'] }) }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processInstagramContent(blog.content), { ADD_TAGS: ['iframe', 'blockquote'], ADD_ATTR: ['allowfullscreen', 'frameborder', 'allow', 'scrolling', 'allowtransparency'], ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'a', 'div', 'span', 'blockquote', 'pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'sub', 'sup', 'iframe'], ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'style', 'target', 'rel', 'width', 'height', 'frameborder', 'allowfullscreen', 'allow', 'scrolling', 'allowtransparency'] }) }}
                 className="whitespace-pre-wrap"
               />
             </div>
