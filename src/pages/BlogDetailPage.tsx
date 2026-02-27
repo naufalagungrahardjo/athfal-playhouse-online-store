@@ -21,20 +21,33 @@ const BlogDetailPage = () => {
 
   useEffect(() => {
     if (!loading && blogs.length > 0 && slug) {
-      // Find blog by slug first, then fall back to id for backward compatibility
       const foundBlog = blogs.find((b) => b.slug === slug) || blogs.find((b) => b.id === slug);
       if (foundBlog) {
         setBlog(foundBlog);
-        
-        // Get related blogs (excluding the current one)
         const related = blogs
           .filter((b) => b.id !== foundBlog.id && b.published)
           .slice(0, 3);
-        
         setRelatedBlogs(related);
       }
     }
   }, [slug, blogs, loading]);
+
+  // Load Instagram embed script when blog content contains instagram embeds
+  useEffect(() => {
+    if (blog?.content?.includes('instagram-media')) {
+      const existing = document.querySelector('script[src*="instagram.com/embed.js"]');
+      if (existing) {
+        // Re-process embeds if script already loaded
+        (window as any).instgrm?.Embeds?.process();
+      } else {
+        const script = document.createElement('script');
+        script.src = 'https://www.instagram.com/embed.js';
+        script.async = true;
+        script.onload = () => (window as any).instgrm?.Embeds?.process();
+        document.body.appendChild(script);
+      }
+    }
+  }, [blog]);
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -136,7 +149,7 @@ const BlogDetailPage = () => {
               style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.02)" }}
             >
               <div
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blog.content, { ADD_TAGS: ['iframe'], ADD_ATTR: ['allowfullscreen', 'frameborder', 'allow'], ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'a', 'div', 'span', 'blockquote', 'pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'sub', 'sup', 'iframe'], ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'style', 'target', 'rel', 'width', 'height', 'frameborder', 'allowfullscreen', 'allow'] }) }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blog.content, { ADD_TAGS: ['iframe', 'blockquote'], ADD_ATTR: ['allowfullscreen', 'frameborder', 'allow', 'data-instgrm-permalink', 'data-instgrm-version', 'data-instagram-id'], ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'a', 'div', 'span', 'blockquote', 'pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'sub', 'sup', 'iframe'], ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'style', 'target', 'rel', 'width', 'height', 'frameborder', 'allowfullscreen', 'allow', 'data-instgrm-permalink', 'data-instgrm-version', 'data-instagram-id'] }) }}
                 className="whitespace-pre-wrap"
               />
             </div>

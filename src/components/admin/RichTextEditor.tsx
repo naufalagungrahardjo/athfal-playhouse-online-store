@@ -6,6 +6,7 @@ import { RichTextToolbar } from "./richtext/RichTextToolbar";
 import { ImageDialog } from "./richtext/ImageDialog";
 import { LinkDialog } from "./richtext/LinkDialog";
 import { VideoDialog } from "./richtext/VideoDialog";
+import { InstagramDialog } from "./richtext/InstagramDialog";
 
 interface RichTextEditorProps {
   value: string;
@@ -37,10 +38,12 @@ export const RichTextEditor = ({
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [showVideoDialog, setShowVideoDialog] = useState(false);
+  const [showInstagramDialog, setShowInstagramDialog] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [linkText, setLinkText] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
 
   const insertAtCursor = (insertValue: string) => {
     const textarea = textareaRef.current;
@@ -101,6 +104,19 @@ export const RichTextEditor = ({
     }
   };
 
+  const insertInstagram = () => {
+    if (instagramUrl) {
+      const match = instagramUrl.match(/instagram\.com\/(?:p|reel)\/([\w-]+)/);
+      if (match) {
+        const postId = match[1];
+        const embedHtml = `<div class="instagram-embed my-4" data-instagram-id="${postId}"><blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/${postId}/" data-instgrm-version="14" style="background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:calc(100% - 2px);"><a href="https://www.instagram.com/p/${postId}/">View on Instagram</a></blockquote></div>`;
+        insertAtCursor(embedHtml);
+      }
+      setInstagramUrl("");
+      setShowInstagramDialog(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {label && <Label>{label}</Label>}
@@ -110,6 +126,7 @@ export const RichTextEditor = ({
         onShowImageDialog={() => setShowImageDialog(true)}
         onShowLinkDialog={() => setShowLinkDialog(true)}
         onShowVideoDialog={() => setShowVideoDialog(true)}
+        onShowInstagramDialog={() => setShowInstagramDialog(true)}
       />
 
       {showImageDialog && (
@@ -147,6 +164,18 @@ export const RichTextEditor = ({
           onCancel={() => {
             setVideoUrl("");
             setShowVideoDialog(false);
+          }}
+        />
+      )}
+
+      {showInstagramDialog && (
+        <InstagramDialog
+          instagramUrl={instagramUrl}
+          setInstagramUrl={setInstagramUrl}
+          onInsertInstagram={insertInstagram}
+          onCancel={() => {
+            setInstagramUrl("");
+            setShowInstagramDialog(false);
           }}
         />
       )}
