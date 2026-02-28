@@ -25,6 +25,7 @@ export interface DatabasePaymentMethod {
   account_name: string;
   active: boolean;
   payment_steps?: BilingualStep[];
+  image?: string;
 }
 
 const DEFAULT_STEPS: BilingualStep[] = [
@@ -100,6 +101,7 @@ export const useDatabase = () => {
         account_name: method.account_name,
         active: method.active,
         payment_steps: normalizeSteps(method.payment_steps),
+        image: (method as any).image || undefined,
       })) || [];
       
       setPaymentMethods(processedData);
@@ -179,8 +181,9 @@ export const useDatabase = () => {
         .upsert({
           ...paymentMethod,
           payment_steps: (paymentMethod.payment_steps || DEFAULT_STEPS) as unknown as any,
+          image: paymentMethod.image || null,
           updated_at: new Date().toISOString()
-        });
+        } as any);
 
       if (error) {
         console.error('Error saving payment method:', error);
