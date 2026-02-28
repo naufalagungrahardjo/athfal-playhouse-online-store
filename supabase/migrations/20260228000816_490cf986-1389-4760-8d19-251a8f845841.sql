@@ -1,0 +1,1 @@
+ALTER TABLE public.payment_methods ADD COLUMN image text DEFAULT NULL;

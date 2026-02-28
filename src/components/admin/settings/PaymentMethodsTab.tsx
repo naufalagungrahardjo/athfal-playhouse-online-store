@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Save, Trash2, X } from "lucide-react";
 import React from "react";
 import { BilingualStep } from "@/hooks/useDatabase";
+import { ImageUpload } from "@/components/ImageUpload";
 
 interface PaymentConfirmationCopy {
   title: { id: string; en: string };
@@ -202,6 +203,15 @@ export const PaymentMethodsTab = ({
                     <Plus className="h-4 w-4 mr-1" />
                     Add Step
                   </Button>
+                </div>
+
+                <div className="mb-4">
+                  <ImageUpload
+                    value={payment.image || ''}
+                    onChange={(url) => handleUpdatePayment(payment.id, 'image', url)}
+                    label="Payment Method Image (QR Code / Logo)"
+                    hint="Recommended: 400x400px. This image will be shown on the payment details page (e.g., QR code or bank logo)."
+                  />
                 </div>
 
                 <div className="flex items-center justify-between">

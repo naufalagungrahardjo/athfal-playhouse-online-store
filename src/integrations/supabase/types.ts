@@ -384,6 +384,7 @@ export type Database = {
           bank_name: string
           created_at: string
           id: string
+          image: string | null
           payment_steps: Json | null
           updated_at: string
         }
@@ -394,6 +395,7 @@ export type Database = {
           bank_name: string
           created_at?: string
           id?: string
+          image?: string | null
           payment_steps?: Json | null
           updated_at?: string
         }
@@ -404,6 +406,7 @@ export type Database = {
           bank_name?: string
           created_at?: string
           id?: string
+          image?: string | null
           payment_steps?: Json | null
           updated_at?: string
         }

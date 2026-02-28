@@ -277,6 +277,15 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                           {language === 'id' ? 'Salin No. Rekening' : 'Copy Account No.'}
                         </Button>
                       </div>
+                      {selectedPaymentMethod.image && (
+                        <div className="flex justify-center mb-4">
+                          <img 
+                            src={selectedPaymentMethod.image} 
+                            alt={selectedPaymentMethod.bank_name}
+                            className="max-w-[200px] max-h-[200px] object-contain rounded-lg"
+                          />
+                        </div>
+                      )}
                       <p className="text-gray-700">
                         {language === 'id' ? 'Nomor Rekening:' : 'Account Number:'} <span className="font-medium">{selectedPaymentMethod.account_number}</span>
                       </p>
