@@ -68,6 +68,7 @@ const AdminSettings = lazyRetry(() => import("./pages/admin/AdminSettings"));
 const AdminCategories = lazyRetry(() => import("./pages/admin/AdminCategories"));
 const AdminAccounts = lazyRetry(() => import("./pages/admin/AdminAccounts"));
 const AdminLogs = lazyRetry(() => import("./pages/admin/AdminLogs"));
+const AdminAnalytics = lazyRetry(() => import("./pages/admin/AdminAnalytics"));
 
 const queryClient = new QueryClient();
 
@@ -107,6 +108,7 @@ const App = () => (
                         <Route index element={<AdminDashboard />} />
                         <Route path="products" element={<AdminProducts />} />
                         <Route path="orders" element={<AdminOrders />} />
+                        <Route path="analytics" element={<AdminAnalytics />} />
                         <Route path="blogs" element={<AdminBlogs />} />
                         <Route path="banners" element={<AdminBanners />} />
                         <Route path="testimonials" element={<AdminTestimonials />} />

@@ -4,10 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
+import { Pencil } from 'lucide-react';
 
 interface OrderItem {
   id: string;
@@ -45,7 +46,44 @@ interface OrderDetailsDialogProps {
 export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: OrderDetailsDialogProps) => {
   const [status, setStatus] = useState(order?.status || 'pending');
   const [updating, setUpdating] = useState(false);
+  const [editingPayment, setEditingPayment] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState(order?.payment_method || '');
+  const [paymentMethods, setPaymentMethods] = useState<{id: string; bank_name: string}[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (order) {
+      setStatus(order.status);
+      setPaymentMethod(order.payment_method);
+    }
+  }, [order]);
+
+  useEffect(() => {
+    if (editingPayment) {
+      supabase.from('payment_methods').select('id, bank_name').eq('active', true)
+        .then(({ data }) => setPaymentMethods(data || []));
+    }
+  }, [editingPayment]);
+
+  const handlePaymentMethodUpdate = async () => {
+    if (!order || paymentMethod === order.payment_method) return;
+    try {
+      setUpdating(true);
+      const { error } = await supabase
+        .from('orders')
+        .update({ payment_method: paymentMethod, updated_at: new Date().toISOString() })
+        .eq('id', order.id);
+      if (error) throw error;
+      toast({ title: "Success", description: "Payment method updated successfully" });
+      setEditingPayment(false);
+      onOrderUpdated();
+    } catch (error) {
+      console.error('Error updating payment method:', error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to update payment method" });
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   const handleStatusUpdate = async () => {
     if (!order) return;
@@ -128,7 +166,37 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Payment Method</label>
-                <p className="text-sm">{order.payment_method}</p>
+                {editingPayment ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {/* Keep current value as option */}
+                        {!paymentMethods.find(pm => pm.bank_name === order.payment_method) && (
+                          <SelectItem value={order.payment_method}>{order.payment_method}</SelectItem>
+                        )}
+                        {paymentMethods.map(pm => (
+                          <SelectItem key={pm.id} value={pm.bank_name}>{pm.bank_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button size="sm" onClick={handlePaymentMethodUpdate} disabled={updating || paymentMethod === order.payment_method}>
+                      Save
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => { setEditingPayment(false); setPaymentMethod(order.payment_method); }}>
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm">{order.payment_method}</p>
+                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingPayment(true)}>
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
               </div>
               {order.customer_address && (
                 <div className="md:col-span-2">

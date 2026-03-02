@@ -1,6 +1,6 @@
 
 import {
-  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Menu, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks
+  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Menu, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3
 } from 'lucide-react';
 
 export type NavigationItem = {
@@ -15,6 +15,7 @@ export function getAdminNavigation(role: string | null) : NavigationItem[] {
     { name: 'Admin Accounts', href: '/admin/accounts', icon: Users },
     { name: 'Products', href: '/admin/products', icon: Package },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+    { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
     { name: 'Blogs', href: '/admin/blogs', icon: FileText },
     { name: 'Banners', href: '/admin/banners', icon: Image },
     { name: 'Testimonials', href: '/admin/testimonials', icon: MessageSquare },
@@ -30,7 +31,7 @@ export function getAdminNavigation(role: string | null) : NavigationItem[] {
   if (role === "super_admin") return navigation;
   if (role === "orders_manager") {
     return navigation.filter(item =>
-      ["/admin", "/admin/products", "/admin/orders", "/admin/promo-codes", "/admin/logs"].includes(item.href)
+      ["/admin", "/admin/products", "/admin/orders", "/admin/analytics", "/admin/promo-codes", "/admin/logs"].includes(item.href)
     );
   }
   if (role === "order_staff") {
