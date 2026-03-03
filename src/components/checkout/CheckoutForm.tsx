@@ -160,7 +160,7 @@ const CheckoutForm = ({
           </SelectTrigger>
           <SelectContent>
             {activePaymentMethods.map((method) => (
-              <SelectItem key={method.id} value={method.id} className="max-w-full">
+              <SelectItem key={method.id} value={method.bank_name} className="max-w-full">
                 <div className="flex items-center gap-2 max-w-full overflow-hidden">
                   <span className="font-medium truncate">{method.bank_name}</span>
                   <span className="text-muted-foreground truncate">- {method.account_number}</span>
