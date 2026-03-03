@@ -34,6 +34,7 @@ const AdminAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,8 +70,13 @@ const AdminAnalytics = () => {
   // Filtered orders
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
-      // Exclude cancelled
-      if (order.status === 'cancelled') return false;
+      // Status filter
+      if (statusFilter === 'all') {
+        // Exclude cancelled by default when "all" is selected
+        if (order.status === 'cancelled') return false;
+      } else if (order.status !== statusFilter) {
+        return false;
+      }
       // Date filter
       if (dateRange?.from) {
         const d = new Date(order.created_at);
@@ -84,7 +90,7 @@ const AdminAnalytics = () => {
       }
       return true;
     });
-  }, [orders, dateRange, categoryFilter, productCategoryMap]);
+  }, [orders, dateRange, categoryFilter, statusFilter, productCategoryMap]);
 
   // Filter items by category too
   const getFilteredItems = (order: OrderWithItems) => {
@@ -195,6 +201,22 @@ const AdminAnalytics = () => {
               {categories.map(cat => (
                 <SelectItem key={cat.slug} value={cat.slug}>{cat.title}</SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="text-sm font-medium block mb-1">Order Status</label>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All (excl. Cancelled)</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="processing">Processing</SelectItem>
+              <SelectItem value="shipped">Shipped</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
         </div>
