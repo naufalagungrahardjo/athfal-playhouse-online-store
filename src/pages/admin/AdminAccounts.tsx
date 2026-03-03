@@ -12,7 +12,8 @@ const ROLES: { value: AdminRole; label: string }[] = [
   { value: "orders_manager", label: "Orders Manager" },
   { value: "order_staff", label: "Order Staff" },
   { value: "content_manager", label: "Content Manager" },
-  { value: "content_staff", label: "Content Staff" }
+  { value: "content_staff", label: "Content Staff" },
+  { value: "teacher", label: "Teacher" }
 ];
 
 const ROLE_DESCRIPTIONS: Record<AdminRole, string> = {
@@ -20,7 +21,8 @@ const ROLE_DESCRIPTIONS: Record<AdminRole, string> = {
   orders_manager: "Full access to order management, products, and customer data. Can create, update, and delete orders and products.",
   order_staff: "Can view and update order status only. Cannot modify order details, pricing, or customer information.",
   content_manager: "Full access to content management including blogs, FAQs, banners, testimonials, and website copy.",
-  content_staff: "Can create and edit content (blogs, FAQs, banners) but with limited deletion permissions."
+  content_staff: "Can create and edit content (blogs, FAQs, banners) but with limited deletion permissions.",
+  teacher: "Can access the Teacher menu to record attendance, submit leave requests, and view attendance history."
 };
 
 const AdminAccounts = () => {

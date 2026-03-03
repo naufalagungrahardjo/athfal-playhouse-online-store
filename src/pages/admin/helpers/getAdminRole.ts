@@ -7,6 +7,7 @@ export type AdminRole =
   | "order_staff"
   | "content_manager"
   | "content_staff"
+  | "teacher"
   | null;
 
 export function getAdminRole(user: User | null): AdminRole {
@@ -17,7 +18,8 @@ export function getAdminRole(user: User | null): AdminRole {
     user.role === "orders_manager" ||
     user.role === "order_staff" ||
     user.role === "content_manager" ||
-    user.role === "content_staff"
+    user.role === "content_staff" ||
+    user.role === "teacher"
   ) {
     return user.role;
   }

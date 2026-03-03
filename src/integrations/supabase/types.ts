@@ -520,6 +520,102 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_attendance: {
+        Row: {
+          arrival_time: string | null
+          created_at: string | null
+          date: string
+          evidence_url: string | null
+          id: string
+          leave_time: string | null
+          remarks: string | null
+          sessions: string[] | null
+          teacher_email: string
+          updated_at: string | null
+        }
+        Insert: {
+          arrival_time?: string | null
+          created_at?: string | null
+          date?: string
+          evidence_url?: string | null
+          id?: string
+          leave_time?: string | null
+          remarks?: string | null
+          sessions?: string[] | null
+          teacher_email: string
+          updated_at?: string | null
+        }
+        Update: {
+          arrival_time?: string | null
+          created_at?: string | null
+          date?: string
+          evidence_url?: string | null
+          id?: string
+          leave_time?: string | null
+          remarks?: string | null
+          sessions?: string[] | null
+          teacher_email?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      teacher_leaves: {
+        Row: {
+          created_at: string | null
+          end_date: string
+          id: string
+          remarks: string | null
+          start_date: string
+          status: string
+          teacher_email: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_date: string
+          id?: string
+          remarks?: string | null
+          start_date: string
+          status?: string
+          teacher_email: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          remarks?: string | null
+          start_date?: string
+          status?: string
+          teacher_email?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      teacher_settings: {
+        Row: {
+          created_at: string | null
+          google_drive_folder: string | null
+          id: string
+          teacher_email: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          google_drive_folder?: string | null
+          id?: string
+          teacher_email: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          google_drive_folder?: string | null
+          id?: string
+          teacher_email?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           active: boolean
@@ -675,6 +771,7 @@ export type Database = {
         | "order_staff"
         | "content_manager"
         | "content_staff"
+        | "teacher"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -808,6 +905,7 @@ export const Constants = {
         "order_staff",
         "content_manager",
         "content_staff",
+        "teacher",
       ],
     },
   },

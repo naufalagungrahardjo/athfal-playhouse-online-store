@@ -1,6 +1,7 @@
 
+
 import {
-  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Menu, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3
+  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Menu, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList
 } from 'lucide-react';
 
 export type NavigationItem = {
@@ -16,6 +17,7 @@ export function getAdminNavigation(role: string | null) : NavigationItem[] {
     { name: 'Products', href: '/admin/products', icon: Package },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+    { name: 'All Teachers', href: '/admin/all-teachers', icon: GraduationCap },
     { name: 'Blogs', href: '/admin/blogs', icon: FileText },
     { name: 'Banners', href: '/admin/banners', icon: Image },
     { name: 'Testimonials', href: '/admin/testimonials', icon: MessageSquare },
@@ -23,7 +25,7 @@ export function getAdminNavigation(role: string | null) : NavigationItem[] {
     { name: 'FAQ', href: '/admin/faq', icon: HelpCircle },
     { name: 'Promo Codes', href: '/admin/promo-codes', icon: CreditCard },
     { name: 'Website Content', href: '/admin/website-copy', icon: Copy },
-    { name: 'Logs', href: '/admin/logs', icon: ListChecks }, // Add Admin Logs page
+    { name: 'Logs', href: '/admin/logs', icon: ListChecks },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
     { name: 'Categories', href: '/admin/categories', icon: Package },
   ];
@@ -54,6 +56,11 @@ export function getAdminNavigation(role: string | null) : NavigationItem[] {
     return navigation.filter(item =>
       ["/admin/blogs", "/admin/logs"].includes(item.href)
     );
+  }
+  if (role === "teacher") {
+    return [
+      { name: 'Teacher', href: '/admin/teacher', icon: ClipboardList },
+    ];
   }
   return [];
 }
