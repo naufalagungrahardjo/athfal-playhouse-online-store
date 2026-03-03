@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { logAdminAction } from "@/utils/logAdminAction";
 
-export type AdminRole = "super_admin" | "orders_manager" | "order_staff" | "content_manager" | "content_staff";
+export type AdminRole = "super_admin" | "orders_manager" | "order_staff" | "content_manager" | "content_staff" | "teacher";
 export interface AdminAccount {
   id: string;
   email: string;

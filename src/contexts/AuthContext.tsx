@@ -146,7 +146,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       user?.role === 'orders_manager' ||
       user?.role === 'order_staff' ||
       user?.role === 'content_manager' ||
-      user?.role === 'content_staff'
+      user?.role === 'content_staff' ||
+      user?.role === 'teacher'
     );
   };
 
