@@ -133,17 +133,46 @@ export default function AdminTeacher() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const filePath = `teacher-evidence/${email}/${today}-${Date.now()}.${file.name.split('.').pop()}`;
-    const { error } = await supabase.storage.from("images").upload(filePath, file);
-    if (error) {
-      toast({ variant: "destructive", title: "Upload failed", description: error.message });
+
+    try {
+      if (driveFolder) {
+        // Upload to Google Drive via edge function
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const session = await supabase.auth.getSession();
+        const token = session.data.session?.access_token;
+
+        const res = await fetch(
+          `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/upload-to-drive`,
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+          }
+        );
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Upload failed");
+        }
+
+        setEvidenceUrl(data.webViewLink);
+        toast({ title: "Uploaded to Google Drive", description: "Evidence photo saved to your Drive folder." });
+      } else {
+        // Fallback to Supabase storage
+        const filePath = `teacher-evidence/${email}/${today}-${Date.now()}.${file.name.split('.').pop()}`;
+        const { error } = await supabase.storage.from("images").upload(filePath, file);
+        if (error) throw error;
+        const { data: urlData } = supabase.storage.from("images").getPublicUrl(filePath);
+        setEvidenceUrl(urlData.publicUrl);
+        toast({ title: "Uploaded", description: "Evidence image uploaded." });
+      }
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Upload failed", description: err.message || "Unknown error" });
+    } finally {
       setUploading(false);
-      return;
     }
-    const { data: urlData } = supabase.storage.from("images").getPublicUrl(filePath);
-    setEvidenceUrl(urlData.publicUrl);
-    setUploading(false);
-    toast({ title: "Uploaded", description: "Evidence image uploaded." });
   };
 
   const handleSubmitLeave = async () => {
