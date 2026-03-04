@@ -71,6 +71,7 @@ export default function AdminAllTeachers() {
 
   // Drive folder edits
   const [driveEdits, setDriveEdits] = useState<Record<string, string>>({});
+  const [deleting, setDeleting] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
