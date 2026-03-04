@@ -10,7 +10,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { Check, X, Save } from "lucide-react";
+import { Check, X, Save, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const SESSION_OPTIONS = [
   { id: "session1", label: "Session 1: 8:30 - 11:30" },
@@ -60,6 +71,7 @@ export default function AdminAllTeachers() {
 
   // Drive folder edits
   const [driveEdits, setDriveEdits] = useState<Record<string, string>>({});
+  const [deleting, setDeleting] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -98,6 +110,49 @@ export default function AdminAllTeachers() {
     } else {
       toast({ title: "Updated", description: `Leave request ${status}.` });
       fetchData();
+    }
+  };
+
+  const handleDeleteAllEvidence = async () => {
+    setDeleting(true);
+    try {
+      // List all files in teacher-evidence folder
+      const { data: files, error: listError } = await supabase.storage
+        .from("images")
+        .list("teacher-evidence", { limit: 1000 });
+
+      if (listError) throw listError;
+
+      // For each teacher subfolder, list and delete files
+      const teacherFolders = (files || []).filter(f => !f.id || f.name);
+      let totalDeleted = 0;
+
+      for (const folder of teacherFolders) {
+        const { data: teacherFiles } = await supabase.storage
+          .from("images")
+          .list(`teacher-evidence/${folder.name}`, { limit: 1000 });
+
+        if (teacherFiles && teacherFiles.length > 0) {
+          const paths = teacherFiles.map(f => `teacher-evidence/${folder.name}/${f.name}`);
+          const { error: delError } = await supabase.storage
+            .from("images")
+            .remove(paths);
+          if (!delError) totalDeleted += paths.length;
+        }
+      }
+
+      // Also clear evidence_url from attendance records
+      await supabase
+        .from("teacher_attendance")
+        .update({ evidence_url: null, updated_at: new Date().toISOString() })
+        .not("evidence_url", "is", null);
+
+      toast({ title: "Done", description: `Deleted ${totalDeleted} evidence files from storage.` });
+      fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to delete evidence files." });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -228,6 +283,43 @@ export default function AdminAllTeachers() {
                   )}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+
+          {/* Delete All Evidence Card */}
+          <Card className="border-destructive/50">
+            <CardHeader>
+              <CardTitle className="text-destructive">Storage Management</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Teacher evidence photos are stored in Supabase storage (1 GB free). 
+                Average photo size is ~2-5 MB. Use the button below to delete ALL evidence photos 
+                to free up storage space. This action cannot be undone.
+              </p>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="gap-2" disabled={deleting}>
+                    <Trash2 className="w-4 h-4" />
+                    {deleting ? "Deleting..." : "Delete All Teacher Evidence Photos"}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete ALL teacher evidence photos from Supabase storage 
+                      and clear the evidence links from attendance records. This cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteAllEvidence} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Yes, Delete All
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </CardContent>
           </Card>
         </TabsContent>
