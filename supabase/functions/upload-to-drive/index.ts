@@ -198,9 +198,11 @@ Deno.serve(async (req) => {
     const uploadData = await uploadRes.json();
 
     if (!uploadRes.ok) {
+      const driveError = uploadData?.error?.message || "Unknown Google Drive error";
       console.error("Drive upload error:", JSON.stringify(uploadData));
+      console.error("Folder ID used:", folderId);
       return new Response(
-        JSON.stringify({ error: "Failed to upload to Google Drive" }),
+        JSON.stringify({ error: `Google Drive error: ${driveError}` }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
