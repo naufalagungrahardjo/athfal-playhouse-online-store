@@ -35,7 +35,7 @@ const OrderDetailsPage = () => {
   // Get the payment method from order data
   useEffect(() => {
     if (order && paymentMethods.length > 0) {
-      const paymentMethod = paymentMethods.find(method => method.id === order.payment_method);
+      const paymentMethod = paymentMethods.find(method => method.bank_name === order.payment_method);
       if (paymentMethod) {
         setSelectedPaymentMethod(paymentMethod);
       }

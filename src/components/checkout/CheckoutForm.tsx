@@ -120,17 +120,6 @@ const CheckoutForm = ({
       />
     </div>
     <div>
-      <Label htmlFor="childAge">{t('childAge')}</Label>
-      <Input
-        id="childAge"
-        type="text"
-        value={formData.childAge}
-        onChange={(e) => handleInputChange('childAge', e.target.value)}
-        placeholder={t('childFieldNote')}
-        className="placeholder:text-muted-foreground/50"
-      />
-    </div>
-    <div>
       <Label htmlFor="childBirthdate">{t('childBirthdate')}</Label>
       <Input
         id="childBirthdate"
@@ -141,6 +130,17 @@ const CheckoutForm = ({
         className="placeholder:text-muted-foreground/50"
       />
       <p className="text-xs text-muted-foreground/50 mt-1">{t('childFieldNote')}</p>
+    </div>
+    <div>
+      <Label htmlFor="childAge">{t('childAge')}</Label>
+      <Input
+        id="childAge"
+        type="text"
+        value={formData.childAge}
+        readOnly
+        className="bg-muted cursor-not-allowed"
+        placeholder={t('childAge')}
+      />
     </div>
     <div>
       <Label htmlFor="paymentMethod">Payment Method *</Label>
