@@ -122,11 +122,40 @@ const CheckoutPage = () => {
     }
   }, [items, navigate]);
 
+  const calculateAge = useCallback((birthdate: string): string => {
+    if (!birthdate) return '';
+    const birth = new Date(birthdate);
+    const today = new Date();
+    
+    let years = today.getFullYear() - birth.getFullYear();
+    let months = today.getMonth() - birth.getMonth();
+    let days = today.getDate() - birth.getDate();
+    
+    if (days < 0) {
+      months--;
+      const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      days += prevMonth.getDate();
+    }
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    
+    const parts: string[] = [];
+    if (years > 0) parts.push(`${years} year${years > 1 ? 's' : ''}`);
+    if (months > 0) parts.push(`${months} month${months > 1 ? 's' : ''}`);
+    if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`);
+    return parts.join(', ') || '0 days';
+  }, []);
+
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      if (field === 'childBirthdate') {
+        updated.childAge = calculateAge(value);
+      }
+      return updated;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
