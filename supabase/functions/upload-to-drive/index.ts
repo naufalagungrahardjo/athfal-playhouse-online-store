@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
     body.set(closingBytes, metaBytes.length + filePartBytes.length + fileBytes.length);
 
     const uploadRes = await fetch(
-      "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink",
+      "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&fields=id,webViewLink",
       {
         method: "POST",
         headers: {
