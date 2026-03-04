@@ -89,7 +89,12 @@ export default function AdminTeacher() {
       }
     }
     if (leaveRes.data) setLeaves(leaveRes.data as LeaveRequest[]);
-    if (settingsRes.data) setDriveFolder((settingsRes.data as any).google_drive_folder || null);
+    console.log("[TeacherDashboard] Settings query result:", settingsRes.data, "error:", settingsRes.error);
+    if (settingsRes.data) {
+      const folder = (settingsRes.data as any).google_drive_folder || null;
+      console.log("[TeacherDashboard] Drive folder ID:", folder);
+      setDriveFolder(folder);
+    }
   };
 
   useEffect(() => { if (email) fetchData(); }, [email]);
