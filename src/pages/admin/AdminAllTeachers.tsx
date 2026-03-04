@@ -285,6 +285,43 @@ export default function AdminAllTeachers() {
               </Table>
             </CardContent>
           </Card>
+
+          {/* Delete All Evidence Card */}
+          <Card className="border-destructive/50">
+            <CardHeader>
+              <CardTitle className="text-destructive">Storage Management</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Teacher evidence photos are stored in Supabase storage (1 GB free). 
+                Average photo size is ~2-5 MB. Use the button below to delete ALL evidence photos 
+                to free up storage space. This action cannot be undone.
+              </p>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="gap-2" disabled={deleting}>
+                    <Trash2 className="w-4 h-4" />
+                    {deleting ? "Deleting..." : "Delete All Teacher Evidence Photos"}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete ALL teacher evidence photos from Supabase storage 
+                      and clear the evidence links from attendance records. This cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteAllEvidence} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Yes, Delete All
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* LEAVES TAB */}
