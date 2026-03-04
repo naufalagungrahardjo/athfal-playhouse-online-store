@@ -113,6 +113,49 @@ export default function AdminAllTeachers() {
     }
   };
 
+  const handleDeleteAllEvidence = async () => {
+    setDeleting(true);
+    try {
+      // List all files in teacher-evidence folder
+      const { data: files, error: listError } = await supabase.storage
+        .from("images")
+        .list("teacher-evidence", { limit: 1000 });
+
+      if (listError) throw listError;
+
+      // For each teacher subfolder, list and delete files
+      const teacherFolders = (files || []).filter(f => !f.id || f.name);
+      let totalDeleted = 0;
+
+      for (const folder of teacherFolders) {
+        const { data: teacherFiles } = await supabase.storage
+          .from("images")
+          .list(`teacher-evidence/${folder.name}`, { limit: 1000 });
+
+        if (teacherFiles && teacherFiles.length > 0) {
+          const paths = teacherFiles.map(f => `teacher-evidence/${folder.name}/${f.name}`);
+          const { error: delError } = await supabase.storage
+            .from("images")
+            .remove(paths);
+          if (!delError) totalDeleted += paths.length;
+        }
+      }
+
+      // Also clear evidence_url from attendance records
+      await supabase
+        .from("teacher_attendance")
+        .update({ evidence_url: null, updated_at: new Date().toISOString() })
+        .not("evidence_url", "is", null);
+
+      toast({ title: "Done", description: `Deleted ${totalDeleted} evidence files from storage.` });
+      fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to delete evidence files." });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleSaveDriveFolder = async (teacherEmail: string) => {
     const folder = driveEdits[teacherEmail] ?? "";
     const existing = teacherSettings.find(s => s.teacher_email === teacherEmail);
