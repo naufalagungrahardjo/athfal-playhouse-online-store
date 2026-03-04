@@ -32,6 +32,11 @@ const AdminDashboard = () => {
     return <Navigate to="/admin/blogs" replace />;
   }
 
+  // Teacher should go directly to teacher dashboard
+  if (adminRole === 'teacher') {
+    return <Navigate to="/admin/teacher" replace />;
+  }
+
   const handleCloseDialog = () => {
     setSelectedView(null);
   };
