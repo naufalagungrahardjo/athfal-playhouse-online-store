@@ -100,7 +100,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Athfal Playhouse <onboarding@resend.dev>",
+        from: "Athfal Playhouse <halo@athfalplayhouse.com>",
         to: recipientEmails,
         subject: `🛒 New Order #${shortId} - ${customerName || "Guest"} (${formattedTotal})`,
         html: htmlBody,
