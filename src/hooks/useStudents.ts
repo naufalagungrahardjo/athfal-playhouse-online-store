@@ -112,7 +112,6 @@ export function useStudents() {
   };
 
   const updateStudentEnrollments = async (studentId: string, programIds: string[]) => {
-    // Delete all existing then re-insert
     await supabase.from("student_enrollments" as any).delete().eq("student_id", studentId);
     if (programIds.length > 0) {
       const rows = programIds.map(pid => ({ student_id: studentId, program_id: pid }));
@@ -129,11 +128,10 @@ export function useStudents() {
     fetchAll();
   };
 
-  // Attendance
+  // Attendance - now unique by (enrollment_id, meeting_number, teacher_email)
   const saveAttendance = async (record: Omit<StudentAttendance, "id">) => {
-    // Upsert by enrollment_id + meeting_number
     const existing = attendance.find(
-      a => a.enrollment_id === record.enrollment_id && a.meeting_number === record.meeting_number
+      a => a.enrollment_id === record.enrollment_id && a.meeting_number === record.meeting_number && a.teacher_email === record.teacher_email
     );
     if (existing) {
       const { error } = await supabase.from("student_attendance" as any)
