@@ -65,9 +65,11 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
   // Selected meeting per program
   const [selectedMeeting, setSelectedMeeting] = useState<Record<string, number>>({});
 
-  const handleSave = async (enrollmentId: string, meetingNum: number) => {
+  // Auto-save just the attendance status for a single enrollment
+  const handleStatusChange = async (enrollmentId: string, meetingNum: number, value: string) => {
+    setField(enrollmentId, meetingNum, "attendance_status", value);
     const fields: any = {};
-    for (const f of ["attendance_status", ...DESCRIPTIVE_FIELDS.map(d => d.key)]) {
+    for (const f of DESCRIPTIVE_FIELDS.map(d => d.key)) {
       fields[f] = getFieldValue(enrollmentId, meetingNum, f);
     }
     await saveAttendance({
@@ -75,11 +77,36 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
       meeting_number: meetingNum,
       date: new Date().toISOString().split("T")[0],
       teacher_email: user?.email || "",
+      attendance_status: value,
       ...fields,
     });
-    // Clear local edits for this key
-    const key = getKey(enrollmentId, meetingNum);
-    setEdits(prev => { const n = { ...prev }; delete n[key]; return n; });
+  };
+
+  // Bulk save all students for a program at the selected meeting
+  const handleBulkSave = async (programId: string) => {
+    const progEnrollments = enrollments.filter(e => e.program_id === programId);
+    const meetingNum = selectedMeeting[programId] || 1;
+    for (const enr of progEnrollments) {
+      const fields: any = {};
+      for (const f of ["attendance_status", ...DESCRIPTIVE_FIELDS.map(d => d.key)]) {
+        fields[f] = getFieldValue(enr.id, meetingNum, f);
+      }
+      await saveAttendance({
+        enrollment_id: enr.id,
+        meeting_number: meetingNum,
+        date: new Date().toISOString().split("T")[0],
+        teacher_email: user?.email || "",
+        ...fields,
+      });
+    }
+    // Clear all edits for this program
+    setEdits(prev => {
+      const n = { ...prev };
+      for (const enr of progEnrollments) {
+        delete n[getKey(enr.id, meetingNum)];
+      }
+      return n;
+    });
   };
 
   const exportCSV = () => {
