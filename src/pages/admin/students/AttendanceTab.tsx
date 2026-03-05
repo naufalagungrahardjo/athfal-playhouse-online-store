@@ -188,7 +188,6 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
                       {DESCRIPTIVE_FIELDS.map(d => (
                         <TableHead key={d.key} className="min-w-[140px]">{d.label}</TableHead>
                       ))}
-                      <TableHead className="w-20">Save</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
