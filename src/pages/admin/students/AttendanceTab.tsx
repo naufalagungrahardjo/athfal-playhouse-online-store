@@ -161,19 +161,22 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
             <CardContent className="pt-4 space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <h3 className="font-semibold text-base">{prog.name}</h3>
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm">Meeting:</Label>
-                  <Select value={String(meetingNum)} onValueChange={v => setSelectedMeeting(prev => ({ ...prev, [prog.id]: Number(v) }))}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: prog.num_meetings }, (_, i) => (
-                        <SelectItem key={i + 1} value={String(i + 1)}>Meeting {i + 1}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-sm">Meeting:</Label>
+                <Select value={String(meetingNum)} onValueChange={v => setSelectedMeeting(prev => ({ ...prev, [prog.id]: Number(v) }))}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: prog.num_meetings }, (_, i) => (
+                      <SelectItem key={i + 1} value={String(i + 1)}>Meeting {i + 1}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button size="sm" onClick={() => handleBulkSave(prog.id)}>
+                  <Save className="h-4 w-4 mr-1" /> Save All
+                </Button>
+              </div>
               </div>
 
               <div className="overflow-x-auto">
