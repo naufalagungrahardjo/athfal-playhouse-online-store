@@ -1,7 +1,7 @@
 
 
 import {
-  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Menu, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList
+  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Menu, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList, BookOpen
 } from 'lucide-react';
 
 export type NavigationItem = {
