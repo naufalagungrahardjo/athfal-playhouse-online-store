@@ -97,10 +97,9 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
     };
   };
 
-  // Auto-save attendance status
-  const handleStatusChange = async (enrollmentId: string, meetingNum: number, value: string) => {
+  // Just update local state for attendance status (saved with Save All)
+  const handleStatusChange = (enrollmentId: string, meetingNum: number, value: string) => {
     setField(enrollmentId, meetingNum, "attendance_status", value);
-    await saveAttendance(buildRecord(enrollmentId, meetingNum, { attendance_status: value }));
   };
 
   // Bulk save all students for a program at the selected meeting
