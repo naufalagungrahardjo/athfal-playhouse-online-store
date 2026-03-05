@@ -199,7 +199,7 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
                           <TableCell>
                             <Select
                               value={getFieldValue(enr.id, meetingNum, "attendance_status")}
-                              onValueChange={v => setField(enr.id, meetingNum, "attendance_status", v)}
+                              onValueChange={v => handleStatusChange(enr.id, meetingNum, v)}
                             >
                               <SelectTrigger className="w-28">
                                 <SelectValue />
@@ -222,11 +222,6 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
                               />
                             </TableCell>
                           ))}
-                          <TableCell>
-                            <Button size="icon" variant="outline" onClick={() => handleSave(enr.id, meetingNum)}>
-                              <Save className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
                         </TableRow>
                       );
                     })}
