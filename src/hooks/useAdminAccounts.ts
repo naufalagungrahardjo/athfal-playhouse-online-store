@@ -11,6 +11,7 @@ export interface AdminAccount {
   email: string;
   role: AdminRole;
   created_at: string;
+  order_alerts: boolean;
 }
 
 export function useAdminAccounts() {
@@ -61,9 +62,23 @@ export function useAdminAccounts() {
     return true;
   };
 
+  const toggleOrderAlerts = async (email: string, enabled: boolean) => {
+    const { error } = await supabase
+      .from("admin_accounts")
+      .update({ order_alerts: enabled })
+      .eq("email", email);
+    if (error) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to update alert setting" });
+      return false;
+    }
+    toast({ title: "Updated", description: `Order alerts ${enabled ? "enabled" : "disabled"} for ${email}` });
+    fetchAccounts();
+    return true;
+  };
+
   useEffect(() => {
     fetchAccounts();
   }, []);
 
-  return { accounts, loading, addOrUpdateAccount, deleteAccount, fetchAccounts };
+  return { accounts, loading, addOrUpdateAccount, deleteAccount, toggleOrderAlerts, fetchAccounts };
 }

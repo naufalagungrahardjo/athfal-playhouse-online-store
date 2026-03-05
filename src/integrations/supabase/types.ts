@@ -37,18 +37,21 @@ export type Database = {
           created_at: string | null
           email: string
           id: string
+          order_alerts: boolean
           role: Database["public"]["Enums"]["admin_role"]
         }
         Insert: {
           created_at?: string | null
           email: string
           id?: string
+          order_alerts?: boolean
           role: Database["public"]["Enums"]["admin_role"]
         }
         Update: {
           created_at?: string | null
           email?: string
           id?: string
+          order_alerts?: boolean
           role?: Database["public"]["Enums"]["admin_role"]
         }
         Relationships: []
