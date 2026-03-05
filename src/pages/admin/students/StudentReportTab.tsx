@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -20,6 +19,14 @@ const DESCRIPTIVE_FIELDS = [
   { key: "tahfidz", label: "Tahfidz" },
 ] as const;
 
+const STATUS_LABELS: Record<string, string> = {
+  present: "Present",
+  absent: "Absent",
+  sick_leave: "Sick Leave",
+  other_leave: "Other Leave",
+  leave: "Leave Permission",
+};
+
 type Props = {
   programs: ClassProgram[];
   students: Student[];
@@ -29,10 +36,10 @@ type Props = {
 
 export default function StudentReportTab({ programs, students, enrollments, attendance }: Props) {
   const [selectedStudentId, setSelectedStudentId] = useState("");
+  const [meetingFilter, setMeetingFilter] = useState("all"); // "all" or meeting number
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
 
-  // Get all enrollments & attendance for selected student
   const studentEnrollments = useMemo(() => {
     if (!selectedStudentId) return [];
     return enrollments.filter(e => e.student_id === selectedStudentId);
@@ -43,40 +50,61 @@ export default function StudentReportTab({ programs, students, enrollments, atte
     return attendance.filter(a => enrollIds.has(a.enrollment_id));
   }, [attendance, studentEnrollments]);
 
+  // Get max meeting number across all enrolled programs
+  const maxMeetingNumber = useMemo(() => {
+    const enrolledProgIds = new Set(studentEnrollments.map(e => e.program_id));
+    const enrolledProgs = programs.filter(p => enrolledProgIds.has(p.id));
+    return Math.max(1, ...enrolledProgs.map(p => p.num_meetings));
+  }, [studentEnrollments, programs]);
+
+  // Get meeting numbers to display based on filter
+  const displayMeetings = useMemo(() => {
+    if (meetingFilter === "all") {
+      const nums = [...new Set(studentAttendance.map(a => a.meeting_number))].sort((a, b) => a - b);
+      return nums.length > 0 ? nums : [];
+    }
+    return [Number(meetingFilter)];
+  }, [meetingFilter, studentAttendance]);
+
   // Summary: per program attendance counts
   const programSummaries = useMemo(() => {
     return studentEnrollments.map(enr => {
       const prog = programs.find(p => p.id === enr.program_id);
       const records = studentAttendance.filter(a => a.enrollment_id === enr.id);
-      const present = records.filter(r => r.attendance_status === "present").length;
-      const absent = records.filter(r => r.attendance_status === "absent").length;
-      const leave = records.filter(r => r.attendance_status === "leave").length;
-      return { program: prog, enrollment: enr, records, present, absent, leave };
+      // Deduplicate by meeting_number (take latest for attendance status)
+      const meetingMap = new Map<number, StudentAttendance>();
+      for (const r of records) {
+        const existing = meetingMap.get(r.meeting_number);
+        if (!existing || r.id > existing.id) meetingMap.set(r.meeting_number, r);
+      }
+      const unique = Array.from(meetingMap.values());
+      return {
+        program: prog,
+        enrollment: enr,
+        present: unique.filter(r => r.attendance_status === "present").length,
+        absent: unique.filter(r => r.attendance_status === "absent").length,
+        sick_leave: unique.filter(r => r.attendance_status === "sick_leave").length,
+        other_leave: unique.filter(r => r.attendance_status === "other_leave").length,
+      };
     });
   }, [studentEnrollments, studentAttendance, programs]);
 
-  // Unique dates from attendance
-  const dates = useMemo(() => {
-    const d = [...new Set(studentAttendance.map(a => a.date))].sort();
-    return d;
-  }, [studentAttendance]);
-
   const exportCSV = () => {
     if (!selectedStudent) return;
-    const headers = ["Field", ...dates.map(d => format(new Date(d), "dd MMM yyyy"))];
+    const headers = ["Field", ...displayMeetings.map(m => `Meeting ${m}`)];
     const rows: string[][] = [];
 
-    // Attendance row
-    rows.push(["Attendance", ...dates.map(d => {
-      const rec = studentAttendance.find(a => a.date === d);
-      return rec?.attendance_status || "";
+    // Attendance row (latest status per meeting)
+    rows.push(["Attendance", ...displayMeetings.map(m => {
+      const recs = studentAttendance.filter(a => a.meeting_number === m).sort((a, b) => (b.id > a.id ? 1 : -1));
+      return recs.length > 0 ? (STATUS_LABELS[recs[0].attendance_status] || recs[0].attendance_status) : "";
     })]);
 
-    // Descriptive rows
+    // Descriptive rows (all teachers)
     for (const field of DESCRIPTIVE_FIELDS) {
-      rows.push([field.label, ...dates.map(d => {
-        const recs = studentAttendance.filter(a => a.date === d);
-        return recs.map(r => `${(r as any)[field.key] || ""}${r.teacher_email ? ` [${r.teacher_email}]` : ""}`).join("; ");
+      rows.push([field.label, ...displayMeetings.map(m => {
+        const recs = studentAttendance.filter(a => a.meeting_number === m);
+        return recs.map(r => `${(r as any)[field.key] || ""}${r.teacher_email ? ` [${r.teacher_email}]` : ""}`).filter(Boolean).join("; ");
       })]);
     }
 
@@ -94,7 +122,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
           <div className="flex flex-wrap items-end gap-4">
             <div className="min-w-[200px]">
               <Label>Student</Label>
-              <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
+              <Select value={selectedStudentId} onValueChange={v => { setSelectedStudentId(v); setMeetingFilter("all"); }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a student" />
                 </SelectTrigger>
@@ -106,7 +134,23 @@ export default function StudentReportTab({ programs, students, enrollments, atte
               </Select>
             </div>
             {selectedStudent && (
-              <Button variant="outline" onClick={exportCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
+              <>
+                <div className="min-w-[160px]">
+                  <Label>Meeting</Label>
+                  <Select value={meetingFilter} onValueChange={setMeetingFilter}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Meetings</SelectItem>
+                      {Array.from({ length: maxMeetingNumber }, (_, i) => (
+                        <SelectItem key={i + 1} value={String(i + 1)}>Meeting {i + 1}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button variant="outline" onClick={exportCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
+              </>
             )}
           </div>
         </CardContent>
@@ -125,7 +169,8 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                     <TableHead>Period</TableHead>
                     <TableHead>Present</TableHead>
                     <TableHead>Absent</TableHead>
-                    <TableHead>Leave</TableHead>
+                    <TableHead>Sick Leave</TableHead>
+                    <TableHead>Other Leave</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -137,19 +182,20 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                       </TableCell>
                       <TableCell className="text-green-600 font-medium">{ps.present}</TableCell>
                       <TableCell className="text-red-600 font-medium">{ps.absent}</TableCell>
-                      <TableCell className="text-yellow-600 font-medium">{ps.leave}</TableCell>
+                      <TableCell className="text-orange-600 font-medium">{ps.sick_leave}</TableCell>
+                      <TableCell className="text-yellow-600 font-medium">{ps.other_leave}</TableCell>
                     </TableRow>
                   ))}
                   {programSummaries.length === 0 && (
-                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No enrollments</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No enrollments</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
 
-          {/* Descriptive Report by Date */}
-          {dates.length > 0 && (
+          {/* Descriptive Report by Meeting Number */}
+          {displayMeetings.length > 0 && (
             <Card>
               <CardContent className="pt-4 overflow-x-auto">
                 <h3 className="font-semibold mb-3">Descriptive Report</h3>
@@ -157,46 +203,51 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                   <TableHeader>
                     <TableRow>
                       <TableHead className="min-w-[140px] sticky left-0 bg-background z-10">Field</TableHead>
-                      {dates.map(d => (
-                        <TableHead key={d} className="min-w-[180px]">{format(new Date(d), "dd MMM yyyy")}</TableHead>
+                      {displayMeetings.map(m => (
+                        <TableHead key={m} className="min-w-[200px]">Meeting {m}</TableHead>
                       ))}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {/* Attendance row */}
+                    {/* Attendance row - latest status per meeting */}
                     <TableRow>
                       <TableCell className="font-medium sticky left-0 bg-background z-10">Attendance</TableCell>
-                      {dates.map(d => {
-                        const recs = studentAttendance.filter(a => a.date === d);
+                      {displayMeetings.map(m => {
+                        const recs = studentAttendance
+                          .filter(a => a.meeting_number === m)
+                          .sort((a, b) => (b.id > a.id ? 1 : -1));
+                        const status = recs.length > 0 ? recs[0].attendance_status : null;
                         return (
-                          <TableCell key={d}>
-                            {recs.map(r => (
-                              <span key={r.id} className={`text-xs px-1.5 py-0.5 rounded ${
-                                r.attendance_status === "present" ? "bg-green-100 text-green-700" :
-                                r.attendance_status === "absent" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"
+                          <TableCell key={m}>
+                            {status && (
+                              <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                status === "present" ? "bg-green-100 text-green-700" :
+                                status === "absent" ? "bg-red-100 text-red-700" :
+                                status === "sick_leave" ? "bg-orange-100 text-orange-700" :
+                                "bg-yellow-100 text-yellow-700"
                               }`}>
-                                {r.attendance_status}
+                                {STATUS_LABELS[status] || status}
                               </span>
-                            ))}
+                            )}
                           </TableCell>
                         );
                       })}
                     </TableRow>
-                    {/* Descriptive fields */}
+                    {/* Descriptive fields - show ALL teachers' contributions */}
                     {DESCRIPTIVE_FIELDS.map(field => (
                       <TableRow key={field.key}>
                         <TableCell className="font-medium sticky left-0 bg-background z-10">{field.label}</TableCell>
-                        {dates.map(d => {
-                          const recs = studentAttendance.filter(a => a.date === d);
+                        {displayMeetings.map(m => {
+                          const recs = studentAttendance.filter(a => a.meeting_number === m);
                           return (
-                            <TableCell key={d}>
+                            <TableCell key={m}>
                               {recs.map(r => {
                                 const val = (r as any)[field.key];
                                 if (!val) return null;
                                 return (
-                                  <div key={r.id} className="text-xs mb-1">
+                                  <div key={r.id} className="text-xs mb-1 p-1 rounded bg-muted/50">
                                     <span>{val}</span>
-                                    <span className="text-muted-foreground ml-1 italic">— {r.teacher_email}</span>
+                                    <span className="text-muted-foreground ml-1 italic text-[10px]">— {r.teacher_email}</span>
                                   </div>
                                 );
                               })}

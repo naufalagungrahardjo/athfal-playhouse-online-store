@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Download, Save } from "lucide-react";
 import { ClassProgram, Student, StudentEnrollment, StudentAttendance } from "@/hooks/useStudents";
-import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 
 const DESCRIPTIVE_FIELDS = [
@@ -22,6 +21,13 @@ const DESCRIPTIVE_FIELDS = [
   { key: "tahfidz", label: "Tahfidz" },
 ] as const;
 
+const ATTENDANCE_STATUSES = [
+  { value: "present", label: "Present" },
+  { value: "absent", label: "Absent" },
+  { value: "sick_leave", label: "Sick Leave" },
+  { value: "other_leave", label: "Other Leave" },
+];
+
 type Props = {
   programs: ClassProgram[];
   students: Student[];
@@ -34,8 +40,8 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
   const { user } = useAuth();
   const [filterStart, setFilterStart] = useState("");
   const [filterEnd, setFilterEnd] = useState("");
+  const teacherEmail = user?.email || "";
 
-  // Filter programs by period
   const filteredPrograms = useMemo(() => {
     if (!filterStart && !filterEnd) return programs;
     return programs.filter(p => {
@@ -47,14 +53,28 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
 
   // Local edits state keyed by `enrollmentId-meetingNumber`
   const [edits, setEdits] = useState<Record<string, Partial<StudentAttendance>>>({});
+  const [selectedMeeting, setSelectedMeeting] = useState<Record<string, number>>({});
 
   const getKey = (enrollmentId: string, meetingNum: number) => `${enrollmentId}-${meetingNum}`;
 
+  // Get field value: for descriptive fields, use current teacher's record; for attendance_status, use latest record
   const getFieldValue = (enrollmentId: string, meetingNum: number, field: string) => {
     const key = getKey(enrollmentId, meetingNum);
     if (edits[key] && field in edits[key]) return (edits[key] as any)[field];
-    const existing = attendance.find(a => a.enrollment_id === enrollmentId && a.meeting_number === meetingNum);
-    return existing ? (existing as any)[field] : (field === "attendance_status" ? "present" : "");
+    
+    if (field === "attendance_status") {
+      // For attendance status, get the latest record (any teacher)
+      const records = attendance
+        .filter(a => a.enrollment_id === enrollmentId && a.meeting_number === meetingNum)
+        .sort((a, b) => (b.id > a.id ? 1 : -1)); // latest first
+      return records.length > 0 ? records[0].attendance_status : "present";
+    }
+    
+    // For descriptive fields, get current teacher's record
+    const existing = attendance.find(
+      a => a.enrollment_id === enrollmentId && a.meeting_number === meetingNum && a.teacher_email === teacherEmail
+    );
+    return existing ? (existing as any)[field] : "";
   };
 
   const setField = (enrollmentId: string, meetingNum: number, field: string, value: string) => {
@@ -62,24 +82,25 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
     setEdits(prev => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
   };
 
-  // Selected meeting per program
-  const [selectedMeeting, setSelectedMeeting] = useState<Record<string, number>>({});
-
-  // Auto-save just the attendance status for a single enrollment
-  const handleStatusChange = async (enrollmentId: string, meetingNum: number, value: string) => {
-    setField(enrollmentId, meetingNum, "attendance_status", value);
+  const buildRecord = (enrollmentId: string, meetingNum: number, overrides?: Record<string, string>) => {
     const fields: any = {};
     for (const f of DESCRIPTIVE_FIELDS.map(d => d.key)) {
-      fields[f] = getFieldValue(enrollmentId, meetingNum, f);
+      fields[f] = overrides?.[f] ?? getFieldValue(enrollmentId, meetingNum, f);
     }
-    await saveAttendance({
+    return {
       enrollment_id: enrollmentId,
       meeting_number: meetingNum,
       date: new Date().toISOString().split("T")[0],
-      teacher_email: user?.email || "",
-      attendance_status: value,
+      teacher_email: teacherEmail,
+      attendance_status: overrides?.attendance_status ?? getFieldValue(enrollmentId, meetingNum, "attendance_status"),
       ...fields,
-    });
+    };
+  };
+
+  // Auto-save attendance status
+  const handleStatusChange = async (enrollmentId: string, meetingNum: number, value: string) => {
+    setField(enrollmentId, meetingNum, "attendance_status", value);
+    await saveAttendance(buildRecord(enrollmentId, meetingNum, { attendance_status: value }));
   };
 
   // Bulk save all students for a program at the selected meeting
@@ -87,25 +108,37 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
     const progEnrollments = enrollments.filter(e => e.program_id === programId);
     const meetingNum = selectedMeeting[programId] || 1;
     for (const enr of progEnrollments) {
-      const fields: any = {};
-      for (const f of ["attendance_status", ...DESCRIPTIVE_FIELDS.map(d => d.key)]) {
-        fields[f] = getFieldValue(enr.id, meetingNum, f);
-      }
-      await saveAttendance({
-        enrollment_id: enr.id,
-        meeting_number: meetingNum,
-        date: new Date().toISOString().split("T")[0],
-        teacher_email: user?.email || "",
-        ...fields,
-      });
+      await saveAttendance(buildRecord(enr.id, meetingNum));
     }
-    // Clear all edits for this program
     setEdits(prev => {
       const n = { ...prev };
       for (const enr of progEnrollments) {
         delete n[getKey(enr.id, meetingNum)];
       }
       return n;
+    });
+  };
+
+  // Attendance summary per program
+  const getAttendanceSummary = (programId: string) => {
+    const progEnrollments = enrollments.filter(e => e.program_id === programId);
+    return progEnrollments.map(enr => {
+      const student = students.find(s => s.id === enr.student_id);
+      // Get unique meetings (deduplicate by meeting_number, take latest)
+      const records = attendance.filter(a => a.enrollment_id === enr.id);
+      const meetingMap = new Map<number, StudentAttendance>();
+      for (const r of records) {
+        const existing = meetingMap.get(r.meeting_number);
+        if (!existing || r.id > existing.id) meetingMap.set(r.meeting_number, r);
+      }
+      const uniqueRecords = Array.from(meetingMap.values());
+      return {
+        studentName: student?.name || "—",
+        present: uniqueRecords.filter(r => r.attendance_status === "present").length,
+        absent: uniqueRecords.filter(r => r.attendance_status === "absent").length,
+        sick_leave: uniqueRecords.filter(r => r.attendance_status === "sick_leave").length,
+        other_leave: uniqueRecords.filter(r => r.attendance_status === "other_leave").length,
+      };
     });
   };
 
@@ -151,6 +184,41 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
         </CardContent>
       </Card>
 
+      {/* Summary Table */}
+      {filteredPrograms.map(prog => {
+        const summary = getAttendanceSummary(prog.id);
+        if (summary.length === 0) return null;
+        return (
+          <Card key={`summary-${prog.id}`}>
+            <CardContent className="pt-4">
+              <h3 className="font-semibold text-base mb-2">{prog.name} — Attendance Summary</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Present</TableHead>
+                    <TableHead>Absent</TableHead>
+                    <TableHead>Sick Leave</TableHead>
+                    <TableHead>Other Leave</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {summary.map((s, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="font-medium">{s.studentName}</TableCell>
+                      <TableCell className="text-green-600 font-medium">{s.present}</TableCell>
+                      <TableCell className="text-red-600 font-medium">{s.absent}</TableCell>
+                      <TableCell className="text-orange-600 font-medium">{s.sick_leave}</TableCell>
+                      <TableCell className="text-yellow-600 font-medium">{s.other_leave}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        );
+      })}
+
       {/* Per-program attendance tables */}
       {filteredPrograms.map(prog => {
         const progEnrollments = enrollments.filter(e => e.program_id === prog.id);
@@ -161,22 +229,22 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
             <CardContent className="pt-4 space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <h3 className="font-semibold text-base">{prog.name}</h3>
-              <div className="flex items-center gap-2">
-                <Label className="text-sm">Meeting:</Label>
-                <Select value={String(meetingNum)} onValueChange={v => setSelectedMeeting(prev => ({ ...prev, [prog.id]: Number(v) }))}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: prog.num_meetings }, (_, i) => (
-                      <SelectItem key={i + 1} value={String(i + 1)}>Meeting {i + 1}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button size="sm" onClick={() => handleBulkSave(prog.id)}>
-                  <Save className="h-4 w-4 mr-1" /> Save All
-                </Button>
-              </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm">Meeting:</Label>
+                  <Select value={String(meetingNum)} onValueChange={v => setSelectedMeeting(prev => ({ ...prev, [prog.id]: Number(v) }))}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: prog.num_meetings }, (_, i) => (
+                        <SelectItem key={i + 1} value={String(i + 1)}>Meeting {i + 1}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" onClick={() => handleBulkSave(prog.id)}>
+                    <Save className="h-4 w-4 mr-1" /> Save All
+                  </Button>
+                </div>
               </div>
 
               <div className="overflow-x-auto">
@@ -184,7 +252,7 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
                   <TableHeader>
                     <TableRow>
                       <TableHead className="min-w-[140px]">Student</TableHead>
-                      <TableHead className="min-w-[120px]">Attendance</TableHead>
+                      <TableHead className="min-w-[130px]">Attendance</TableHead>
                       {DESCRIPTIVE_FIELDS.map(d => (
                         <TableHead key={d.key} className="min-w-[140px]">{d.label}</TableHead>
                       ))}
@@ -201,13 +269,13 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
                               value={getFieldValue(enr.id, meetingNum, "attendance_status")}
                               onValueChange={v => handleStatusChange(enr.id, meetingNum, v)}
                             >
-                              <SelectTrigger className="w-28">
+                              <SelectTrigger className="w-32">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="present">Present</SelectItem>
-                                <SelectItem value="absent">Absent</SelectItem>
-                                <SelectItem value="leave">Leave Permission</SelectItem>
+                                {ATTENDANCE_STATUSES.map(s => (
+                                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </TableCell>
@@ -227,7 +295,7 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
                     })}
                     {progEnrollments.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={10 + DESCRIPTIVE_FIELDS.length} className="text-center text-muted-foreground">
+                        <TableCell colSpan={2 + DESCRIPTIVE_FIELDS.length} className="text-center text-muted-foreground">
                           No students enrolled in this program
                         </TableCell>
                       </TableRow>
