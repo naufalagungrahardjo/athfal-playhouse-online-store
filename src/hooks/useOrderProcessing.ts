@@ -197,6 +197,21 @@ export const useOrderProcessing = () => {
         description: `Your order has been placed successfully! Order ID: ${order.id.slice(0, 8)}`
       });
 
+      // Send order alert emails (fire-and-forget, don't block checkout)
+      try {
+        supabase.functions.invoke('order-alert-email', {
+          body: {
+            orderId: order.id,
+            customerName: orderData.customerName,
+            customerEmail: orderData.customerEmail,
+            totalAmount: orderData.totalAmount,
+            items: orderItems,
+          },
+        });
+      } catch (alertError) {
+        console.error('Order alert email failed (non-blocking):', alertError);
+      }
+
       setProcessing(false);
       return { success: true, orderId: order.id, lookupToken: order.lookup_token };
     } catch (error: any) {

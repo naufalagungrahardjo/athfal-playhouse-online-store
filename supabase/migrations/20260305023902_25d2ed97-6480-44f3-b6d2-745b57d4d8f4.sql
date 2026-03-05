@@ -1,0 +1,1 @@
+ALTER TABLE public.admin_accounts ADD COLUMN order_alerts boolean NOT NULL DEFAULT false;

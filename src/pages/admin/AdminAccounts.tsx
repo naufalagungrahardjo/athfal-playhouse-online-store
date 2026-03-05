@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Trash2, Bell, BellOff } from "lucide-react";
 
 const ROLES: { value: AdminRole; label: string }[] = [
   { value: "super_admin", label: "Super Admin" },
@@ -26,7 +27,7 @@ const ROLE_DESCRIPTIONS: Record<AdminRole, string> = {
 };
 
 const AdminAccounts = () => {
-  const { accounts, loading, addOrUpdateAccount, deleteAccount } = useAdminAccounts();
+  const { accounts, loading, addOrUpdateAccount, deleteAccount, toggleOrderAlerts } = useAdminAccounts();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<AdminRole>("content_staff");
 
@@ -89,6 +90,7 @@ const AdminAccounts = () => {
                     <tr className="border-b bg-muted/50">
                       <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
                       <th className="px-4 py-3 text-left text-sm font-medium">Role</th>
+                      <th className="px-4 py-3 text-center text-sm font-medium">Order Alerts</th>
                       <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
                     </tr>
                   </thead>
@@ -97,6 +99,19 @@ const AdminAccounts = () => {
                       <tr key={acc.email} className="border-b last:border-0">
                         <td className="px-4 py-3 text-sm break-all">{acc.email}</td>
                         <td className="px-4 py-3 text-sm capitalize">{acc.role.replace(/_/g, " ")}</td>
+                        <td className="px-4 py-3 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            {acc.order_alerts ? (
+                              <Bell className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <BellOff className="h-4 w-4 text-muted-foreground" />
+                            )}
+                            <Switch
+                              checked={acc.order_alerts}
+                              onCheckedChange={(checked) => toggleOrderAlerts(acc.email, checked)}
+                            />
+                          </div>
+                        </td>
                         <td className="px-4 py-3">
                           <Button
                             variant="outline"
