@@ -1,5 +1,9 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /checkout
+Disallow: /order-details/
 
 Sitemap: https://athfalplayhouse.com/sitemap.xml
 Sitemap: https://wjfsfojfeyznnddxfspx.supabase.co/functions/v1/serve-sitemap
