@@ -1,0 +1,3 @@
+
+ALTER TABLE public.student_attendance DROP CONSTRAINT IF EXISTS student_attendance_enrollment_id_meeting_number_key;
+ALTER TABLE public.student_attendance ADD CONSTRAINT student_attendance_enrollment_meeting_teacher_key UNIQUE (enrollment_id, meeting_number, teacher_email);
