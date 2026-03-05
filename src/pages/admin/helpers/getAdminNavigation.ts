@@ -61,6 +61,7 @@ export function getAdminNavigation(role: string | null) : NavigationItem[] {
   if (role === "teacher") {
     return [
       { name: 'Teacher', href: '/admin/teacher', icon: ClipboardList },
+      { name: 'Students', href: '/admin/students', icon: BookOpen },
     ];
   }
   return [];
