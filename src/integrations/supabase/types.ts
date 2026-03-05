@@ -212,6 +212,36 @@ export type Database = {
         }
         Relationships: []
       }
+      class_programs: {
+        Row: {
+          created_at: string | null
+          end_date: string
+          id: string
+          name: string
+          num_meetings: number
+          start_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_date: string
+          id?: string
+          name: string
+          num_meetings?: number
+          start_date: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          name?: string
+          num_meetings?: number
+          start_date?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       collaborators: {
         Row: {
           created_at: string
@@ -520,6 +550,128 @@ export type Database = {
           usage_limit?: number | null
           valid_from?: string | null
           valid_until?: string | null
+        }
+        Relationships: []
+      }
+      student_attendance: {
+        Row: {
+          attendance_status: string
+          bahasa: string | null
+          created_at: string | null
+          date: string
+          enrollment_id: string
+          id: string
+          kemandirian: string | null
+          kognisi: string | null
+          meeting_number: number
+          motorik_halus: string | null
+          motorik_kasar: string | null
+          sosial_emosional: string | null
+          tahfidz: string | null
+          tahsin: string | null
+          teacher_email: string
+          updated_at: string | null
+        }
+        Insert: {
+          attendance_status?: string
+          bahasa?: string | null
+          created_at?: string | null
+          date?: string
+          enrollment_id: string
+          id?: string
+          kemandirian?: string | null
+          kognisi?: string | null
+          meeting_number: number
+          motorik_halus?: string | null
+          motorik_kasar?: string | null
+          sosial_emosional?: string | null
+          tahfidz?: string | null
+          tahsin?: string | null
+          teacher_email: string
+          updated_at?: string | null
+        }
+        Update: {
+          attendance_status?: string
+          bahasa?: string | null
+          created_at?: string | null
+          date?: string
+          enrollment_id?: string
+          id?: string
+          kemandirian?: string | null
+          kognisi?: string | null
+          meeting_number?: number
+          motorik_halus?: string | null
+          motorik_kasar?: string | null
+          sosial_emosional?: string | null
+          tahfidz?: string | null
+          tahsin?: string | null
+          teacher_email?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_attendance_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "student_enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_enrollments: {
+        Row: {
+          created_at: string | null
+          id: string
+          program_id: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          program_id: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          program_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_enrollments_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "class_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

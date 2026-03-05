@@ -1,7 +1,7 @@
 
 
 import {
-  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Menu, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList
+  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Menu, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList, BookOpen
 } from 'lucide-react';
 
 export type NavigationItem = {
@@ -28,6 +28,7 @@ export function getAdminNavigation(role: string | null) : NavigationItem[] {
     { name: 'Logs', href: '/admin/logs', icon: ListChecks },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
     { name: 'Categories', href: '/admin/categories', icon: Package },
+    { name: 'Students', href: '/admin/students', icon: BookOpen },
   ];
 
   if (role === "super_admin") return navigation;
@@ -60,6 +61,7 @@ export function getAdminNavigation(role: string | null) : NavigationItem[] {
   if (role === "teacher") {
     return [
       { name: 'Teacher', href: '/admin/teacher', icon: ClipboardList },
+      { name: 'Students', href: '/admin/students', icon: BookOpen },
     ];
   }
   return [];

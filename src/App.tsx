@@ -71,6 +71,7 @@ const AdminLogs = lazyRetry(() => import("./pages/admin/AdminLogs"));
 const AdminAnalytics = lazyRetry(() => import("./pages/admin/AdminAnalytics"));
 const AdminTeacher = lazyRetry(() => import("./pages/admin/AdminTeacher"));
 const AdminAllTeachers = lazyRetry(() => import("./pages/admin/AdminAllTeachers"));
+const AdminStudents = lazyRetry(() => import("./pages/admin/AdminStudents"));
 
 const queryClient = new QueryClient();
 
@@ -125,6 +126,7 @@ const App = () => (
                         <Route path="logs" element={<AdminLogs />} />
                         <Route path="teacher" element={<AdminTeacher />} />
                         <Route path="all-teachers" element={<AdminAllTeachers />} />
+                        <Route path="students" element={<AdminStudents />} />
                       </Route>
                       
                       <Route path="*" element={<NotFound />} />
