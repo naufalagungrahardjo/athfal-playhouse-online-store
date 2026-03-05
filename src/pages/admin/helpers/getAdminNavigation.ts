@@ -28,6 +28,7 @@ export function getAdminNavigation(role: string | null) : NavigationItem[] {
     { name: 'Logs', href: '/admin/logs', icon: ListChecks },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
     { name: 'Categories', href: '/admin/categories', icon: Package },
+    { name: 'Students', href: '/admin/students', icon: BookOpen },
   ];
 
   if (role === "super_admin") return navigation;
