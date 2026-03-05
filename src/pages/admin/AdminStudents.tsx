@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useStudents } from "@/hooks/useStudents";
 import ProgramsStudentsTab from "./students/ProgramsStudentsTab";
@@ -5,6 +6,7 @@ import AttendanceTab from "./students/AttendanceTab";
 import StudentReportTab from "./students/StudentReportTab";
 
 const AdminStudents = () => {
+  const [activeTab, setActiveTab] = useState("programs");
   const {
     programs, students, enrollments, attendance, loading,
     addProgram, updateProgram, deleteProgram,
@@ -19,7 +21,7 @@ const AdminStudents = () => {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Students Management</h1>
-      <Tabs defaultValue="programs">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="programs">Programs & Students</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>

@@ -65,9 +65,11 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
   // Selected meeting per program
   const [selectedMeeting, setSelectedMeeting] = useState<Record<string, number>>({});
 
-  const handleSave = async (enrollmentId: string, meetingNum: number) => {
+  // Auto-save just the attendance status for a single enrollment
+  const handleStatusChange = async (enrollmentId: string, meetingNum: number, value: string) => {
+    setField(enrollmentId, meetingNum, "attendance_status", value);
     const fields: any = {};
-    for (const f of ["attendance_status", ...DESCRIPTIVE_FIELDS.map(d => d.key)]) {
+    for (const f of DESCRIPTIVE_FIELDS.map(d => d.key)) {
       fields[f] = getFieldValue(enrollmentId, meetingNum, f);
     }
     await saveAttendance({
@@ -75,11 +77,36 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
       meeting_number: meetingNum,
       date: new Date().toISOString().split("T")[0],
       teacher_email: user?.email || "",
+      attendance_status: value,
       ...fields,
     });
-    // Clear local edits for this key
-    const key = getKey(enrollmentId, meetingNum);
-    setEdits(prev => { const n = { ...prev }; delete n[key]; return n; });
+  };
+
+  // Bulk save all students for a program at the selected meeting
+  const handleBulkSave = async (programId: string) => {
+    const progEnrollments = enrollments.filter(e => e.program_id === programId);
+    const meetingNum = selectedMeeting[programId] || 1;
+    for (const enr of progEnrollments) {
+      const fields: any = {};
+      for (const f of ["attendance_status", ...DESCRIPTIVE_FIELDS.map(d => d.key)]) {
+        fields[f] = getFieldValue(enr.id, meetingNum, f);
+      }
+      await saveAttendance({
+        enrollment_id: enr.id,
+        meeting_number: meetingNum,
+        date: new Date().toISOString().split("T")[0],
+        teacher_email: user?.email || "",
+        ...fields,
+      });
+    }
+    // Clear all edits for this program
+    setEdits(prev => {
+      const n = { ...prev };
+      for (const enr of progEnrollments) {
+        delete n[getKey(enr.id, meetingNum)];
+      }
+      return n;
+    });
   };
 
   const exportCSV = () => {
@@ -134,19 +161,22 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
             <CardContent className="pt-4 space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <h3 className="font-semibold text-base">{prog.name}</h3>
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm">Meeting:</Label>
-                  <Select value={String(meetingNum)} onValueChange={v => setSelectedMeeting(prev => ({ ...prev, [prog.id]: Number(v) }))}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: prog.num_meetings }, (_, i) => (
-                        <SelectItem key={i + 1} value={String(i + 1)}>Meeting {i + 1}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-sm">Meeting:</Label>
+                <Select value={String(meetingNum)} onValueChange={v => setSelectedMeeting(prev => ({ ...prev, [prog.id]: Number(v) }))}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: prog.num_meetings }, (_, i) => (
+                      <SelectItem key={i + 1} value={String(i + 1)}>Meeting {i + 1}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button size="sm" onClick={() => handleBulkSave(prog.id)}>
+                  <Save className="h-4 w-4 mr-1" /> Save All
+                </Button>
+              </div>
               </div>
 
               <div className="overflow-x-auto">
@@ -158,7 +188,6 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
                       {DESCRIPTIVE_FIELDS.map(d => (
                         <TableHead key={d.key} className="min-w-[140px]">{d.label}</TableHead>
                       ))}
-                      <TableHead className="w-20">Save</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -170,7 +199,7 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
                           <TableCell>
                             <Select
                               value={getFieldValue(enr.id, meetingNum, "attendance_status")}
-                              onValueChange={v => setField(enr.id, meetingNum, "attendance_status", v)}
+                              onValueChange={v => handleStatusChange(enr.id, meetingNum, v)}
                             >
                               <SelectTrigger className="w-28">
                                 <SelectValue />
@@ -193,11 +222,6 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
                               />
                             </TableCell>
                           ))}
-                          <TableCell>
-                            <Button size="icon" variant="outline" onClick={() => handleSave(enr.id, meetingNum)}>
-                              <Save className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
                         </TableRow>
                       );
                     })}
