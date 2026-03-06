@@ -231,6 +231,7 @@ export default function AdminAllTeachers() {
                 <div><Label>From</Label><Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} /></div>
                 <div><Label>To</Label><Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} /></div>
                 {(dateFrom || dateTo) && <Button variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); }}>Clear dates</Button>}
+                <Button variant="outline" onClick={exportAttendanceCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
               </div>
               <div className="overflow-auto">
                 <Table>
