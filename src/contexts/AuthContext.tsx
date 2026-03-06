@@ -88,7 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       // If session is already missing, that's fine - we'll still clear local state
       if (error instanceof Error && error.message !== 'Auth session missing!') {
-        console.error('Logout error:', error);
+        logger.error('Logout error:', error);
       }
     }
     
