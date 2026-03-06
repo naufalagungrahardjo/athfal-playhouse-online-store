@@ -85,7 +85,7 @@ export const useOrderProcessing = () => {
           .rpc('validate_promo_code', { code_input: orderData.promoCode });
 
         if (promoCheckError || !promoResult || promoResult.length === 0) {
-          console.error(`[${errorId}] Promo pre-check failed`);
+          logger.error(`[${errorId}] Promo pre-check failed`);
           toast({
             variant: "destructive",
             title: "Promo unavailable",
