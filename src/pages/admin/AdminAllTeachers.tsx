@@ -173,6 +173,32 @@ export default function AdminAllTeachers() {
     }
   };
 
+  const exportAttendanceCSV = () => {
+    const headers = ["Teacher", "Date", "Arrival", "Leave", "Sessions", "Evidence", "Remarks"];
+    const rows = filteredAttendances.map(a => [
+      a.teacher_email, a.date,
+      a.arrival_time ? format(new Date(a.arrival_time), "HH:mm") : "",
+      a.leave_time || "",
+      (a.sessions || []).map(s => SESSION_OPTIONS.find(o => o.id === s)?.label || s).join("; "),
+      a.evidence_url || "", a.remarks || "",
+    ]);
+    downloadCSV(headers, rows, "teacher_attendance.csv");
+  };
+
+  const exportLeavesCSV = () => {
+    const headers = ["Teacher", "Start", "End", "Remarks", "Status"];
+    const rows = leaves.map(l => [l.teacher_email, l.start_date, l.end_date, l.remarks || "", l.status]);
+    downloadCSV(headers, rows, "teacher_leaves.csv");
+  };
+
+  const downloadCSV = (headers: string[], rows: string[][], filename: string) => {
+    const csv = [headers.join(","), ...rows.map(r => r.map(f => `"${(f || "").replace(/"/g, '""')}"`).join(","))].join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  };
+
   if (loading) return <div className="p-8 text-center">Loading...</div>;
 
   return (
