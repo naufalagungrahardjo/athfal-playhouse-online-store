@@ -83,7 +83,7 @@ export default function ProgramsStudentsTab({
               <Input value={progName} onChange={e => setProgName(e.target.value)} placeholder="Program name" />
             </div>
             <div>
-              <Label>Number of Meetings</Label>
+              <Label>Number of Sessions</Label>
               <Input type="number" min={1} value={progMeetings} onChange={e => setProgMeetings(Number(e.target.value))} />
             </div>
             <div>
