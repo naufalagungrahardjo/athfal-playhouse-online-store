@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { Check, X, Save, Trash2 } from "lucide-react";
+import { Check, X, Save, Trash2, Download } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -173,6 +173,32 @@ export default function AdminAllTeachers() {
     }
   };
 
+  const exportAttendanceCSV = () => {
+    const headers = ["Teacher", "Date", "Arrival", "Leave", "Sessions", "Evidence", "Remarks"];
+    const rows = filteredAttendances.map(a => [
+      a.teacher_email, a.date,
+      a.arrival_time ? format(new Date(a.arrival_time), "HH:mm") : "",
+      a.leave_time || "",
+      (a.sessions || []).map(s => SESSION_OPTIONS.find(o => o.id === s)?.label || s).join("; "),
+      a.evidence_url || "", a.remarks || "",
+    ]);
+    downloadCSV(headers, rows, "teacher_attendance.csv");
+  };
+
+  const exportLeavesCSV = () => {
+    const headers = ["Teacher", "Start", "End", "Remarks", "Status"];
+    const rows = leaves.map(l => [l.teacher_email, l.start_date, l.end_date, l.remarks || "", l.status]);
+    downloadCSV(headers, rows, "teacher_leaves.csv");
+  };
+
+  const downloadCSV = (headers: string[], rows: string[][], filename: string) => {
+    const csv = [headers.join(","), ...rows.map(r => r.map(f => `"${(f || "").replace(/"/g, '""')}"`).join(","))].join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  };
+
   if (loading) return <div className="p-8 text-center">Loading...</div>;
 
   return (
@@ -205,6 +231,7 @@ export default function AdminAllTeachers() {
                 <div><Label>From</Label><Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} /></div>
                 <div><Label>To</Label><Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} /></div>
                 {(dateFrom || dateTo) && <Button variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); }}>Clear dates</Button>}
+                <Button variant="outline" onClick={exportAttendanceCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
               </div>
               <div className="overflow-auto">
                 <Table>
@@ -327,7 +354,12 @@ export default function AdminAllTeachers() {
         {/* LEAVES TAB */}
         <TabsContent value="leaves" className="space-y-4">
           <Card>
-            <CardHeader><CardTitle>Leave Requests</CardTitle></CardHeader>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Leave Requests</CardTitle>
+                <Button variant="outline" size="sm" onClick={exportLeavesCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
+              </div>
+            </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>

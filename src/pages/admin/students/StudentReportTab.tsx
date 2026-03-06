@@ -78,7 +78,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
       const recs = studentAttendance.filter(a => a.meeting_number === m);
       for (const r of recs) {
         const val = (r as any)[fieldKey];
-        if (val) parts.push(`Meeting ${m}: ${val} [${r.teacher_email}]`);
+        if (val) parts.push(`Session ${m}: ${val} [${r.teacher_email}]`);
       }
     }
     return parts.join("\n");
@@ -139,7 +139,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
 
   const exportCSV = () => {
     if (!selectedStudent) return;
-    const headers = ["Field", ...displayMeetings.map(m => `Meeting ${m}`), "Compilation"];
+    const headers = ["Field", ...displayMeetings.map(m => `Session ${m}`), "Compilation"];
     const rows: string[][] = [];
 
     rows.push(["Attendance", ...displayMeetings.map(m => {
@@ -182,15 +182,15 @@ export default function StudentReportTab({ programs, students, enrollments, atte
             {selectedStudent && (
               <>
                 <div className="min-w-[160px]">
-                  <Label>Meeting</Label>
+                  <Label>Session</Label>
                   <Select value={meetingFilter} onValueChange={setMeetingFilter}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Meetings</SelectItem>
+                      <SelectItem value="all">All Sessions</SelectItem>
                       {Array.from({ length: maxMeetingNumber }, (_, i) => (
-                        <SelectItem key={i + 1} value={String(i + 1)}>Meeting {i + 1}</SelectItem>
+                        <SelectItem key={i + 1} value={String(i + 1)}>Session {i + 1}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -256,7 +256,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                     <TableRow>
                       <TableHead className="min-w-[140px] sticky left-0 bg-background z-10">Field</TableHead>
                       {displayMeetings.map(m => (
-                        <TableHead key={m} className="min-w-[200px]">Meeting {m}</TableHead>
+                        <TableHead key={m} className="min-w-[200px]">Session {m}</TableHead>
                       ))}
                       <TableHead className="min-w-[280px] bg-blue-50">Compilation</TableHead>
                       {aiSummary && <TableHead className="min-w-[300px] bg-purple-50">AI Summary</TableHead>}

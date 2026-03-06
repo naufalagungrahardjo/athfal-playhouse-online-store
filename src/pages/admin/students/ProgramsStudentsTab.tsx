@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Trash2, Edit2 } from "lucide-react";
+import { Plus, Trash2, Edit2, Download } from "lucide-react";
 import { ClassProgram, Student } from "@/hooks/useStudents";
 import { format } from "date-fns";
 
@@ -69,8 +69,31 @@ export default function ProgramsStudentsTab({
     setEditingStudent(null);
   };
 
+  const exportCSV = () => {
+    const headers = ["Student Name", "Enrolled Programs"];
+    const rows = students.map(s => [
+      s.name,
+      s.enrolled_programs.map(pid => programs.find(p => p.id === pid)?.name || pid).join("; "),
+    ]);
+    const progHeaders = ["Program Name", "Sessions", "Start Date", "End Date"];
+    const progRows = programs.map(p => [p.name, String(p.num_meetings), p.start_date, p.end_date]);
+    const csv = [
+      "=== Programs ===", progHeaders.join(","),
+      ...progRows.map(r => r.map(f => `"${(f || "").replace(/"/g, '""')}"`).join(",")),
+      "", "=== Students ===", headers.join(","),
+      ...rows.map(r => r.map(f => `"${(f || "").replace(/"/g, '""')}"`).join(",")),
+    ].join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "programs_students.csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <Button variant="outline" onClick={exportCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
+      </div>
       {/* Programs Section */}
       <Card>
         <CardHeader>
@@ -83,7 +106,7 @@ export default function ProgramsStudentsTab({
               <Input value={progName} onChange={e => setProgName(e.target.value)} placeholder="Program name" />
             </div>
             <div>
-              <Label>Number of Meetings</Label>
+              <Label>Number of Sessions</Label>
               <Input type="number" min={1} value={progMeetings} onChange={e => setProgMeetings(Number(e.target.value))} />
             </div>
             <div>
@@ -103,7 +126,7 @@ export default function ProgramsStudentsTab({
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Meetings</TableHead>
+                <TableHead>Sessions</TableHead>
                 <TableHead>Period</TableHead>
                 <TableHead className="w-24">Actions</TableHead>
               </TableRow>
