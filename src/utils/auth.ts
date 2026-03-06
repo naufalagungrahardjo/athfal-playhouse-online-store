@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { User, UserRole } from '@/types/auth';
+import { logger } from '@/utils/logger';
 
 /**
  * Loads user profile including role for UI display purposes only.
