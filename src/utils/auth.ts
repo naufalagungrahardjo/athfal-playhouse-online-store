@@ -22,11 +22,11 @@ export const loadUserProfile = async (supabaseUser: SupabaseUser): Promise<User>
       .eq('email', supabaseUser.email)
       .maybeSingle();
 
-    console.log('[loadUserProfile] Admin account query result:', { adminAccount, error });
+    logger.log('[loadUserProfile] Admin account query result:', { adminAccount, error });
 
     // Set the admin role from the DB, otherwise fallback to 'user'
     const userRole: UserRole = adminAccount?.role || 'user';
-    console.log('[loadUserProfile] Final user role:', userRole);
+    logger.log('[loadUserProfile] Final user role:', userRole);
     
     const userData: User = {
       id: supabaseUser.id,
