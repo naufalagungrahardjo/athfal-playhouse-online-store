@@ -145,7 +145,7 @@ export const useOrderProcessing = () => {
         .single();
 
       if (orderError) {
-        console.error(`[${errorId}] Order creation failed`);
+        logger.error(`[${errorId}] Order creation failed`);
         toast({
           variant: "destructive",
           title: "Order Failed",
