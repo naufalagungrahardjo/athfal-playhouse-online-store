@@ -176,6 +176,7 @@ export const HomeBanner = () => {
                     : 'bg-white/50'
                 }`}
                 onClick={() => setCurrentBannerIndex(index)}
+                aria-label={`Go to banner ${index + 1}`}
               />
             ))}
           </div>
