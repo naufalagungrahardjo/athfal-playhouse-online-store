@@ -102,7 +102,7 @@ export const useOrderProcessing = () => {
           });
 
         if (promoIncError || !reserved) {
-          console.error(`[${errorId}] Failed to reserve promo usage`);
+          logger.error(`[${errorId}] Failed to reserve promo usage`);
           toast({
             variant: "destructive",
             title: "Promo quota reached",
