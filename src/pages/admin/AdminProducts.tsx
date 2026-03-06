@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Download } from 'lucide-react';
 import { ProductCategory } from '@/contexts/CartContext';
 import { ProductList } from '@/components/admin/ProductList';
 import { ProductDialog } from '@/components/admin/ProductDialog';
