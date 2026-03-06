@@ -13,7 +13,7 @@ import { logger } from '@/utils/logger';
  */
 export const loadUserProfile = async (supabaseUser: SupabaseUser): Promise<User> => {
   try {
-    console.log('[loadUserProfile] Loading profile for:', supabaseUser.email);
+    logger.log('[loadUserProfile] Loading profile for:', supabaseUser.email);
     
     // Check if user is admin by checking admin_accounts table by email
     const { data: adminAccount, error } = await supabase
