@@ -129,7 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: "Password Anda telah berhasil diubah",
       });
     } catch (error) {
-      console.error('Update password error:', error);
+      logger.error('Update password error:', error);
       toast({
         variant: "destructive",
         title: "Gagal memperbarui password",

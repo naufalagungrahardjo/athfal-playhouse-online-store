@@ -217,7 +217,7 @@ export const useOrderProcessing = () => {
       return { success: true, orderId: order.id, lookupToken: order.lookup_token };
     } catch (error: any) {
       const errorId = `ORD-${Date.now()}`;
-      console.error(`[${errorId}] Unexpected order error`);
+      logger.error(`[${errorId}] Unexpected order error`);
       toast({
         variant: "destructive",
         title: "Order Failed",

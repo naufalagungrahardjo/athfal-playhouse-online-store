@@ -13,9 +13,9 @@ const UserMenu = () => {
   const navigate = useNavigate();
 
   // Debug logging to see what's happening with user data
-  console.log('[UserMenu] Current user:', user);
-  console.log('[UserMenu] User role:', user?.role);
-  console.log('[UserMenu] isAdmin():', isAdmin());
+  logger.log('[UserMenu] Current user:', user);
+  logger.log('[UserMenu] User role:', user?.role);
+  logger.log('[UserMenu] isAdmin():', isAdmin());
 
   const handleProfileClick = () => {
     navigate('/profile');

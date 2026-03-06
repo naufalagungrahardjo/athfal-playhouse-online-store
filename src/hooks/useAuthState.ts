@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { User } from '@/types/auth';
 import { loadUserProfile } from '@/utils/auth';
+import { logger } from '@/utils/logger';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -16,7 +17,7 @@ export const useAuthState = () => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('[useAuthState] Auth state changed:', event, session);
+        logger.log('[useAuthState] Auth state changed:', event, session);
 
         // For SIGNED_OUT, always clear.
         if (event === 'SIGNED_OUT') {
@@ -30,7 +31,7 @@ export const useAuthState = () => {
         // server error, transient issue), keep the current user logged in.
         // Only trust explicit SIGNED_OUT to clear user state.
         if (!session && user) {
-          console.warn('[useAuthState] Session became null but user exists, keeping current user (event:', event, ')');
+          logger.warn('[useAuthState] Session became null but user exists, keeping current user (event:', event, ')');
           return;
         }
 
@@ -41,11 +42,11 @@ export const useAuthState = () => {
           setTimeout(() => {
             loadUserProfile(session.user)
               .then((userData) => {
-                console.log('[useAuthState] Loaded user profile:', userData);
+                logger.log('[useAuthState] Loaded user profile:', userData);
                 if (!canceled) setUser(userData);
               })
               .catch((err) => {
-                console.error('[useAuthState] Failed to load user profile:', err);
+                logger.error('[useAuthState] Failed to load user profile:', err);
                 // Don't set user to null on profile load failure if we already have a user
               })
               .finally(() => {
@@ -62,17 +63,17 @@ export const useAuthState = () => {
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('[useAuthState] Initial session:', session);
+      logger.log('[useAuthState] Initial session:', session);
 
       setSession(session);
       if (session?.user) {
         loadUserProfile(session.user)
           .then((userData) => {
-            console.log('[useAuthState] Loaded user profile (init):', userData);
+            logger.log('[useAuthState] Loaded user profile (init):', userData);
             if (!canceled) setUser(userData);
           })
           .catch((err) => {
-            console.error('[useAuthState] Failed to load user profile (init):', err);
+            logger.error('[useAuthState] Failed to load user profile (init):', err);
             if (!canceled) setUser(null);
           })
           .finally(() => {
@@ -82,7 +83,7 @@ export const useAuthState = () => {
         setLoading(false);
       }
     }).catch((err) => {
-      console.error('[useAuthState] Failed to get initial session:', err);
+      logger.error('[useAuthState] Failed to get initial session:', err);
       setLoading(false);
     });
 
