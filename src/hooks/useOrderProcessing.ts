@@ -173,7 +173,7 @@ export const useOrderProcessing = () => {
         .insert(orderItems);
 
       if (itemsError) {
-        console.error(`[${errorId}] Order items creation failed`);
+        logger.error(`[${errorId}] Order items creation failed`);
         toast({
           variant: "destructive",
           title: "Order Item Failed",
