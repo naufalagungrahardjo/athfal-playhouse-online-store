@@ -229,14 +229,14 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <h3 className="font-semibold text-base">{prog.name}</h3>
                 <div className="flex items-center gap-2">
-                  <Label className="text-sm">Meeting:</Label>
+                  <Label className="text-sm">Session:</Label>
                   <Select value={String(meetingNum)} onValueChange={v => setSelectedMeeting(prev => ({ ...prev, [prog.id]: Number(v) }))}>
                     <SelectTrigger className="w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {Array.from({ length: prog.num_meetings }, (_, i) => (
-                        <SelectItem key={i + 1} value={String(i + 1)}>Meeting {i + 1}</SelectItem>
+                        <SelectItem key={i + 1} value={String(i + 1)}>Session {i + 1}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

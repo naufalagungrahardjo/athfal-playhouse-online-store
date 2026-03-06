@@ -103,7 +103,7 @@ export default function ProgramsStudentsTab({
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Meetings</TableHead>
+                <TableHead>Sessions</TableHead>
                 <TableHead>Period</TableHead>
                 <TableHead className="w-24">Actions</TableHead>
               </TableRow>

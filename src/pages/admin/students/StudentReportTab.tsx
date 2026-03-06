@@ -256,7 +256,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                     <TableRow>
                       <TableHead className="min-w-[140px] sticky left-0 bg-background z-10">Field</TableHead>
                       {displayMeetings.map(m => (
-                        <TableHead key={m} className="min-w-[200px]">Meeting {m}</TableHead>
+                        <TableHead key={m} className="min-w-[200px]">Session {m}</TableHead>
                       ))}
                       <TableHead className="min-w-[280px] bg-blue-50">Compilation</TableHead>
                       {aiSummary && <TableHead className="min-w-[300px] bg-purple-50">AI Summary</TableHead>}
