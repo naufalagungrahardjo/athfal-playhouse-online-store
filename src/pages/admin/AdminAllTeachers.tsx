@@ -116,10 +116,10 @@ export default function AdminAllTeachers() {
   const handleDeleteAllEvidence = async () => {
     setDeleting(true);
     try {
-      // List all files in teacher-evidence folder
+      // List all files in teacher-evidence bucket
       const { data: files, error: listError } = await supabase.storage
-        .from("images")
-        .list("teacher-evidence", { limit: 1000 });
+        .from("teacher-evidence")
+        .list("", { limit: 1000 });
 
       if (listError) throw listError;
 
@@ -129,13 +129,13 @@ export default function AdminAllTeachers() {
 
       for (const folder of teacherFolders) {
         const { data: teacherFiles } = await supabase.storage
-          .from("images")
-          .list(`teacher-evidence/${folder.name}`, { limit: 1000 });
+          .from("teacher-evidence")
+          .list(`${folder.name}`, { limit: 1000 });
 
         if (teacherFiles && teacherFiles.length > 0) {
-          const paths = teacherFiles.map(f => `teacher-evidence/${folder.name}/${f.name}`);
+          const paths = teacherFiles.map(f => `${folder.name}/${f.name}`);
           const { error: delError } = await supabase.storage
-            .from("images")
+            .from("teacher-evidence")
             .remove(paths);
           if (!delError) totalDeleted += paths.length;
         }

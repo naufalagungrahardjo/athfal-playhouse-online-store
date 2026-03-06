@@ -165,12 +165,15 @@ export default function AdminTeacher() {
         setEvidenceUrl(data.webViewLink);
         toast({ title: "Uploaded to Google Drive", description: "Evidence photo saved to your Drive folder." });
       } else {
-        // Fallback to Supabase storage
-        const filePath = `teacher-evidence/${email}/${today}-${Date.now()}.${file.name.split('.').pop()}`;
-        const { error } = await supabase.storage.from("images").upload(filePath, file);
+        // Fallback to private Supabase storage bucket
+        const filePath = `${email}/${today}-${Date.now()}.${file.name.split('.').pop()}`;
+        const { error } = await supabase.storage.from("teacher-evidence").upload(filePath, file);
         if (error) throw error;
-        const { data: urlData } = supabase.storage.from("images").getPublicUrl(filePath);
-        setEvidenceUrl(urlData.publicUrl);
+        const { data: signedData, error: signError } = await supabase.storage
+          .from("teacher-evidence")
+          .createSignedUrl(filePath, 86400); // 24 hour expiry
+        if (signError) throw signError;
+        setEvidenceUrl(signedData.signedUrl);
         toast({ title: "Uploaded", description: "Evidence image uploaded." });
       }
     } catch (err: any) {

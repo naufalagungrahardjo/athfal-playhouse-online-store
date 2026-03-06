@@ -64,7 +64,7 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 export const signUpWithEmail = async (email: string, password: string, name: string) => {
-  console.log('Attempting signup for:', email);
+  logger.log('Attempting signup for:', email);
   
   const { data, error } = await supabase.auth.signUp({
     email,
