@@ -139,7 +139,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
 
   const exportCSV = () => {
     if (!selectedStudent) return;
-    const headers = ["Field", ...displayMeetings.map(m => `Meeting ${m}`), "Compilation"];
+    const headers = ["Field", ...displayMeetings.map(m => `Session ${m}`), "Compilation"];
     const rows: string[][] = [];
 
     rows.push(["Attendance", ...displayMeetings.map(m => {
