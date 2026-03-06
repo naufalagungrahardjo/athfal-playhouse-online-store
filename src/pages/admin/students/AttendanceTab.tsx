@@ -142,7 +142,7 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
   };
 
   const exportCSV = () => {
-    const headers = ["Program", "Student", "Meeting #", "Date", "Attendance", ...DESCRIPTIVE_FIELDS.map(d => d.label), "Teacher"];
+    const headers = ["Program", "Student", "Session #", "Date", "Attendance", ...DESCRIPTIVE_FIELDS.map(d => d.label), "Teacher"];
     const rows: string[][] = [];
     for (const prog of filteredPrograms) {
       const progEnrollments = enrollments.filter(e => e.program_id === prog.id);
