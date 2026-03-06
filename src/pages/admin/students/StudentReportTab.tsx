@@ -78,7 +78,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
       const recs = studentAttendance.filter(a => a.meeting_number === m);
       for (const r of recs) {
         const val = (r as any)[fieldKey];
-        if (val) parts.push(`Meeting ${m}: ${val} [${r.teacher_email}]`);
+        if (val) parts.push(`Session ${m}: ${val} [${r.teacher_email}]`);
       }
     }
     return parts.join("\n");
