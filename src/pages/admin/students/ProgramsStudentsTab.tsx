@@ -91,6 +91,9 @@ export default function ProgramsStudentsTab({
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <Button variant="outline" onClick={exportCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
+      </div>
       {/* Programs Section */}
       <Card>
         <CardHeader>

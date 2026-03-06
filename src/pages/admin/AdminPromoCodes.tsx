@@ -196,6 +196,19 @@ const AdminPromoCodes = () => {
     return { status: 'Active', color: 'bg-green-100 text-green-800' };
   };
 
+  const exportPromoCSV = () => {
+    const headers = ["Code", "Discount %", "Description", "Status", "Usage Count", "Usage Limit", "Valid From", "Valid Until", "Applies To"];
+    const rows = promoCodes.map(p => {
+      const s = getPromoStatus(p);
+      return [p.code, String(p.discount_percentage), p.description || "", s.status, String(p.usage_count), p.usage_limit != null ? String(p.usage_limit) : "∞", formatDate(p.valid_from), formatDate(p.valid_until), p.applies_to];
+    });
+    const csv = [headers.join(","), ...rows.map(r => r.map(f => `"${(f || "").replace(/"/g, '""')}"`).join(","))].join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "promo_codes.csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -203,13 +216,19 @@ const AdminPromoCodes = () => {
           <h1 className="text-2xl font-bold">Promo Code Management</h1>
           <p className="text-gray-600">Create and manage discount codes with date ranges</p>
         </div>
-        <Button 
-          onClick={() => handleOpenDialog()} 
-          className="flex items-center gap-2 bg-athfal-pink hover:bg-athfal-pink/90"
-        >
-          <PlusCircle size={16} />
-          Add New Promo
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportPromoCSV}>
+            <Download size={16} className="mr-1" />
+            Export CSV
+          </Button>
+          <Button 
+            onClick={() => handleOpenDialog()} 
+            className="flex items-center gap-2 bg-athfal-pink hover:bg-athfal-pink/90"
+          >
+            <PlusCircle size={16} />
+            Add New Promo
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-md shadow">

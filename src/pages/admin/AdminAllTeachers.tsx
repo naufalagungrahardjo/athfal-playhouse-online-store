@@ -354,7 +354,12 @@ export default function AdminAllTeachers() {
         {/* LEAVES TAB */}
         <TabsContent value="leaves" className="space-y-4">
           <Card>
-            <CardHeader><CardTitle>Leave Requests</CardTitle></CardHeader>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Leave Requests</CardTitle>
+                <Button variant="outline" size="sm" onClick={exportLeavesCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
+              </div>
+            </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
