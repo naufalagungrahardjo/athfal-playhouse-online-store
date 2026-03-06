@@ -210,7 +210,7 @@ export const useOrderProcessing = () => {
           },
         });
       } catch (alertError) {
-        console.error('Order alert email failed (non-blocking):', alertError);
+        logger.error('Order alert email failed (non-blocking):', alertError);
       }
 
       setProcessing(false);
