@@ -2,26 +2,86 @@
 import { Link, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Menu, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NavigationItem } from "./helpers/getAdminNavigation";
-import React from "react";
+import { NavigationGroup } from "./helpers/getAdminNavigation";
+import React, { useState } from "react";
 
 type Props = {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
-  navigation: NavigationItem[];
+  navigation: NavigationGroup[];
+};
+
+const SidebarNav: React.FC<{ groups: NavigationGroup[]; onItemClick?: () => void }> = ({ groups, onItemClick }) => {
+  const location = useLocation();
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    // Auto-open group containing current route
+    const init: Record<string, boolean> = {};
+    groups.forEach(g => {
+      if (g.items.some(i => location.pathname === i.href)) {
+        init[g.label] = true;
+      }
+    });
+    return init;
+  });
+
+  const toggle = (label: string) => {
+    setOpenGroups(prev => ({ ...prev, [label]: !prev[label] }));
+  };
+
+  return (
+    <div className="space-y-1">
+      {groups.map((group) => {
+        const isOpen = openGroups[group.label] ?? false;
+        const hasActive = group.items.some(i => location.pathname === i.href);
+
+        return (
+          <div key={group.label}>
+            <button
+              onClick={() => toggle(group.label)}
+              className={cn(
+                "flex items-center justify-between w-full px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors",
+                hasActive && "text-gray-700"
+              )}
+              aria-label={`Toggle ${group.label} menu`}
+            >
+              <span>{group.label}</span>
+              <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", isOpen && "rotate-180")} />
+            </button>
+            {isOpen && (
+              <ul className="space-y-0.5 pb-1">
+                {group.items.map((item) => (
+                  <li key={item.name}>
+                    <Link
+                      to={item.href}
+                      className={cn(
+                        "flex items-center pl-8 pr-6 py-2 text-sm font-medium hover:bg-gray-200 transition-colors",
+                        location.pathname === item.href ? "bg-gray-200 text-gray-900" : "text-gray-600"
+                      )}
+                      onClick={onItemClick}
+                    >
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {item.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 };
 
 const AdminSidebar: React.FC<Props> = ({ sidebarOpen, setSidebarOpen, navigation }) => {
-  const location = useLocation();
-
   return (
     <>
       {/* Mobile Sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden">
+          <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open admin menu">
             <Menu />
           </Button>
         </SheetTrigger>
@@ -33,23 +93,7 @@ const AdminSidebar: React.FC<Props> = ({ sidebarOpen, setSidebarOpen, navigation
               </Link>
             </div>
             <div className="flex-1 overflow-y-auto">
-              <ul className="space-y-1">
-                {navigation.map((item) => (
-                  <li key={item.name}>
-                    <Link
-                      to={item.href}
-                      className={cn(
-                        "flex items-center px-6 py-3 text-sm font-medium hover:bg-gray-200",
-                        location.pathname === item.href ? "bg-gray-200" : "bg-transparent"
-                      )}
-                      onClick={() => setSidebarOpen(false)}
-                    >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {item.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <SidebarNav groups={navigation} onItemClick={() => setSidebarOpen(false)} />
             </div>
           </div>
         </SheetContent>
@@ -63,22 +107,7 @@ const AdminSidebar: React.FC<Props> = ({ sidebarOpen, setSidebarOpen, navigation
           </Link>
         </div>
         <div className="flex-1 overflow-y-auto">
-          <ul className="space-y-1">
-            {navigation.map((item) => (
-              <li key={item.name}>
-                <Link
-                  to={item.href}
-                  className={cn(
-                    "flex items-center px-6 py-3 text-sm font-medium hover:bg-gray-200",
-                    location.pathname === item.href ? "bg-gray-200" : "bg-transparent"
-                  )}
-                >
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <SidebarNav groups={navigation} />
         </div>
       </div>
     </>

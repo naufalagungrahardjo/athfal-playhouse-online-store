@@ -4,7 +4,7 @@ import { Outlet, Navigate } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminRole } from "./helpers/getAdminRole";
-import { getAdminNavigation } from "./helpers/getAdminNavigation";
+import { getAdminNavigation, NavigationGroup } from "./helpers/getAdminNavigation";
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
