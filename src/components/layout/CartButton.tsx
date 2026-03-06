@@ -9,8 +9,8 @@ const CartButton = () => {
   const total = getTotalItems();
 
   return (
-    <Link to="/cart">
-      <Button variant="ghost" size="icon" className="relative">
+    <Link to="/cart" aria-label="Shopping cart">
+      <Button variant="ghost" size="icon" className="relative" aria-label="Shopping cart">
         <ShoppingCart className="h-5 w-5 text-athfal-pink" />
         {total > 0 && (
           <span className="absolute -top-1 -right-1 bg-athfal-yellow text-xs rounded-full h-5 w-5 flex items-center justify-center">
