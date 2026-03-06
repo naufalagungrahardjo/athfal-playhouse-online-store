@@ -24,7 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { PlusCircle, Pencil, Trash2, Calendar } from "lucide-react";
+import { PlusCircle, Pencil, Trash2, Calendar, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { logAdminAction } from "@/utils/logAdminAction";
 import { useCategories } from "@/hooks/useCategories";
