@@ -58,6 +58,19 @@ const AdminProducts = () => {
     setIsDialogOpen(true);
   };
 
+  const exportProductsCSV = () => {
+    const headers = ["Product ID", "Name", "Description", "Category", "Price", "Tax %", "Stock", "First Payment", "Installment", "Installment Months"];
+    const rows = products.map(p => [
+      p.product_id, p.name, p.description, p.category, String(p.price), String(p.tax), String(p.stock),
+      String(p.first_payment), String(p.installment), String(p.installment_months),
+    ]);
+    const csv = [headers.join(","), ...rows.map(r => r.map(f => `"${(f || "").replace(/"/g, '""')}"`).join(","))].join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "products.csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  };
+
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setEditingProduct(null);
