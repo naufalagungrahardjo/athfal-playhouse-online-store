@@ -110,7 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: "Cek email Anda untuk instruksi selanjutnya",
       });
     } catch (error) {
-      console.error('Reset password error:', error);
+      logger.error('Reset password error:', error);
       toast({
         variant: "destructive",
         title: "Reset password gagal",
