@@ -35,7 +35,7 @@ const WhatsAppFloatButton = lazyRetry(() => import("@/components/WhatsAppFloatBu
 
 // Lazy load components
 const Index = lazyRetry(() => import("./pages/Index"));
-const HomePage = lazyRetry(() => import("./pages/HomePage"));
+import HomePage from "./pages/HomePage";
 const AboutPage = lazyRetry(() => import("./pages/AboutPage"));
 const AllProductsPage = lazyRetry(() => import("./pages/AllProductsPage"));
 const ProductListPage = lazyRetry(() => import("./pages/ProductListPage"));
