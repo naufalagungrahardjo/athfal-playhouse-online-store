@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CartItem } from '@/contexts/CartContext';
+import { logger } from '@/utils/logger';
 
 interface OrderData {
   customerName: string;
@@ -84,7 +85,7 @@ export const useOrderProcessing = () => {
           .rpc('validate_promo_code', { code_input: orderData.promoCode });
 
         if (promoCheckError || !promoResult || promoResult.length === 0) {
-          console.error(`[${errorId}] Promo pre-check failed`);
+          logger.error(`[${errorId}] Promo pre-check failed`);
           toast({
             variant: "destructive",
             title: "Promo unavailable",
@@ -101,7 +102,7 @@ export const useOrderProcessing = () => {
           });
 
         if (promoIncError || !reserved) {
-          console.error(`[${errorId}] Failed to reserve promo usage`);
+          logger.error(`[${errorId}] Failed to reserve promo usage`);
           toast({
             variant: "destructive",
             title: "Promo quota reached",
@@ -144,7 +145,7 @@ export const useOrderProcessing = () => {
         .single();
 
       if (orderError) {
-        console.error(`[${errorId}] Order creation failed`);
+        logger.error(`[${errorId}] Order creation failed`);
         toast({
           variant: "destructive",
           title: "Order Failed",
@@ -172,7 +173,7 @@ export const useOrderProcessing = () => {
         .insert(orderItems);
 
       if (itemsError) {
-        console.error(`[${errorId}] Order items creation failed`);
+        logger.error(`[${errorId}] Order items creation failed`);
         toast({
           variant: "destructive",
           title: "Order Item Failed",
@@ -209,14 +210,14 @@ export const useOrderProcessing = () => {
           },
         });
       } catch (alertError) {
-        console.error('Order alert email failed (non-blocking):', alertError);
+        logger.error('Order alert email failed (non-blocking):', alertError);
       }
 
       setProcessing(false);
       return { success: true, orderId: order.id, lookupToken: order.lookup_token };
     } catch (error: any) {
       const errorId = `ORD-${Date.now()}`;
-      console.error(`[${errorId}] Unexpected order error`);
+      logger.error(`[${errorId}] Unexpected order error`);
       toast({
         variant: "destructive",
         title: "Order Failed",

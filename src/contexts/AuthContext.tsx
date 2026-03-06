@@ -2,6 +2,7 @@ import { createContext, useContext, ReactNode } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { User } from '@/types/auth';
 import { useAuthState } from '@/hooks/useAuthState';
+import { logger } from '@/utils/logger';
 import {
   signInWithEmail,
   signUpWithEmail,
@@ -33,7 +34,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  console.log('[AuthProvider] Provider initialized');
+  logger.log('[AuthProvider] Provider initialized');
   const { user, loading, setUser, setSession } = useAuthState();
   const { toast } = useToast();
 
@@ -50,7 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       }
     } catch (error) {
-      console.error('Login error:', error);
+      logger.error('Login error:', error);
       toast({
         variant: "destructive",
         title: "Login gagal",
@@ -71,7 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       }
     } catch (error) {
-      console.error('Signup error:', error);
+      logger.error('Signup error:', error);
       toast({
         variant: "destructive",
         title: "Pendaftaran gagal",
@@ -87,7 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       // If session is already missing, that's fine - we'll still clear local state
       if (error instanceof Error && error.message !== 'Auth session missing!') {
-        console.error('Logout error:', error);
+        logger.error('Logout error:', error);
       }
     }
     
@@ -109,7 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: "Cek email Anda untuk instruksi selanjutnya",
       });
     } catch (error) {
-      console.error('Reset password error:', error);
+      logger.error('Reset password error:', error);
       toast({
         variant: "destructive",
         title: "Reset password gagal",
@@ -128,7 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: "Password Anda telah berhasil diubah",
       });
     } catch (error) {
-      console.error('Update password error:', error);
+      logger.error('Update password error:', error);
       toast({
         variant: "destructive",
         title: "Gagal memperbarui password",

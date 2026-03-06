@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { User, UserRole } from '@/types/auth';
+import { logger } from '@/utils/logger';
 
 /**
  * Loads user profile including role for UI display purposes only.
@@ -12,7 +13,7 @@ import { User, UserRole } from '@/types/auth';
  */
 export const loadUserProfile = async (supabaseUser: SupabaseUser): Promise<User> => {
   try {
-    console.log('[loadUserProfile] Loading profile for:', supabaseUser.email);
+    logger.log('[loadUserProfile] Loading profile for:', supabaseUser.email);
     
     // Check if user is admin by checking admin_accounts table by email
     const { data: adminAccount, error } = await supabase
@@ -21,11 +22,11 @@ export const loadUserProfile = async (supabaseUser: SupabaseUser): Promise<User>
       .eq('email', supabaseUser.email)
       .maybeSingle();
 
-    console.log('[loadUserProfile] Admin account query result:', { adminAccount, error });
+    logger.log('[loadUserProfile] Admin account query result:', { adminAccount, error });
 
     // Set the admin role from the DB, otherwise fallback to 'user'
     const userRole: UserRole = adminAccount?.role || 'user';
-    console.log('[loadUserProfile] Final user role:', userRole);
+    logger.log('[loadUserProfile] Final user role:', userRole);
     
     const userData: User = {
       id: supabaseUser.id,
@@ -36,7 +37,7 @@ export const loadUserProfile = async (supabaseUser: SupabaseUser): Promise<User>
 
     return userData;
   } catch (error) {
-    console.error('Error loading user profile:', error);
+    logger.error('Error loading user profile:', error);
     // Return basic user data even if profile loading fails
     return {
       id: supabaseUser.id,
@@ -48,7 +49,7 @@ export const loadUserProfile = async (supabaseUser: SupabaseUser): Promise<User>
 };
 
 export const signInWithEmail = async (email: string, password: string) => {
-  console.log('Attempting login for:', email);
+  logger.log('Attempting login for:', email);
   
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -63,7 +64,7 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 export const signUpWithEmail = async (email: string, password: string, name: string) => {
-  console.log('Attempting signup for:', email);
+  logger.log('Attempting signup for:', email);
   
   const { data, error } = await supabase.auth.signUp({
     email,
