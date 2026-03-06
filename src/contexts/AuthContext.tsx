@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       }
     } catch (error) {
-      console.error('Login error:', error);
+      logger.error('Login error:', error);
       toast({
         variant: "destructive",
         title: "Login gagal",
