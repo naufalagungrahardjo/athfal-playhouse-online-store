@@ -69,6 +69,26 @@ export default function ProgramsStudentsTab({
     setEditingStudent(null);
   };
 
+  const exportCSV = () => {
+    const headers = ["Student Name", "Enrolled Programs"];
+    const rows = students.map(s => [
+      s.name,
+      s.enrolled_programs.map(pid => programs.find(p => p.id === pid)?.name || pid).join("; "),
+    ]);
+    const progHeaders = ["Program Name", "Sessions", "Start Date", "End Date"];
+    const progRows = programs.map(p => [p.name, String(p.num_meetings), p.start_date, p.end_date]);
+    const csv = [
+      "=== Programs ===", progHeaders.join(","),
+      ...progRows.map(r => r.map(f => `"${(f || "").replace(/"/g, '""')}"`).join(",")),
+      "", "=== Students ===", headers.join(","),
+      ...rows.map(r => r.map(f => `"${(f || "").replace(/"/g, '""')}"`).join(",")),
+    ].join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "programs_students.csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       {/* Programs Section */}
