@@ -12,8 +12,28 @@ export const HomeBanner = () => {
   const { banners, loading } = useBanners();
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
 
-  // Get all active banners
-  const activeBanners = banners.filter(banner => banner.active);
+  // Get all active banners (filter out expired)
+  const now = new Date();
+  const activeBanners = banners.filter(banner => banner.active && (!banner.expiry_date || new Date(banner.expiry_date) > now));
+
+  // Preload the current banner image for LCP optimization
+  useEffect(() => {
+    if (activeBanners.length > 0) {
+      const imgUrl = activeBanners[0]?.image;
+      if (imgUrl) {
+        // Add preload link to head for LCP image
+        const existing = document.querySelector('link[data-lcp-preload]');
+        if (!existing) {
+          const link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'image';
+          link.href = imgUrl;
+          link.setAttribute('data-lcp-preload', 'true');
+          document.head.appendChild(link);
+        }
+      }
+    }
+  }, [activeBanners.length > 0 ? activeBanners[0]?.image : null]);
 
   // Auto-rotate banners if there are multiple active banners
   useEffect(() => {
