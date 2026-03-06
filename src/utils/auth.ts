@@ -49,7 +49,7 @@ export const loadUserProfile = async (supabaseUser: SupabaseUser): Promise<User>
 };
 
 export const signInWithEmail = async (email: string, password: string) => {
-  console.log('Attempting login for:', email);
+  logger.log('Attempting login for:', email);
   
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
