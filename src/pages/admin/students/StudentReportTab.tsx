@@ -182,15 +182,15 @@ export default function StudentReportTab({ programs, students, enrollments, atte
             {selectedStudent && (
               <>
                 <div className="min-w-[160px]">
-                  <Label>Meeting</Label>
+                  <Label>Session</Label>
                   <Select value={meetingFilter} onValueChange={setMeetingFilter}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Meetings</SelectItem>
+                      <SelectItem value="all">All Sessions</SelectItem>
                       {Array.from({ length: maxMeetingNumber }, (_, i) => (
-                        <SelectItem key={i + 1} value={String(i + 1)}>Meeting {i + 1}</SelectItem>
+                        <SelectItem key={i + 1} value={String(i + 1)}>Session {i + 1}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
