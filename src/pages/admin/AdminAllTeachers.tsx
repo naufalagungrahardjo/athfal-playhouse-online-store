@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { Check, X, Save, Trash2 } from "lucide-react";
+import { Check, X, Save, Trash2, Download } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
