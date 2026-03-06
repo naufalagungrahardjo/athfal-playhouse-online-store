@@ -37,7 +37,7 @@ export const loadUserProfile = async (supabaseUser: SupabaseUser): Promise<User>
 
     return userData;
   } catch (error) {
-    console.error('Error loading user profile:', error);
+    logger.error('Error loading user profile:', error);
     // Return basic user data even if profile loading fails
     return {
       id: supabaseUser.id,
