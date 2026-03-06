@@ -2,6 +2,7 @@ import { createContext, useContext, ReactNode } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { User } from '@/types/auth';
 import { useAuthState } from '@/hooks/useAuthState';
+import { logger } from '@/utils/logger';
 import {
   signInWithEmail,
   signUpWithEmail,
