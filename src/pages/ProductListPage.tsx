@@ -25,7 +25,7 @@ const ProductListPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const { products, loading, error, getProductsByCategory } = useProducts();
   const { categories } = useCategories();
-  
+  const { getLowestPrice } = useAllProductVariants();
   // Get products for the current category
   const categoryProducts = category ? getProductsByCategory(category as ProductCategory) : [];
   
