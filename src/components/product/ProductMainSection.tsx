@@ -4,6 +4,7 @@ import { Plus, Minus, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import { Product } from "@/contexts/CartContext";
 import { ProductMediaCarousel, ProductMedia } from "@/components/product/ProductMediaCarousel";
+import { useProductVariants, ProductVariant } from "@/hooks/useProductVariants";
 
 interface ProductMainSectionProps {
   product: Product;
@@ -20,10 +21,23 @@ const formatCurrency = (amount: number) =>
 
 const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, language, addItem }) => {
   const [quantity, setQuantity] = useState(1);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  const { variants, loading: variantsLoading } = useProductVariants(product.dbId);
 
-  const handleAddToCart = () => addItem(product, quantity);
+  const activePrice = selectedVariant ? selectedVariant.price : product.price;
+
+  const handleAddToCart = () => {
+    const cartProduct = selectedVariant 
+      ? { ...product, price: selectedVariant.price, name: `${product.name} - ${selectedVariant.name}` }
+      : product;
+    addItem(cartProduct, quantity);
+  };
+
   const handleBuyNow = () => {
-    addItem(product, quantity);
+    const cartProduct = selectedVariant 
+      ? { ...product, price: selectedVariant.price, name: `${product.name} - ${selectedVariant.name}` }
+      : product;
+    addItem(cartProduct, quantity);
     window.location.href = '/cart';
   };
 
@@ -51,7 +65,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
         {product.stock <= 0 ? (
           <p className="text-2xl font-bold text-red-600 mb-4">SOLD OUT</p>
         ) : (
-          <p className="text-2xl font-bold text-athfal-green mb-4">{formatCurrency(product.price)}</p>
+          <p className="text-2xl font-bold text-athfal-green mb-4">{formatCurrency(activePrice)}</p>
         )}
         <div className="border-t border-b border-gray-200 py-4 my-6">
           <div className="flex items-center mb-4">
@@ -95,6 +109,43 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
             </div>
           )}
         </div>
+
+        {/* Variant selector */}
+        {!variantsLoading && variants.length > 0 && (
+          <div className="mb-6">
+            <label className="font-medium text-gray-700 block mb-3">
+              {language === 'id' ? 'Pilih Opsi' : 'Choose Option'}:
+            </label>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => setSelectedVariant(null)}
+                className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                  selectedVariant === null
+                    ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
+                    : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
+                }`}
+              >
+                <span className="block">{language === 'id' ? 'Harga Normal' : 'Regular Price'}</span>
+                <span className="block text-xs mt-0.5">{formatCurrency(product.price)}</span>
+              </button>
+              {variants.map(variant => (
+                <button
+                  key={variant.id}
+                  onClick={() => setSelectedVariant(variant)}
+                  className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                    selectedVariant?.id === variant.id
+                      ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
+                      : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
+                  }`}
+                >
+                  <span className="block">{variant.name}</span>
+                  <span className="block text-xs mt-0.5">{formatCurrency(variant.price)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Quantity selector */}
         <div className="mb-6">
           <label className="font-medium text-gray-700 block mb-2">

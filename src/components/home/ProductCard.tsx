@@ -4,6 +4,7 @@ import { getOptimizedImageUrl } from '@/utils/imageOptimizer';
 
 interface Product {
   id: string;
+  dbId?: string;
   name: string;
   description: string;
   price: number;
@@ -13,6 +14,7 @@ interface Product {
 
 interface ProductCardProps {
   product: Product;
+  lowestPrice?: number;
 }
 
 const formatCurrency = (amount: number) => {
@@ -23,8 +25,10 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
-export const ProductCard = ({ product }: ProductCardProps) => {
+export const ProductCard = ({ product, lowestPrice }: ProductCardProps) => {
   const isSoldOut = product.stock !== undefined && product.stock <= 0;
+  const displayPrice = lowestPrice !== undefined ? lowestPrice : product.price;
+  const hasVariants = lowestPrice !== undefined && lowestPrice < product.price;
 
   return (
     <Link to={`/product/${product.id}`}>
@@ -59,7 +63,8 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             <p className="font-bold text-red-600">SOLD OUT</p>
           ) : (
             <p className="font-bold text-athfal-green">
-              {formatCurrency(product.price)}
+              {hasVariants && <span className="text-xs text-gray-500 font-normal mr-1">Mulai dari</span>}
+              {formatCurrency(displayPrice)}
             </p>
           )}
         </CardContent>
