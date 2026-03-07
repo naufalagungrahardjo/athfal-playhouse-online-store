@@ -338,6 +338,9 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             </div>
           </div>
 
+          {/* Variant Manager - only for existing products */}
+          <ProductVariantManager productDbId={editingProduct?.id} />
+
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
