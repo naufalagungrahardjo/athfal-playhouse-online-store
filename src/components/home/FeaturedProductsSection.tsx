@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProducts } from '@/hooks/useProducts';
+import { useAllProductVariants } from '@/hooks/useProductVariants';
 import { ProductCard } from './ProductCard';
 
 export const FeaturedProductsSection = () => {
   const { language } = useLanguage();
   const { products, loading } = useProducts();
+  const { getLowestPrice } = useAllProductVariants();
   
   // Get featured products (first 4 products from database)
   const featuredProducts = products.slice(0, 4);
