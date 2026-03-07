@@ -32,6 +32,9 @@ type PromoCode = {
   applicable_category_slugs?: string[];
 };
 
+// Extract base product ID from composite cart ID (e.g., "PROD1__variant_xxx" -> "PROD1")
+const getBaseProductId = (cartId: string) => cartId.split('__')[0];
+
 const CartPage = () => {
   const { items, removeItem, updateQuantity, clearCart, getSubtotal, getTaxAmount, getTotal } = useCart();
   const { language } = useLanguage();
