@@ -194,31 +194,13 @@ export const useOrderProcessing = () => {
 
       // Order items created successfully
 
-      // Deduct stock immediately after order items are created
-      // Aggregate quantities per base product
-      const stockUpdates: Record<string, number> = {};
-      for (const item of orderItems) {
-        stockUpdates[item.product_id] = (stockUpdates[item.product_id] || 0) + item.quantity;
-      }
-      for (const [productId, qty] of Object.entries(stockUpdates)) {
-        const { data: currentProduct } = await supabase
-          .from('products')
-          .select('stock')
-          .eq('product_id', productId)
-          .single();
-        if (currentProduct) {
-          await supabase
-            .from('products')
-            .update({ stock: Math.max(0, currentProduct.stock - qty), updated_at: new Date().toISOString() })
-            .eq('product_id', productId);
-        }
-      }
+      // Deduct stock via SECURITY DEFINER RPC (bypasses RLS)
+      const { error: stockDeductError } = await supabase
+        .rpc('deduct_stock_for_order', { p_order_id: order.id });
 
-      // Mark order as stock_deducted
-      await supabase
-        .from('orders')
-        .update({ stock_deducted: true })
-        .eq('id', order.id);
+      if (stockDeductError) {
+        logger.error(`[${errorId}] Stock deduction failed: ${stockDeductError.message}`);
+      }
 
       // Increment promo code usage count if promo was applied
       // Promo code usage is now validated and incremented BEFORE order creation to strictly enforce quota.
