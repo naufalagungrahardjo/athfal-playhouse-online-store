@@ -7,6 +7,7 @@ export type ProductCategory = string;
 // NOTE: schedule property has been fully removed from Product interface
 export interface Product {
   id: string;
+  dbId: string; // UUID from products.id for variant lookups
   name: string;
   description: string;
   price: number;
