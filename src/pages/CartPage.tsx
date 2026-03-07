@@ -344,7 +344,7 @@ const CartPage = () => {
                           {/* Product details */}
                           <div className="flex-grow">
                             <div className="flex flex-col sm:flex-row sm:justify-between">
-                              <Link to={`/product/${item.product.id}`}>
+                              <Link to={`/product/${getBaseProductId(item.product.id)}`}>
                                 <h3 className="font-semibold text-lg text-athfal-pink hover:text-athfal-pink/80">
                                   {item.product.name}
                                 </h3>
