@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { useProducts } from '@/hooks/useProducts';
+import { useAllProductVariants } from '@/hooks/useProductVariants';
 import { ProductCategory } from '@/contexts/CartContext';
 
 interface RelatedProductsProps {
