@@ -85,9 +85,16 @@ export const RelatedProducts = ({ currentProductId, currentCategory }: RelatedPr
                 {product.stock !== undefined && product.stock <= 0 ? (
                   <p className="font-bold text-red-600">SOLD OUT</p>
                 ) : (
-                  <p className="font-bold text-athfal-green">
-                    {formatCurrency(product.price)}
-                  </p>
+                  (() => {
+                    const lowest = getLowestPrice(product.dbId, product.price);
+                    const hasVariants = lowest < product.price;
+                    return (
+                      <p className="font-bold text-athfal-green">
+                        {hasVariants && <span className="text-xs text-gray-500 font-normal mr-1">Mulai dari</span>}
+                        {formatCurrency(lowest)}
+                      </p>
+                    );
+                  })()
                 )}
               </CardContent>
             </Card>
