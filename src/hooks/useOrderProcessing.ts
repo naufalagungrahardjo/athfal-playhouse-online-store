@@ -32,28 +32,35 @@ export const useOrderProcessing = () => {
       setProcessing(true);
       const errorId = `ORD-${Date.now()}`;
 
-      // Validate stock from database before proceeding
+      // Validate stock from database - aggregate quantities per base product
+      const getBaseId = (id: string) => id.includes('__') ? id.split('__')[0] : id;
+      const qtyByBase: Record<string, number> = {};
       for (const item of orderData.items) {
-        // Extract base product ID from composite cart ID (e.g., "prod123__variant_xxx" -> "prod123")
-        const baseProductId = item.product.id.includes('__') ? item.product.id.split('__')[0] : item.product.id;
-        const { data: productData, error: stockError } = await supabase
-          .from('products')
-          .select('stock, name')
-          .eq('product_id', baseProductId)
-          .single();
+        const base = getBaseId(item.product.id);
+        qtyByBase[base] = (qtyByBase[base] || 0) + item.quantity;
+      }
 
-        if (stockError || !productData) {
-          toast({ variant: "destructive", title: "Stock Error", description: `Could not verify stock for ${item.product.name}. [${errorId}]` });
+      const baseIds = Object.keys(qtyByBase);
+      const { data: freshStock, error: stockError } = await supabase
+        .from('products')
+        .select('product_id, stock, name')
+        .in('product_id', baseIds);
+
+      if (stockError || !freshStock) {
+        toast({ variant: "destructive", title: "Stock Error", description: `Could not verify stock. [${errorId}]` });
+        setProcessing(false);
+        return { success: false };
+      }
+
+      for (const [baseId, totalQty] of Object.entries(qtyByBase)) {
+        const product = freshStock.find(p => p.product_id === baseId);
+        if (!product || product.stock <= 0) {
+          toast({ variant: "destructive", title: "Product Sold Out", description: `${product?.name || baseId} is sold out.` });
           setProcessing(false);
           return { success: false };
         }
-        if (productData.stock <= 0) {
-          toast({ variant: "destructive", title: "Product Sold Out", description: `${productData.name} is sold out. Please remove it from your cart.` });
-          setProcessing(false);
-          return { success: false };
-        }
-        if (item.quantity > productData.stock) {
-          toast({ variant: "destructive", title: "Insufficient Stock", description: `Only ${productData.stock} of ${productData.name} available.` });
+        if (totalQty > product.stock) {
+          toast({ variant: "destructive", title: "Insufficient Stock", description: `Only ${product.stock} of ${product.name} available (requested ${totalQty}).` });
           setProcessing(false);
           return { success: false };
         }
@@ -159,10 +166,10 @@ export const useOrderProcessing = () => {
 
       // Order created successfully
 
-      // Create order items
+      // Create order items - store base product_id so stock trigger can match
       const orderItems = orderData.items.map(item => ({
         order_id: order.id,
-        product_id: item.product.id,
+        product_id: getBaseId(item.product.id),
         product_name: item.product.name,
         product_price: item.product.price,
         quantity: item.quantity
@@ -186,6 +193,32 @@ export const useOrderProcessing = () => {
       }
 
       // Order items created successfully
+
+      // Deduct stock immediately after order items are created
+      // Aggregate quantities per base product
+      const stockUpdates: Record<string, number> = {};
+      for (const item of orderItems) {
+        stockUpdates[item.product_id] = (stockUpdates[item.product_id] || 0) + item.quantity;
+      }
+      for (const [productId, qty] of Object.entries(stockUpdates)) {
+        const { data: currentProduct } = await supabase
+          .from('products')
+          .select('stock')
+          .eq('product_id', productId)
+          .single();
+        if (currentProduct) {
+          await supabase
+            .from('products')
+            .update({ stock: Math.max(0, currentProduct.stock - qty), updated_at: new Date().toISOString() })
+            .eq('product_id', productId);
+        }
+      }
+
+      // Mark order as stock_deducted
+      await supabase
+        .from('orders')
+        .update({ stock_deducted: true })
+        .eq('id', order.id);
 
       // Increment promo code usage count if promo was applied
       // Promo code usage is now validated and incremented BEFORE order creation to strictly enforce quota.
