@@ -88,11 +88,11 @@ const CartPage = () => {
     }
 
     // Validate stock from database before proceeding
-    const productIds = items.map(item => item.product.id);
+    const baseProductIds = [...new Set(items.map(item => getBaseProductId(item.product.id)))];
     const { data: freshStock, error: stockError } = await supabase
       .from('products')
       .select('product_id, stock, name')
-      .in('product_id', productIds);
+      .in('product_id', baseProductIds);
 
     if (stockError || !freshStock) {
       toast({
