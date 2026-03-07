@@ -24,6 +24,7 @@ export const useProducts = () => {
 
       const formattedProducts: Product[] = (data || []).map(product => ({
         id: product.product_id,
+        dbId: product.id,
         name: product.name,
         description: product.description,
         price: product.price,
