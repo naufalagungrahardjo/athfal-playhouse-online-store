@@ -166,10 +166,10 @@ export const useOrderProcessing = () => {
 
       // Order created successfully
 
-      // Create order items
+      // Create order items - store base product_id so stock trigger can match
       const orderItems = orderData.items.map(item => ({
         order_id: order.id,
-        product_id: item.product.id,
+        product_id: getBaseId(item.product.id),
         product_name: item.product.name,
         product_price: item.product.price,
         quantity: item.quantity

@@ -44,10 +44,31 @@ const CartPage = () => {
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
   const [isCheckingPromo, setIsCheckingPromo] = useState(false);
 
+  // Calculate aggregate quantity for a base product across all variants in the cart
+  const getAggregateQuantity = (cartId: string, excludeId?: string) => {
+    const baseId = getBaseProductId(cartId);
+    return items.reduce((total, item) => {
+      if (excludeId && item.product.id === excludeId) return total;
+      if (getBaseProductId(item.product.id) === baseId) {
+        return total + item.quantity;
+      }
+      return total;
+    }, 0);
+  };
+
   const handleIncreaseQuantity = (productId: string, currentQuantity: number, maxStock: number) => {
-    if (currentQuantity < maxStock) {
-      updateQuantity(productId, currentQuantity + 1);
+    const aggregateQty = getAggregateQuantity(productId);
+    if (aggregateQty >= maxStock) {
+      toast({
+        variant: 'destructive',
+        title: language === 'id' ? 'Stok tidak cukup' : 'Insufficient stock',
+        description: language === 'id'
+          ? `Total kuantitas untuk produk ini (${aggregateQty}) sudah mencapai batas stok (${maxStock}).`
+          : `Total quantity for this product (${aggregateQty}) has reached the stock limit (${maxStock}).`
+      });
+      return;
     }
+    updateQuantity(productId, currentQuantity + 1);
   };
 
   const handleDecreaseQuantity = (productId: string, currentQuantity: number) => {
