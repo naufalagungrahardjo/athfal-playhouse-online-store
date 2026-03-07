@@ -43,6 +43,12 @@ const MobileMenu = () => {
               {language === "id" ? nav.products.id : nav.products.en}
             </h3>
             <div className="pl-4 flex flex-col space-y-2">
+              <Link 
+                to="/products" 
+                className="text-athfal-pink hover:text-athfal-pink/80 text-sm font-bold"
+              >
+                {language === 'id' ? 'Semua Produk' : 'All Products'}
+              </Link>
               {categories.map(category => (
                 <Link 
                   key={category.id}

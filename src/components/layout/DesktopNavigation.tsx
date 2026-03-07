@@ -28,6 +28,11 @@ const DesktopNavigation = () => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="bg-white">
+          <DropdownMenuItem>
+            <Link to="/products" className="w-full text-athfal-pink text-sm font-bold">
+              {language === "id" ? "Semua Produk" : "All Products"}
+            </Link>
+          </DropdownMenuItem>
           {categories.map(category => (
             <DropdownMenuItem key={category.id}>
               <Link to={`/products/${category.slug}`} className="w-full text-athfal-pink text-sm font-medium">
