@@ -32,6 +32,9 @@ type PromoCode = {
   applicable_category_slugs?: string[];
 };
 
+// Extract base product ID from composite cart ID (e.g., "PROD1__variant_xxx" -> "PROD1")
+const getBaseProductId = (cartId: string) => cartId.split('__')[0];
+
 const CartPage = () => {
   const { items, removeItem, updateQuantity, clearCart, getSubtotal, getTaxAmount, getTotal } = useCart();
   const { language } = useLanguage();
@@ -85,11 +88,11 @@ const CartPage = () => {
     }
 
     // Validate stock from database before proceeding
-    const productIds = items.map(item => item.product.id);
+    const baseProductIds = [...new Set(items.map(item => getBaseProductId(item.product.id)))];
     const { data: freshStock, error: stockError } = await supabase
       .from('products')
       .select('product_id, stock, name')
-      .in('product_id', productIds);
+      .in('product_id', baseProductIds);
 
     if (stockError || !freshStock) {
       toast({
@@ -100,17 +103,24 @@ const CartPage = () => {
       return;
     }
 
+    // Aggregate quantities per base product for stock validation
+    const qtyByBase: Record<string, number> = {};
     for (const item of items) {
-      const fresh = freshStock.find(p => p.product_id === item.product.id);
+      const base = getBaseProductId(item.product.id);
+      qtyByBase[base] = (qtyByBase[base] || 0) + item.quantity;
+    }
+
+    for (const [baseId, totalQty] of Object.entries(qtyByBase)) {
+      const fresh = freshStock.find(p => p.product_id === baseId);
       if (!fresh || fresh.stock <= 0) {
         toast({
           variant: 'destructive',
           title: language === 'id' ? 'Produk habis' : 'Product sold out',
-          description: `${fresh?.name || item.product.name} ${language === 'id' ? 'sudah habis' : 'is sold out'}.`
+          description: `${fresh?.name || baseId} ${language === 'id' ? 'sudah habis' : 'is sold out'}.`
         });
         return;
       }
-      if (item.quantity > fresh.stock) {
+      if (totalQty > fresh.stock) {
         toast({
           variant: 'destructive',
           title: language === 'id' ? 'Stok tidak cukup' : 'Insufficient stock',
@@ -334,7 +344,7 @@ const CartPage = () => {
                           {/* Product details */}
                           <div className="flex-grow">
                             <div className="flex flex-col sm:flex-row sm:justify-between">
-                              <Link to={`/product/${item.product.id}`}>
+                              <Link to={`/product/${getBaseProductId(item.product.id)}`}>
                                 <h3 className="font-semibold text-lg text-athfal-pink hover:text-athfal-pink/80">
                                   {item.product.name}
                                 </h3>
