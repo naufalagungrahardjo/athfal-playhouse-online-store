@@ -103,17 +103,24 @@ const CartPage = () => {
       return;
     }
 
+    // Aggregate quantities per base product for stock validation
+    const qtyByBase: Record<string, number> = {};
     for (const item of items) {
-      const fresh = freshStock.find(p => p.product_id === item.product.id);
+      const base = getBaseProductId(item.product.id);
+      qtyByBase[base] = (qtyByBase[base] || 0) + item.quantity;
+    }
+
+    for (const [baseId, totalQty] of Object.entries(qtyByBase)) {
+      const fresh = freshStock.find(p => p.product_id === baseId);
       if (!fresh || fresh.stock <= 0) {
         toast({
           variant: 'destructive',
           title: language === 'id' ? 'Produk habis' : 'Product sold out',
-          description: `${fresh?.name || item.product.name} ${language === 'id' ? 'sudah habis' : 'is sold out'}.`
+          description: `${fresh?.name || baseId} ${language === 'id' ? 'sudah habis' : 'is sold out'}.`
         });
         return;
       }
-      if (item.quantity > fresh.stock) {
+      if (totalQty > fresh.stock) {
         toast({
           variant: 'destructive',
           title: language === 'id' ? 'Stok tidak cukup' : 'Insufficient stock',
