@@ -11,6 +11,7 @@ import { ProductCategory } from '@/contexts/CartContext';
 import { useCategories } from '@/hooks/useCategories';
 import { ProductMediaUpload, ProductMedia } from '@/components/admin/ProductMediaUpload';
 import { RichTextEditor } from '@/components/admin/RichTextEditor';
+import { ProductVariantManager } from '@/components/admin/ProductVariantManager';
 
 interface ProductFormData {
   id?: string;
