@@ -302,41 +302,6 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="first_payment">First Payment (IDR)</Label>
-              <Input
-                id="first_payment"
-                type="number"
-                value={formData.first_payment === 0 ? '' : formData.first_payment}
-                onChange={(e) => setFormData({...formData, first_payment: e.target.value ? Number(e.target.value) : 0})}
-                placeholder="Enter first payment amount"
-                min="0"
-              />
-            </div>
-            <div>
-              <Label htmlFor="installment">Installment (IDR)</Label>
-              <Input
-                id="installment"
-                type="number"
-                value={formData.installment === 0 ? '' : formData.installment}
-                onChange={(e) => setFormData({...formData, installment: e.target.value ? Number(e.target.value) : 0})}
-                placeholder="Enter installment amount"
-                min="0"
-              />
-            </div>
-            <div>
-              <Label htmlFor="installment_months">Installment Months</Label>
-              <Input
-                id="installment_months"
-                type="number"
-                value={formData.installment_months === 0 ? '' : formData.installment_months}
-                onChange={(e) => setFormData({...formData, installment_months: e.target.value ? Number(e.target.value) : 0})}
-                placeholder="e.g. 3"
-                min="0"
-              />
-            </div>
-          </div>
 
           {/* Variant Manager - only for existing products */}
           <ProductVariantManager productDbId={editingProduct?.id} />
