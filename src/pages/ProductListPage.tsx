@@ -8,6 +8,7 @@ import { ProductCategory } from '@/contexts/CartContext';
 import { Search } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
+import { useAllProductVariants } from '@/hooks/useProductVariants';
 
 // Format currency
 const formatCurrency = (amount: number) => {

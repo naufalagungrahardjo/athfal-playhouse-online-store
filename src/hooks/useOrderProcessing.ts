@@ -34,10 +34,12 @@ export const useOrderProcessing = () => {
 
       // Validate stock from database before proceeding
       for (const item of orderData.items) {
+        // Extract base product ID from composite cart ID (e.g., "prod123__variant_xxx" -> "prod123")
+        const baseProductId = item.product.id.includes('__') ? item.product.id.split('__')[0] : item.product.id;
         const { data: productData, error: stockError } = await supabase
           .from('products')
           .select('stock, name')
-          .eq('product_id', item.product.id)
+          .eq('product_id', baseProductId)
           .single();
 
         if (stockError || !productData) {
