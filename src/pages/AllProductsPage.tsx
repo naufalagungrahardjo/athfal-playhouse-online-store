@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Search } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
+import { useAllProductVariants } from '@/hooks/useProductVariants';
 
 // Format currency
 const formatCurrency = (amount: number) => {
@@ -20,6 +21,7 @@ const AllProductsPage = () => {
   const { language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const { products, loading, error } = useProducts();
+  const { getLowestPrice } = useAllProductVariants();
   
   // Filter products based on search query
   const filteredProducts = products.filter(product => {
@@ -90,6 +92,8 @@ const AllProductsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProducts.map((product) => {
               const isSoldOut = product.stock <= 0;
+              const lowest = getLowestPrice(product.dbId, product.price);
+              const hasVariants = lowest < product.price;
               return (
               <Link to={`/product/${product.id}`} key={product.id}>
                 <Card className={`athfal-card overflow-hidden h-full hover:scale-[1.02] transition-all ${isSoldOut ? 'grayscale opacity-70' : ''}`}>
@@ -120,7 +124,8 @@ const AllProductsPage = () => {
                       <p className="font-bold text-red-600">SOLD OUT</p>
                     ) : (
                       <p className="font-bold text-athfal-green">
-                        {formatCurrency(product.price)}
+                        {hasVariants && <span className="text-xs text-gray-500 font-normal mr-1">Mulai dari</span>}
+                        {formatCurrency(lowest)}
                       </p>
                     )}
                   </CardContent>

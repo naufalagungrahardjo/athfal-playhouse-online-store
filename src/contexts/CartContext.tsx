@@ -7,6 +7,7 @@ export type ProductCategory = string;
 // NOTE: schedule property has been fully removed from Product interface
 export interface Product {
   id: string;
+  dbId: string; // UUID from products.id for variant lookups
   name: string;
   description: string;
   price: number;
@@ -120,6 +121,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       // schedule property completely removed here
       const formattedProducts: Product[] = (data || []).map(product => ({
         id: product.product_id,
+        dbId: product.id,
         name: product.name,
         description: product.description,
         price: product.price,

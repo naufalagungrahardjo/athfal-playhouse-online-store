@@ -11,6 +11,7 @@ import { ProductCategory } from '@/contexts/CartContext';
 import { useCategories } from '@/hooks/useCategories';
 import { ProductMediaUpload, ProductMedia } from '@/components/admin/ProductMediaUpload';
 import { RichTextEditor } from '@/components/admin/RichTextEditor';
+import { ProductVariantManager } from '@/components/admin/ProductVariantManager';
 
 interface ProductFormData {
   id?: string;
@@ -336,6 +337,9 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
               />
             </div>
           </div>
+
+          {/* Variant Manager - only for existing products */}
+          <ProductVariantManager productDbId={editingProduct?.id} />
 
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>

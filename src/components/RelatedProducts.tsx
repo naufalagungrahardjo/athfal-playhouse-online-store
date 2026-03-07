@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { useProducts } from '@/hooks/useProducts';
+import { useAllProductVariants } from '@/hooks/useProductVariants';
 import { ProductCategory } from '@/contexts/CartContext';
 
 interface RelatedProductsProps {
@@ -20,6 +21,7 @@ const formatCurrency = (amount: number) => {
 
 export const RelatedProducts = ({ currentProductId, currentCategory }: RelatedProductsProps) => {
   const { products, loading } = useProducts();
+  const { getLowestPrice } = useAllProductVariants();
 
   if (loading) {
     return (
@@ -83,9 +85,16 @@ export const RelatedProducts = ({ currentProductId, currentCategory }: RelatedPr
                 {product.stock !== undefined && product.stock <= 0 ? (
                   <p className="font-bold text-red-600">SOLD OUT</p>
                 ) : (
-                  <p className="font-bold text-athfal-green">
-                    {formatCurrency(product.price)}
-                  </p>
+                  (() => {
+                    const lowest = getLowestPrice(product.dbId, product.price);
+                    const hasVariants = lowest < product.price;
+                    return (
+                      <p className="font-bold text-athfal-green">
+                        {hasVariants && <span className="text-xs text-gray-500 font-normal mr-1">Mulai dari</span>}
+                        {formatCurrency(lowest)}
+                      </p>
+                    );
+                  })()
                 )}
               </CardContent>
             </Card>
