@@ -65,8 +65,11 @@ export default function ProgramsStudentsTab({
     setEnrollDialogOpen(true);
   };
 
-  const saveEnrollments = async () => {
+  const saveStudentEdit = async () => {
     if (!editingStudent) return;
+    if (editStudentName.trim() && editStudentName !== editingStudent.name) {
+      await updateStudent(editingStudent.id, editStudentName.trim());
+    }
     await updateStudentEnrollments(editingStudent.id, editPrograms);
     setEnrollDialogOpen(false);
     setEditingStudent(null);
