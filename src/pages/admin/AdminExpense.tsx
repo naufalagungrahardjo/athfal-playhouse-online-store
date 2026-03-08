@@ -32,7 +32,11 @@ const AdminExpense = () => {
 
   // Category form
   const [newCatName, setNewCatName] = useState('');
+  const [editingCatId, setEditingCatId] = useState<string | null>(null);
+  const [editingCatName, setEditingCatName] = useState('');
   const [newFundName, setNewFundName] = useState('');
+  const [editingFundId, setEditingFundId] = useState<string | null>(null);
+  const [editingFundName, setEditingFundName] = useState('');
 
   // Expense form
   const [expDesc, setExpDesc] = useState('');
