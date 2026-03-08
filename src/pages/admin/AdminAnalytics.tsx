@@ -10,10 +10,11 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
 import { formatCurrency } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
-  BarChart, Bar
+  BarChart, Bar, AreaChart, Area
 } from 'recharts';
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#a855f7', '#ef4444'];
@@ -28,6 +29,10 @@ interface OrderWithItems {
   total_amount: number;
   items: { product_id: string; product_name: string; quantity: number; product_price: number }[];
 }
+
+type ExpenseRow = { id: string; description: string; category_id: string | null; fund_source_id: string | null; amount: number; date: string };
+type ExpenseCategory = { id: string; name: string };
+type FundSource = { id: string; name: string };
 
 const formatDateKey = (dateStr: string, granularity: TimeGranularity): string => {
   const d = new Date(dateStr);
@@ -48,14 +53,25 @@ const AdminAnalytics = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [timeGranularity, setTimeGranularity] = useState<TimeGranularity>('daily');
 
+  // Expense data
+  const [expenses, setExpenses] = useState<ExpenseRow[]>([]);
+  const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>([]);
+  const [fundSources, setFundSources] = useState<FundSource[]>([]);
+  const [expGranularity, setExpGranularity] = useState<TimeGranularity>('monthly');
+  const [expCatFilter, setExpCatFilter] = useState('all');
+  const [expFundFilter, setExpFundFilter] = useState('all');
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const [ordersRes, itemsRes, catsRes, prodsRes] = await Promise.all([
+      const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes] = await Promise.all([
         supabase.from('orders').select('id, created_at, payment_method, status, total_amount').order('created_at', { ascending: true }),
         supabase.from('order_items').select('order_id, product_id, product_name, quantity, product_price'),
         supabase.from('categories').select('slug, title'),
         supabase.from('products').select('product_id, category'),
+        supabase.from('expenses' as any).select('*').order('date', { ascending: true }),
+        supabase.from('expense_categories' as any).select('id, name'),
+        supabase.from('expense_fund_sources' as any).select('id, name'),
       ]);
 
       const itemsByOrder: Record<string, any[]> = {};
@@ -67,6 +83,9 @@ const AdminAnalytics = () => {
       setOrders((ordersRes.data || []).map(o => ({ ...o, items: itemsByOrder[o.id] || [] })));
       setCategories(catsRes.data || []);
       setProducts(prodsRes.data || []);
+      setExpenses((expRes.data as any) || []);
+      setExpenseCategories((expCatsRes.data as any) || []);
+      setFundSources((fundsRes.data as any) || []);
       setLoading(false);
     };
     fetchData();
@@ -82,19 +101,16 @@ const AdminAnalytics = () => {
   // Filtered orders
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
-      // Status filter
       if (statusFilter === 'all') {
         if (order.status === 'cancelled') return false;
       } else if (order.status !== statusFilter) {
         return false;
       }
-      // Date filter
       if (dateRange?.from) {
         const d = new Date(order.created_at);
         if (d < dateRange.from) return false;
         if (dateRange.to && d > new Date(dateRange.to.getTime() + 86400000)) return false;
       }
-      // Category filter
       if (categoryFilter !== 'all') {
         const hasCategory = order.items.some(item => productCategoryMap[item.product_id] === categoryFilter);
         if (!hasCategory) return false;
@@ -103,13 +119,11 @@ const AdminAnalytics = () => {
     });
   }, [orders, dateRange, categoryFilter, statusFilter, productCategoryMap]);
 
-  // Filter items by category too
   const getFilteredItems = (order: OrderWithItems) => {
     if (categoryFilter === 'all') return order.items;
     return order.items.filter(item => productCategoryMap[item.product_id] === categoryFilter);
   };
 
-  // 1) Sales quantity line chart (by granularity)
   const salesQuantityData = useMemo(() => {
     const map: Record<string, number> = {};
     filteredOrders.forEach(order => {
@@ -120,7 +134,6 @@ const AdminAnalytics = () => {
     return Object.entries(map).sort().map(([date, qty]) => ({ date, quantity: qty }));
   }, [filteredOrders, categoryFilter, timeGranularity]);
 
-  // NEW: Sales value line chart (by granularity)
   const salesValueData = useMemo(() => {
     const map: Record<string, number> = {};
     filteredOrders.forEach(order => {
@@ -131,7 +144,6 @@ const AdminAnalytics = () => {
     return Object.entries(map).sort().map(([date, value]) => ({ date, value }));
   }, [filteredOrders, categoryFilter, timeGranularity]);
 
-  // 2) Product proportion pie chart
   const productProportionData = useMemo(() => {
     const map: Record<string, number> = {};
     filteredOrders.forEach(order => {
@@ -145,7 +157,6 @@ const AdminAnalytics = () => {
       .sort((a, b) => b.value - a.value);
   }, [filteredOrders, categoryFilter]);
 
-  // 3) Payment method proportion pie chart
   const paymentProportionData = useMemo(() => {
     const map: Record<string, number> = {};
     filteredOrders.forEach(order => {
@@ -158,7 +169,6 @@ const AdminAnalytics = () => {
       .sort((a, b) => b.value - a.value);
   }, [filteredOrders]);
 
-  // 4) Product sales bar chart (quantity & value)
   const productSalesBarData = useMemo(() => {
     const qtyMap: Record<string, number> = {};
     const valMap: Record<string, number> = {};
@@ -173,7 +183,73 @@ const AdminAnalytics = () => {
       .sort((a, b) => b.quantity - a.quantity);
   }, [filteredOrders, categoryFilter]);
 
+  // === Expense analytics ===
+  const expCatMap = useMemo(() => Object.fromEntries(expenseCategories.map(c => [c.id, c.name])), [expenseCategories]);
+  const expFundMap = useMemo(() => Object.fromEntries(fundSources.map(f => [f.id, f.name])), [fundSources]);
+
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter(e => {
+      if (expCatFilter !== 'all' && e.category_id !== expCatFilter) return false;
+      if (expFundFilter !== 'all' && e.fund_source_id !== expFundFilter) return false;
+      return true;
+    });
+  }, [expenses, expCatFilter, expFundFilter]);
+
+  // Expense trend (area chart)
+  const expenseTrendData = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredExpenses.forEach(e => {
+      const key = formatDateKey(e.date, expGranularity);
+      map[key] = (map[key] || 0) + e.amount;
+    });
+    return Object.entries(map).sort().map(([date, total]) => ({ date, total }));
+  }, [filteredExpenses, expGranularity]);
+
+  // Expense by category (stacked bar)
+  const expenseByCategoryData = useMemo(() => {
+    const dateMap: Record<string, Record<string, number>> = {};
+    const catNames = new Set<string>();
+    filteredExpenses.forEach(e => {
+      const key = formatDateKey(e.date, expGranularity);
+      const catName = e.category_id ? (expCatMap[e.category_id] || 'Uncategorized') : 'Uncategorized';
+      catNames.add(catName);
+      if (!dateMap[key]) dateMap[key] = {};
+      dateMap[key][catName] = (dateMap[key][catName] || 0) + e.amount;
+    });
+    const sortedDates = Object.keys(dateMap).sort();
+    return { data: sortedDates.map(date => ({ date, ...dateMap[date] })), categories: Array.from(catNames) };
+  }, [filteredExpenses, expGranularity, expCatMap]);
+
+  // Expense by category pie
+  const expenseCatPieData = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredExpenses.forEach(e => {
+      const catName = e.category_id ? (expCatMap[e.category_id] || 'Uncategorized') : 'Uncategorized';
+      map[catName] = (map[catName] || 0) + e.amount;
+    });
+    const total = Object.values(map).reduce((s, v) => s + v, 0);
+    return Object.entries(map)
+      .map(([name, value]) => ({ name, value, percentage: total > 0 ? ((value / total) * 100).toFixed(1) : '0' }))
+      .sort((a, b) => b.value - a.value);
+  }, [filteredExpenses, expCatMap]);
+
+  // Expense by fund source pie
+  const expenseFundPieData = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredExpenses.forEach(e => {
+      const fundName = e.fund_source_id ? (expFundMap[e.fund_source_id] || 'Unknown') : 'Unknown';
+      map[fundName] = (map[fundName] || 0) + e.amount;
+    });
+    const total = Object.values(map).reduce((s, v) => s + v, 0);
+    return Object.entries(map)
+      .map(([name, value]) => ({ name, value, percentage: total > 0 ? ((value / total) * 100).toFixed(1) : '0' }))
+      .sort((a, b) => b.value - a.value);
+  }, [filteredExpenses, expFundMap]);
+
+  const totalExpense = useMemo(() => filteredExpenses.reduce((s, e) => s + e.amount, 0), [filteredExpenses]);
+
   const granularityLabel = timeGranularity === 'daily' ? 'Daily' : timeGranularity === 'monthly' ? 'Monthly' : 'Yearly';
+  const expGranLabel = expGranularity === 'daily' ? 'Daily' : expGranularity === 'monthly' ? 'Monthly' : 'Yearly';
 
   if (loading) {
     return (
@@ -188,224 +264,288 @@ const AdminAnalytics = () => {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Analytics</h1>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 items-end">
-        <div>
-          <label className="text-sm font-medium block mb-1">Date Range</label>
-          <div className="flex items-center gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("w-[260px] justify-start text-left font-normal", !dateRange && "text-muted-foreground")}>
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange?.from ? (
-                    dateRange.to ? `${format(dateRange.from, 'PP')} - ${format(dateRange.to, 'PP')}` : format(dateRange.from, 'PP')
-                  ) : 'All Lifetime'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="range"
-                  selected={dateRange}
-                  onSelect={setDateRange}
-                  numberOfMonths={2}
-                  className="p-3 pointer-events-auto"
-                />
-                <div className="p-3 border-t">
-                  <Button
-                    variant="ghost"
-                    className="w-full text-sm"
-                    onClick={() => setDateRange(undefined)}
-                  >
-                    Show All Lifetime Data
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
-            {dateRange && (
-              <Button variant="ghost" size="sm" onClick={() => setDateRange(undefined)}>Clear</Button>
-            )}
+      <Tabs defaultValue="sales">
+        <TabsList>
+          <TabsTrigger value="sales">Sales Analytics</TabsTrigger>
+          <TabsTrigger value="expense">Expense Analytics</TabsTrigger>
+        </TabsList>
+
+        {/* Sales Tab */}
+        <TabsContent value="sales" className="space-y-6">
+          {/* Filters */}
+          <div className="flex flex-wrap gap-4 items-end">
+            <div>
+              <label className="text-sm font-medium block mb-1">Date Range</label>
+              <div className="flex items-center gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-[260px] justify-start text-left font-normal", !dateRange && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange?.from ? (
+                        dateRange.to ? `${format(dateRange.from, 'PP')} - ${format(dateRange.to, 'PP')}` : format(dateRange.from, 'PP')
+                      ) : 'All Lifetime'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} className="p-3 pointer-events-auto" />
+                    <div className="p-3 border-t">
+                      <Button variant="ghost" className="w-full text-sm" onClick={() => setDateRange(undefined)}>Show All Lifetime Data</Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                {dateRange && <Button variant="ghost" size="sm" onClick={() => setDateRange(undefined)}>Clear</Button>}
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Time Granularity</label>
+              <Select value={timeGranularity} onValueChange={(v) => setTimeGranularity(v as TimeGranularity)}>
+                <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Product Category</label>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map(cat => <SelectItem key={cat.slug} value={cat.slug}>{cat.title}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Order Status</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All (excl. Cancelled)</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="processing">Processing</SelectItem>
+                  <SelectItem value="shipped">Shipped</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="refund">Refund</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
-        <div>
-          <label className="text-sm font-medium block mb-1">Time Granularity</label>
-          <Select value={timeGranularity} onValueChange={(v) => setTimeGranularity(v as TimeGranularity)}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="daily">Daily</SelectItem>
-              <SelectItem value="monthly">Monthly</SelectItem>
-              <SelectItem value="yearly">Yearly</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="text-sm font-medium block mb-1">Product Category</label>
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(cat => (
-                <SelectItem key={cat.slug} value={cat.slug}>{cat.title}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="text-sm font-medium block mb-1">Order Status</label>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All (excl. Cancelled)</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="processing">Processing</SelectItem>
-              <SelectItem value="shipped">Shipped</SelectItem>
-               <SelectItem value="completed">Completed</SelectItem>
-               <SelectItem value="cancelled">Cancelled</SelectItem>
-               <SelectItem value="refund">Refund</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
 
-      {/* 1) Sales Quantity Line Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{granularityLabel} Product Sales Quantity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {salesQuantityData.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No sales data available</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={salesQuantityData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Line type="monotone" dataKey="quantity" stroke="#8884d8" strokeWidth={2} dot={{ r: 3 }} name="Quantity Sold" />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
+          <Card>
+            <CardHeader><CardTitle>{granularityLabel} Product Sales Quantity</CardTitle></CardHeader>
+            <CardContent>
+              {salesQuantityData.length === 0 ? <p className="text-muted-foreground text-center py-8">No sales data available</p> : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={salesQuantityData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="quantity" stroke="#8884d8" strokeWidth={2} dot={{ r: 3 }} name="Quantity Sold" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
 
-      {/* NEW: Sales Value Line Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{granularityLabel} Product Sales Value</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {salesValueData.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No sales data available</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={salesValueData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                <Line type="monotone" dataKey="value" stroke="#82ca9d" strokeWidth={2} dot={{ r: 3 }} name="Sales Value" />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
+          <Card>
+            <CardHeader><CardTitle>{granularityLabel} Product Sales Value</CardTitle></CardHeader>
+            <CardContent>
+              {salesValueData.length === 0 ? <p className="text-muted-foreground text-center py-8">No sales data available</p> : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={salesValueData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Line type="monotone" dataKey="value" stroke="#82ca9d" strokeWidth={2} dot={{ r: 3 }} name="Sales Value" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
 
-      {/* Pie Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 2) Product Proportion Pie */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Product Sales Proportion</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {productProportionData.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No data</p>
-            ) : (
-              <ResponsiveContainer width="100%" height={350}>
-                <PieChart>
-                  <Pie
-                    data={productProportionData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    label={({ percentage }) => `${percentage}%`}
-                  >
-                    {productProportionData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader><CardTitle>Product Sales Proportion</CardTitle></CardHeader>
+              <CardContent>
+                {productProportionData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <PieChart>
+                      <Pie data={productProportionData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ percentage }) => `${percentage}%`}>
+                        {productProportionData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip formatter={(value: number, name: string, props: any) => [`${value} units (${props.payload.percentage}%)`, name]} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Payment Method Proportion</CardTitle></CardHeader>
+              <CardContent>
+                {paymentProportionData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <PieChart>
+                      <Pie data={paymentProportionData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ percentage }) => `${percentage}%`}>
+                        {paymentProportionData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip formatter={(value: number, name: string, props: any) => [`${value} orders (${props.payload.percentage}%)`, name]} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader><CardTitle>Product Sales Ranking (Quantity & Value)</CardTitle></CardHeader>
+            <CardContent>
+              {productSalesBarData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                <ResponsiveContainer width="100%" height={Math.max(300, productSalesBarData.length * 40)}>
+                  <BarChart data={productSalesBarData} layout="vertical" margin={{ left: 120 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" />
+                    <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11 }} />
+                    <Tooltip formatter={(value: number, name: string) => name === 'value' ? formatCurrency(value) : value} />
+                    <Legend />
+                    <Bar dataKey="quantity" fill="#8884d8" name="Quantity" />
+                    <Bar dataKey="value" fill="#82ca9d" name="Sales Value (Rp)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Expense Tab */}
+        <TabsContent value="expense" className="space-y-6">
+          {/* Filters */}
+          <div className="flex flex-wrap gap-4 items-end">
+            <div>
+              <label className="text-sm font-medium block mb-1">Time Granularity</label>
+              <Select value={expGranularity} onValueChange={(v) => setExpGranularity(v as TimeGranularity)}>
+                <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Category</label>
+              <Select value={expCatFilter} onValueChange={setExpCatFilter}>
+                <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {expenseCategories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Fund Source</label>
+              <Select value={expFundFilter} onValueChange={setExpFundFilter}>
+                <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sources</SelectItem>
+                  {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Total */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-sm text-muted-foreground">Total Expense (filtered)</div>
+              <div className="text-3xl font-bold">{formatCurrency(totalExpense)}</div>
+            </CardContent>
+          </Card>
+
+          {/* Area Chart - Expense Trend */}
+          <Card>
+            <CardHeader><CardTitle>{expGranLabel} Expense Trend</CardTitle></CardHeader>
+            <CardContent>
+              {expenseTrendData.length === 0 ? <p className="text-muted-foreground text-center py-8">No expense data</p> : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={expenseTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Area type="monotone" dataKey="total" stroke="#ef4444" fill="#ef4444" fillOpacity={0.15} strokeWidth={2} name="Expense" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Stacked Bar - By Category */}
+          <Card>
+            <CardHeader><CardTitle>{expGranLabel} Expense by Category</CardTitle></CardHeader>
+            <CardContent>
+              {expenseByCategoryData.data.length === 0 ? <p className="text-muted-foreground text-center py-8">No expense data</p> : (
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={expenseByCategoryData.data}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Legend />
+                    {expenseByCategoryData.categories.map((cat, i) => (
+                      <Bar key={cat} dataKey={cat} stackId="a" fill={COLORS[i % COLORS.length]} />
                     ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number, name: string, props: any) => [`${value} units (${props.payload.percentage}%)`, name]} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* 3) Payment Method Proportion Pie */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Payment Method Proportion</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {paymentProportionData.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No data</p>
-            ) : (
-              <ResponsiveContainer width="100%" height={350}>
-                <PieChart>
-                  <Pie
-                    data={paymentProportionData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    label={({ percentage }) => `${percentage}%`}
-                  >
-                    {paymentProportionData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number, name: string, props: any) => [`${value} orders (${props.payload.percentage}%)`, name]} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          {/* Pie Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader><CardTitle>Expense by Category</CardTitle></CardHeader>
+              <CardContent>
+                {expenseCatPieData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <PieChart>
+                      <Pie data={expenseCatPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ percentage }) => `${percentage}%`}>
+                        {expenseCatPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
 
-      {/* 4) Product Sales Bar Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Product Sales Ranking (Quantity & Value)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {productSalesBarData.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No data</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={Math.max(300, productSalesBarData.length * 40)}>
-              <BarChart data={productSalesBarData} layout="vertical" margin={{ left: 120 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(value: number, name: string) => name === 'value' ? formatCurrency(value) : value} />
-                <Legend />
-                <Bar dataKey="quantity" fill="#8884d8" name="Quantity" />
-                <Bar dataKey="value" fill="#82ca9d" name="Sales Value (Rp)" />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
+            <Card>
+              <CardHeader><CardTitle>Expense by Fund Source</CardTitle></CardHeader>
+              <CardContent>
+                {expenseFundPieData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <PieChart>
+                      <Pie data={expenseFundPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ percentage }) => `${percentage}%`}>
+                        {expenseFundPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
