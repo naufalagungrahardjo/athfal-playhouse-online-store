@@ -91,10 +91,13 @@ const CartPage = () => {
     localStorage.removeItem('appliedPromo');
   };
 
-  // Check if any cart item is sold out
-  const hasSoldOutItems = items.some(item => item.product.stock <= 0);
+  // Check if any cart item is sold out (either by stock or admin toggle)
+  const hasSoldOutItems = items.some(item => item.product.is_sold_out || item.product.stock <= 0);
   // Check if any item exceeds available stock
-  const hasOverStockItems = items.some(item => item.quantity > item.product.stock && item.product.stock > 0);
+  const hasOverStockItems = items.some(item => {
+    const eff = item.product.is_sold_out ? 0 : item.product.stock;
+    return item.quantity > eff && eff > 0;
+  });
 
   const handleCheckout = async () => {
     if (items.length === 0) return;
