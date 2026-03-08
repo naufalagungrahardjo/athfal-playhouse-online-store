@@ -946,6 +946,10 @@ export type Database = {
       is_admin_account: { Args: { email: string }; Returns: boolean }
       is_admin_user: { Args: { user_id: string }; Returns: boolean }
       is_super_admin: { Args: { email: string }; Returns: boolean }
+      restore_stock_for_order: {
+        Args: { p_order_id: string }
+        Returns: boolean
+      }
       validate_promo_code: {
         Args: { code_input: string }
         Returns: {
