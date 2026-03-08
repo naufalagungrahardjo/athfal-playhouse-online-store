@@ -71,6 +71,7 @@ const AdminAnalytics = () => {
   const [expenses, setExpenses] = useState<ExpenseRow[]>([]);
   const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>([]);
   const [fundSources, setFundSources] = useState<FundSource[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<{ id: string; bank_name: string }[]>([]);
   const [expGranularity, setExpGranularity] = useState<TimeGranularity>('monthly');
   const [expCatFilter, setExpCatFilter] = useState('all');
   const [expFundFilter, setExpFundFilter] = useState('all');
