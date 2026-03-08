@@ -157,7 +157,41 @@ export default function AdminAllTeachers() {
     return summary;
   }, [filteredAttendances, teachers]);
 
-  const handleLeaveStatus = async (id: string, status: string) => {
+  // Filtered leaves
+  const filteredLeaves = useMemo(() => {
+    return leaves.filter(l => {
+      if (leaveTeacherFilter !== "all" && l.teacher_email !== leaveTeacherFilter) return false;
+      if (leaveMonth !== "all") {
+        const month = new Date(l.start_date).getMonth();
+        if (month !== parseInt(leaveMonth)) return false;
+      }
+      if (leaveYear !== "all") {
+        const year = new Date(l.start_date).getFullYear();
+        if (year !== parseInt(leaveYear)) return false;
+      }
+      return true;
+    });
+  }, [leaves, leaveTeacherFilter, leaveMonth, leaveYear]);
+
+  // Leave summary per teacher
+  const leaveSummary = useMemo(() => {
+    const summary: Record<string, { total: number; approved: number; rejected: number; pending: number }> = {};
+    for (const email of teachers) {
+      summary[email] = { total: 0, approved: 0, rejected: 0, pending: 0 };
+    }
+    for (const l of filteredLeaves) {
+      if (!summary[l.teacher_email]) {
+        summary[l.teacher_email] = { total: 0, approved: 0, rejected: 0, pending: 0 };
+      }
+      const s = summary[l.teacher_email];
+      s.total += 1;
+      if (l.status === "approved") s.approved += 1;
+      else if (l.status === "rejected") s.rejected += 1;
+      else s.pending += 1;
+    }
+    return summary;
+  }, [filteredLeaves, teachers]);
+
     const { error } = await supabase.from("teacher_leaves").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) {
       toast({ variant: "destructive", title: "Error", description: "Failed to update leave status." });
