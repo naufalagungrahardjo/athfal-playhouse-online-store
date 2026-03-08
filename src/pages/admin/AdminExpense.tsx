@@ -168,7 +168,7 @@ const AdminExpense = () => {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Expense Management</h1>
 
-      <Tabs defaultValue="setup">
+      <Tabs defaultValue="setup" value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="setup">Categories & Fund Sources</TabsTrigger>
           <TabsTrigger value="expenses">Expense Data</TabsTrigger>
