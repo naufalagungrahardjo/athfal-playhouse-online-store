@@ -80,6 +80,9 @@ const AdminAnalytics = () => {
   const [incGranularity, setIncGranularity] = useState<TimeGranularity>('monthly');
   const [incFundFilter, setIncFundFilter] = useState('all');
 
+  // Net Income
+  const [netGranularity, setNetGranularity] = useState<TimeGranularity>('monthly');
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -300,6 +303,65 @@ const AdminAnalytics = () => {
 
   const totalIncome = useMemo(() => filteredIncomes.reduce((s, i) => s + i.amount, 0), [filteredIncomes]);
 
+  // === Net Income analytics ===
+  // Use all non-cancelled orders for net income (no category/status filter)
+  const totalSalesRevenue = useMemo(() => {
+    return orders
+      .filter(o => o.status !== 'cancelled')
+      .reduce((s, o) => s + o.total_amount, 0);
+  }, [orders]);
+
+  const totalOtherIncome = useMemo(() => otherIncomes.reduce((s, i) => s + i.amount, 0), [otherIncomes]);
+  const totalAllExpenses = useMemo(() => expenses.reduce((s, e) => s + e.amount, 0), [expenses]);
+  const netIncome = totalSalesRevenue + totalOtherIncome - totalAllExpenses;
+
+  const netGranLabel = netGranularity === 'daily' ? 'Daily' : netGranularity === 'monthly' ? 'Monthly' : 'Yearly';
+
+  // Revenue vs Expense over time (grouped bar)
+  const revenueVsExpenseData = useMemo(() => {
+    const map: Record<string, { revenue: number; expense: number; net: number }> = {};
+    // Sales revenue
+    orders.filter(o => o.status !== 'cancelled').forEach(o => {
+      const key = formatDateKey(o.created_at, netGranularity);
+      if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
+      map[key].revenue += o.total_amount;
+    });
+    // Other income
+    otherIncomes.forEach(i => {
+      const key = formatDateKey(i.date, netGranularity);
+      if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
+      map[key].revenue += i.amount;
+    });
+    // Expenses
+    expenses.forEach(e => {
+      const key = formatDateKey(e.date, netGranularity);
+      if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
+      map[key].expense += e.amount;
+    });
+    // Calculate net
+    Object.values(map).forEach(v => { v.net = v.revenue - v.expense; });
+    return Object.entries(map).sort().map(([date, vals]) => ({ date, ...vals }));
+  }, [orders, otherIncomes, expenses, netGranularity]);
+
+  // Cumulative net income over time
+  const cumulativeNetData = useMemo(() => {
+    let cumulative = 0;
+    return revenueVsExpenseData.map(d => {
+      cumulative += d.net;
+      return { date: d.date, cumulative };
+    });
+  }, [revenueVsExpenseData]);
+
+  // Revenue composition pie
+  const revenueCompositionData = useMemo(() => {
+    const data = [
+      { name: 'Sales Revenue', value: totalSalesRevenue },
+      { name: 'Other Income', value: totalOtherIncome },
+    ].filter(d => d.value > 0);
+    const total = data.reduce((s, d) => s + d.value, 0);
+    return data.map(d => ({ ...d, percentage: total > 0 ? ((d.value / total) * 100).toFixed(1) : '0' }));
+  }, [totalSalesRevenue, totalOtherIncome]);
+
   const granularityLabel = timeGranularity === 'daily' ? 'Daily' : timeGranularity === 'monthly' ? 'Monthly' : 'Yearly';
   const expGranLabel = expGranularity === 'daily' ? 'Daily' : expGranularity === 'monthly' ? 'Monthly' : 'Yearly';
   const incGranLabel = incGranularity === 'daily' ? 'Daily' : incGranularity === 'monthly' ? 'Monthly' : 'Yearly';
@@ -318,10 +380,11 @@ const AdminAnalytics = () => {
       <h1 className="text-3xl font-bold">Analytics</h1>
 
       <Tabs defaultValue="sales">
-        <TabsList>
-          <TabsTrigger value="sales">Sales Analytics</TabsTrigger>
-          <TabsTrigger value="expense">Expense Analytics</TabsTrigger>
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="sales">Sales</TabsTrigger>
+          <TabsTrigger value="expense">Expense</TabsTrigger>
           <TabsTrigger value="income">Other Income</TabsTrigger>
+          <TabsTrigger value="net">Net Income</TabsTrigger>
         </TabsList>
 
         {/* Sales Tab */}
@@ -667,6 +730,163 @@ const AdminAnalytics = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+        {/* Net Income Tab */}
+        <TabsContent value="net" className="space-y-6">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-sm text-muted-foreground">Sales Revenue</div>
+                <div className="text-2xl font-bold">{formatCurrency(totalSalesRevenue)}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-sm text-muted-foreground">Other Income</div>
+                <div className="text-2xl font-bold">{formatCurrency(totalOtherIncome)}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-sm text-muted-foreground">Total Expenses</div>
+                <div className="text-2xl font-bold text-destructive">{formatCurrency(totalAllExpenses)}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-sm text-muted-foreground">Net Income</div>
+                <div className={`text-2xl font-bold ${netIncome >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                  {netIncome < 0 ? '-' : ''}{formatCurrency(Math.abs(netIncome))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Granularity Filter */}
+          <div className="flex flex-wrap gap-4 items-end">
+            <div>
+              <label className="text-sm font-medium block mb-1">Time Granularity</label>
+              <Select value={netGranularity} onValueChange={(v) => setNetGranularity(v as TimeGranularity)}>
+                <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Grouped Bar: Revenue vs Expense */}
+          <Card>
+            <CardHeader><CardTitle>{netGranLabel} Revenue vs Expense</CardTitle></CardHeader>
+            <CardContent>
+              {revenueVsExpenseData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={revenueVsExpenseData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Legend />
+                    <Bar dataKey="revenue" fill="#22c55e" name="Revenue (Sales + Other)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="expense" fill="#ef4444" name="Expenses" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Area: Net Income per period */}
+          <Card>
+            <CardHeader><CardTitle>{netGranLabel} Net Income</CardTitle></CardHeader>
+            <CardContent>
+              {revenueVsExpenseData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={revenueVsExpenseData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <defs>
+                      <linearGradient id="netGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <Area type="monotone" dataKey="net" stroke="#6366f1" fill="url(#netGradient)" strokeWidth={2} name="Net Income" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Cumulative Net Income */}
+          <Card>
+            <CardHeader><CardTitle>Cumulative Net Income</CardTitle></CardHeader>
+            <CardContent>
+              {cumulativeNetData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={cumulativeNetData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Line type="monotone" dataKey="cumulative" stroke="#0ea5e9" strokeWidth={2} dot={{ r: 3 }} name="Cumulative Net" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Revenue Composition Pie */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader><CardTitle>Revenue Composition</CardTitle></CardHeader>
+              <CardContent>
+                {revenueCompositionData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <PieChart>
+                      <Pie data={revenueCompositionData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={50} outerRadius={110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                        {revenueCompositionData.map((_, i) => <Cell key={i} fill={['#22c55e', '#0ea5e9'][i]} />)}
+                      </Pie>
+                      <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
+                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Money Flow Summary</CardTitle></CardHeader>
+              <CardContent className="flex flex-col justify-center h-[350px] space-y-4">
+                <div className="flex justify-between items-center p-3 rounded-lg bg-green-50 dark:bg-green-950/20">
+                  <span className="text-sm font-medium">Sales Revenue</span>
+                  <span className="font-bold text-green-600">{formatCurrency(totalSalesRevenue)}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20">
+                  <span className="text-sm font-medium">+ Other Income</span>
+                  <span className="font-bold text-blue-600">{formatCurrency(totalOtherIncome)}</span>
+                </div>
+                <div className="border-t pt-2 flex justify-between items-center p-3">
+                  <span className="text-sm font-medium">Total Revenue</span>
+                  <span className="font-bold">{formatCurrency(totalSalesRevenue + totalOtherIncome)}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-red-50 dark:bg-red-950/20">
+                  <span className="text-sm font-medium">- Total Expenses</span>
+                  <span className="font-bold text-destructive">{formatCurrency(totalAllExpenses)}</span>
+                </div>
+                <div className={`border-t-2 pt-2 flex justify-between items-center p-3 rounded-lg ${netIncome >= 0 ? 'bg-green-100 dark:bg-green-950/30' : 'bg-red-100 dark:bg-red-950/30'}`}>
+                  <span className="font-semibold">Net Income</span>
+                  <span className={`text-xl font-bold ${netIncome >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                    {netIncome < 0 ? '-' : ''}{formatCurrency(Math.abs(netIncome))}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
       </Tabs>
