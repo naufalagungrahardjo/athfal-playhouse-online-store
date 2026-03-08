@@ -20,7 +20,7 @@ const formatCurrency = (amount: number) => {
 const AllProductsPage = () => {
   const { language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
-  const { products, loading, error } = useProducts();
+  const { visibleProducts, loading, error } = useProducts();
   const { getLowestPrice } = useAllProductVariants();
   
   // Filter products based on search query
