@@ -24,7 +24,7 @@ type Props = {
 
 export default function ProgramsStudentsTab({
   programs, students, addProgram, updateProgram, deleteProgram,
-  addStudent, updateStudentEnrollments, deleteStudent,
+  addStudent, updateStudent, updateStudentEnrollments, deleteStudent,
 }: Props) {
   // Program form
   const [progName, setProgName] = useState("");
