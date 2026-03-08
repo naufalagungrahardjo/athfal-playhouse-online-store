@@ -898,6 +898,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_cancel_stale_orders: { Args: never; Returns: number }
       deduct_stock_for_order: { Args: { p_order_id: string }; Returns: boolean }
       get_order_by_token: {
         Args: { p_order_id: string; p_token: string }
