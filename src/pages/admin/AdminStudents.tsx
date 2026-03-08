@@ -31,7 +31,7 @@ const AdminStudents = () => {
           <ProgramsStudentsTab
             programs={programs} students={students}
             addProgram={addProgram} updateProgram={updateProgram} deleteProgram={deleteProgram}
-            addStudent={addStudent} updateStudentEnrollments={updateStudentEnrollments} deleteStudent={deleteStudent}
+            addStudent={addStudent} updateStudent={updateStudent} updateStudentEnrollments={updateStudentEnrollments} deleteStudent={deleteStudent}
           />
         </TabsContent>
         <TabsContent value="attendance">
