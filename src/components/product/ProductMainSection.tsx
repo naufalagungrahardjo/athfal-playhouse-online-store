@@ -68,7 +68,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
       {/* Product info */}
       <div>
         <h1 className="text-3xl font-bold text-athfal-pink mb-2">{product.name}</h1>
-        {product.stock <= 0 ? (
+        {effectiveStock <= 0 ? (
           <p className="text-2xl font-bold text-red-600 mb-4">SOLD OUT</p>
         ) : (
           <p className="text-2xl font-bold text-athfal-green mb-4">{formatCurrency(activePrice)}</p>
