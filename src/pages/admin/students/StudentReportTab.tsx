@@ -181,13 +181,27 @@ export default function StudentReportTab({ programs, students, enrollments, atte
         <CardContent className="pt-4">
           <div className="flex flex-wrap items-end gap-4">
             <div className="min-w-[200px]">
+              <Label>Class</Label>
+              <Select value={classFilter} onValueChange={v => { setClassFilter(v); setSelectedStudentId(""); setAiSummary(""); }}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Classes</SelectItem>
+                  {programs.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="min-w-[200px]">
               <Label>Student</Label>
               <Select value={selectedStudentId} onValueChange={v => { setSelectedStudentId(v); setMeetingFilter("all"); setAiSummary(""); }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a student" />
                 </SelectTrigger>
                 <SelectContent>
-                  {students.map(s => (
+                  {filteredStudents.map(s => (
                     <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                   ))}
                 </SelectContent>
