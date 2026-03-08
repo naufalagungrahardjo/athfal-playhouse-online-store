@@ -27,7 +27,7 @@ export function getAdminNavigation(role: string | null): NavigationGroup[] {
       ],
     },
     {
-      label: 'Admin',
+      label: 'Admin (Super Admin Only)',
       items: [
         { name: 'Categories', href: '/admin/categories', icon: Package },
         { name: 'Admin Accounts', href: '/admin/accounts', icon: Users },
