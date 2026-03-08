@@ -17,7 +17,20 @@ import {
   BarChart, Bar, AreaChart, Area
 } from 'recharts';
 
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#a855f7', '#ef4444'];
+const COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#0ea5e9', '#8b5cf6', '#14b8a6', '#f97316', '#ec4899', '#64748b'];
+
+const RADIAN = Math.PI / 180;
+const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percentage }: any) => {
+  if (parseFloat(percentage) < 5) return null;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  return (
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight={600}>
+      {`${percentage}%`}
+    </text>
+  );
+};
 
 type TimeGranularity = 'daily' | 'monthly' | 'yearly';
 
@@ -414,13 +427,13 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Product Sales Proportion</CardTitle></CardHeader>
               <CardContent>
                 {productProportionData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={350}>
+                  <ResponsiveContainer width="100%" height={400}>
                     <PieChart>
-                      <Pie data={productProportionData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ percentage }) => `${percentage}%`}>
+                      <Pie data={productProportionData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={50} outerRadius={110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                         {productProportionData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number, name: string, props: any) => [`${value} units (${props.payload.percentage}%)`, name]} />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
@@ -431,13 +444,13 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Payment Method Proportion</CardTitle></CardHeader>
               <CardContent>
                 {paymentProportionData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={350}>
+                  <ResponsiveContainer width="100%" height={400}>
                     <PieChart>
-                      <Pie data={paymentProportionData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ percentage }) => `${percentage}%`}>
+                      <Pie data={paymentProportionData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={50} outerRadius={110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                         {paymentProportionData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number, name: string, props: any) => [`${value} orders (${props.payload.percentage}%)`, name]} />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
@@ -555,13 +568,13 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Expense by Category</CardTitle></CardHeader>
               <CardContent>
                 {expenseCatPieData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={350}>
+                  <ResponsiveContainer width="100%" height={400}>
                     <PieChart>
-                      <Pie data={expenseCatPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ percentage }) => `${percentage}%`}>
+                      <Pie data={expenseCatPieData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={50} outerRadius={110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                         {expenseCatPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
@@ -572,13 +585,13 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Expense by Fund Source</CardTitle></CardHeader>
               <CardContent>
                 {expenseFundPieData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={350}>
+                  <ResponsiveContainer width="100%" height={400}>
                     <PieChart>
-                      <Pie data={expenseFundPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ percentage }) => `${percentage}%`}>
+                      <Pie data={expenseFundPieData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={50} outerRadius={110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                         {expenseFundPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
@@ -642,13 +655,13 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>Income by Fund Destination</CardTitle></CardHeader>
             <CardContent>
               {incomeFundPieData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                <ResponsiveContainer width="100%" height={350}>
+                <ResponsiveContainer width="100%" height={400}>
                   <PieChart>
-                    <Pie data={incomeFundPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ percentage }) => `${percentage}%`}>
+                    <Pie data={incomeFundPieData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={50} outerRadius={110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                       {incomeFundPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                     </Pie>
                     <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
                   </PieChart>
                 </ResponsiveContainer>
               )}
