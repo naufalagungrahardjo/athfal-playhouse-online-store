@@ -256,8 +256,40 @@ const AdminAnalytics = () => {
 
   const totalExpense = useMemo(() => filteredExpenses.reduce((s, e) => s + e.amount, 0), [filteredExpenses]);
 
+  // === Other Income analytics ===
+  const filteredIncomes = useMemo(() => {
+    return otherIncomes.filter(i => {
+      if (incFundFilter !== 'all' && i.fund_source_id !== incFundFilter) return false;
+      return true;
+    });
+  }, [otherIncomes, incFundFilter]);
+
+  const incomeTrendData = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredIncomes.forEach(i => {
+      const key = formatDateKey(i.date, incGranularity);
+      map[key] = (map[key] || 0) + i.amount;
+    });
+    return Object.entries(map).sort().map(([date, total]) => ({ date, total }));
+  }, [filteredIncomes, incGranularity]);
+
+  const incomeFundPieData = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredIncomes.forEach(i => {
+      const fundName = i.fund_source_id ? (expFundMap[i.fund_source_id] || 'Unknown') : 'Unknown';
+      map[fundName] = (map[fundName] || 0) + i.amount;
+    });
+    const total = Object.values(map).reduce((s, v) => s + v, 0);
+    return Object.entries(map)
+      .map(([name, value]) => ({ name, value, percentage: total > 0 ? ((value / total) * 100).toFixed(1) : '0' }))
+      .sort((a, b) => b.value - a.value);
+  }, [filteredIncomes, expFundMap]);
+
+  const totalIncome = useMemo(() => filteredIncomes.reduce((s, i) => s + i.amount, 0), [filteredIncomes]);
+
   const granularityLabel = timeGranularity === 'daily' ? 'Daily' : timeGranularity === 'monthly' ? 'Monthly' : 'Yearly';
   const expGranLabel = expGranularity === 'daily' ? 'Daily' : expGranularity === 'monthly' ? 'Monthly' : 'Yearly';
+  const incGranLabel = incGranularity === 'daily' ? 'Daily' : incGranularity === 'monthly' ? 'Monthly' : 'Yearly';
 
   if (loading) {
     return (
