@@ -362,6 +362,57 @@ const AdminAnalytics = () => {
     return data.map(d => ({ ...d, percentage: total > 0 ? ((d.value / total) * 100).toFixed(1) : '0' }));
   }, [totalSalesRevenue, totalOtherIncome]);
 
+  // === Fund Balance Breakdown ===
+  // Sales inflow by payment method (text) → map to fund source name
+  const fundBalanceData = useMemo(() => {
+    const balanceMap: Record<string, { salesIn: number; otherIn: number; expenseOut: number }> = {};
+
+    const ensure = (name: string) => {
+      if (!balanceMap[name]) balanceMap[name] = { salesIn: 0, otherIn: 0, expenseOut: 0 };
+    };
+
+    // Sales revenue by payment_method (text field like "BCA", "Mandiri")
+    orders.filter(o => o.status !== 'cancelled').forEach(o => {
+      const method = o.payment_method || 'Unknown';
+      ensure(method);
+      balanceMap[method].salesIn += o.total_amount;
+    });
+
+    // Other income by fund_source_id
+    otherIncomes.forEach(i => {
+      const name = i.fund_source_id ? (expFundMap[i.fund_source_id] || 'Unknown') : 'Unknown';
+      ensure(name);
+      balanceMap[name].otherIn += i.amount;
+    });
+
+    // Expenses by fund_source_id
+    expenses.forEach(e => {
+      const name = e.fund_source_id ? (expFundMap[e.fund_source_id] || 'Unknown') : 'Unknown';
+      ensure(name);
+      balanceMap[name].expenseOut += e.amount;
+    });
+
+    return Object.entries(balanceMap)
+      .map(([name, v]) => ({
+        name,
+        salesIn: v.salesIn,
+        otherIn: v.otherIn,
+        totalIn: v.salesIn + v.otherIn,
+        expenseOut: v.expenseOut,
+        net: v.salesIn + v.otherIn - v.expenseOut,
+      }))
+      .sort((a, b) => b.net - a.net);
+  }, [orders, otherIncomes, expenses, expFundMap]);
+
+  // Fund balance pie (net positive only)
+  const fundBalancePieData = useMemo(() => {
+    const positive = fundBalanceData.filter(d => d.totalIn > 0 || d.expenseOut > 0);
+    const totalNet = positive.reduce((s, d) => s + Math.max(0, d.net), 0);
+    return positive
+      .filter(d => d.net > 0)
+      .map(d => ({ name: d.name, value: d.net, percentage: totalNet > 0 ? ((d.net / totalNet) * 100).toFixed(1) : '0' }));
+  }, [fundBalanceData]);
+
   const granularityLabel = timeGranularity === 'daily' ? 'Daily' : timeGranularity === 'monthly' ? 'Monthly' : 'Yearly';
   const expGranLabel = expGranularity === 'daily' ? 'Daily' : expGranularity === 'monthly' ? 'Monthly' : 'Yearly';
   const incGranLabel = incGranularity === 'daily' ? 'Daily' : incGranularity === 'monthly' ? 'Monthly' : 'Yearly';
