@@ -56,6 +56,26 @@ type TeacherSetting = {
   google_drive_folder: string | null;
 };
 
+// Generate month options
+const getMonthOptions = () => {
+  const months = [];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(2026, i, 1);
+    months.push({ value: String(i), label: format(d, "MMMM") });
+  }
+  return months;
+};
+
+// Generate year options (from 2024 to current year + 1)
+const getYearOptions = () => {
+  const currentYear = new Date().getFullYear();
+  const years = [];
+  for (let y = 2024; y <= currentYear + 1; y++) {
+    years.push(String(y));
+  }
+  return years;
+};
+
 export default function AdminAllTeachers() {
   const { toast } = useToast();
   const [attendances, setAttendances] = useState<Attendance[]>([]);
@@ -68,6 +88,8 @@ export default function AdminAllTeachers() {
   const [teacherFilter, setTeacherFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [filterMonth, setFilterMonth] = useState<string>("all");
+  const [filterYear, setFilterYear] = useState<string>("all");
 
   // Drive folder edits
   const [driveEdits, setDriveEdits] = useState<Record<string, string>>({});
@@ -86,7 +108,6 @@ export default function AdminAllTeachers() {
     if (leaveRes.data) setLeaves(leaveRes.data as LeaveRequest[]);
     if (settingsRes.data) setTeacherSettings(settingsRes.data as TeacherSetting[]);
 
-    // Build teachers list from admin_accounts with role=teacher
     const teacherEmails = (teacherAccRes.data || []).map((t: any) => t.email);
     setTeachers(teacherEmails);
     setLoading(false);
@@ -99,9 +120,38 @@ export default function AdminAllTeachers() {
       if (teacherFilter !== "all" && a.teacher_email !== teacherFilter) return false;
       if (dateFrom && a.date < dateFrom) return false;
       if (dateTo && a.date > dateTo) return false;
+      if (filterMonth !== "all") {
+        const month = new Date(a.date).getMonth();
+        if (month !== parseInt(filterMonth)) return false;
+      }
+      if (filterYear !== "all") {
+        const year = new Date(a.date).getFullYear();
+        if (year !== parseInt(filterYear)) return false;
+      }
       return true;
     });
-  }, [attendances, teacherFilter, dateFrom, dateTo]);
+  }, [attendances, teacherFilter, dateFrom, dateTo, filterMonth, filterYear]);
+
+  // Summary: per-teacher attendance stats from filtered data
+  const attendanceSummary = useMemo(() => {
+    const summary: Record<string, { totalDays: number; totalSessions: number; session1: number; session2: number; session3: number }> = {};
+    for (const email of teachers) {
+      summary[email] = { totalDays: 0, totalSessions: 0, session1: 0, session2: 0, session3: 0 };
+    }
+    for (const a of filteredAttendances) {
+      if (!summary[a.teacher_email]) {
+        summary[a.teacher_email] = { totalDays: 0, totalSessions: 0, session1: 0, session2: 0, session3: 0 };
+      }
+      const s = summary[a.teacher_email];
+      s.totalDays += 1;
+      const sessions = a.sessions || [];
+      s.totalSessions += sessions.length;
+      if (sessions.includes("session1")) s.session1 += 1;
+      if (sessions.includes("session2")) s.session2 += 1;
+      if (sessions.includes("session3")) s.session3 += 1;
+    }
+    return summary;
+  }, [filteredAttendances, teachers]);
 
   const handleLeaveStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("teacher_leaves").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
@@ -228,11 +278,73 @@ export default function AdminAllTeachers() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <Label>Month</Label>
+                  <Select value={filterMonth} onValueChange={setFilterMonth}>
+                    <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Months</SelectItem>
+                      {getMonthOptions().map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Year</Label>
+                  <Select value={filterYear} onValueChange={setFilterYear}>
+                    <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Years</SelectItem>
+                      {getYearOptions().map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div><Label>From</Label><Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} /></div>
                 <div><Label>To</Label><Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} /></div>
-                {(dateFrom || dateTo) && <Button variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); }}>Clear dates</Button>}
+                {(dateFrom || dateTo || filterMonth !== "all" || filterYear !== "all") && (
+                  <Button variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); setFilterMonth("all"); setFilterYear("all"); }}>Clear filters</Button>
+                )}
                 <Button variant="outline" onClick={exportAttendanceCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
               </div>
+
+              {/* Attendance Summary Table */}
+              <Card className="bg-muted/40">
+                <CardHeader className="pb-2 pt-4">
+                  <CardTitle className="text-base">Attendance Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="pb-4">
+                  <div className="overflow-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Teacher</TableHead>
+                          <TableHead className="text-center">Total Days</TableHead>
+                          <TableHead className="text-center">Total Sessions</TableHead>
+                          <TableHead className="text-center">Session 1</TableHead>
+                          <TableHead className="text-center">Session 2</TableHead>
+                          <TableHead className="text-center">Session 3</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Object.entries(attendanceSummary).map(([email, s]) => (
+                          <TableRow key={email}>
+                            <TableCell className="font-medium">{email}</TableCell>
+                            <TableCell className="text-center">{s.totalDays}</TableCell>
+                            <TableCell className="text-center">{s.totalSessions}</TableCell>
+                            <TableCell className="text-center">{s.session1}</TableCell>
+                            <TableCell className="text-center">{s.session2}</TableCell>
+                            <TableCell className="text-center">{s.session3}</TableCell>
+                          </TableRow>
+                        ))}
+                        {Object.keys(attendanceSummary).length === 0 && (
+                          <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No data</TableCell></TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Detailed Attendance Table */}
               <div className="overflow-auto">
                 <Table>
                   <TableHeader>
