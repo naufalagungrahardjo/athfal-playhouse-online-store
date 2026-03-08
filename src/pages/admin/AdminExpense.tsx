@@ -28,6 +28,7 @@ type Expense = {
 const AdminExpense = () => {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [fundSources, setFundSources] = useState<FundSource[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodOption[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('setup');
