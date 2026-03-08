@@ -38,6 +38,7 @@ export default function ProgramsStudentsTab({
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [editPrograms, setEditPrograms] = useState<string[]>([]);
+  const [editStudentName, setEditStudentName] = useState("");
   const [enrollDialogOpen, setEnrollDialogOpen] = useState(false);
 
   const handleAddProgram = async () => {
