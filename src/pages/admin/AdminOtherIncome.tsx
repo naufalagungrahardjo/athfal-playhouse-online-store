@@ -52,15 +52,30 @@ const AdminOtherIncome = () => {
     ...paymentMethods.map(p => [`pm_${p.id}`, p.bank_name]),
   ]);
 
+  // Resolve pm_ prefixed IDs by finding/creating a matching fund source
+  const resolveFundSourceId = async (value: string): Promise<string | null> => {
+    if (!value) return null;
+    if (!value.startsWith('pm_')) return value;
+    const pmId = value.replace('pm_', '');
+    const pm = paymentMethods.find(p => p.id === pmId);
+    if (!pm) return null;
+    const { data: existing } = await supabase.from('expense_fund_sources' as any).select('id').eq('name', pm.bank_name).maybeSingle();
+    if (existing) return (existing as any).id;
+    const { data: created, error } = await supabase.from('expense_fund_sources' as any).insert({ name: pm.bank_name } as any).select('id').single();
+    if (error || !created) return null;
+    return (created as any).id;
+  };
+
   const addIncome = async () => {
     if (!description.trim() || !amount) {
       toast.error('Please fill in description and amount');
       return;
     }
+    const resolvedFundId = await resolveFundSourceId(fundSourceId);
     const { error } = await supabase.from('other_income' as any).insert({
       description: description.trim(),
       amount: parseInt(amount),
-      fund_source_id: fundSourceId || null,
+      fund_source_id: resolvedFundId,
       date,
     } as any);
     if (error) { toast.error(error.message); return; }
@@ -85,10 +100,11 @@ const AdminOtherIncome = () => {
 
   const saveEdit = async () => {
     if (!editingId || !editDesc.trim() || !editAmount) return;
+    const resolvedFundId = await resolveFundSourceId(editFund);
     await supabase.from('other_income' as any).update({
       description: editDesc.trim(),
       amount: parseInt(editAmount),
-      fund_source_id: editFund || null,
+      fund_source_id: resolvedFundId,
       date: editDate,
       updated_at: new Date().toISOString(),
     } as any).eq('id', editingId);
