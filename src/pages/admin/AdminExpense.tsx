@@ -77,6 +77,15 @@ const AdminExpense = () => {
     fetchAll();
   };
 
+  const startEditCat = (cat: ExpenseCategory) => { setEditingCatId(cat.id); setEditingCatName(cat.name); };
+  const saveEditCat = async () => {
+    if (!editingCatId || !editingCatName.trim()) return;
+    await supabase.from('expense_categories' as any).update({ name: editingCatName.trim(), updated_at: new Date().toISOString() } as any).eq('id', editingCatId);
+    setEditingCatId(null); setEditingCatName('');
+    toast({ title: 'Category updated' });
+    fetchAll();
+  };
+
   // Fund source CRUD
   const addFundSource = async () => {
     if (!newFundName.trim()) return;
