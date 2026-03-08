@@ -308,6 +308,7 @@ const AdminAnalytics = () => {
         <TabsList>
           <TabsTrigger value="sales">Sales Analytics</TabsTrigger>
           <TabsTrigger value="expense">Expense Analytics</TabsTrigger>
+          <TabsTrigger value="income">Other Income</TabsTrigger>
         </TabsList>
 
         {/* Sales Tab */}
