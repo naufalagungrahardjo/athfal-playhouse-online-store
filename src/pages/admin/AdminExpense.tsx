@@ -153,6 +153,9 @@ const AdminExpense = () => {
     setExpFundId(exp.fund_source_id || '');
     setExpAmount(String(exp.amount));
     setExpDate(exp.date);
+    setTimeout(() => {
+      expenseFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
   const deleteExpense = async (id: string) => {
