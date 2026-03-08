@@ -24,6 +24,8 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const { variants, loading: variantsLoading } = useProductVariants(product.dbId);
 
+  // If admin toggled sold out, treat stock as 0 for customers
+  const effectiveStock = product.is_sold_out ? 0 : product.stock;
   const activePrice = selectedVariant ? selectedVariant.price : product.price;
 
   const handleAddToCart = () => {
