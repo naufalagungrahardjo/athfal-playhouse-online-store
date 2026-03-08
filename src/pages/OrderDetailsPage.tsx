@@ -28,7 +28,7 @@ const OrderDetailsPage = () => {
   const [searchParams] = useSearchParams();
   const lookupToken = searchParams.get('token') || undefined;
   const { order, loading } = useOrderDetails(id, lookupToken);
-  const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(20 * 60); // 20 minutes in seconds
   const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<any>(null);
 
