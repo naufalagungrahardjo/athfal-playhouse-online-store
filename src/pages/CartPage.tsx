@@ -91,10 +91,13 @@ const CartPage = () => {
     localStorage.removeItem('appliedPromo');
   };
 
-  // Check if any cart item is sold out
-  const hasSoldOutItems = items.some(item => item.product.stock <= 0);
+  // Check if any cart item is sold out (either by stock or admin toggle)
+  const hasSoldOutItems = items.some(item => item.product.is_sold_out || item.product.stock <= 0);
   // Check if any item exceeds available stock
-  const hasOverStockItems = items.some(item => item.quantity > item.product.stock && item.product.stock > 0);
+  const hasOverStockItems = items.some(item => {
+    const eff = item.product.is_sold_out ? 0 : item.product.stock;
+    return item.quantity > eff && eff > 0;
+  });
 
   const handleCheckout = async () => {
     if (items.length === 0) return;
@@ -115,7 +118,7 @@ const CartPage = () => {
     const baseProductIds = [...new Set(items.map(item => getBaseProductId(item.product.id)))];
     const { data: freshStock, error: stockError } = await supabase
       .from('products')
-      .select('product_id, stock, name')
+      .select('product_id, stock, name, is_sold_out')
       .in('product_id', baseProductIds);
 
     if (stockError || !freshStock) {
@@ -136,7 +139,8 @@ const CartPage = () => {
 
     for (const [baseId, totalQty] of Object.entries(qtyByBase)) {
       const fresh = freshStock.find(p => p.product_id === baseId);
-      if (!fresh || fresh.stock <= 0) {
+      const effectiveStock = fresh?.is_sold_out ? 0 : (fresh?.stock ?? 0);
+      if (!fresh || effectiveStock <= 0) {
         toast({
           variant: 'destructive',
           title: language === 'id' ? 'Produk habis' : 'Product sold out',
@@ -144,13 +148,13 @@ const CartPage = () => {
         });
         return;
       }
-      if (totalQty > fresh.stock) {
+      if (totalQty > effectiveStock) {
         toast({
           variant: 'destructive',
           title: language === 'id' ? 'Stok tidak cukup' : 'Insufficient stock',
           description: language === 'id'
-            ? `Hanya ada ${fresh.stock} stok tersisa untuk ${fresh.name}, silakan sesuaikan keranjang Anda sebelum melanjutkan pembayaran`
-            : `There are only ${fresh.stock} stock available left for ${fresh.name}, please adjust your cart before proceeding check out`
+            ? `Hanya ada ${effectiveStock} stok tersisa untuk ${fresh.name}, silakan sesuaikan keranjang Anda sebelum melanjutkan pembayaran`
+            : `There are only ${effectiveStock} stock available left for ${fresh.name}, please adjust your cart before proceeding check out`
         });
         return;
       }

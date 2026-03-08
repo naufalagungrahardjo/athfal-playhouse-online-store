@@ -24,6 +24,8 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const { variants, loading: variantsLoading } = useProductVariants(product.dbId);
 
+  // If admin toggled sold out, treat stock as 0 for customers
+  const effectiveStock = product.is_sold_out ? 0 : product.stock;
   const activePrice = selectedVariant ? selectedVariant.price : product.price;
 
   const handleAddToCart = () => {
@@ -46,7 +48,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
   };
 
   const increaseQuantity = () => {
-    if (quantity < product.stock) setQuantity(quantity + 1);
+    if (quantity < effectiveStock) setQuantity(quantity + 1);
   };
 
   const decreaseQuantity = () => {
@@ -66,7 +68,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
       {/* Product info */}
       <div>
         <h1 className="text-3xl font-bold text-athfal-pink mb-2">{product.name}</h1>
-        {product.stock <= 0 ? (
+        {effectiveStock <= 0 ? (
           <p className="text-2xl font-bold text-red-600 mb-4">SOLD OUT</p>
         ) : (
           <p className="text-2xl font-bold text-athfal-green mb-4">{formatCurrency(activePrice)}</p>
@@ -85,9 +87,9 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
           </div>
           <div className="flex items-center mb-4">
             <span className="font-medium text-gray-700 w-24">{language === 'id' ? 'Stok' : 'Stock'}:</span>
-            <span className={`${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {product.stock > 0
-                ? (language === 'id' ? `${product.stock} tersedia` : `${product.stock} available`)
+            <span className={`${effectiveStock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {effectiveStock > 0
+                ? (language === 'id' ? `${effectiveStock} tersedia` : `${effectiveStock} available`)
                 : (language === 'id' ? 'Habis' : 'Out of stock')}
             </span>
           </div>
@@ -170,7 +172,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
               variant="outline"
               size="icon"
               onClick={increaseQuantity}
-              disabled={product.stock <= quantity}
+              disabled={effectiveStock <= quantity}
               className="h-10 w-10"
             >
               <Plus className="h-4 w-4" />
@@ -183,7 +185,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
             onClick={handleAddToCart}
             variant="outline"
             className="flex-1 border-athfal-pink text-athfal-pink hover:bg-athfal-pink/10"
-            disabled={product.stock <= 0}
+            disabled={effectiveStock <= 0}
           >
             <ShoppingCart className="mr-2 h-4 w-4" />
             {language === 'id' ? 'Tambah ke Keranjang' : 'Add to Cart'}
@@ -191,7 +193,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
           <Button
             onClick={handleBuyNow}
             className="flex-1 bg-athfal-pink hover:bg-athfal-pink/80 text-white"
-            disabled={product.stock <= 0}
+            disabled={effectiveStock <= 0}
           >
             {language === 'id' ? 'Beli Sekarang' : 'Buy Now'}
           </Button>
