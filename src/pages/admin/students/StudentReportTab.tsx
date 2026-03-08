@@ -46,10 +46,23 @@ export default function StudentReportTab({ programs, students, enrollments, atte
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
 
+  // Filter students by class
+  const filteredStudents = useMemo(() => {
+    if (classFilter === "all") return students;
+    const enrolledStudentIds = new Set(
+      enrollments.filter(e => e.program_id === classFilter).map(e => e.student_id)
+    );
+    return students.filter(s => enrolledStudentIds.has(s.id));
+  }, [students, enrollments, classFilter]);
+
   const studentEnrollments = useMemo(() => {
     if (!selectedStudentId) return [];
-    return enrollments.filter(e => e.student_id === selectedStudentId);
-  }, [enrollments, selectedStudentId]);
+    let filtered = enrollments.filter(e => e.student_id === selectedStudentId);
+    if (classFilter !== "all") {
+      filtered = filtered.filter(e => e.program_id === classFilter);
+    }
+    return filtered;
+  }, [enrollments, selectedStudentId, classFilter]);
 
   const studentAttendance = useMemo(() => {
     const enrollIds = new Set(studentEnrollments.map(e => e.id));
