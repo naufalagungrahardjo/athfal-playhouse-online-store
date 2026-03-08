@@ -444,13 +444,13 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Payment Method Proportion</CardTitle></CardHeader>
               <CardContent>
                 {paymentProportionData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={350}>
+                  <ResponsiveContainer width="100%" height={400}>
                     <PieChart>
-                      <Pie data={paymentProportionData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ percentage }) => `${percentage}%`}>
+                      <Pie data={paymentProportionData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={50} outerRadius={110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                         {paymentProportionData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number, name: string, props: any) => [`${value} orders (${props.payload.percentage}%)`, name]} />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
