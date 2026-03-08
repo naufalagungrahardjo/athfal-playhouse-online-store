@@ -200,11 +200,15 @@ const CheckoutPage = () => {
     }
   };
 
+  // Extract base product ID from composite cart ID (e.g., "PROD1__variant_xxx" -> "PROD1")
+  const getBaseProductId = (cartId: string) => cartId.split('__')[0];
+
   // Check if a cart item is eligible for the promo
   const isItemEligible = (item: typeof items[0]) => {
     if (!appliedPromo || appliedPromo.applies_to === 'all') return true;
     if (appliedPromo.applies_to === 'specific_products') {
-      return appliedPromo.applicable_product_ids.includes(item.product.id);
+      const baseId = getBaseProductId(item.product.id);
+      return appliedPromo.applicable_product_ids.includes(baseId);
     }
     if (appliedPromo.applies_to === 'specific_categories') {
       return appliedPromo.applicable_category_slugs.includes(item.product.category);
