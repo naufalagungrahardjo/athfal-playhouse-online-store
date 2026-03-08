@@ -938,6 +938,95 @@ const AdminAnalytics = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Fund Balance Breakdown */}
+          <Card>
+            <CardHeader><CardTitle>💰 Fund Balance by Source / Bank</CardTitle></CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">Where your money sits: inflows from sales & other income vs outflows from expenses per fund source.</p>
+              {fundBalanceData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                <div className="overflow-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-3 font-medium text-muted-foreground">Fund Source / Bank</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground">Sales In</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground">Other Income In</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground">Total In</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground">Expense Out</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground">Net Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {fundBalanceData.map((row, i) => (
+                        <tr key={i} className="border-b hover:bg-muted/50 transition-colors">
+                          <td className="p-3 font-medium">{row.name}</td>
+                          <td className="p-3 text-right text-green-600">{row.salesIn > 0 ? formatCurrency(row.salesIn) : '-'}</td>
+                          <td className="p-3 text-right text-blue-600">{row.otherIn > 0 ? formatCurrency(row.otherIn) : '-'}</td>
+                          <td className="p-3 text-right font-medium">{formatCurrency(row.totalIn)}</td>
+                          <td className="p-3 text-right text-destructive">{row.expenseOut > 0 ? formatCurrency(row.expenseOut) : '-'}</td>
+                          <td className={`p-3 text-right font-bold ${row.net >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                            {row.net < 0 ? '-' : ''}{formatCurrency(Math.abs(row.net))}
+                          </td>
+                        </tr>
+                      ))}
+                      <tr className="border-t-2 font-bold">
+                        <td className="p-3">Total</td>
+                        <td className="p-3 text-right text-green-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.salesIn, 0))}</td>
+                        <td className="p-3 text-right text-blue-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.otherIn, 0))}</td>
+                        <td className="p-3 text-right">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.totalIn, 0))}</td>
+                        <td className="p-3 text-right text-destructive">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.expenseOut, 0))}</td>
+                        <td className={`p-3 text-right ${netIncome >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                          {netIncome < 0 ? '-' : ''}{formatCurrency(Math.abs(netIncome))}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Fund Balance Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Stacked bar: inflow vs outflow per fund */}
+            <Card>
+              <CardHeader><CardTitle>Inflow vs Outflow by Fund</CardTitle></CardHeader>
+              <CardContent>
+                {fundBalanceData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <BarChart data={fundBalanceData} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                      <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11 }} />
+                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      <Legend />
+                      <Bar dataKey="totalIn" fill="#22c55e" name="Total Inflow" radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="expenseOut" fill="#ef4444" name="Expense Outflow" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Net balance distribution pie */}
+            <Card>
+              <CardHeader><CardTitle>Net Balance Distribution</CardTitle></CardHeader>
+              <CardContent>
+                {fundBalancePieData.length === 0 ? <p className="text-muted-foreground text-center py-8">No positive balances</p> : (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <PieChart>
+                      <Pie data={fundBalancePieData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={50} outerRadius={110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                        {fundBalancePieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
+                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
       </Tabs>
