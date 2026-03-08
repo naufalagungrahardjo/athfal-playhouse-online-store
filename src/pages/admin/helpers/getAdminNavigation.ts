@@ -25,6 +25,7 @@ export function getAdminNavigation(role: string | null): NavigationGroup[] {
         { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
         { name: 'Promo Codes', href: '/admin/promo-codes', icon: CreditCard },
         { name: 'Expense', href: '/admin/expense', icon: Wallet },
+        { name: 'Other Income', href: '/admin/other-income', icon: Wallet },
       ],
     },
     {
@@ -60,7 +61,7 @@ export function getAdminNavigation(role: string | null): NavigationGroup[] {
 
   // For other roles, filter items within groups and remove empty groups
   const allAllowed: Record<string, string[]> = {
-    orders_manager: ["/admin", "/admin/products", "/admin/orders", "/admin/analytics", "/admin/promo-codes", "/admin/expense"],
+    orders_manager: ["/admin", "/admin/products", "/admin/orders", "/admin/analytics", "/admin/promo-codes", "/admin/expense", "/admin/other-income"],
     order_staff: ["/admin/orders"],
     content_manager: ["/admin/blogs", "/admin/banners", "/admin/website-copy", "/admin/categories", "/admin/faq", "/admin/testimonials"],
     content_staff: ["/admin/blogs"],

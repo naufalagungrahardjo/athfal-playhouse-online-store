@@ -33,6 +33,7 @@ interface OrderWithItems {
 type ExpenseRow = { id: string; description: string; category_id: string | null; fund_source_id: string | null; amount: number; date: string };
 type ExpenseCategory = { id: string; name: string };
 type FundSource = { id: string; name: string };
+type OtherIncomeRow = { id: string; description: string; amount: number; fund_source_id: string | null; date: string };
 
 const formatDateKey = (dateStr: string, granularity: TimeGranularity): string => {
   const d = new Date(dateStr);
@@ -61,10 +62,15 @@ const AdminAnalytics = () => {
   const [expCatFilter, setExpCatFilter] = useState('all');
   const [expFundFilter, setExpFundFilter] = useState('all');
 
+  // Other Income data
+  const [otherIncomes, setOtherIncomes] = useState<OtherIncomeRow[]>([]);
+  const [incGranularity, setIncGranularity] = useState<TimeGranularity>('monthly');
+  const [incFundFilter, setIncFundFilter] = useState('all');
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes] = await Promise.all([
+      const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes, incRes] = await Promise.all([
         supabase.from('orders').select('id, created_at, payment_method, status, total_amount').order('created_at', { ascending: true }),
         supabase.from('order_items').select('order_id, product_id, product_name, quantity, product_price'),
         supabase.from('categories').select('slug, title'),
@@ -72,6 +78,7 @@ const AdminAnalytics = () => {
         supabase.from('expenses' as any).select('*').order('date', { ascending: true }),
         supabase.from('expense_categories' as any).select('id, name'),
         supabase.from('expense_fund_sources' as any).select('id, name'),
+        supabase.from('other_income' as any).select('*').order('date', { ascending: true }),
       ]);
 
       const itemsByOrder: Record<string, any[]> = {};
@@ -86,6 +93,7 @@ const AdminAnalytics = () => {
       setExpenses((expRes.data as any) || []);
       setExpenseCategories((expCatsRes.data as any) || []);
       setFundSources((fundsRes.data as any) || []);
+      setOtherIncomes((incRes.data as any) || []);
       setLoading(false);
     };
     fetchData();
@@ -248,8 +256,40 @@ const AdminAnalytics = () => {
 
   const totalExpense = useMemo(() => filteredExpenses.reduce((s, e) => s + e.amount, 0), [filteredExpenses]);
 
+  // === Other Income analytics ===
+  const filteredIncomes = useMemo(() => {
+    return otherIncomes.filter(i => {
+      if (incFundFilter !== 'all' && i.fund_source_id !== incFundFilter) return false;
+      return true;
+    });
+  }, [otherIncomes, incFundFilter]);
+
+  const incomeTrendData = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredIncomes.forEach(i => {
+      const key = formatDateKey(i.date, incGranularity);
+      map[key] = (map[key] || 0) + i.amount;
+    });
+    return Object.entries(map).sort().map(([date, total]) => ({ date, total }));
+  }, [filteredIncomes, incGranularity]);
+
+  const incomeFundPieData = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredIncomes.forEach(i => {
+      const fundName = i.fund_source_id ? (expFundMap[i.fund_source_id] || 'Unknown') : 'Unknown';
+      map[fundName] = (map[fundName] || 0) + i.amount;
+    });
+    const total = Object.values(map).reduce((s, v) => s + v, 0);
+    return Object.entries(map)
+      .map(([name, value]) => ({ name, value, percentage: total > 0 ? ((value / total) * 100).toFixed(1) : '0' }))
+      .sort((a, b) => b.value - a.value);
+  }, [filteredIncomes, expFundMap]);
+
+  const totalIncome = useMemo(() => filteredIncomes.reduce((s, i) => s + i.amount, 0), [filteredIncomes]);
+
   const granularityLabel = timeGranularity === 'daily' ? 'Daily' : timeGranularity === 'monthly' ? 'Monthly' : 'Yearly';
   const expGranLabel = expGranularity === 'daily' ? 'Daily' : expGranularity === 'monthly' ? 'Monthly' : 'Yearly';
+  const incGranLabel = incGranularity === 'daily' ? 'Daily' : incGranularity === 'monthly' ? 'Monthly' : 'Yearly';
 
   if (loading) {
     return (
@@ -268,6 +308,7 @@ const AdminAnalytics = () => {
         <TabsList>
           <TabsTrigger value="sales">Sales Analytics</TabsTrigger>
           <TabsTrigger value="expense">Expense Analytics</TabsTrigger>
+          <TabsTrigger value="income">Other Income</TabsTrigger>
         </TabsList>
 
         {/* Sales Tab */}
@@ -545,6 +586,76 @@ const AdminAnalytics = () => {
             </Card>
           </div>
         </TabsContent>
+        {/* Other Income Tab */}
+        <TabsContent value="income" className="space-y-6">
+          <div className="flex flex-wrap gap-4 items-end">
+            <div>
+              <label className="text-sm font-medium block mb-1">Time Granularity</label>
+              <Select value={incGranularity} onValueChange={(v) => setIncGranularity(v as TimeGranularity)}>
+                <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Fund Destination</label>
+              <Select value={incFundFilter} onValueChange={setIncFundFilter}>
+                <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Destinations</SelectItem>
+                  {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-sm text-muted-foreground">Total Other Income (filtered)</div>
+              <div className="text-3xl font-bold text-green-600">{formatCurrency(totalIncome)}</div>
+            </CardContent>
+          </Card>
+
+          {/* Bar Chart - Income Trend (bar charts clearly show discrete income amounts per period) */}
+          <Card>
+            <CardHeader><CardTitle>{incGranLabel} Other Income Trend</CardTitle></CardHeader>
+            <CardContent>
+              {incomeTrendData.length === 0 ? <p className="text-muted-foreground text-center py-8">No income data</p> : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={incomeTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Bar dataKey="total" fill="#22c55e" name="Other Income" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Pie Chart - By Fund Destination */}
+          <Card>
+            <CardHeader><CardTitle>Income by Fund Destination</CardTitle></CardHeader>
+            <CardContent>
+              {incomeFundPieData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                <ResponsiveContainer width="100%" height={350}>
+                  <PieChart>
+                    <Pie data={incomeFundPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ percentage }) => `${percentage}%`}>
+                      {incomeFundPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
       </Tabs>
     </div>
   );
