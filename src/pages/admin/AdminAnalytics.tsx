@@ -664,8 +664,7 @@ const AdminAnalytics = () => {
                     <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
                   </PieChart>
                 </ResponsiveContainer>
-              )}
-              )}
+              )
             </CardContent>
           </Card>
         </TabsContent>
