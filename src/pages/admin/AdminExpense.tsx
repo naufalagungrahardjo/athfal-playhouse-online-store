@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,6 +46,7 @@ const AdminExpense = () => {
   const [expAmount, setExpAmount] = useState('');
   const [expDate, setExpDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [editingExpense, setEditingExpense] = useState<string | null>(null);
+  const expenseFormRef = useRef<HTMLDivElement>(null);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -152,6 +153,9 @@ const AdminExpense = () => {
     setExpFundId(exp.fund_source_id || '');
     setExpAmount(String(exp.amount));
     setExpDate(exp.date);
+    setTimeout(() => {
+      expenseFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
   const deleteExpense = async (id: string) => {
@@ -248,8 +252,8 @@ const AdminExpense = () => {
 
         {/* Tab 2: Expense Data */}
         <TabsContent value="expenses">
-          <Card className="mb-6">
-            <CardHeader><CardTitle>{editingExpense ? 'Edit Expense' : 'Add New Expense'}</CardTitle></CardHeader>
+          <Card className="mb-6" ref={expenseFormRef}>
+            <CardHeader><CardTitle>{editingExpense ? '✏️ Edit Expense' : 'Add New Expense'}</CardTitle></CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="lg:col-span-2">
