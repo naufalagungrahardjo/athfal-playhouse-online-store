@@ -25,6 +25,7 @@ export function getAdminNavigation(role: string | null): NavigationGroup[] {
         { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
         { name: 'Promo Codes', href: '/admin/promo-codes', icon: CreditCard },
         { name: 'Expense', href: '/admin/expense', icon: Wallet },
+        { name: 'Other Income', href: '/admin/other-income', icon: Wallet },
       ],
     },
     {
