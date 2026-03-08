@@ -106,9 +106,7 @@ const AdminSidebar: React.FC<Props> = ({ sidebarOpen, setSidebarOpen, navigation
             Athfal Admin
           </Link>
         </div>
-        <div className="flex-1 overflow-y-auto">
-          <SidebarNav groups={navigation} />
-        </div>
+        <DesktopSidebarScroll groups={navigation} />
       </div>
     </>
   );
