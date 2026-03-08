@@ -10,6 +10,7 @@ interface Product {
   price: number;
   image: string;
   stock?: number;
+  is_sold_out?: boolean;
 }
 
 interface ProductCardProps {
