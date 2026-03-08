@@ -73,6 +73,7 @@ const AdminTeacher = lazyRetry(() => import("./pages/admin/AdminTeacher"));
 const AdminAllTeachers = lazyRetry(() => import("./pages/admin/AdminAllTeachers"));
 const AdminStudents = lazyRetry(() => import("./pages/admin/AdminStudents"));
 const AdminExpense = lazyRetry(() => import("./pages/admin/AdminExpense"));
+const AdminOtherIncome = lazyRetry(() => import("./pages/admin/AdminOtherIncome"));
 
 const queryClient = new QueryClient();
 
