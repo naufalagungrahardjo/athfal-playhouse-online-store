@@ -146,7 +146,9 @@ const CartPage = () => {
         toast({
           variant: 'destructive',
           title: language === 'id' ? 'Stok tidak cukup' : 'Insufficient stock',
-          description: `${fresh.name}: ${language === 'id' ? `hanya tersisa ${fresh.stock}` : `only ${fresh.stock} available`}.`
+          description: language === 'id'
+            ? `Hanya ada ${fresh.stock} stok tersisa untuk ${fresh.name}, silakan sesuaikan keranjang Anda sebelum melanjutkan pembayaran`
+            : `There are only ${fresh.stock} stock available left for ${fresh.name}, please adjust your cart before proceeding check out`
         });
         return;
       }
