@@ -32,7 +32,11 @@ const AdminExpense = () => {
 
   // Category form
   const [newCatName, setNewCatName] = useState('');
+  const [editingCatId, setEditingCatId] = useState<string | null>(null);
+  const [editingCatName, setEditingCatName] = useState('');
   const [newFundName, setNewFundName] = useState('');
+  const [editingFundId, setEditingFundId] = useState<string | null>(null);
+  const [editingFundName, setEditingFundName] = useState('');
 
   // Expense form
   const [expDesc, setExpDesc] = useState('');
@@ -73,6 +77,15 @@ const AdminExpense = () => {
     fetchAll();
   };
 
+  const startEditCat = (cat: ExpenseCategory) => { setEditingCatId(cat.id); setEditingCatName(cat.name); };
+  const saveEditCat = async () => {
+    if (!editingCatId || !editingCatName.trim()) return;
+    await supabase.from('expense_categories' as any).update({ name: editingCatName.trim(), updated_at: new Date().toISOString() } as any).eq('id', editingCatId);
+    setEditingCatId(null); setEditingCatName('');
+    toast({ title: 'Category updated' });
+    fetchAll();
+  };
+
   // Fund source CRUD
   const addFundSource = async () => {
     if (!newFundName.trim()) return;
@@ -86,6 +99,15 @@ const AdminExpense = () => {
   const deleteFundSource = async (id: string) => {
     await supabase.from('expense_fund_sources' as any).delete().eq('id', id);
     toast({ title: 'Fund source deleted' });
+    fetchAll();
+  };
+
+  const startEditFund = (fund: FundSource) => { setEditingFundId(fund.id); setEditingFundName(fund.name); };
+  const saveEditFund = async () => {
+    if (!editingFundId || !editingFundName.trim()) return;
+    await supabase.from('expense_fund_sources' as any).update({ name: editingFundName.trim(), updated_at: new Date().toISOString() } as any).eq('id', editingFundId);
+    setEditingFundId(null); setEditingFundName('');
+    toast({ title: 'Fund source updated' });
     fetchAll();
   };
 
@@ -166,8 +188,21 @@ const AdminExpense = () => {
                 <div className="space-y-1">
                   {categories.map(cat => (
                     <div key={cat.id} className="flex items-center justify-between p-2 rounded hover:bg-muted">
-                      <span className="text-sm">{cat.name}</span>
-                      <Button variant="ghost" size="icon" onClick={() => deleteCategory(cat.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      {editingCatId === cat.id ? (
+                        <div className="flex gap-2 flex-1 mr-2">
+                          <Input value={editingCatName} onChange={e => setEditingCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveEditCat()} className="h-8 text-sm" />
+                          <Button size="sm" variant="outline" onClick={saveEditCat}>Save</Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditingCatId(null)}>Cancel</Button>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="text-sm">{cat.name}</span>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => startEditCat(cat)}><Pencil className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => deleteCategory(cat.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                   {categories.length === 0 && <p className="text-sm text-muted-foreground">No categories yet</p>}
@@ -186,8 +221,21 @@ const AdminExpense = () => {
                 <div className="space-y-1">
                   {fundSources.map(fund => (
                     <div key={fund.id} className="flex items-center justify-between p-2 rounded hover:bg-muted">
-                      <span className="text-sm">{fund.name}</span>
-                      <Button variant="ghost" size="icon" onClick={() => deleteFundSource(fund.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      {editingFundId === fund.id ? (
+                        <div className="flex gap-2 flex-1 mr-2">
+                          <Input value={editingFundName} onChange={e => setEditingFundName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveEditFund()} className="h-8 text-sm" />
+                          <Button size="sm" variant="outline" onClick={saveEditFund}>Save</Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditingFundId(null)}>Cancel</Button>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="text-sm">{fund.name}</span>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => startEditFund(fund)}><Pencil className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => deleteFundSource(fund.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                   {fundSources.length === 0 && <p className="text-sm text-muted-foreground">No fund sources yet</p>}
