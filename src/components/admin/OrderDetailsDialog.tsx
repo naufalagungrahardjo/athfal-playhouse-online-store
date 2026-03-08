@@ -90,6 +90,23 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
     
     try {
       setUpdating(true);
+
+      // If cancelling, restore stock via RPC
+      if (status === 'cancelled') {
+        const { error: restoreError } = await supabase
+          .rpc('restore_stock_for_order', { p_order_id: order.id });
+
+        if (restoreError) {
+          console.error('Stock restoration failed:', restoreError);
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Failed to restore stock for cancelled order',
+          });
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from('orders')
         .update({ status, updated_at: new Date().toISOString() })
