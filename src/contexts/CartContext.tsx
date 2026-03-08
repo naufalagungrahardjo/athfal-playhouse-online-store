@@ -19,6 +19,8 @@ export interface Product {
   installment: number;
   installment_months: number;
   media?: Array<{ url: string; type: 'image' | 'video' }>;
+  is_hidden?: boolean;
+  is_sold_out?: boolean;
 }
 
 export interface CartItem {

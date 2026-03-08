@@ -20,11 +20,11 @@ const formatCurrency = (amount: number) => {
 const AllProductsPage = () => {
   const { language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
-  const { products, loading, error } = useProducts();
+  const { visibleProducts, loading, error } = useProducts();
   const { getLowestPrice } = useAllProductVariants();
   
   // Filter products based on search query
-  const filteredProducts = products.filter(product => {
+  const filteredProducts = visibleProducts.filter(product => {
     if (searchQuery.trim() === '') return true;
     const query = searchQuery.toLowerCase();
     return product.name.toLowerCase().includes(query) || 
@@ -91,7 +91,7 @@ const AllProductsPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProducts.map((product) => {
-              const isSoldOut = product.stock <= 0;
+              const isSoldOut = product.is_sold_out || product.stock <= 0;
               const lowest = getLowestPrice(product.dbId, product.price);
               const hasVariants = lowest < product.price;
               return (

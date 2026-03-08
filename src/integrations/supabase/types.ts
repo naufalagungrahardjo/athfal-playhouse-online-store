@@ -493,6 +493,8 @@ export type Database = {
           image: string
           installment: number
           installment_months: number
+          is_hidden: boolean
+          is_sold_out: boolean
           media: Json | null
           name: string
           price: number
@@ -511,6 +513,8 @@ export type Database = {
           image: string
           installment?: number
           installment_months?: number
+          is_hidden?: boolean
+          is_sold_out?: boolean
           media?: Json | null
           name: string
           price: number
@@ -529,6 +533,8 @@ export type Database = {
           image?: string
           installment?: number
           installment_months?: number
+          is_hidden?: boolean
+          is_sold_out?: boolean
           media?: Json | null
           name?: string
           price?: number

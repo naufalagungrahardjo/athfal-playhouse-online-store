@@ -36,10 +36,12 @@ export const useProducts = () => {
         installment: product.installment,
         installment_months: product.installment_months,
         media: product.media as any,
+        is_hidden: (product as any).is_hidden ?? false,
+        is_sold_out: (product as any).is_sold_out ?? false,
       }));
 
       setProducts(formattedProducts);
-      console.log('Products fetched and formatted:', formattedProducts);
+      console.log('Products fetched and formatted:', formattedProducts.length);
     } catch (err) {
       console.error('Error fetching products:', err);
       setError('Failed to fetch products');
@@ -85,8 +87,12 @@ export const useProducts = () => {
     return products.find(product => product.id === id);
   };
 
+  // Public-facing: filter out hidden products
+  const visibleProducts = products.filter(p => !p.is_hidden);
+
   return {
     products,
+    visibleProducts,
     loading,
     error,
     fetchProducts,

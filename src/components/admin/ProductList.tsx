@@ -16,15 +16,18 @@ interface ProductListData {
   first_payment: number;
   installment: number;
   installment_months: number;
+  is_hidden?: boolean;
+  is_sold_out?: boolean;
 }
 
 interface ProductListProps {
   products: ProductListData[];
   onEdit: (product: ProductListData) => void;
   onDelete: (productId: string) => void;
+  onToggleUpdated?: () => void;
 }
 
-export const ProductList = ({ products, onEdit, onDelete }: ProductListProps) => {
+export const ProductList = ({ products, onEdit, onDelete, onToggleUpdated }: ProductListProps) => {
   if (products.length === 0) {
     return (
       <Card>
@@ -43,6 +46,7 @@ export const ProductList = ({ products, onEdit, onDelete }: ProductListProps) =>
           product={product}
           onEdit={onEdit}
           onDelete={onDelete}
+          onToggleUpdated={onToggleUpdated}
         />
       ))}
     </div>

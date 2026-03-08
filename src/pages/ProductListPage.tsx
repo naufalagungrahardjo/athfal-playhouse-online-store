@@ -23,11 +23,11 @@ const ProductListPage = () => {
   const { category } = useParams<{ category: string }>();
   const { language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
-  const { products, loading, error, getProductsByCategory } = useProducts();
+  const { visibleProducts, loading, error, getProductsByCategory } = useProducts();
   const { categories } = useCategories();
   const { getLowestPrice } = useAllProductVariants();
-  // Get products for the current category
-  const categoryProducts = category ? getProductsByCategory(category as ProductCategory) : [];
+  // Get visible products for the current category
+  const categoryProducts = category ? visibleProducts.filter(p => p.category === category) : [];
   
   // Filter products based on search query
   const filteredProducts = categoryProducts.filter(product => {
@@ -84,7 +84,7 @@ const ProductListPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProducts.map((product) => {
-              const isSoldOut = product.stock <= 0;
+              const isSoldOut = product.is_sold_out || product.stock <= 0;
               const displayPrice = product.dbId ? getLowestPrice(product.dbId, product.price) : product.price;
               const hasVariants = displayPrice < product.price;
               return (
