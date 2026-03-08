@@ -11,10 +11,12 @@ import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 
 type FundSource = { id: string; name: string };
+type PaymentMethodOption = { id: string; bank_name: string };
 type OtherIncome = { id: string; description: string; amount: number; fund_source_id: string | null; date: string };
 
 const AdminOtherIncome = () => {
   const [fundSources, setFundSources] = useState<FundSource[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodOption[]>([]);
   const [incomes, setIncomes] = useState<OtherIncome[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,18 +34,23 @@ const AdminOtherIncome = () => {
   const [editDate, setEditDate] = useState('');
 
   const fetchAll = async () => {
-    const [fundsRes, incomeRes] = await Promise.all([
+    const [fundsRes, incomeRes, pmRes] = await Promise.all([
       supabase.from('expense_fund_sources' as any).select('id, name'),
       supabase.from('other_income' as any).select('*').order('date', { ascending: false }),
+      supabase.from('payment_methods').select('id, bank_name').eq('active', true).order('bank_name'),
     ]);
     setFundSources((fundsRes.data as any) || []);
+    setPaymentMethods((pmRes.data as PaymentMethodOption[]) || []);
     setIncomes((incomeRes.data as any) || []);
     setLoading(false);
   };
 
   useEffect(() => { fetchAll(); }, []);
 
-  const fundMap = Object.fromEntries(fundSources.map(f => [f.id, f.name]));
+  const fundMap = Object.fromEntries([
+    ...fundSources.map(f => [f.id, f.name]),
+    ...paymentMethods.map(p => [`pm_${p.id}`, p.bank_name]),
+  ]);
 
   const addIncome = async () => {
     if (!description.trim() || !amount) {
@@ -106,7 +113,18 @@ const AdminOtherIncome = () => {
             <Select value={fundSourceId} onValueChange={setFundSourceId}>
               <SelectTrigger><SelectValue placeholder="Fund Destination" /></SelectTrigger>
               <SelectContent>
-                {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                {fundSources.length > 0 && (
+                  <>
+                    <SelectItem value="_label_funds" disabled className="text-xs font-semibold text-muted-foreground">Fund Sources</SelectItem>
+                    {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                  </>
+                )}
+                {paymentMethods.length > 0 && (
+                  <>
+                    <SelectItem value="_label_pm" disabled className="text-xs font-semibold text-muted-foreground">Payment Methods</SelectItem>
+                    {paymentMethods.map(p => <SelectItem key={`pm_${p.id}`} value={`pm_${p.id}`}>{p.bank_name}</SelectItem>)}
+                  </>
+                )}
               </SelectContent>
             </Select>
             <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
@@ -143,7 +161,18 @@ const AdminOtherIncome = () => {
                           <Select value={editFund} onValueChange={setEditFund}>
                             <SelectTrigger><SelectValue placeholder="Fund Destination" /></SelectTrigger>
                             <SelectContent>
-                              {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                              {fundSources.length > 0 && (
+                                <>
+                                  <SelectItem value="_label_funds" disabled className="text-xs font-semibold text-muted-foreground">Fund Sources</SelectItem>
+                                  {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                                </>
+                              )}
+                              {paymentMethods.length > 0 && (
+                                <>
+                                  <SelectItem value="_label_pm" disabled className="text-xs font-semibold text-muted-foreground">Payment Methods</SelectItem>
+                                  {paymentMethods.map(p => <SelectItem key={`pm_${p.id}`} value={`pm_${p.id}`}>{p.bank_name}</SelectItem>)}
+                                </>
+                              )}
                             </SelectContent>
                           </Select>
                         </TableCell>
