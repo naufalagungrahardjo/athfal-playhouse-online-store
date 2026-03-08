@@ -139,7 +139,8 @@ const CartPage = () => {
 
     for (const [baseId, totalQty] of Object.entries(qtyByBase)) {
       const fresh = freshStock.find(p => p.product_id === baseId);
-      if (!fresh || fresh.stock <= 0) {
+      const effectiveStock = fresh?.is_sold_out ? 0 : (fresh?.stock ?? 0);
+      if (!fresh || effectiveStock <= 0) {
         toast({
           variant: 'destructive',
           title: language === 'id' ? 'Produk habis' : 'Product sold out',
@@ -147,13 +148,13 @@ const CartPage = () => {
         });
         return;
       }
-      if (totalQty > fresh.stock) {
+      if (totalQty > effectiveStock) {
         toast({
           variant: 'destructive',
           title: language === 'id' ? 'Stok tidak cukup' : 'Insufficient stock',
           description: language === 'id'
-            ? `Hanya ada ${fresh.stock} stok tersisa untuk ${fresh.name}, silakan sesuaikan keranjang Anda sebelum melanjutkan pembayaran`
-            : `There are only ${fresh.stock} stock available left for ${fresh.name}, please adjust your cart before proceeding check out`
+            ? `Hanya ada ${effectiveStock} stok tersisa untuk ${fresh.name}, silakan sesuaikan keranjang Anda sebelum melanjutkan pembayaran`
+            : `There are only ${effectiveStock} stock available left for ${fresh.name}, please adjust your cart before proceeding check out`
         });
         return;
       }

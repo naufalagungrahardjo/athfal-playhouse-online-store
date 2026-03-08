@@ -54,13 +54,14 @@ export const useOrderProcessing = () => {
 
       for (const [baseId, totalQty] of Object.entries(qtyByBase)) {
         const product = freshStock.find(p => p.product_id === baseId);
-        if (!product || product.stock <= 0) {
+        const effectiveStock = product?.is_sold_out ? 0 : (product?.stock ?? 0);
+        if (!product || effectiveStock <= 0) {
           toast({ variant: "destructive", title: "Product Sold Out", description: `${product?.name || baseId} is sold out.` });
           setProcessing(false);
           return { success: false };
         }
-        if (totalQty > product.stock) {
-          toast({ variant: "destructive", title: "Insufficient Stock", description: `There are only ${product.stock} stock available left for ${product.name}, please adjust your cart before proceeding check out` });
+        if (totalQty > effectiveStock) {
+          toast({ variant: "destructive", title: "Insufficient Stock", description: `There are only ${effectiveStock} stock available left for ${product.name}, please adjust your cart before proceeding check out` });
           setProcessing(false);
           return { success: false };
         }
