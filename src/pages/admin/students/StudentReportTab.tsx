@@ -38,6 +38,7 @@ type Props = {
 
 export default function StudentReportTab({ programs, students, enrollments, attendance }: Props) {
   const [selectedStudentId, setSelectedStudentId] = useState("");
+  const [classFilter, setClassFilter] = useState("all");
   const [meetingFilter, setMeetingFilter] = useState("all");
   const [aiSummary, setAiSummary] = useState("");
   const [summaryLoading, setSummaryLoading] = useState(false);
