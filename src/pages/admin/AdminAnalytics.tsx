@@ -18,6 +18,8 @@ import {
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#a855f7', '#ef4444'];
 
+type TimeGranularity = 'daily' | 'monthly' | 'yearly';
+
 interface OrderWithItems {
   id: string;
   created_at: string;
@@ -27,6 +29,15 @@ interface OrderWithItems {
   items: { product_id: string; product_name: string; quantity: number; product_price: number }[];
 }
 
+const formatDateKey = (dateStr: string, granularity: TimeGranularity): string => {
+  const d = new Date(dateStr);
+  switch (granularity) {
+    case 'daily': return format(d, 'yyyy-MM-dd');
+    case 'monthly': return format(d, 'yyyy-MM');
+    case 'yearly': return format(d, 'yyyy');
+  }
+};
+
 const AdminAnalytics = () => {
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
   const [categories, setCategories] = useState<{ slug: string; title: string }[]>([]);
@@ -35,6 +46,7 @@ const AdminAnalytics = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [timeGranularity, setTimeGranularity] = useState<TimeGranularity>('daily');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -72,7 +84,6 @@ const AdminAnalytics = () => {
     return orders.filter(order => {
       // Status filter
       if (statusFilter === 'all') {
-        // Exclude cancelled by default when "all" is selected
         if (order.status === 'cancelled') return false;
       } else if (order.status !== statusFilter) {
         return false;
@@ -98,16 +109,27 @@ const AdminAnalytics = () => {
     return order.items.filter(item => productCategoryMap[item.product_id] === categoryFilter);
   };
 
-  // 1) Daily sales quantity line chart
-  const dailySalesData = useMemo(() => {
+  // 1) Sales quantity line chart (by granularity)
+  const salesQuantityData = useMemo(() => {
     const map: Record<string, number> = {};
     filteredOrders.forEach(order => {
-      const day = format(new Date(order.created_at), 'yyyy-MM-dd');
+      const key = formatDateKey(order.created_at, timeGranularity);
       const qty = getFilteredItems(order).reduce((sum, item) => sum + item.quantity, 0);
-      map[day] = (map[day] || 0) + qty;
+      map[key] = (map[key] || 0) + qty;
     });
     return Object.entries(map).sort().map(([date, qty]) => ({ date, quantity: qty }));
-  }, [filteredOrders, categoryFilter]);
+  }, [filteredOrders, categoryFilter, timeGranularity]);
+
+  // NEW: Sales value line chart (by granularity)
+  const salesValueData = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredOrders.forEach(order => {
+      const key = formatDateKey(order.created_at, timeGranularity);
+      const val = getFilteredItems(order).reduce((sum, item) => sum + item.product_price * item.quantity, 0);
+      map[key] = (map[key] || 0) + val;
+    });
+    return Object.entries(map).sort().map(([date, value]) => ({ date, value }));
+  }, [filteredOrders, categoryFilter, timeGranularity]);
 
   // 2) Product proportion pie chart
   const productProportionData = useMemo(() => {
@@ -151,7 +173,7 @@ const AdminAnalytics = () => {
       .sort((a, b) => b.quantity - a.quantity);
   }, [filteredOrders, categoryFilter]);
 
-  const renderPercentageLabel = ({ name, percentage }: any) => `${name}: ${percentage}%`;
+  const granularityLabel = timeGranularity === 'daily' ? 'Daily' : timeGranularity === 'monthly' ? 'Monthly' : 'Yearly';
 
   if (loading) {
     return (
@@ -170,25 +192,52 @@ const AdminAnalytics = () => {
       <div className="flex flex-wrap gap-4 items-end">
         <div>
           <label className="text-sm font-medium block mb-1">Date Range</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className={cn("w-[260px] justify-start text-left font-normal", !dateRange && "text-muted-foreground")}>
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateRange?.from ? (
-                  dateRange.to ? `${format(dateRange.from, 'PP')} - ${format(dateRange.to, 'PP')}` : format(dateRange.from, 'PP')
-                ) : 'All time'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="range"
-                selected={dateRange}
-                onSelect={setDateRange}
-                numberOfMonths={2}
-                className="p-3 pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className={cn("w-[260px] justify-start text-left font-normal", !dateRange && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange?.from ? (
+                    dateRange.to ? `${format(dateRange.from, 'PP')} - ${format(dateRange.to, 'PP')}` : format(dateRange.from, 'PP')
+                  ) : 'All Lifetime'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={2}
+                  className="p-3 pointer-events-auto"
+                />
+                <div className="p-3 border-t">
+                  <Button
+                    variant="ghost"
+                    className="w-full text-sm"
+                    onClick={() => setDateRange(undefined)}
+                  >
+                    Show All Lifetime Data
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+            {dateRange && (
+              <Button variant="ghost" size="sm" onClick={() => setDateRange(undefined)}>Clear</Button>
+            )}
+          </div>
+        </div>
+        <div>
+          <label className="text-sm font-medium block mb-1">Time Granularity</label>
+          <Select value={timeGranularity} onValueChange={(v) => setTimeGranularity(v as TimeGranularity)}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="daily">Daily</SelectItem>
+              <SelectItem value="monthly">Monthly</SelectItem>
+              <SelectItem value="yearly">Yearly</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <label className="text-sm font-medium block mb-1">Product Category</label>
@@ -220,27 +269,46 @@ const AdminAnalytics = () => {
             </SelectContent>
           </Select>
         </div>
-        {dateRange && (
-          <Button variant="ghost" onClick={() => setDateRange(undefined)}>Clear dates</Button>
-        )}
       </div>
 
-      {/* 1) Daily Sales Line Chart */}
+      {/* 1) Sales Quantity Line Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>Daily Product Sales Quantity</CardTitle>
+          <CardTitle>{granularityLabel} Product Sales Quantity</CardTitle>
         </CardHeader>
         <CardContent>
-          {dailySalesData.length === 0 ? (
+          {salesQuantityData.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">No sales data available</p>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={dailySalesData}>
+              <LineChart data={salesQuantityData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                 <YAxis allowDecimals={false} />
                 <Tooltip />
                 <Line type="monotone" dataKey="quantity" stroke="#8884d8" strokeWidth={2} dot={{ r: 3 }} name="Quantity Sold" />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* NEW: Sales Value Line Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{granularityLabel} Product Sales Value</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {salesValueData.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">No sales data available</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={salesValueData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                <Line type="monotone" dataKey="value" stroke="#82ca9d" strokeWidth={2} dot={{ r: 3 }} name="Sales Value" />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -267,7 +335,7 @@ const AdminAnalytics = () => {
                     cx="50%"
                     cy="50%"
                     outerRadius={100}
-                    label={({ name, percentage }) => `${percentage}%`}
+                    label={({ percentage }) => `${percentage}%`}
                   >
                     {productProportionData.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -299,7 +367,7 @@ const AdminAnalytics = () => {
                     cx="50%"
                     cy="50%"
                     outerRadius={100}
-                    label={({ name, percentage }) => `${percentage}%`}
+                    label={({ percentage }) => `${percentage}%`}
                   >
                     {paymentProportionData.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
