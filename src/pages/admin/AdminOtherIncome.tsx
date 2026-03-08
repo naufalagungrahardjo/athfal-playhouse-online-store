@@ -47,7 +47,10 @@ const AdminOtherIncome = () => {
 
   useEffect(() => { fetchAll(); }, []);
 
-  const fundMap = Object.fromEntries(fundSources.map(f => [f.id, f.name]));
+  const fundMap = Object.fromEntries([
+    ...fundSources.map(f => [f.id, f.name]),
+    ...paymentMethods.map(p => [`pm_${p.id}`, p.bank_name]),
+  ]);
 
   const addIncome = async () => {
     if (!description.trim() || !amount) {

@@ -292,7 +292,18 @@ const AdminExpense = () => {
                   <Select value={expFundId} onValueChange={setExpFundId}>
                     <SelectTrigger><SelectValue placeholder="Select fund source" /></SelectTrigger>
                     <SelectContent>
-                      {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                      {fundSources.length > 0 && (
+                        <>
+                          <SelectItem value="_label_funds" disabled className="text-xs font-semibold text-muted-foreground">Fund Sources</SelectItem>
+                          {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                        </>
+                      )}
+                      {paymentMethods.length > 0 && (
+                        <>
+                          <SelectItem value="_label_pm" disabled className="text-xs font-semibold text-muted-foreground">Payment Methods</SelectItem>
+                          {paymentMethods.map(p => <SelectItem key={`pm_${p.id}`} value={`pm_${p.id}`}>{p.bank_name}</SelectItem>)}
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
