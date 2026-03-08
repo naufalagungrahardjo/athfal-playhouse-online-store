@@ -1,6 +1,6 @@
 
 import {
-  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList, BookOpen
+  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList, BookOpen, Wallet
 } from 'lucide-react';
 
 export type NavigationItem = {
@@ -24,6 +24,7 @@ export function getAdminNavigation(role: string | null): NavigationGroup[] {
         { name: 'Products', href: '/admin/products', icon: Package },
         { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
         { name: 'Promo Codes', href: '/admin/promo-codes', icon: CreditCard },
+        { name: 'Expense', href: '/admin/expense', icon: Wallet },
       ],
     },
     {
@@ -59,7 +60,7 @@ export function getAdminNavigation(role: string | null): NavigationGroup[] {
 
   // For other roles, filter items within groups and remove empty groups
   const allAllowed: Record<string, string[]> = {
-    orders_manager: ["/admin", "/admin/products", "/admin/orders", "/admin/analytics", "/admin/promo-codes"],
+    orders_manager: ["/admin", "/admin/products", "/admin/orders", "/admin/analytics", "/admin/promo-codes", "/admin/expense"],
     order_staff: ["/admin/orders"],
     content_manager: ["/admin/blogs", "/admin/banners", "/admin/website-copy", "/admin/categories", "/admin/faq", "/admin/testimonials"],
     content_staff: ["/admin/blogs"],
