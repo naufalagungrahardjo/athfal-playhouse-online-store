@@ -212,7 +212,17 @@ const AdminAnalytics = () => {
 
   // === Expense analytics ===
   const expCatMap = useMemo(() => Object.fromEntries(expenseCategories.map(c => [c.id, c.name])), [expenseCategories]);
-  const expFundMap = useMemo(() => Object.fromEntries(fundSources.map(f => [f.id, f.name])), [fundSources]);
+  const expFundMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    fundSources.forEach(f => { map[f.id] = f.name; });
+    paymentMethods.forEach(p => { map[`pm_${p.id}`] = p.bank_name; });
+    return map;
+  }, [fundSources, paymentMethods]);
+
+  const allFundOptions = useMemo(() => [
+    ...fundSources.map(f => ({ id: f.id, name: f.name })),
+    ...paymentMethods.map(p => ({ id: `pm_${p.id}`, name: p.bank_name })),
+  ], [fundSources, paymentMethods]);
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter(e => {
