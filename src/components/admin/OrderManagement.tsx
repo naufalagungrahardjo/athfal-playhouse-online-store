@@ -106,6 +106,7 @@ export const OrderManagement = ({ onClose, onOrderUpdate }: OrderManagementProps
               <SelectItem value="shipped">Shipped</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectItem value="refund">Refund</SelectItem>
             </SelectContent>
           </Select>
         </div>
