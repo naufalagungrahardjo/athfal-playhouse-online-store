@@ -586,6 +586,76 @@ const AdminAnalytics = () => {
             </Card>
           </div>
         </TabsContent>
+        {/* Other Income Tab */}
+        <TabsContent value="income" className="space-y-6">
+          <div className="flex flex-wrap gap-4 items-end">
+            <div>
+              <label className="text-sm font-medium block mb-1">Time Granularity</label>
+              <Select value={incGranularity} onValueChange={(v) => setIncGranularity(v as TimeGranularity)}>
+                <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Fund Destination</label>
+              <Select value={incFundFilter} onValueChange={setIncFundFilter}>
+                <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Destinations</SelectItem>
+                  {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-sm text-muted-foreground">Total Other Income (filtered)</div>
+              <div className="text-3xl font-bold text-green-600">{formatCurrency(totalIncome)}</div>
+            </CardContent>
+          </Card>
+
+          {/* Bar Chart - Income Trend (bar charts clearly show discrete income amounts per period) */}
+          <Card>
+            <CardHeader><CardTitle>{incGranLabel} Other Income Trend</CardTitle></CardHeader>
+            <CardContent>
+              {incomeTrendData.length === 0 ? <p className="text-muted-foreground text-center py-8">No income data</p> : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={incomeTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Bar dataKey="total" fill="#22c55e" name="Other Income" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Pie Chart - By Fund Destination */}
+          <Card>
+            <CardHeader><CardTitle>Income by Fund Destination</CardTitle></CardHeader>
+            <CardContent>
+              {incomeFundPieData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                <ResponsiveContainer width="100%" height={350}>
+                  <PieChart>
+                    <Pie data={incomeFundPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ percentage }) => `${percentage}%`}>
+                      {incomeFundPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
       </Tabs>
     </div>
   );
