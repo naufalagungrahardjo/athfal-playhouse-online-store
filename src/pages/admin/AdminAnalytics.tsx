@@ -70,7 +70,7 @@ const AdminAnalytics = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes] = await Promise.all([
+      const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes, incRes] = await Promise.all([
         supabase.from('orders').select('id, created_at, payment_method, status, total_amount').order('created_at', { ascending: true }),
         supabase.from('order_items').select('order_id, product_id, product_name, quantity, product_price'),
         supabase.from('categories').select('slug, title'),
@@ -78,6 +78,7 @@ const AdminAnalytics = () => {
         supabase.from('expenses' as any).select('*').order('date', { ascending: true }),
         supabase.from('expense_categories' as any).select('id, name'),
         supabase.from('expense_fund_sources' as any).select('id, name'),
+        supabase.from('other_income' as any).select('*').order('date', { ascending: true }),
       ]);
 
       const itemsByOrder: Record<string, any[]> = {};
