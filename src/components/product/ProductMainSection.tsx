@@ -87,9 +87,9 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
           </div>
           <div className="flex items-center mb-4">
             <span className="font-medium text-gray-700 w-24">{language === 'id' ? 'Stok' : 'Stock'}:</span>
-            <span className={`${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {product.stock > 0
-                ? (language === 'id' ? `${product.stock} tersedia` : `${product.stock} available`)
+            <span className={`${effectiveStock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {effectiveStock > 0
+                ? (language === 'id' ? `${effectiveStock} tersedia` : `${effectiveStock} available`)
                 : (language === 'id' ? 'Habis' : 'Out of stock')}
             </span>
           </div>
