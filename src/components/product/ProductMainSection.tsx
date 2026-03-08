@@ -193,7 +193,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
           <Button
             onClick={handleBuyNow}
             className="flex-1 bg-athfal-pink hover:bg-athfal-pink/80 text-white"
-            disabled={product.stock <= 0}
+            disabled={effectiveStock <= 0}
           >
             {language === 'id' ? 'Beli Sekarang' : 'Buy Now'}
           </Button>
