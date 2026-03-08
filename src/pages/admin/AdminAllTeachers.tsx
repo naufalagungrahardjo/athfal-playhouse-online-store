@@ -192,6 +192,7 @@ export default function AdminAllTeachers() {
     return summary;
   }, [filteredLeaves, teachers]);
 
+  const handleLeaveStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("teacher_leaves").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) {
       toast({ variant: "destructive", title: "Error", description: "Failed to update leave status." });
