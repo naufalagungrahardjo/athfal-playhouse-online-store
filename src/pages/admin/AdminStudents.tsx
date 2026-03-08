@@ -10,7 +10,7 @@ const AdminStudents = () => {
   const {
     programs, students, enrollments, attendance, loading,
     addProgram, updateProgram, deleteProgram,
-    addStudent, updateStudentEnrollments, deleteStudent,
+    addStudent, updateStudent, updateStudentEnrollments, deleteStudent,
     saveAttendance,
   } = useStudents();
 
@@ -31,7 +31,7 @@ const AdminStudents = () => {
           <ProgramsStudentsTab
             programs={programs} students={students}
             addProgram={addProgram} updateProgram={updateProgram} deleteProgram={deleteProgram}
-            addStudent={addStudent} updateStudentEnrollments={updateStudentEnrollments} deleteStudent={deleteStudent}
+            addStudent={addStudent} updateStudent={updateStudent} updateStudentEnrollments={updateStudentEnrollments} deleteStudent={deleteStudent}
           />
         </TabsContent>
         <TabsContent value="attendance">

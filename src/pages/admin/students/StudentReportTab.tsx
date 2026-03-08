@@ -38,6 +38,7 @@ type Props = {
 
 export default function StudentReportTab({ programs, students, enrollments, attendance }: Props) {
   const [selectedStudentId, setSelectedStudentId] = useState("");
+  const [classFilter, setClassFilter] = useState("all");
   const [meetingFilter, setMeetingFilter] = useState("all");
   const [aiSummary, setAiSummary] = useState("");
   const [summaryLoading, setSummaryLoading] = useState(false);
@@ -45,10 +46,23 @@ export default function StudentReportTab({ programs, students, enrollments, atte
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
 
+  // Filter students by class
+  const filteredStudents = useMemo(() => {
+    if (classFilter === "all") return students;
+    const enrolledStudentIds = new Set(
+      enrollments.filter(e => e.program_id === classFilter).map(e => e.student_id)
+    );
+    return students.filter(s => enrolledStudentIds.has(s.id));
+  }, [students, enrollments, classFilter]);
+
   const studentEnrollments = useMemo(() => {
     if (!selectedStudentId) return [];
-    return enrollments.filter(e => e.student_id === selectedStudentId);
-  }, [enrollments, selectedStudentId]);
+    let filtered = enrollments.filter(e => e.student_id === selectedStudentId);
+    if (classFilter !== "all") {
+      filtered = filtered.filter(e => e.program_id === classFilter);
+    }
+    return filtered;
+  }, [enrollments, selectedStudentId, classFilter]);
 
   const studentAttendance = useMemo(() => {
     const enrollIds = new Set(studentEnrollments.map(e => e.id));
@@ -167,13 +181,27 @@ export default function StudentReportTab({ programs, students, enrollments, atte
         <CardContent className="pt-4">
           <div className="flex flex-wrap items-end gap-4">
             <div className="min-w-[200px]">
+              <Label>Class</Label>
+              <Select value={classFilter} onValueChange={v => { setClassFilter(v); setSelectedStudentId(""); setAiSummary(""); }}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Classes</SelectItem>
+                  {programs.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="min-w-[200px]">
               <Label>Student</Label>
               <Select value={selectedStudentId} onValueChange={v => { setSelectedStudentId(v); setMeetingFilter("all"); setAiSummary(""); }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a student" />
                 </SelectTrigger>
                 <SelectContent>
-                  {students.map(s => (
+                  {filteredStudents.map(s => (
                     <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                   ))}
                 </SelectContent>

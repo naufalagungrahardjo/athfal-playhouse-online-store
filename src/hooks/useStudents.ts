@@ -100,6 +100,13 @@ export function useStudents() {
   };
 
   // Student CRUD
+  const updateStudent = async (id: string, name: string) => {
+    const { error } = await supabase.from("students" as any).update({ name, updated_at: new Date().toISOString() } as any).eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Student updated" });
+    fetchAll();
+  };
+
   const addStudent = async (name: string, programIds: string[]) => {
     const { data, error } = await supabase.from("students" as any).insert({ name } as any).select().single();
     if (error || !data) { toast({ title: "Error", description: error?.message, variant: "destructive" }); return; }
@@ -149,7 +156,7 @@ export function useStudents() {
   return {
     programs, students, enrollments, attendance, loading,
     addProgram, updateProgram, deleteProgram,
-    addStudent, updateStudentEnrollments, deleteStudent,
+    addStudent, updateStudent, updateStudentEnrollments, deleteStudent,
     saveAttendance, refetch: fetchAll,
   };
 }

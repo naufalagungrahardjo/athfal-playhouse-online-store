@@ -17,13 +17,14 @@ type Props = {
   updateProgram: (id: string, p: Partial<ClassProgram>) => Promise<void>;
   deleteProgram: (id: string) => Promise<void>;
   addStudent: (name: string, programIds: string[]) => Promise<void>;
+  updateStudent: (id: string, name: string) => Promise<void>;
   updateStudentEnrollments: (studentId: string, programIds: string[]) => Promise<void>;
   deleteStudent: (id: string) => Promise<void>;
 };
 
 export default function ProgramsStudentsTab({
   programs, students, addProgram, updateProgram, deleteProgram,
-  addStudent, updateStudentEnrollments, deleteStudent,
+  addStudent, updateStudent, updateStudentEnrollments, deleteStudent,
 }: Props) {
   // Program form
   const [progName, setProgName] = useState("");
@@ -37,6 +38,7 @@ export default function ProgramsStudentsTab({
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [editPrograms, setEditPrograms] = useState<string[]>([]);
+  const [editStudentName, setEditStudentName] = useState("");
   const [enrollDialogOpen, setEnrollDialogOpen] = useState(false);
 
   const handleAddProgram = async () => {
@@ -58,12 +60,16 @@ export default function ProgramsStudentsTab({
 
   const openEditEnrollments = (s: Student) => {
     setEditingStudent(s);
+    setEditStudentName(s.name);
     setEditPrograms(s.enrolled_programs);
     setEnrollDialogOpen(true);
   };
 
-  const saveEnrollments = async () => {
+  const saveStudentEdit = async () => {
     if (!editingStudent) return;
+    if (editStudentName.trim() && editStudentName !== editingStudent.name) {
+      await updateStudent(editingStudent.id, editStudentName.trim());
+    }
     await updateStudentEnrollments(editingStudent.id, editPrograms);
     setEnrollDialogOpen(false);
     setEditingStudent(null);
@@ -227,22 +233,31 @@ export default function ProgramsStudentsTab({
       <Dialog open={enrollDialogOpen} onOpenChange={setEnrollDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Enrollments — {editingStudent?.name}</DialogTitle>
+            <DialogTitle>Edit Student</DialogTitle>
           </DialogHeader>
-          <div className="space-y-2">
-            {programs.map(p => (
-              <label key={p.id} className="flex items-center gap-2">
-                <Checkbox
-                  checked={editPrograms.includes(p.id)}
-                  onCheckedChange={checked => {
-                    setEditPrograms(prev => checked ? [...prev, p.id] : prev.filter(x => x !== p.id));
-                  }}
-                />
-                {p.name}
-              </label>
-            ))}
+          <div className="space-y-4">
+            <div>
+              <Label>Student Name</Label>
+              <Input value={editStudentName} onChange={e => setEditStudentName(e.target.value)} placeholder="Student name" />
+            </div>
+            <div>
+              <Label>Enrolled Programs</Label>
+              <div className="space-y-2 mt-1">
+                {programs.map(p => (
+                  <label key={p.id} className="flex items-center gap-2">
+                    <Checkbox
+                      checked={editPrograms.includes(p.id)}
+                      onCheckedChange={checked => {
+                        setEditPrograms(prev => checked ? [...prev, p.id] : prev.filter(x => x !== p.id));
+                      }}
+                    />
+                    {p.name}
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
-          <Button onClick={saveEnrollments} className="mt-4 w-full">Save Enrollments</Button>
+          <Button onClick={saveStudentEdit} className="mt-4 w-full">Save Changes</Button>
         </DialogContent>
       </Dialog>
     </div>
