@@ -87,6 +87,9 @@ export const useProducts = () => {
     return products.find(product => product.id === id);
   };
 
+  // Public-facing: filter out hidden products
+  const visibleProducts = products.filter(p => !p.is_hidden);
+
   return {
     products,
     loading,
