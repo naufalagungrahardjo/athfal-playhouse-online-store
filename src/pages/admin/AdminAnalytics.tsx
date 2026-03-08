@@ -380,10 +380,11 @@ const AdminAnalytics = () => {
       <h1 className="text-3xl font-bold">Analytics</h1>
 
       <Tabs defaultValue="sales">
-        <TabsList>
-          <TabsTrigger value="sales">Sales Analytics</TabsTrigger>
-          <TabsTrigger value="expense">Expense Analytics</TabsTrigger>
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="sales">Sales</TabsTrigger>
+          <TabsTrigger value="expense">Expense</TabsTrigger>
           <TabsTrigger value="income">Other Income</TabsTrigger>
+          <TabsTrigger value="net">Net Income</TabsTrigger>
         </TabsList>
 
         {/* Sales Tab */}
