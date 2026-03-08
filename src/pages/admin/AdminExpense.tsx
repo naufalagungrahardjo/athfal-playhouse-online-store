@@ -14,7 +14,6 @@ import { formatCurrency } from '@/lib/utils';
 
 type ExpenseCategory = { id: string; name: string };
 type FundSource = { id: string; name: string };
-type PaymentMethodOption = { id: string; bank_name: string };
 type Expense = {
   id: string;
   description: string;
@@ -28,7 +27,6 @@ type Expense = {
 const AdminExpense = () => {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [fundSources, setFundSources] = useState<FundSource[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodOption[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('setup');
@@ -51,15 +49,13 @@ const AdminExpense = () => {
 
   const fetchAll = async () => {
     setLoading(true);
-    const [catsRes, fundsRes, expRes, pmRes] = await Promise.all([
+    const [catsRes, fundsRes, expRes] = await Promise.all([
       supabase.from('expense_categories' as any).select('id, name').order('name'),
       supabase.from('expense_fund_sources' as any).select('id, name').order('name'),
       supabase.from('expenses' as any).select('*').order('date', { ascending: false }),
-      supabase.from('payment_methods').select('id, bank_name').eq('active', true).order('bank_name'),
     ]);
     setCategories((catsRes.data as any) || []);
     setFundSources((fundsRes.data as any) || []);
-    setPaymentMethods((pmRes.data as PaymentMethodOption[]) || []);
     setExpenses((expRes.data as any) || []);
     setLoading(false);
   };
@@ -116,22 +112,6 @@ const AdminExpense = () => {
     fetchAll();
   };
 
-  // Resolve pm_ prefixed IDs by finding/creating a matching fund source
-  const resolveFundSourceId = async (value: string): Promise<string | null> => {
-    if (!value) return null;
-    if (!value.startsWith('pm_')) return value;
-    const pmId = value.replace('pm_', '');
-    const pm = paymentMethods.find(p => p.id === pmId);
-    if (!pm) return null;
-    // Check if a fund source with same name already exists
-    const { data: existing } = await supabase.from('expense_fund_sources' as any).select('id').eq('name', pm.bank_name).maybeSingle();
-    if (existing) return (existing as any).id;
-    // Create one
-    const { data: created, error } = await supabase.from('expense_fund_sources' as any).insert({ name: pm.bank_name } as any).select('id').single();
-    if (error || !created) return null;
-    return (created as any).id;
-  };
-
   // Expense CRUD
   const resetExpenseForm = () => {
     setExpDesc(''); setExpCatId(''); setExpFundId(''); setExpAmount('');
@@ -143,11 +123,10 @@ const AdminExpense = () => {
       toast({ title: 'Please fill description and amount', variant: 'destructive' });
       return;
     }
-    const resolvedFundId = await resolveFundSourceId(expFundId);
     const payload: any = {
       description: expDesc.trim(),
       category_id: expCatId || null,
-      fund_source_id: resolvedFundId,
+      fund_source_id: expFundId || null,
       amount: parseInt(expAmount),
       date: expDate,
       updated_at: new Date().toISOString(),
@@ -182,17 +161,7 @@ const AdminExpense = () => {
   };
 
   const catMap = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c.name])), [categories]);
-  const fundMap = useMemo(() => {
-    const map: Record<string, string> = {};
-    fundSources.forEach(f => { map[f.id] = f.name; });
-    paymentMethods.forEach(p => { map[`pm_${p.id}`] = p.bank_name; });
-    return map;
-  }, [fundSources, paymentMethods]);
-
-  const allFundOptions = useMemo(() => [
-    ...fundSources.map(f => ({ id: f.id, name: f.name, group: 'Fund Sources' })),
-    ...paymentMethods.map(p => ({ id: `pm_${p.id}`, name: p.bank_name, group: 'Payment Methods' })),
-  ], [fundSources, paymentMethods]);
+  const fundMap = useMemo(() => Object.fromEntries(fundSources.map(f => [f.id, f.name])), [fundSources]);
 
   if (loading) return <div className="p-6">Loading...</div>;
 
@@ -309,18 +278,7 @@ const AdminExpense = () => {
                   <Select value={expFundId} onValueChange={setExpFundId}>
                     <SelectTrigger><SelectValue placeholder="Select fund source" /></SelectTrigger>
                     <SelectContent>
-                      {fundSources.length > 0 && (
-                        <>
-                          <SelectItem value="_label_funds" disabled className="text-xs font-semibold text-muted-foreground">Fund Sources</SelectItem>
-                          {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
-                        </>
-                      )}
-                      {paymentMethods.length > 0 && (
-                        <>
-                          <SelectItem value="_label_pm" disabled className="text-xs font-semibold text-muted-foreground">Payment Methods</SelectItem>
-                          {paymentMethods.map(p => <SelectItem key={`pm_${p.id}`} value={`pm_${p.id}`}>{p.bank_name}</SelectItem>)}
-                        </>
-                      )}
+                      {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>

@@ -71,7 +71,6 @@ const AdminAnalytics = () => {
   const [expenses, setExpenses] = useState<ExpenseRow[]>([]);
   const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>([]);
   const [fundSources, setFundSources] = useState<FundSource[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<{ id: string; bank_name: string }[]>([]);
   const [expGranularity, setExpGranularity] = useState<TimeGranularity>('monthly');
   const [expCatFilter, setExpCatFilter] = useState('all');
   const [expFundFilter, setExpFundFilter] = useState('all');
@@ -87,7 +86,7 @@ const AdminAnalytics = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes, incRes, pmRes] = await Promise.all([
+      const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes, incRes] = await Promise.all([
         supabase.from('orders').select('id, created_at, payment_method, status, total_amount').order('created_at', { ascending: true }),
         supabase.from('order_items').select('order_id, product_id, product_name, quantity, product_price'),
         supabase.from('categories').select('slug, title'),
@@ -96,7 +95,6 @@ const AdminAnalytics = () => {
         supabase.from('expense_categories' as any).select('id, name'),
         supabase.from('expense_fund_sources' as any).select('id, name'),
         supabase.from('other_income' as any).select('*').order('date', { ascending: true }),
-        supabase.from('payment_methods').select('id, bank_name').eq('active', true),
       ]);
 
       const itemsByOrder: Record<string, any[]> = {};
@@ -111,7 +109,6 @@ const AdminAnalytics = () => {
       setExpenses((expRes.data as any) || []);
       setExpenseCategories((expCatsRes.data as any) || []);
       setFundSources((fundsRes.data as any) || []);
-      setPaymentMethods((pmRes.data as any) || []);
       setOtherIncomes((incRes.data as any) || []);
       setLoading(false);
     };
@@ -212,21 +209,7 @@ const AdminAnalytics = () => {
 
   // === Expense analytics ===
   const expCatMap = useMemo(() => Object.fromEntries(expenseCategories.map(c => [c.id, c.name])), [expenseCategories]);
-  const expFundMap = useMemo(() => {
-    const map: Record<string, string> = {};
-    const existingNames = new Set<string>();
-    fundSources.forEach(f => { map[f.id] = f.name; existingNames.add(f.name); });
-    paymentMethods.forEach(p => { if (!existingNames.has(p.bank_name)) map[`pm_${p.id}`] = p.bank_name; });
-    return map;
-  }, [fundSources, paymentMethods]);
-
-  const allFundOptions = useMemo(() => {
-    const existingNames = new Set(fundSources.map(f => f.name));
-    return [
-      ...fundSources.map(f => ({ id: f.id, name: f.name })),
-      ...paymentMethods.filter(p => !existingNames.has(p.bank_name)).map(p => ({ id: `pm_${p.id}`, name: p.bank_name })),
-    ];
-  }, [fundSources, paymentMethods]);
+  const expFundMap = useMemo(() => Object.fromEntries(fundSources.map(f => [f.id, f.name])), [fundSources]);
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter(e => {
@@ -589,7 +572,7 @@ const AdminAnalytics = () => {
                 <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Sources</SelectItem>
-                  {allFundOptions.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                  {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -699,7 +682,7 @@ const AdminAnalytics = () => {
                 <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Destinations</SelectItem>
-                  {allFundOptions.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                  {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

@@ -11,12 +11,10 @@ import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 
 type FundSource = { id: string; name: string };
-type PaymentMethodOption = { id: string; bank_name: string };
 type OtherIncome = { id: string; description: string; amount: number; fund_source_id: string | null; date: string };
 
 const AdminOtherIncome = () => {
   const [fundSources, setFundSources] = useState<FundSource[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodOption[]>([]);
   const [incomes, setIncomes] = useState<OtherIncome[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,48 +32,28 @@ const AdminOtherIncome = () => {
   const [editDate, setEditDate] = useState('');
 
   const fetchAll = async () => {
-    const [fundsRes, incomeRes, pmRes] = await Promise.all([
+    const [fundsRes, incomeRes] = await Promise.all([
       supabase.from('expense_fund_sources' as any).select('id, name'),
       supabase.from('other_income' as any).select('*').order('date', { ascending: false }),
-      supabase.from('payment_methods').select('id, bank_name').eq('active', true).order('bank_name'),
     ]);
     setFundSources((fundsRes.data as any) || []);
-    setPaymentMethods((pmRes.data as PaymentMethodOption[]) || []);
     setIncomes((incomeRes.data as any) || []);
     setLoading(false);
   };
 
   useEffect(() => { fetchAll(); }, []);
 
-  const fundMap = Object.fromEntries([
-    ...fundSources.map(f => [f.id, f.name]),
-    ...paymentMethods.map(p => [`pm_${p.id}`, p.bank_name]),
-  ]);
-
-  // Resolve pm_ prefixed IDs by finding/creating a matching fund source
-  const resolveFundSourceId = async (value: string): Promise<string | null> => {
-    if (!value) return null;
-    if (!value.startsWith('pm_')) return value;
-    const pmId = value.replace('pm_', '');
-    const pm = paymentMethods.find(p => p.id === pmId);
-    if (!pm) return null;
-    const { data: existing } = await supabase.from('expense_fund_sources' as any).select('id').eq('name', pm.bank_name).maybeSingle();
-    if (existing) return (existing as any).id;
-    const { data: created, error } = await supabase.from('expense_fund_sources' as any).insert({ name: pm.bank_name } as any).select('id').single();
-    if (error || !created) return null;
-    return (created as any).id;
-  };
+  const fundMap = Object.fromEntries(fundSources.map(f => [f.id, f.name]));
 
   const addIncome = async () => {
     if (!description.trim() || !amount) {
       toast.error('Please fill in description and amount');
       return;
     }
-    const resolvedFundId = await resolveFundSourceId(fundSourceId);
     const { error } = await supabase.from('other_income' as any).insert({
       description: description.trim(),
       amount: parseInt(amount),
-      fund_source_id: resolvedFundId,
+      fund_source_id: fundSourceId || null,
       date,
     } as any);
     if (error) { toast.error(error.message); return; }
@@ -100,11 +78,10 @@ const AdminOtherIncome = () => {
 
   const saveEdit = async () => {
     if (!editingId || !editDesc.trim() || !editAmount) return;
-    const resolvedFundId = await resolveFundSourceId(editFund);
     await supabase.from('other_income' as any).update({
       description: editDesc.trim(),
       amount: parseInt(editAmount),
-      fund_source_id: resolvedFundId,
+      fund_source_id: editFund || null,
       date: editDate,
       updated_at: new Date().toISOString(),
     } as any).eq('id', editingId);
@@ -128,19 +105,8 @@ const AdminOtherIncome = () => {
             <Input type="number" placeholder="Amount (Rp)" value={amount} onChange={e => setAmount(e.target.value)} />
             <Select value={fundSourceId} onValueChange={setFundSourceId}>
               <SelectTrigger><SelectValue placeholder="Fund Destination" /></SelectTrigger>
-              <SelectContent position="popper" className="min-w-[280px] max-h-[300px]">
-                {fundSources.length > 0 && (
-                  <>
-                    <SelectItem value="_label_funds" disabled className="text-xs font-semibold text-muted-foreground">Fund Sources</SelectItem>
-                    {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
-                  </>
-                )}
-                {paymentMethods.length > 0 && (
-                  <>
-                    <SelectItem value="_label_pm" disabled className="text-xs font-semibold text-muted-foreground">Payment Methods</SelectItem>
-                    {paymentMethods.map(p => <SelectItem key={`pm_${p.id}`} value={`pm_${p.id}`}>{p.bank_name}</SelectItem>)}
-                  </>
-                )}
+              <SelectContent>
+                {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
               </SelectContent>
             </Select>
             <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
@@ -176,19 +142,8 @@ const AdminOtherIncome = () => {
                         <TableCell>
                           <Select value={editFund} onValueChange={setEditFund}>
                             <SelectTrigger><SelectValue placeholder="Fund Destination" /></SelectTrigger>
-                            <SelectContent position="popper" className="min-w-[280px] max-h-[300px]">
-                              {fundSources.length > 0 && (
-                                <>
-                                  <SelectItem value="_label_funds" disabled className="text-xs font-semibold text-muted-foreground">Fund Sources</SelectItem>
-                                  {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
-                                </>
-                              )}
-                              {paymentMethods.length > 0 && (
-                                <>
-                                  <SelectItem value="_label_pm" disabled className="text-xs font-semibold text-muted-foreground">Payment Methods</SelectItem>
-                                  {paymentMethods.map(p => <SelectItem key={`pm_${p.id}`} value={`pm_${p.id}`}>{p.bank_name}</SelectItem>)}
-                                </>
-                              )}
+                            <SelectContent>
+                              {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </TableCell>
