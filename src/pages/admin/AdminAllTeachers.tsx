@@ -91,7 +91,11 @@ export default function AdminAllTeachers() {
   const [filterMonth, setFilterMonth] = useState<string>("all");
   const [filterYear, setFilterYear] = useState<string>("all");
 
-  // Drive folder edits
+  // Leave filters
+  const [leaveTeacherFilter, setLeaveTeacherFilter] = useState<string>("all");
+  const [leaveMonth, setLeaveMonth] = useState<string>("all");
+  const [leaveYear, setLeaveYear] = useState<string>("all");
+
   const [driveEdits, setDriveEdits] = useState<Record<string, string>>({});
   const [deleting, setDeleting] = useState(false);
 
@@ -152,6 +156,41 @@ export default function AdminAllTeachers() {
     }
     return summary;
   }, [filteredAttendances, teachers]);
+
+  // Filtered leaves
+  const filteredLeaves = useMemo(() => {
+    return leaves.filter(l => {
+      if (leaveTeacherFilter !== "all" && l.teacher_email !== leaveTeacherFilter) return false;
+      if (leaveMonth !== "all") {
+        const month = new Date(l.start_date).getMonth();
+        if (month !== parseInt(leaveMonth)) return false;
+      }
+      if (leaveYear !== "all") {
+        const year = new Date(l.start_date).getFullYear();
+        if (year !== parseInt(leaveYear)) return false;
+      }
+      return true;
+    });
+  }, [leaves, leaveTeacherFilter, leaveMonth, leaveYear]);
+
+  // Leave summary per teacher
+  const leaveSummary = useMemo(() => {
+    const summary: Record<string, { total: number; approved: number; rejected: number; pending: number }> = {};
+    for (const email of teachers) {
+      summary[email] = { total: 0, approved: 0, rejected: 0, pending: 0 };
+    }
+    for (const l of filteredLeaves) {
+      if (!summary[l.teacher_email]) {
+        summary[l.teacher_email] = { total: 0, approved: 0, rejected: 0, pending: 0 };
+      }
+      const s = summary[l.teacher_email];
+      s.total += 1;
+      if (l.status === "approved") s.approved += 1;
+      else if (l.status === "rejected") s.rejected += 1;
+      else s.pending += 1;
+    }
+    return summary;
+  }, [filteredLeaves, teachers]);
 
   const handleLeaveStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("teacher_leaves").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
@@ -472,7 +511,81 @@ export default function AdminAllTeachers() {
                 <Button variant="outline" size="sm" onClick={exportLeavesCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              {/* Filters */}
+              <div className="flex flex-wrap gap-3 items-end">
+                <div>
+                  <Label>Teacher</Label>
+                  <Select value={leaveTeacherFilter} onValueChange={setLeaveTeacherFilter}>
+                    <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Teachers</SelectItem>
+                      {teachers.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Month</Label>
+                  <Select value={leaveMonth} onValueChange={setLeaveMonth}>
+                    <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Months</SelectItem>
+                      {getMonthOptions().map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Year</Label>
+                  <Select value={leaveYear} onValueChange={setLeaveYear}>
+                    <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Years</SelectItem>
+                      {getYearOptions().map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {(leaveTeacherFilter !== "all" || leaveMonth !== "all" || leaveYear !== "all") && (
+                  <Button variant="ghost" onClick={() => { setLeaveTeacherFilter("all"); setLeaveMonth("all"); setLeaveYear("all"); }}>Clear filters</Button>
+                )}
+              </div>
+
+              {/* Leave Summary Table */}
+              <Card className="bg-muted/40">
+                <CardHeader className="pb-2 pt-4">
+                  <CardTitle className="text-base">Leave Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="pb-4">
+                  <div className="overflow-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Teacher</TableHead>
+                          <TableHead className="text-center">Total</TableHead>
+                          <TableHead className="text-center">Approved</TableHead>
+                          <TableHead className="text-center">Rejected</TableHead>
+                          <TableHead className="text-center">Pending</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Object.entries(leaveSummary).map(([email, s]) => (
+                          <TableRow key={email}>
+                            <TableCell className="font-medium">{email}</TableCell>
+                            <TableCell className="text-center">{s.total}</TableCell>
+                            <TableCell className="text-center">{s.approved}</TableCell>
+                            <TableCell className="text-center">{s.rejected}</TableCell>
+                            <TableCell className="text-center">{s.pending}</TableCell>
+                          </TableRow>
+                        ))}
+                        {Object.keys(leaveSummary).length === 0 && (
+                          <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No data</TableCell></TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Detailed Leave Table */}
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -485,7 +598,7 @@ export default function AdminAllTeachers() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {leaves.map(l => (
+                  {filteredLeaves.map(l => (
                     <TableRow key={l.id}>
                       <TableCell className="font-medium">{l.teacher_email}</TableCell>
                       <TableCell>{l.start_date}</TableCell>
@@ -510,7 +623,7 @@ export default function AdminAllTeachers() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {leaves.length === 0 && (
+                  {filteredLeaves.length === 0 && (
                     <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No leave requests</TableCell></TableRow>
                   )}
                 </TableBody>
