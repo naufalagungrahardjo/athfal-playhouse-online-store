@@ -43,7 +43,7 @@ export const useOrderProcessing = () => {
       const baseIds = Object.keys(qtyByBase);
       const { data: freshStock, error: stockError } = await supabase
         .from('products')
-        .select('product_id, stock, name')
+        .select('product_id, stock, name, is_sold_out')
         .in('product_id', baseIds);
 
       if (stockError || !freshStock) {
