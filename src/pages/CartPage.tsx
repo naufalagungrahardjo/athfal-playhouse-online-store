@@ -58,7 +58,9 @@ const CartPage = () => {
 
   const handleIncreaseQuantity = (productId: string, currentQuantity: number, maxStock: number) => {
     const aggregateQty = getAggregateQuantity(productId);
-    const productName = items.find(item => item.product.id === productId)?.product.name || 'this product';
+    const fullProductName = items.find(item => item.product.id === productId)?.product.name || 'this product';
+    // Extract base product name (remove variant part after " - ")
+    const productName = fullProductName.split(' - ')[0];
     if (aggregateQty >= maxStock) {
       toast({
         variant: 'destructive',
