@@ -127,7 +127,10 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
       case 'completed':
         return 'bg-green-100 text-green-800';
       case 'cancelled':
+      case 'cancelled':
         return 'bg-red-100 text-red-800';
+      case 'refund':
+        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -292,6 +295,7 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
                     <SelectItem value="shipped">Shipped</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
                     <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="refund">Refund</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

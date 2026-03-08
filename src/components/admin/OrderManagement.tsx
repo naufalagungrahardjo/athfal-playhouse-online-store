@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Eye, Package, Truck, CheckCircle, XCircle, Clock, Search } from 'lucide-react';
+import { Eye, Package, Truck, CheckCircle, XCircle, Clock, Search, DollarSign } from 'lucide-react';
 import { useOrders } from '@/hooks/useOrders';
 import { formatCurrency } from '@/lib/utils';
 
@@ -33,6 +33,8 @@ export const OrderManagement = ({ onClose, onOrderUpdate }: OrderManagementProps
         return <CheckCircle className="h-4 w-4" />;
       case 'cancelled':
         return <XCircle className="h-4 w-4" />;
+      case 'refund':
+        return <DollarSign className="h-4 w-4" />;
       default:
         return <Clock className="h-4 w-4" />;
     }
@@ -50,6 +52,8 @@ export const OrderManagement = ({ onClose, onOrderUpdate }: OrderManagementProps
         return 'bg-green-100 text-green-800';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
+      case 'refund':
+        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -104,6 +108,7 @@ export const OrderManagement = ({ onClose, onOrderUpdate }: OrderManagementProps
               <SelectItem value="shipped">Shipped</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectItem value="refund">Refund</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -213,6 +218,7 @@ export const OrderManagement = ({ onClose, onOrderUpdate }: OrderManagementProps
                       <SelectItem value="shipped">Shipped</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="refund">Refund</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
