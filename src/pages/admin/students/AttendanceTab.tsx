@@ -40,16 +40,23 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
   const { user } = useAuth();
   const [filterStart, setFilterStart] = useState("");
   const [filterEnd, setFilterEnd] = useState("");
+  const [classFilter, setClassFilter] = useState("all");
   const teacherEmail = user?.email || "";
 
   const filteredPrograms = useMemo(() => {
-    if (!filterStart && !filterEnd) return programs;
-    return programs.filter(p => {
-      if (filterStart && p.end_date < filterStart) return false;
-      if (filterEnd && p.start_date > filterEnd) return false;
-      return true;
-    });
-  }, [programs, filterStart, filterEnd]);
+    let filtered = programs;
+    if (classFilter !== "all") {
+      filtered = filtered.filter(p => p.id === classFilter);
+    }
+    if (filterStart || filterEnd) {
+      filtered = filtered.filter(p => {
+        if (filterStart && p.end_date < filterStart) return false;
+        if (filterEnd && p.start_date > filterEnd) return false;
+        return true;
+      });
+    }
+    return filtered;
+  }, [programs, filterStart, filterEnd, classFilter]);
 
   // Local edits state keyed by `enrollmentId-meetingNumber`
   const [edits, setEdits] = useState<Record<string, Partial<StudentAttendance>>>({});
