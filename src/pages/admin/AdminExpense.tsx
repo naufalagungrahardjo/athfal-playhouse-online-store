@@ -188,8 +188,21 @@ const AdminExpense = () => {
                 <div className="space-y-1">
                   {categories.map(cat => (
                     <div key={cat.id} className="flex items-center justify-between p-2 rounded hover:bg-muted">
-                      <span className="text-sm">{cat.name}</span>
-                      <Button variant="ghost" size="icon" onClick={() => deleteCategory(cat.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      {editingCatId === cat.id ? (
+                        <div className="flex gap-2 flex-1 mr-2">
+                          <Input value={editingCatName} onChange={e => setEditingCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveEditCat()} className="h-8 text-sm" />
+                          <Button size="sm" variant="outline" onClick={saveEditCat}>Save</Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditingCatId(null)}>Cancel</Button>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="text-sm">{cat.name}</span>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => startEditCat(cat)}><Pencil className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => deleteCategory(cat.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                   {categories.length === 0 && <p className="text-sm text-muted-foreground">No categories yet</p>}
