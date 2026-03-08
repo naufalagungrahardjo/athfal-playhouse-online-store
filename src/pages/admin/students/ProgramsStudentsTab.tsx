@@ -60,6 +60,7 @@ export default function ProgramsStudentsTab({
 
   const openEditEnrollments = (s: Student) => {
     setEditingStudent(s);
+    setEditStudentName(s.name);
     setEditPrograms(s.enrolled_programs);
     setEnrollDialogOpen(true);
   };
