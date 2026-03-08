@@ -10,7 +10,7 @@ const AdminStudents = () => {
   const {
     programs, students, enrollments, attendance, loading,
     addProgram, updateProgram, deleteProgram,
-    addStudent, updateStudentEnrollments, deleteStudent,
+    addStudent, updateStudent, updateStudentEnrollments, deleteStudent,
     saveAttendance,
   } = useStudents();
 
