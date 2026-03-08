@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NavigationGroup } from "./helpers/getAdminNavigation";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 type Props = {
   sidebarOpen: boolean;
