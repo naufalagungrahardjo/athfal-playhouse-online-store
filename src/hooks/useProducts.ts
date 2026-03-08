@@ -92,6 +92,7 @@ export const useProducts = () => {
 
   return {
     products,
+    visibleProducts,
     loading,
     error,
     fetchProducts,

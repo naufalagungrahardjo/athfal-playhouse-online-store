@@ -8,11 +8,11 @@ import { ProductCard } from './ProductCard';
 
 export const FeaturedProductsSection = () => {
   const { language } = useLanguage();
-  const { products, loading } = useProducts();
+  const { visibleProducts, loading } = useProducts();
   const { getLowestPrice } = useAllProductVariants();
   
-  // Get featured products (first 4 products from database)
-  const featuredProducts = products.slice(0, 4);
+  // Get featured products (first 4 visible products from database)
+  const featuredProducts = visibleProducts.slice(0, 4);
 
   return (
     <section className="py-16">

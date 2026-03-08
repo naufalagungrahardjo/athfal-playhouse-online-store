@@ -84,7 +84,7 @@ const ProductListPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProducts.map((product) => {
-              const isSoldOut = product.stock <= 0;
+              const isSoldOut = product.is_sold_out || product.stock <= 0;
               const displayPrice = product.dbId ? getLowestPrice(product.dbId, product.price) : product.price;
               const hasVariants = displayPrice < product.price;
               return (
