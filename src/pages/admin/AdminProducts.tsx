@@ -37,6 +37,8 @@ const AdminProducts = () => {
       first_payment: p.first_payment ?? 0,
       installment: p.installment ?? 0,
       installment_months: p.installment_months ?? 0,
+      is_hidden: (p as any).is_hidden ?? false,
+      is_sold_out: (p as any).is_sold_out ?? false,
     }));
     setProducts(formatted);
     setLoading(false);

@@ -27,7 +27,7 @@ const formatCurrency = (amount: number) => {
 };
 
 export const ProductCard = ({ product, lowestPrice }: ProductCardProps) => {
-  const isSoldOut = product.stock !== undefined && product.stock <= 0;
+  const isSoldOut = product.is_sold_out || (product.stock !== undefined && product.stock <= 0);
   const displayPrice = lowestPrice !== undefined ? lowestPrice : product.price;
   const hasVariants = lowestPrice !== undefined && lowestPrice < product.price;
 

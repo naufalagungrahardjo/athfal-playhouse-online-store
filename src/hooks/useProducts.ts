@@ -36,6 +36,8 @@ export const useProducts = () => {
         installment: product.installment,
         installment_months: product.installment_months,
         media: product.media as any,
+        is_hidden: (product as any).is_hidden ?? false,
+        is_sold_out: (product as any).is_sold_out ?? false,
       }));
 
       setProducts(formattedProducts);

@@ -46,6 +46,7 @@ export const ProductList = ({ products, onEdit, onDelete, onToggleUpdated }: Pro
           product={product}
           onEdit={onEdit}
           onDelete={onDelete}
+          onToggleUpdated={onToggleUpdated}
         />
       ))}
     </div>
