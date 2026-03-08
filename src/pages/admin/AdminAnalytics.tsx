@@ -96,6 +96,7 @@ const AdminAnalytics = () => {
         supabase.from('expense_categories' as any).select('id, name'),
         supabase.from('expense_fund_sources' as any).select('id, name'),
         supabase.from('other_income' as any).select('*').order('date', { ascending: true }),
+        supabase.from('payment_methods').select('id, bank_name').eq('active', true),
       ]);
 
       const itemsByOrder: Record<string, any[]> = {};
