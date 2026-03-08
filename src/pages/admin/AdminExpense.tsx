@@ -221,8 +221,21 @@ const AdminExpense = () => {
                 <div className="space-y-1">
                   {fundSources.map(fund => (
                     <div key={fund.id} className="flex items-center justify-between p-2 rounded hover:bg-muted">
-                      <span className="text-sm">{fund.name}</span>
-                      <Button variant="ghost" size="icon" onClick={() => deleteFundSource(fund.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      {editingFundId === fund.id ? (
+                        <div className="flex gap-2 flex-1 mr-2">
+                          <Input value={editingFundName} onChange={e => setEditingFundName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveEditFund()} className="h-8 text-sm" />
+                          <Button size="sm" variant="outline" onClick={saveEditFund}>Save</Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditingFundId(null)}>Cancel</Button>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="text-sm">{fund.name}</span>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => startEditFund(fund)}><Pencil className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => deleteFundSource(fund.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                   {fundSources.length === 0 && <p className="text-sm text-muted-foreground">No fund sources yet</p>}
