@@ -16,7 +16,6 @@ type Props = {
 const SidebarNav: React.FC<{ groups: NavigationGroup[]; onItemClick?: () => void }> = ({ groups, onItemClick }) => {
   const location = useLocation();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
-    // Auto-open group containing current route
     const init: Record<string, boolean> = {};
     groups.forEach(g => {
       if (g.items.some(i => location.pathname === i.href)) {
@@ -71,6 +70,35 @@ const SidebarNav: React.FC<{ groups: NavigationGroup[]; onItemClick?: () => void
           </div>
         );
       })}
+    </div>
+  );
+};
+
+// Preserves scroll position across route changes
+const DesktopSidebarScroll: React.FC<{ groups: NavigationGroup[] }> = ({ groups }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const scrollPos = useRef(0);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) {
+      const save = () => { scrollPos.current = el.scrollTop; };
+      el.addEventListener('scroll', save);
+      return () => el.removeEventListener('scroll', save);
+    }
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) {
+      requestAnimationFrame(() => { el.scrollTop = scrollPos.current; });
+    }
+  }, [location.pathname]);
+
+  return (
+    <div ref={scrollRef} className="flex-1 overflow-y-auto">
+      <SidebarNav groups={groups} />
     </div>
   );
 };
