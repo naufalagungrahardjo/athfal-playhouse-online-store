@@ -24,7 +24,7 @@ const AllProductsPage = () => {
   const { getLowestPrice } = useAllProductVariants();
   
   // Filter products based on search query
-  const filteredProducts = products.filter(product => {
+  const filteredProducts = visibleProducts.filter(product => {
     if (searchQuery.trim() === '') return true;
     const query = searchQuery.toLowerCase();
     return product.name.toLowerCase().includes(query) || 
