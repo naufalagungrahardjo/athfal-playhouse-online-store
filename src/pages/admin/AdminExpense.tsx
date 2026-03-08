@@ -29,6 +29,7 @@ const AdminExpense = () => {
   const [fundSources, setFundSources] = useState<FundSource[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('setup');
 
   // Category form
   const [newCatName, setNewCatName] = useState('');
