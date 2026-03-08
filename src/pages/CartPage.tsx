@@ -353,7 +353,7 @@ const CartPage = () => {
                 <CardContent className="p-6">
                   <div className="space-y-6">
                     {items.map((item) => {
-                      const isSoldOut = item.product.stock <= 0;
+                      const isSoldOut = item.product.is_sold_out || item.product.stock <= 0;
                       return (
                       <div key={item.product.id}>
                         <div className={`flex flex-col sm:flex-row items-start gap-4 ${isSoldOut ? 'opacity-60' : ''}`}>
