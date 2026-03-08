@@ -176,7 +176,7 @@ const AdminOtherIncome = () => {
                         <TableCell>
                           <Select value={editFund} onValueChange={setEditFund}>
                             <SelectTrigger><SelectValue placeholder="Fund Destination" /></SelectTrigger>
-                            <SelectContent>
+                            <SelectContent position="popper" className="min-w-[280px] max-h-[300px]">
                               {fundSources.length > 0 && (
                                 <>
                                   <SelectItem value="_label_funds" disabled className="text-xs font-semibold text-muted-foreground">Fund Sources</SelectItem>
