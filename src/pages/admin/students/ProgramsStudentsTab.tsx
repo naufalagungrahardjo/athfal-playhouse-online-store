@@ -233,22 +233,31 @@ export default function ProgramsStudentsTab({
       <Dialog open={enrollDialogOpen} onOpenChange={setEnrollDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Enrollments — {editingStudent?.name}</DialogTitle>
+            <DialogTitle>Edit Student</DialogTitle>
           </DialogHeader>
-          <div className="space-y-2">
-            {programs.map(p => (
-              <label key={p.id} className="flex items-center gap-2">
-                <Checkbox
-                  checked={editPrograms.includes(p.id)}
-                  onCheckedChange={checked => {
-                    setEditPrograms(prev => checked ? [...prev, p.id] : prev.filter(x => x !== p.id));
-                  }}
-                />
-                {p.name}
-              </label>
-            ))}
+          <div className="space-y-4">
+            <div>
+              <Label>Student Name</Label>
+              <Input value={editStudentName} onChange={e => setEditStudentName(e.target.value)} placeholder="Student name" />
+            </div>
+            <div>
+              <Label>Enrolled Programs</Label>
+              <div className="space-y-2 mt-1">
+                {programs.map(p => (
+                  <label key={p.id} className="flex items-center gap-2">
+                    <Checkbox
+                      checked={editPrograms.includes(p.id)}
+                      onCheckedChange={checked => {
+                        setEditPrograms(prev => checked ? [...prev, p.id] : prev.filter(x => x !== p.id));
+                      }}
+                    />
+                    {p.name}
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
-          <Button onClick={saveEnrollments} className="mt-4 w-full">Save Enrollments</Button>
+          <Button onClick={saveStudentEdit} className="mt-4 w-full">Save Changes</Button>
         </DialogContent>
       </Dialog>
     </div>
