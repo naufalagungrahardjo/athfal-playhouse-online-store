@@ -23,11 +23,11 @@ const ProductListPage = () => {
   const { category } = useParams<{ category: string }>();
   const { language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
-  const { products, loading, error, getProductsByCategory } = useProducts();
+  const { visibleProducts, loading, error, getProductsByCategory } = useProducts();
   const { categories } = useCategories();
   const { getLowestPrice } = useAllProductVariants();
-  // Get products for the current category
-  const categoryProducts = category ? getProductsByCategory(category as ProductCategory) : [];
+  // Get visible products for the current category
+  const categoryProducts = category ? visibleProducts.filter(p => p.category === category) : [];
   
   // Filter products based on search query
   const filteredProducts = categoryProducts.filter(product => {
