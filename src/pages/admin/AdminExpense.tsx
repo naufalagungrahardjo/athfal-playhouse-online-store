@@ -252,8 +252,8 @@ const AdminExpense = () => {
 
         {/* Tab 2: Expense Data */}
         <TabsContent value="expenses">
-          <Card className="mb-6">
-            <CardHeader><CardTitle>{editingExpense ? 'Edit Expense' : 'Add New Expense'}</CardTitle></CardHeader>
+          <Card className="mb-6" ref={expenseFormRef}>
+            <CardHeader><CardTitle>{editingExpense ? '✏️ Edit Expense' : 'Add New Expense'}</CardTitle></CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="lg:col-span-2">
