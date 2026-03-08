@@ -278,11 +278,73 @@ export default function AdminAllTeachers() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <Label>Month</Label>
+                  <Select value={filterMonth} onValueChange={setFilterMonth}>
+                    <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Months</SelectItem>
+                      {getMonthOptions().map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Year</Label>
+                  <Select value={filterYear} onValueChange={setFilterYear}>
+                    <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Years</SelectItem>
+                      {getYearOptions().map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div><Label>From</Label><Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} /></div>
                 <div><Label>To</Label><Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} /></div>
-                {(dateFrom || dateTo) && <Button variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); }}>Clear dates</Button>}
+                {(dateFrom || dateTo || filterMonth !== "all" || filterYear !== "all") && (
+                  <Button variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); setFilterMonth("all"); setFilterYear("all"); }}>Clear filters</Button>
+                )}
                 <Button variant="outline" onClick={exportAttendanceCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
               </div>
+
+              {/* Attendance Summary Table */}
+              <Card className="bg-muted/40">
+                <CardHeader className="pb-2 pt-4">
+                  <CardTitle className="text-base">Attendance Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="pb-4">
+                  <div className="overflow-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Teacher</TableHead>
+                          <TableHead className="text-center">Total Days</TableHead>
+                          <TableHead className="text-center">Total Sessions</TableHead>
+                          <TableHead className="text-center">Session 1</TableHead>
+                          <TableHead className="text-center">Session 2</TableHead>
+                          <TableHead className="text-center">Session 3</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Object.entries(attendanceSummary).map(([email, s]) => (
+                          <TableRow key={email}>
+                            <TableCell className="font-medium">{email}</TableCell>
+                            <TableCell className="text-center">{s.totalDays}</TableCell>
+                            <TableCell className="text-center">{s.totalSessions}</TableCell>
+                            <TableCell className="text-center">{s.session1}</TableCell>
+                            <TableCell className="text-center">{s.session2}</TableCell>
+                            <TableCell className="text-center">{s.session3}</TableCell>
+                          </TableRow>
+                        ))}
+                        {Object.keys(attendanceSummary).length === 0 && (
+                          <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No data</TableCell></TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Detailed Attendance Table */}
               <div className="overflow-auto">
                 <Table>
                   <TableHeader>
