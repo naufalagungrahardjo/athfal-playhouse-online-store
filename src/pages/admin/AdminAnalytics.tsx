@@ -303,6 +303,65 @@ const AdminAnalytics = () => {
 
   const totalIncome = useMemo(() => filteredIncomes.reduce((s, i) => s + i.amount, 0), [filteredIncomes]);
 
+  // === Net Income analytics ===
+  // Use all non-cancelled orders for net income (no category/status filter)
+  const totalSalesRevenue = useMemo(() => {
+    return orders
+      .filter(o => o.status !== 'cancelled')
+      .reduce((s, o) => s + o.total_amount, 0);
+  }, [orders]);
+
+  const totalOtherIncome = useMemo(() => otherIncomes.reduce((s, i) => s + i.amount, 0), [otherIncomes]);
+  const totalAllExpenses = useMemo(() => expenses.reduce((s, e) => s + e.amount, 0), [expenses]);
+  const netIncome = totalSalesRevenue + totalOtherIncome - totalAllExpenses;
+
+  const netGranLabel = netGranularity === 'daily' ? 'Daily' : netGranularity === 'monthly' ? 'Monthly' : 'Yearly';
+
+  // Revenue vs Expense over time (grouped bar)
+  const revenueVsExpenseData = useMemo(() => {
+    const map: Record<string, { revenue: number; expense: number; net: number }> = {};
+    // Sales revenue
+    orders.filter(o => o.status !== 'cancelled').forEach(o => {
+      const key = formatDateKey(o.created_at, netGranularity);
+      if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
+      map[key].revenue += o.total_amount;
+    });
+    // Other income
+    otherIncomes.forEach(i => {
+      const key = formatDateKey(i.date, netGranularity);
+      if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
+      map[key].revenue += i.amount;
+    });
+    // Expenses
+    expenses.forEach(e => {
+      const key = formatDateKey(e.date, netGranularity);
+      if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
+      map[key].expense += e.amount;
+    });
+    // Calculate net
+    Object.values(map).forEach(v => { v.net = v.revenue - v.expense; });
+    return Object.entries(map).sort().map(([date, vals]) => ({ date, ...vals }));
+  }, [orders, otherIncomes, expenses, netGranularity]);
+
+  // Cumulative net income over time
+  const cumulativeNetData = useMemo(() => {
+    let cumulative = 0;
+    return revenueVsExpenseData.map(d => {
+      cumulative += d.net;
+      return { date: d.date, cumulative };
+    });
+  }, [revenueVsExpenseData]);
+
+  // Revenue composition pie
+  const revenueCompositionData = useMemo(() => {
+    const data = [
+      { name: 'Sales Revenue', value: totalSalesRevenue },
+      { name: 'Other Income', value: totalOtherIncome },
+    ].filter(d => d.value > 0);
+    const total = data.reduce((s, d) => s + d.value, 0);
+    return data.map(d => ({ ...d, percentage: total > 0 ? ((d.value / total) * 100).toFixed(1) : '0' }));
+  }, [totalSalesRevenue, totalOtherIncome]);
+
   const granularityLabel = timeGranularity === 'daily' ? 'Daily' : timeGranularity === 'monthly' ? 'Monthly' : 'Yearly';
   const expGranLabel = expGranularity === 'daily' ? 'Daily' : expGranularity === 'monthly' ? 'Monthly' : 'Yearly';
   const incGranLabel = incGranularity === 'daily' ? 'Daily' : incGranularity === 'monthly' ? 'Monthly' : 'Yearly';
