@@ -91,7 +91,11 @@ export default function AdminAllTeachers() {
   const [filterMonth, setFilterMonth] = useState<string>("all");
   const [filterYear, setFilterYear] = useState<string>("all");
 
-  // Drive folder edits
+  // Leave filters
+  const [leaveTeacherFilter, setLeaveTeacherFilter] = useState<string>("all");
+  const [leaveMonth, setLeaveMonth] = useState<string>("all");
+  const [leaveYear, setLeaveYear] = useState<string>("all");
+
   const [driveEdits, setDriveEdits] = useState<Record<string, string>>({});
   const [deleting, setDeleting] = useState(false);
 
