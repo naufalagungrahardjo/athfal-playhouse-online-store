@@ -264,8 +264,9 @@ const AdminAnalytics = () => {
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="processing">Processing</SelectItem>
               <SelectItem value="shipped">Shipped</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
+               <SelectItem value="completed">Completed</SelectItem>
+               <SelectItem value="cancelled">Cancelled</SelectItem>
+               <SelectItem value="refund">Refund</SelectItem>
             </SelectContent>
           </Select>
         </div>
