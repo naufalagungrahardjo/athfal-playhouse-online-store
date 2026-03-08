@@ -102,6 +102,15 @@ const AdminExpense = () => {
     fetchAll();
   };
 
+  const startEditFund = (fund: FundSource) => { setEditingFundId(fund.id); setEditingFundName(fund.name); };
+  const saveEditFund = async () => {
+    if (!editingFundId || !editingFundName.trim()) return;
+    await supabase.from('expense_fund_sources' as any).update({ name: editingFundName.trim(), updated_at: new Date().toISOString() } as any).eq('id', editingFundId);
+    setEditingFundId(null); setEditingFundName('');
+    toast({ title: 'Fund source updated' });
+    fetchAll();
+  };
+
   // Expense CRUD
   const resetExpenseForm = () => {
     setExpDesc(''); setExpCatId(''); setExpFundId(''); setExpAmount('');
