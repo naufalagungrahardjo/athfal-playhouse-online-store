@@ -46,6 +46,7 @@ const AdminExpense = () => {
   const [expAmount, setExpAmount] = useState('');
   const [expDate, setExpDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [editingExpense, setEditingExpense] = useState<string | null>(null);
+  const expenseFormRef = useRef<HTMLDivElement>(null);
 
   const fetchAll = async () => {
     setLoading(true);
