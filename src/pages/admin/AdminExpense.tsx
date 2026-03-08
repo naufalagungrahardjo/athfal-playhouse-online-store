@@ -51,13 +51,15 @@ const AdminExpense = () => {
 
   const fetchAll = async () => {
     setLoading(true);
-    const [catsRes, fundsRes, expRes] = await Promise.all([
+    const [catsRes, fundsRes, expRes, pmRes] = await Promise.all([
       supabase.from('expense_categories' as any).select('id, name').order('name'),
       supabase.from('expense_fund_sources' as any).select('id, name').order('name'),
       supabase.from('expenses' as any).select('*').order('date', { ascending: false }),
+      supabase.from('payment_methods').select('id, bank_name').eq('active', true).order('bank_name'),
     ]);
     setCategories((catsRes.data as any) || []);
     setFundSources((fundsRes.data as any) || []);
+    setPaymentMethods((pmRes.data as PaymentMethodOption[]) || []);
     setExpenses((expRes.data as any) || []);
     setLoading(false);
   };
