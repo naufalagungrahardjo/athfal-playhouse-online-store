@@ -27,7 +27,7 @@ interface ProductListProps {
   onToggleUpdated?: () => void;
 }
 
-export const ProductList = ({ products, onEdit, onDelete }: ProductListProps) => {
+export const ProductList = ({ products, onEdit, onDelete, onToggleUpdated }: ProductListProps) => {
   if (products.length === 0) {
     return (
       <Card>
