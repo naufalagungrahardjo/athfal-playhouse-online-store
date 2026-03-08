@@ -109,6 +109,7 @@ const AdminProducts = () => {
         products={products}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onToggleUpdated={fetchAllProducts}
       />
 
       <ProductDialog
