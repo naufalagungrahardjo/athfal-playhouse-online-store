@@ -128,7 +128,7 @@ const AdminOtherIncome = () => {
             <Input type="number" placeholder="Amount (Rp)" value={amount} onChange={e => setAmount(e.target.value)} />
             <Select value={fundSourceId} onValueChange={setFundSourceId}>
               <SelectTrigger><SelectValue placeholder="Fund Destination" /></SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="min-w-[280px] max-h-[300px]">
                 {fundSources.length > 0 && (
                   <>
                     <SelectItem value="_label_funds" disabled className="text-xs font-semibold text-muted-foreground">Fund Sources</SelectItem>
