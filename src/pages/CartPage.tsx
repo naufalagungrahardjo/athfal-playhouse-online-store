@@ -258,7 +258,8 @@ const CartPage = () => {
     const appliesTo = appliedPromo.applies_to || 'all';
     if (appliesTo === 'all') return true;
     if (appliesTo === 'specific_products') {
-      return (appliedPromo.applicable_product_ids || []).includes(item.product.id);
+      const baseId = getBaseProductId(item.product.id);
+      return (appliedPromo.applicable_product_ids || []).includes(baseId);
     }
     if (appliesTo === 'specific_categories') {
       return (appliedPromo.applicable_category_slugs || []).includes(item.product.category);
