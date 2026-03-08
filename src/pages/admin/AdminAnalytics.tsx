@@ -62,6 +62,11 @@ const AdminAnalytics = () => {
   const [expCatFilter, setExpCatFilter] = useState('all');
   const [expFundFilter, setExpFundFilter] = useState('all');
 
+  // Other Income data
+  const [otherIncomes, setOtherIncomes] = useState<OtherIncomeRow[]>([]);
+  const [incGranularity, setIncGranularity] = useState<TimeGranularity>('monthly');
+  const [incFundFilter, setIncFundFilter] = useState('all');
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
