@@ -118,7 +118,7 @@ const CartPage = () => {
     const baseProductIds = [...new Set(items.map(item => getBaseProductId(item.product.id)))];
     const { data: freshStock, error: stockError } = await supabase
       .from('products')
-      .select('product_id, stock, name')
+      .select('product_id, stock, name, is_sold_out')
       .in('product_id', baseProductIds);
 
     if (stockError || !freshStock) {
