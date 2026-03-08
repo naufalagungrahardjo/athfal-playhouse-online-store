@@ -349,6 +349,21 @@ const CartPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Cart items */}
             <div className="lg:col-span-2">
+              {hasSoldOutItems && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                  <span className="text-red-600 text-lg">⚠️</span>
+                  <div>
+                    <p className="font-semibold text-red-700">
+                      {language === 'id' ? 'Beberapa produk sudah habis' : 'Some products are sold out'}
+                    </p>
+                    <p className="text-red-600 text-sm">
+                      {language === 'id' 
+                        ? 'Hapus produk yang bertanda "SOLD OUT" dari keranjang sebelum melanjutkan checkout.' 
+                        : 'Remove items marked "SOLD OUT" from your cart before proceeding to checkout.'}
+                    </p>
+                  </div>
+                </div>
+              )}
               <Card className="bg-white rounded-3xl shadow-md overflow-hidden">
                 <CardContent className="p-6">
                   <div className="space-y-6">
