@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Eye, Package, Truck, CheckCircle, XCircle, Clock, Search } from 'lucide-react';
+import { Eye, Package, Truck, CheckCircle, XCircle, Clock, Search, DollarSign } from 'lucide-react';
 import { useOrders } from '@/hooks/useOrders';
 import { formatCurrency } from '@/lib/utils';
 

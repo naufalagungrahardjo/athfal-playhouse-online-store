@@ -71,6 +71,15 @@ export function OrderStatistics({ orders, getStatusCount }: OrderStatisticsProps
           <div className="text-2xl font-bold text-red-600">{getStatusCount('cancelled')}</div>
         </CardContent>
       </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Refund</CardTitle>
+          <DollarSign className="h-4 w-4 text-orange-600" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-orange-600">{getStatusCount('refund')}</div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
