@@ -585,13 +585,13 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Expense by Fund Source</CardTitle></CardHeader>
               <CardContent>
                 {expenseFundPieData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={350}>
+                  <ResponsiveContainer width="100%" height={400}>
                     <PieChart>
-                      <Pie data={expenseFundPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ percentage }) => `${percentage}%`}>
+                      <Pie data={expenseFundPieData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={50} outerRadius={110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                         {expenseFundPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
