@@ -185,7 +185,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
             onClick={handleAddToCart}
             variant="outline"
             className="flex-1 border-athfal-pink text-athfal-pink hover:bg-athfal-pink/10"
-            disabled={product.stock <= 0}
+            disabled={effectiveStock <= 0}
           >
             <ShoppingCart className="mr-2 h-4 w-4" />
             {language === 'id' ? 'Tambah ke Keranjang' : 'Add to Cart'}
