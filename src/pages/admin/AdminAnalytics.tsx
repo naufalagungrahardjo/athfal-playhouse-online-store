@@ -33,6 +33,7 @@ interface OrderWithItems {
 type ExpenseRow = { id: string; description: string; category_id: string | null; fund_source_id: string | null; amount: number; date: string };
 type ExpenseCategory = { id: string; name: string };
 type FundSource = { id: string; name: string };
+type OtherIncomeRow = { id: string; description: string; amount: number; fund_source_id: string | null; date: string };
 
 const formatDateKey = (dateStr: string, granularity: TimeGranularity): string => {
   const d = new Date(dateStr);
