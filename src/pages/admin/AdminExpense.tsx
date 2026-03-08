@@ -165,7 +165,17 @@ const AdminExpense = () => {
   };
 
   const catMap = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c.name])), [categories]);
-  const fundMap = useMemo(() => Object.fromEntries(fundSources.map(f => [f.id, f.name])), [fundSources]);
+  const fundMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    fundSources.forEach(f => { map[f.id] = f.name; });
+    paymentMethods.forEach(p => { map[`pm_${p.id}`] = p.bank_name; });
+    return map;
+  }, [fundSources, paymentMethods]);
+
+  const allFundOptions = useMemo(() => [
+    ...fundSources.map(f => ({ id: f.id, name: f.name, group: 'Fund Sources' })),
+    ...paymentMethods.map(p => ({ id: `pm_${p.id}`, name: p.bank_name, group: 'Payment Methods' })),
+  ], [fundSources, paymentMethods]);
 
   if (loading) return <div className="p-6">Loading...</div>;
 
