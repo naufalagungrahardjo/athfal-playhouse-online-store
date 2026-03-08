@@ -172,7 +172,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
               variant="outline"
               size="icon"
               onClick={increaseQuantity}
-              disabled={product.stock <= quantity}
+              disabled={effectiveStock <= quantity}
               className="h-10 w-10"
             >
               <Plus className="h-4 w-4" />
