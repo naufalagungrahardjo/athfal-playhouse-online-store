@@ -17,6 +17,7 @@ type Props = {
   updateProgram: (id: string, p: Partial<ClassProgram>) => Promise<void>;
   deleteProgram: (id: string) => Promise<void>;
   addStudent: (name: string, programIds: string[]) => Promise<void>;
+  updateStudent: (id: string, name: string) => Promise<void>;
   updateStudentEnrollments: (studentId: string, programIds: string[]) => Promise<void>;
   deleteStudent: (id: string) => Promise<void>;
 };
