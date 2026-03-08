@@ -214,15 +214,19 @@ const AdminAnalytics = () => {
   const expCatMap = useMemo(() => Object.fromEntries(expenseCategories.map(c => [c.id, c.name])), [expenseCategories]);
   const expFundMap = useMemo(() => {
     const map: Record<string, string> = {};
-    fundSources.forEach(f => { map[f.id] = f.name; });
-    paymentMethods.forEach(p => { map[`pm_${p.id}`] = p.bank_name; });
+    const existingNames = new Set<string>();
+    fundSources.forEach(f => { map[f.id] = f.name; existingNames.add(f.name); });
+    paymentMethods.forEach(p => { if (!existingNames.has(p.bank_name)) map[`pm_${p.id}`] = p.bank_name; });
     return map;
   }, [fundSources, paymentMethods]);
 
-  const allFundOptions = useMemo(() => [
-    ...fundSources.map(f => ({ id: f.id, name: f.name })),
-    ...paymentMethods.map(p => ({ id: `pm_${p.id}`, name: p.bank_name })),
-  ], [fundSources, paymentMethods]);
+  const allFundOptions = useMemo(() => {
+    const existingNames = new Set(fundSources.map(f => f.name));
+    return [
+      ...fundSources.map(f => ({ id: f.id, name: f.name })),
+      ...paymentMethods.filter(p => !existingNames.has(p.bank_name)).map(p => ({ id: `pm_${p.id}`, name: p.bank_name })),
+    ];
+  }, [fundSources, paymentMethods]);
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter(e => {
