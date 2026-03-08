@@ -48,7 +48,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
   };
 
   const increaseQuantity = () => {
-    if (quantity < product.stock) setQuantity(quantity + 1);
+    if (quantity < effectiveStock) setQuantity(quantity + 1);
   };
 
   const decreaseQuantity = () => {
