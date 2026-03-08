@@ -23,8 +23,8 @@ export const PaymentTimeoutPage = ({ orderId, totalAmount }: PaymentTimeoutPageP
 
   const handleContactAdmin = () => {
     const message = language === 'id'
-      ? `Halo Athfal Playhouse, saya membutuhkan bantuan terkait pembayaran untuk Order ID: ${orderId?.slice(0, 8)}. Batas waktu pembayaran telah habis, namun saya sudah/belum melakukan pembayaran sebesar ${formatCurrency(totalAmount)}. Mohon bantuannya untuk melanjutkan proses pesanan saya. Terima kasih.`
-      : `Hello Athfal Playhouse, I need assistance regarding payment for Order ID: ${orderId?.slice(0, 8)}. The payment time limit has expired, but I have/have not made the payment of ${formatCurrency(totalAmount)}. Please help me continue my order process. Thank you.`;
+      ? `Halo Athfal Playhouse, saya ingin mengonfirmasi pembayaran untuk Order ID: ${orderId?.slice(0, 8)} sebesar ${formatCurrency(totalAmount)}. Batas waktu pembayaran telah habis. Mohon segera dibantu untuk memastikan ketersediaan stok dan kelanjutan pesanan saya. Terima kasih.`
+      : `Hello Athfal Playhouse, I would like to confirm my payment for Order ID: ${orderId?.slice(0, 8)} amounting to ${formatCurrency(totalAmount)}. The payment deadline has passed. Please assist me promptly to verify stock availability and proceed with my order. Thank you.`;
       
     const encodedMessage = encodeURIComponent(message);
     const whatsappNumber = '082120614748';
@@ -45,18 +45,18 @@ export const PaymentTimeoutPage = ({ orderId, totalAmount }: PaymentTimeoutPageP
               {language === 'id' ? 'Waktu Pembayaran Habis' : 'Payment Time Expired'}
             </h1>
             <p className="text-gray-600">
-              {language === 'id' ? 'Batas waktu pembayaran 25 menit telah berakhir' : 'The 25-minute payment time limit has ended'}
+              {language === 'id' ? 'Batas waktu pembayaran 20 menit telah berakhir.' : 'The 20-minute payment deadline has passed.'}
             </p>
           </div>
 
           <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
             <h3 className="font-semibold text-yellow-800 mb-2">
-              {language === 'id' ? 'Jangan Khawatir!' : "Don't Worry!"}
+              {language === 'id' ? 'Perhatian' : 'Important Notice'}
             </h3>
             <p className="text-sm text-yellow-700 leading-relaxed">
               {language === 'id' 
-                ? 'Jika Anda sudah melakukan pembayaran, pesanan Anda tetap akan diproses. Silakan hubungi admin kami untuk konfirmasi. Jika belum, Anda masih bisa melakukan pembayaran dan menghubungi admin untuk melanjutkan proses.'
-                : 'If you have already made the payment, your order will still be processed. Please contact our admin for confirmation. If not, you can still make the payment and contact admin to continue the process.'}
+                ? 'Jika Anda telah melakukan pembayaran, segera hubungi admin melalui WhatsApp untuk konfirmasi. Harap diperhatikan bahwa ketersediaan stok tidak dapat kami jamin setelah batas waktu berakhir. Semakin cepat Anda menghubungi kami, semakin besar kemungkinan pesanan Anda dapat diproses.'
+                : 'If you have completed the payment, please contact our admin via WhatsApp immediately for confirmation. Please note that stock availability cannot be guaranteed once the payment deadline has passed. The sooner you reach out, the more likely we can fulfill your order.'}
             </p>
           </div>
 
@@ -80,8 +80,8 @@ export const PaymentTimeoutPage = ({ orderId, totalAmount }: PaymentTimeoutPageP
           <div className="mt-6 pt-6 border-t border-gray-200">
             <p className="text-sm text-gray-500">
               {language === 'id' 
-                ? 'Admin kami siap membantu Anda 24/7'
-                : 'Our admin is ready to help you 24/7'}
+                ? 'Tim kami akan merespons secepat mungkin.'
+                : 'Our team will respond as soon as possible.'}
             </p>
           </div>
         </CardContent>

@@ -48,7 +48,7 @@ const OrderDetailsPage = () => {
       const orderTime = new Date(order.created_at).getTime();
       const currentTime = Date.now();
       const elapsed = Math.floor((currentTime - orderTime) / 1000);
-      const remaining = Math.max(0, (30 * 60) - elapsed);
+      const remaining = Math.max(0, (20 * 60) - elapsed);
       setTimeLeft(remaining);
     }
   }, [order?.created_at]);
