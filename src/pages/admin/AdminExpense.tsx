@@ -14,6 +14,7 @@ import { formatCurrency } from '@/lib/utils';
 
 type ExpenseCategory = { id: string; name: string };
 type FundSource = { id: string; name: string };
+type PaymentMethodOption = { id: string; bank_name: string };
 type Expense = {
   id: string;
   description: string;
