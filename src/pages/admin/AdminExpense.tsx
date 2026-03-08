@@ -29,6 +29,7 @@ const AdminExpense = () => {
   const [fundSources, setFundSources] = useState<FundSource[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('setup');
 
   // Category form
   const [newCatName, setNewCatName] = useState('');
@@ -168,7 +169,7 @@ const AdminExpense = () => {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Expense Management</h1>
 
-      <Tabs defaultValue="setup">
+      <Tabs defaultValue="setup" value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="setup">Categories & Fund Sources</TabsTrigger>
           <TabsTrigger value="expenses">Expense Data</TabsTrigger>
