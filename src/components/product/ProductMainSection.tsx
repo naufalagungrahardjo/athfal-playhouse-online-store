@@ -116,88 +116,102 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
           )}
         </div>
 
-        {/* Variant selector */}
-        {!variantsLoading && variants.length > 0 && (
-          <div className="mb-6">
-            <label className="font-medium text-gray-700 block mb-3">
-              {language === 'id' ? 'Pilih Opsi' : 'Choose Option'}:
-            </label>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => setSelectedVariant(null)}
-                className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
-                  selectedVariant === null
-                    ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
-                    : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
-                }`}
-              >
-                <span className="block">{language === 'id' ? 'Harga Normal' : 'Normal Price'}</span>
-                <span className="block text-xs mt-0.5">{formatCurrency(product.price)}</span>
-              </button>
-              {variants.map(variant => (
-                <button
-                  key={variant.id}
-                  onClick={() => setSelectedVariant(variant)}
-                  className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
-                    selectedVariant?.id === variant.id
-                      ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
-                      : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
-                  }`}
+        {effectiveStock > 0 ? (
+          <>
+            {/* Variant selector */}
+            {!variantsLoading && variants.length > 0 && (
+              <div className="mb-6">
+                <label className="font-medium text-gray-700 block mb-3">
+                  {language === 'id' ? 'Pilih Opsi' : 'Choose Option'}:
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => setSelectedVariant(null)}
+                    className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                      selectedVariant === null
+                        ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
+                        : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
+                    }`}
+                  >
+                    <span className="block">{language === 'id' ? 'Harga Normal' : 'Normal Price'}</span>
+                    <span className="block text-xs mt-0.5">{formatCurrency(product.price)}</span>
+                  </button>
+                  {variants.map(variant => (
+                    <button
+                      key={variant.id}
+                      onClick={() => setSelectedVariant(variant)}
+                      className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                        selectedVariant?.id === variant.id
+                          ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
+                          : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
+                      }`}
+                    >
+                      <span className="block">{variant.name}</span>
+                      <span className="block text-xs mt-0.5">{formatCurrency(variant.price)}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Quantity selector */}
+            <div className="mb-6">
+              <label className="font-medium text-gray-700 block mb-2">
+                {language === 'id' ? 'Jumlah' : 'Quantity'}:
+              </label>
+              <div className="flex items-center">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={decreaseQuantity}
+                  disabled={quantity <= 1}
+                  className="h-10 w-10"
                 >
-                  <span className="block">{variant.name}</span>
-                  <span className="block text-xs mt-0.5">{formatCurrency(variant.price)}</span>
-                </button>
-              ))}
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="mx-4 w-10 text-center">{quantity}</span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={increaseQuantity}
+                  disabled={effectiveStock <= quantity}
+                  className="h-10 w-10"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
+
+            {/* Action buttons */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button
+                onClick={handleAddToCart}
+                variant="outline"
+                className="flex-1 border-athfal-pink text-athfal-pink hover:bg-athfal-pink/10"
+              >
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                {language === 'id' ? 'Tambah ke Keranjang' : 'Add to Cart'}
+              </Button>
+              <Button
+                onClick={handleBuyNow}
+                className="flex-1 bg-athfal-pink hover:bg-athfal-pink/80 text-white"
+              >
+                {language === 'id' ? 'Beli Sekarang' : 'Buy Now'}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className="mt-6 p-6 bg-red-50 border border-red-200 rounded-lg text-center">
+            <p className="text-red-600 font-bold text-lg mb-2">
+              {language === 'id' ? 'Produk ini sudah habis' : 'This product is sold out'}
+            </p>
+            <p className="text-red-500 text-sm">
+              {language === 'id' 
+                ? 'Produk tidak dapat ditambahkan ke keranjang saat ini.' 
+                : 'This product cannot be added to cart at this time.'}
+            </p>
           </div>
         )}
-
-        {/* Quantity selector */}
-        <div className="mb-6">
-          <label className="font-medium text-gray-700 block mb-2">
-            {language === 'id' ? 'Jumlah' : 'Quantity'}:
-          </label>
-          <div className="flex items-center">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={decreaseQuantity}
-              disabled={quantity <= 1}
-              className="h-10 w-10"
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <span className="mx-4 w-10 text-center">{quantity}</span>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={increaseQuantity}
-              disabled={effectiveStock <= quantity}
-              className="h-10 w-10"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-        {/* Action buttons */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button
-            onClick={handleAddToCart}
-            variant="outline"
-            className="flex-1 border-athfal-pink text-athfal-pink hover:bg-athfal-pink/10"
-            disabled={effectiveStock <= 0}
-          >
-            <ShoppingCart className="mr-2 h-4 w-4" />
-            {language === 'id' ? 'Tambah ke Keranjang' : 'Add to Cart'}
-          </Button>
-          <Button
-            onClick={handleBuyNow}
-            className="flex-1 bg-athfal-pink hover:bg-athfal-pink/80 text-white"
-            disabled={effectiveStock <= 0}
-          >
-            {language === 'id' ? 'Beli Sekarang' : 'Buy Now'}
-          </Button>
-        </div>
       </div>
     </div>
   );
