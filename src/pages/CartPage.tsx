@@ -58,13 +58,14 @@ const CartPage = () => {
 
   const handleIncreaseQuantity = (productId: string, currentQuantity: number, maxStock: number) => {
     const aggregateQty = getAggregateQuantity(productId);
+    const productName = items.find(item => item.product.id === productId)?.product.name || 'this product';
     if (aggregateQty >= maxStock) {
       toast({
         variant: 'destructive',
         title: language === 'id' ? 'Stok tidak cukup' : 'Insufficient stock',
         description: language === 'id'
-          ? `Total kuantitas untuk produk ini (${aggregateQty}) sudah mencapai batas stok (${maxStock}).`
-          : `Total quantity for this product (${aggregateQty}) has reached the stock limit (${maxStock}).`
+          ? `Hanya ada ${maxStock} stok tersisa untuk ${productName}, silakan sesuaikan keranjang Anda sebelum melanjutkan pembayaran`
+          : `There are only ${maxStock} stock available left for ${productName}, please adjust your cart before proceeding check out`
       });
       return;
     }

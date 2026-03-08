@@ -60,7 +60,7 @@ export const useOrderProcessing = () => {
           return { success: false };
         }
         if (totalQty > product.stock) {
-          toast({ variant: "destructive", title: "Insufficient Stock", description: `Only ${product.stock} of ${product.name} available (requested ${totalQty}).` });
+          toast({ variant: "destructive", title: "Insufficient Stock", description: `There are only ${product.stock} stock available left for ${product.name}, please adjust your cart before proceeding check out` });
           setProcessing(false);
           return { success: false };
         }
