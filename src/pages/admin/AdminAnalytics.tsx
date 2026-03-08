@@ -80,6 +80,9 @@ const AdminAnalytics = () => {
   const [incGranularity, setIncGranularity] = useState<TimeGranularity>('monthly');
   const [incFundFilter, setIncFundFilter] = useState('all');
 
+  // Net Income
+  const [netGranularity, setNetGranularity] = useState<TimeGranularity>('monthly');
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
