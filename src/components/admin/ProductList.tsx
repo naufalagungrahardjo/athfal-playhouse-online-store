@@ -16,12 +16,15 @@ interface ProductListData {
   first_payment: number;
   installment: number;
   installment_months: number;
+  is_hidden?: boolean;
+  is_sold_out?: boolean;
 }
 
 interface ProductListProps {
   products: ProductListData[];
   onEdit: (product: ProductListData) => void;
   onDelete: (productId: string) => void;
+  onToggleUpdated?: () => void;
 }
 
 export const ProductList = ({ products, onEdit, onDelete }: ProductListProps) => {
