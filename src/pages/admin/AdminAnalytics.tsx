@@ -787,29 +787,29 @@ const AdminAnalytics = () => {
         {/* Net Income Tab */}
         <TabsContent value="net" className="space-y-6">
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-sm text-muted-foreground">Sales Revenue</div>
-                <div className="text-2xl font-bold">{formatCurrency(totalSalesRevenue)}</div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <Card className="overflow-hidden">
+              <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+                <div className="text-xs sm:text-sm text-muted-foreground">Sales Revenue</div>
+                <div className="text-base sm:text-2xl font-bold truncate">{formatCurrency(totalSalesRevenue)}</div>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-sm text-muted-foreground">Other Income</div>
-                <div className="text-2xl font-bold">{formatCurrency(totalOtherIncome)}</div>
+            <Card className="overflow-hidden">
+              <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+                <div className="text-xs sm:text-sm text-muted-foreground">Other Income</div>
+                <div className="text-base sm:text-2xl font-bold truncate">{formatCurrency(totalOtherIncome)}</div>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-sm text-muted-foreground">Total Expenses</div>
-                <div className="text-2xl font-bold text-destructive">{formatCurrency(totalAllExpenses)}</div>
+            <Card className="overflow-hidden">
+              <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+                <div className="text-xs sm:text-sm text-muted-foreground">Total Expenses</div>
+                <div className="text-base sm:text-2xl font-bold text-destructive truncate">{formatCurrency(totalAllExpenses)}</div>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-sm text-muted-foreground">Net Income</div>
-                <div className={`text-2xl font-bold ${netIncome >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+            <Card className="overflow-hidden">
+              <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+                <div className="text-xs sm:text-sm text-muted-foreground">Net Income</div>
+                <div className={`text-base sm:text-2xl font-bold truncate ${netIncome >= 0 ? 'text-green-600' : 'text-destructive'}`}>
                   {netIncome < 0 ? '-' : ''}{formatCurrency(Math.abs(netIncome))}
                 </div>
               </CardContent>
