@@ -34,6 +34,7 @@ export type Database = {
       }
       admin_accounts: {
         Row: {
+          allowed_menus: string[] | null
           created_at: string | null
           email: string
           id: string
@@ -41,6 +42,7 @@ export type Database = {
           role: Database["public"]["Enums"]["admin_role"]
         }
         Insert: {
+          allowed_menus?: string[] | null
           created_at?: string | null
           email: string
           id?: string
@@ -48,6 +50,7 @@ export type Database = {
           role: Database["public"]["Enums"]["admin_role"]
         }
         Update: {
+          allowed_menus?: string[] | null
           created_at?: string | null
           email?: string
           id?: string
