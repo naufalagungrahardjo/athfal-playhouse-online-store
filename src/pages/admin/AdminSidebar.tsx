@@ -12,9 +12,11 @@ type Props = {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   navigation: NavigationGroup[];
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
 };
 
-const SidebarNav: React.FC<{ groups: NavigationGroup[]; onItemClick?: () => void }> = ({ groups, onItemClick }) => {
+const SidebarNav: React.FC<{ groups: NavigationGroup[]; onItemClick?: () => void; collapsed?: boolean }> = ({ groups, onItemClick, collapsed = false }) => {
   const location = useLocation();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     // Auto-open group containing current route
