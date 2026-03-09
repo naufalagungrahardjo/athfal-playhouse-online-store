@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { user, isAdmin, loading } = useAuth();
   const wasAdmin = useRef(false);
   const [allowedMenus, setAllowedMenus] = useState<string[] | null>(null);
