@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/utils/logger';
 
 export interface AppUser {
   id: string;
@@ -19,7 +20,6 @@ export const useUserManagement = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      console.log('Fetching users from database...');
       
       const { data, error } = await supabase
         .from('users')
@@ -27,14 +27,13 @@ export const useUserManagement = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching users:', error);
+        logger.error('Error fetching users:', error);
         throw error;
       }
       
-      console.log('Users fetched:', data);
       setUsers(data || []);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      logger.error('Error fetching users:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -47,19 +46,16 @@ export const useUserManagement = () => {
 
   const deleteUser = async (userId: string) => {
     try {
-      console.log('Deleting user:', userId);
-      
       const { error } = await supabase
         .from('users')
         .delete()
         .eq('id', userId);
 
       if (error) {
-        console.error('Delete user error:', error);
+        logger.error('Delete user error:', error);
         throw error;
       }
 
-      console.log('User deleted successfully');
       toast({
         title: "Success",
         description: "User deleted successfully"
@@ -67,7 +63,7 @@ export const useUserManagement = () => {
 
       await fetchUsers();
     } catch (error) {
-      console.error('Error deleting user:', error);
+      logger.error('Error deleting user:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -78,8 +74,6 @@ export const useUserManagement = () => {
 
   const resetPassword = async (userId: string, newPassword: string) => {
     try {
-      console.log('Resetting password for user:', userId);
-      
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         throw new Error('No active session');
@@ -103,13 +97,12 @@ export const useUserManagement = () => {
         throw new Error(result.error || 'Failed to reset password');
       }
 
-      console.log('Password reset successfully');
       toast({
         title: "Success",
         description: "Password reset successfully"
       });
     } catch (error: any) {
-      console.error('Error resetting password:', error);
+      logger.error('Error resetting password:', error);
       toast({
         variant: "destructive",
         title: "Error",

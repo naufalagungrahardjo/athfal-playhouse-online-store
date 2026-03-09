@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/utils/logger';
 
 export interface PromoCode {
   id: string;
@@ -27,21 +28,19 @@ export const usePromoCodes = () => {
   const fetchPromoCodes = async () => {
     try {
       setLoading(true);
-      console.log('Fetching promo codes from database...');
       const { data, error } = await supabase
         .from('promo_codes')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Supabase promo codes error:', error);
+        logger.error('Supabase promo codes error:', error);
         throw error;
       }
       
       setPromoCodes(data || []);
-      console.log('Promo codes fetched:', data);
     } catch (error) {
-      console.error('Error fetching promo codes:', error);
+      logger.error('Error fetching promo codes:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -54,8 +53,6 @@ export const usePromoCodes = () => {
 
   const savePromoCode = async (promoCode: Omit<PromoCode, 'id' | 'created_at' | 'updated_at'> & { id?: string }) => {
     try {
-      console.log('Saving promo code:', promoCode);
-
       // Validate required fields
       if (!promoCode.code?.trim()) {
         throw new Error('Promo code is required');
@@ -81,24 +78,21 @@ export const usePromoCodes = () => {
 
       let result;
       if (promoCode.id && promoCode.id !== '' && !promoCode.id.startsWith('promo_')) {
-        // Update existing promo code
         result = await supabase
           .from('promo_codes')
           .update(promoData)
           .eq('id', promoCode.id);
       } else {
-        // Insert new promo code
         result = await supabase
           .from('promo_codes')
           .insert([promoData]);
       }
 
       if (result.error) {
-        console.error('Save promo code error:', result.error);
+        logger.error('Save promo code error:', result.error);
         throw result.error;
       }
 
-      console.log('Promo code saved successfully');
       toast({
         title: "Success",
         description: "Promo code saved successfully"
@@ -106,7 +100,7 @@ export const usePromoCodes = () => {
 
       await fetchPromoCodes();
     } catch (error) {
-      console.error('Error saving promo code:', error);
+      logger.error('Error saving promo code:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -118,18 +112,16 @@ export const usePromoCodes = () => {
 
   const deletePromoCode = async (id: string) => {
     try {
-      console.log('Deleting promo code:', id);
       const { error } = await supabase
         .from('promo_codes')
         .delete()
         .eq('id', id);
 
       if (error) {
-        console.error('Delete promo code error:', error);
+        logger.error('Delete promo code error:', error);
         throw error;
       }
 
-      console.log('Promo code deleted successfully');
       toast({
         title: "Success",
         description: "Promo code deleted successfully"
@@ -137,7 +129,7 @@ export const usePromoCodes = () => {
 
       await fetchPromoCodes();
     } catch (error) {
-      console.error('Error deleting promo code:', error);
+      logger.error('Error deleting promo code:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -149,7 +141,6 @@ export const usePromoCodes = () => {
   useEffect(() => {
     fetchPromoCodes();
 
-    // Set up real-time subscription
     const channel = supabase
       .channel('promo-codes-changes')
       .on(
@@ -160,7 +151,7 @@ export const usePromoCodes = () => {
           table: 'promo_codes'
         },
         () => {
-          console.log('Promo codes table changed, refetching...');
+          logger.log('Promo codes table changed, refetching...');
           fetchPromoCodes();
         }
       )

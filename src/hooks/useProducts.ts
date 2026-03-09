@@ -69,7 +69,7 @@ export const useProducts = () => {
           table: 'products'
         },
         () => {
-          console.log('Products table changed, refetching...');
+          logger.log('Products table changed, refetching...');
           fetchProducts();
         }
       )
