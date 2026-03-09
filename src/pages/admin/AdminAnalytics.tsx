@@ -635,7 +635,7 @@ const AdminAnalytics = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="text-sm text-muted-foreground">Total Expense (filtered)</div>
-              <div className="text-3xl font-bold">{formatCurrency(totalExpense)}</div>
+              <div className="text-xl sm:text-3xl font-bold truncate">{formatCurrency(totalExpense)}</div>
             </CardContent>
           </Card>
 
