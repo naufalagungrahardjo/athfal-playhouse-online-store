@@ -223,7 +223,7 @@ export default function ClassMaterialsTab() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {materials.map(m => (
+                {filteredMaterials.map(m => (
                   <TableRow key={m.id}>
                     <TableCell className="font-medium whitespace-nowrap">{getProgramName(m.program_id)}</TableCell>
                     <TableCell className="max-w-[300px]">{m.detail || "-"}</TableCell>
