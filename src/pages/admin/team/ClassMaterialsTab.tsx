@@ -41,12 +41,19 @@ export default function ClassMaterialsTab() {
   const [programs, setPrograms] = useState<ClassProgram[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Filter state
+  const [filterProgramId, setFilterProgramId] = useState<string>("all");
+
   // Form state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formProgramId, setFormProgramId] = useState("");
   const [formDetail, setFormDetail] = useState("");
   const [formLink, setFormLink] = useState("");
   const [showForm, setShowForm] = useState(false);
+
+  const filteredMaterials = filterProgramId === "all"
+    ? materials
+    : materials.filter(m => m.program_id === filterProgramId);
 
   const fetchData = async () => {
     setLoading(true);
@@ -140,6 +147,24 @@ export default function ClassMaterialsTab() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Filter */}
+          <div className="flex flex-wrap gap-3 items-end">
+            <div>
+              <Label>Class</Label>
+              <Select value={filterProgramId} onValueChange={setFilterProgramId}>
+                <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Classes</SelectItem>
+                  {programs.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {filterProgramId !== "all" && (
+              <Button variant="ghost" onClick={() => setFilterProgramId("all")}>Clear filter</Button>
+            )}
+          </div>
           {/* Add / Edit Form */}
           {showForm && (
             <Card className="bg-muted/40">
@@ -198,7 +223,7 @@ export default function ClassMaterialsTab() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {materials.map(m => (
+                {filteredMaterials.map(m => (
                   <TableRow key={m.id}>
                     <TableCell className="font-medium whitespace-nowrap">{getProgramName(m.program_id)}</TableCell>
                     <TableCell className="max-w-[300px]">{m.detail || "-"}</TableCell>
@@ -242,7 +267,7 @@ export default function ClassMaterialsTab() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {materials.length === 0 && (
+                {filteredMaterials.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground">
                       No materials added yet.
