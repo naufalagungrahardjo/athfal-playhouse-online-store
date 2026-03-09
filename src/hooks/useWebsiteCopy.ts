@@ -38,11 +38,17 @@ type PaymentConfirmationCopy = {
   description: CopyField;
 };
 
+type CheckoutTermsCopy = {
+  title: CopyField;
+  content: CopyField;
+};
+
 export type WebsiteCopy = {
   homePage: HomePageCopy;
   navigation: NavigationCopy;
   productCategories: ProductCategoryCopy;
   paymentConfirmation: PaymentConfirmationCopy;
+  checkoutTerms: CheckoutTermsCopy;
 };
 
 const DEFAULT_COPY: WebsiteCopy = {
