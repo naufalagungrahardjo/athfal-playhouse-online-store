@@ -212,6 +212,41 @@ export type Database = {
         }
         Relationships: []
       }
+      class_materials: {
+        Row: {
+          created_at: string
+          detail: string
+          id: string
+          link: string
+          program_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string
+          id?: string
+          link?: string
+          program_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string
+          id?: string
+          link?: string
+          program_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_materials_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "class_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_programs: {
         Row: {
           created_at: string | null
