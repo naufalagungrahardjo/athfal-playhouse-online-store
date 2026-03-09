@@ -147,6 +147,24 @@ export default function ClassMaterialsTab() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Filter */}
+          <div className="flex flex-wrap gap-3 items-end">
+            <div>
+              <Label>Class</Label>
+              <Select value={filterProgramId} onValueChange={setFilterProgramId}>
+                <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Classes</SelectItem>
+                  {programs.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {filterProgramId !== "all" && (
+              <Button variant="ghost" onClick={() => setFilterProgramId("all")}>Clear filter</Button>
+            )}
+          </div>
           {/* Add / Edit Form */}
           {showForm && (
             <Card className="bg-muted/40">
