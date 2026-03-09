@@ -59,6 +59,7 @@ const formatDateKey = (dateStr: string, granularity: TimeGranularity): string =>
 };
 
 const AdminAnalytics = () => {
+  const isMobile = useIsMobile();
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
   const [categories, setCategories] = useState<{ slug: string; title: string }[]>([]);
   const [products, setProducts] = useState<{ product_id: string; category: string }[]>([]);
