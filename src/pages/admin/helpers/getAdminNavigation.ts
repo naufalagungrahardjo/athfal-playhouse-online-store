@@ -35,6 +35,7 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
         { name: 'Admin Accounts', href: '/admin/accounts', icon: Users },
         { name: 'Users', href: '/admin/users', icon: Users },
         { name: 'Website Content', href: '/admin/website-copy', icon: Copy },
+        { name: 'Checkout Terms', href: '/admin/checkout-terms', icon: FileCheck },
         { name: 'Settings', href: '/admin/settings', icon: Settings },
         { name: 'Logs', href: '/admin/logs', icon: ListChecks },
       ],
