@@ -42,7 +42,7 @@ export const useProducts = () => {
       }));
 
       setProducts(formattedProducts);
-      console.log('Products fetched and formatted:', formattedProducts.length);
+      logger.log('Products fetched and formatted:', formattedProducts.length);
     } catch (err) {
       console.error('Error fetching products:', err);
       setError('Failed to fetch products');
