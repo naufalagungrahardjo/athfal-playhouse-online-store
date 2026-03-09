@@ -753,11 +753,11 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>{incGranLabel} Other Income Trend</CardTitle></CardHeader>
             <CardContent>
               {incomeTrendData.length === 0 ? <p className="text-muted-foreground text-center py-8">No income data</p> : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={incomeTrendData}>
+                <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
+                  <BarChart data={incomeTrendData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
                     <Bar dataKey="total" fill="#22c55e" name="Other Income" radius={[4, 4, 0, 0]} />
                   </BarChart>
