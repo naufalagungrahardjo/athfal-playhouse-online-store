@@ -27,6 +27,7 @@ interface ProductFormData {
   first_payment: number;
   installment: number;
   installment_months: number;
+  admission_date?: string;
 }
 
 interface ProductFormProps {
