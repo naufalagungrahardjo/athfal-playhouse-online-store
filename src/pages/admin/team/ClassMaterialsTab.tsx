@@ -267,7 +267,7 @@ export default function ClassMaterialsTab() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {materials.length === 0 && (
+                {filteredMaterials.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground">
                       No materials added yet.
