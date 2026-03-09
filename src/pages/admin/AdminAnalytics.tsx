@@ -996,13 +996,13 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Inflow vs Outflow by Fund</CardTitle></CardHeader>
               <CardContent>
                 {fundBalanceData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={fundBalanceData} layout="vertical">
+                  <ResponsiveContainer width="100%" height={isMobile ? 280 : 350}>
+                    <BarChart data={fundBalanceData} layout="vertical" margin={{ left: isMobile ? 10 : 0 }}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                      <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11 }} />
+                      <XAxis type="number" tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 9 : 12 }} />
+                      <YAxis type="category" dataKey="name" width={isMobile ? 70 : 120} tick={{ fontSize: isMobile ? 9 : 11 }} />
                       <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
                       <Bar dataKey="totalIn" fill="#22c55e" name="Total Inflow" radius={[0, 4, 4, 0]} />
                       <Bar dataKey="expenseOut" fill="#ef4444" name="Expense Outflow" radius={[0, 4, 4, 0]} />
                     </BarChart>
