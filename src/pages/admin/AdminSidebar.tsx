@@ -132,14 +132,28 @@ const AdminSidebar: React.FC<Props> = ({ sidebarOpen, setSidebarOpen, navigation
       </Sheet>
 
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex flex-col w-64 border-r border-gray-200">
-        <div className="px-6 py-4">
-          <Link to="/admin" className="flex items-center text-lg font-semibold">
-            Athfal Admin
+      <div className={cn(
+        "hidden md:flex flex-col border-r border-gray-200 transition-all duration-300 relative",
+        collapsed ? "w-16" : "w-64"
+      )}>
+        <div className={cn("py-4 transition-all", collapsed ? "px-2" : "px-6")}>
+          <Link to="/admin" className={cn("flex items-center text-lg font-semibold", collapsed && "justify-center")}>
+            {collapsed ? "A" : "Athfal Admin"}
           </Link>
         </div>
         <div className="flex-1 overflow-y-auto">
-          <SidebarNav groups={navigation} />
+          <SidebarNav groups={navigation} collapsed={collapsed} />
+        </div>
+        <div className="border-t border-gray-200 p-2 flex justify-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCollapsed(!collapsed)}
+            className="h-8 w-8"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
         </div>
       </div>
     </>
