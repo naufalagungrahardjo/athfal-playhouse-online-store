@@ -948,7 +948,7 @@ const AdminAnalytics = () => {
               <p className="text-sm text-muted-foreground mb-4">Where your money sits: inflows from sales & other income vs outflows from expenses per fund source.</p>
               {fundBalanceData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
                 <div className="overflow-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-xs sm:text-sm">
                     <thead>
                       <tr className="border-b">
                         <th className="text-left p-3 font-medium text-muted-foreground">Fund Source / Bank</th>
