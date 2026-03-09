@@ -93,6 +93,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         first_payment: (editingProduct as any).first_payment || 0,
         installment: (editingProduct as any).installment || 0,
         installment_months: (editingProduct as any).installment_months || 0,
+        admission_date: (editingProduct as any).admission_date || '',
       });
     } else {
       setFormData({
