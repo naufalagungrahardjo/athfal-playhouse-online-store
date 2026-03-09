@@ -1,6 +1,6 @@
 
 import {
-  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList, BookOpen, Wallet
+  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList, BookOpen, Wallet, FileCheck
 } from 'lucide-react';
 
 export type NavigationItem = {
@@ -35,6 +35,7 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
         { name: 'Admin Accounts', href: '/admin/accounts', icon: Users },
         { name: 'Users', href: '/admin/users', icon: Users },
         { name: 'Website Content', href: '/admin/website-copy', icon: Copy },
+        { name: 'Checkout Terms', href: '/admin/checkout-terms', icon: FileCheck },
         { name: 'Settings', href: '/admin/settings', icon: Settings },
         { name: 'Logs', href: '/admin/logs', icon: ListChecks },
       ],
@@ -132,6 +133,7 @@ export function getAllMenuItems(): { href: string; name: string }[] {
     { href: '/admin/accounts', name: 'Admin Accounts' },
     { href: '/admin/users', name: 'Users' },
     { href: '/admin/website-copy', name: 'Website Content' },
+    { href: '/admin/checkout-terms', name: 'Checkout Terms' },
     { href: '/admin/settings', name: 'Settings' },
     { href: '/admin/logs', name: 'Logs' },
     { href: '/admin/all-teachers', name: 'All Teachers' },
