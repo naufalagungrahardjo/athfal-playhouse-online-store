@@ -18,7 +18,7 @@ interface PaymentMethodsTabProps {
   newPayment: any;
   setNewPayment: (n: any) => void;
   handleAddPayment: () => void;
-  handleUpdatePayment: (id: string, field: string, value: string | boolean | string[] | BilingualStep[]) => void;
+  handleUpdatePayment: (id: string, field: string, value: string | boolean | string[] | BilingualStep[] | number) => void;
   handleAddPaymentStep: (paymentId: string) => void;
   handleRemovePaymentStep: (paymentId: string, stepIndex: number) => void;
   handleUpdatePaymentStep: (paymentId: string, stepIndex: number, lang: 'id' | 'en', value: string) => void;
@@ -140,7 +140,7 @@ export const PaymentMethodsTab = ({
                 key={payment.id}
                 className="border rounded-lg p-6"
               >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                   <div>
                     <Label>Bank Name</Label>
                     <Input
@@ -163,6 +163,20 @@ export const PaymentMethodsTab = ({
                       value={payment.account_name}
                       onChange={(e) => handleUpdatePayment(payment.id, 'account_name', e.target.value)}
                     />
+                  </div>
+
+                  <div>
+                    <Label>MDR Rate (%)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={payment.mdr_rate ?? 0}
+                      onChange={(e) => handleUpdatePayment(payment.id, 'mdr_rate', e.target.value)}
+                      placeholder="0.00"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Not shown to customers</p>
                   </div>
                 </div>
 

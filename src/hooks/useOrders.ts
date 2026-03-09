@@ -92,6 +92,10 @@ export const useOrders = () => {
 
   const updateOrderStatus = async (orderId: string, status: string) => {
     try {
+      // Get current order to check previous status and payment method
+      const currentOrder = orders.find(o => o.id === orderId);
+      const previousStatus = currentOrder?.status;
+
       // If cancelling, restore stock via RPC (handles stock_deducted check internally)
       if (status === 'cancelled') {
         const { error: restoreError } = await supabase
@@ -119,6 +123,11 @@ export const useOrders = () => {
 
       if (error) throw error;
 
+      // Auto-create MDR expense when order moves to "completed" (from any other status)
+      if (status === 'completed' && previousStatus !== 'completed' && currentOrder) {
+        await createMdrExpense(currentOrder);
+      }
+
       toast({
         title: 'Success',
         description: 'Order status updated successfully',
@@ -137,6 +146,96 @@ export const useOrders = () => {
         title: 'Error',
         description: 'Failed to update order status',
       });
+    }
+  };
+
+  // Create MDR expense based on payment method's MDR rate
+  const createMdrExpense = async (order: Order) => {
+    try {
+      // Get payment method with MDR rate
+      const { data: paymentMethod, error: pmError } = await supabase
+        .from('payment_methods')
+        .select('bank_name, mdr_rate')
+        .eq('bank_name', order.payment_method)
+        .maybeSingle();
+
+      if (pmError) {
+        console.error('Error fetching payment method for MDR:', pmError);
+        return;
+      }
+
+      const mdrRate = (paymentMethod as any)?.mdr_rate ?? 0;
+      if (mdrRate <= 0) {
+        console.log('No MDR rate set for this payment method, skipping expense creation');
+        return;
+      }
+
+      // Calculate MDR amount
+      const mdrAmount = Math.round((order.total_amount * mdrRate) / 100);
+      if (mdrAmount <= 0) return;
+
+      // Get or create "MDR Fee" expense category
+      let categoryId: string | null = null;
+      const { data: existingCategory } = await supabase
+        .from('expense_categories')
+        .select('id')
+        .eq('name', 'MDR Fee')
+        .maybeSingle();
+
+      if (existingCategory) {
+        categoryId = existingCategory.id;
+      } else {
+        const { data: newCategory, error: catError } = await supabase
+          .from('expense_categories')
+          .insert({ name: 'MDR Fee' })
+          .select('id')
+          .single();
+        
+        if (!catError && newCategory) {
+          categoryId = newCategory.id;
+        }
+      }
+
+      // Get or create fund source matching the payment method
+      let fundSourceId: string | null = null;
+      const { data: existingSource } = await supabase
+        .from('expense_fund_sources')
+        .select('id')
+        .eq('name', order.payment_method)
+        .maybeSingle();
+
+      if (existingSource) {
+        fundSourceId = existingSource.id;
+      } else {
+        const { data: newSource, error: srcError } = await supabase
+          .from('expense_fund_sources')
+          .insert({ name: order.payment_method })
+          .select('id')
+          .single();
+        
+        if (!srcError && newSource) {
+          fundSourceId = newSource.id;
+        }
+      }
+
+      // Insert MDR expense
+      const { error: expenseError } = await supabase
+        .from('expenses')
+        .insert({
+          description: `MDR Fee - Order #${order.id.slice(0, 8)} (${mdrRate}%)`,
+          amount: mdrAmount,
+          category_id: categoryId,
+          fund_source_id: fundSourceId,
+          date: new Date().toISOString().split('T')[0],
+        });
+
+      if (expenseError) {
+        console.error('Error creating MDR expense:', expenseError);
+      } else {
+        console.log(`MDR expense created: Rp ${mdrAmount} (${mdrRate}% of ${order.total_amount})`);
+      }
+    } catch (error) {
+      console.error('Error in createMdrExpense:', error);
     }
   };
 

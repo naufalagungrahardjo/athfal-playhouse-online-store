@@ -172,12 +172,14 @@ const AdminSettings = () => {
     });
   };
 
-  const handleUpdatePayment = async (id: string, field: string, value: string | boolean | string[] | BilingualStep[]) => {
+  const handleUpdatePayment = async (id: string, field: string, value: string | boolean | string[] | BilingualStep[] | number) => {
     const payment = localPayments.find(p => p.id === id);
     if (payment) {
+      // Convert MDR rate to number if it's a string
+      const processedValue = field === 'mdr_rate' ? parseFloat(String(value)) || 0 : value;
       await savePaymentMethod({
         ...payment,
-        [field]: value
+        [field]: processedValue
       });
       logAdminAction({
         user,

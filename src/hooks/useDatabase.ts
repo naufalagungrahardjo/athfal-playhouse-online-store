@@ -26,6 +26,7 @@ export interface DatabasePaymentMethod {
   active: boolean;
   payment_steps?: BilingualStep[];
   image?: string;
+  mdr_rate?: number;
 }
 
 const DEFAULT_STEPS: BilingualStep[] = [
@@ -102,6 +103,7 @@ export const useDatabase = () => {
         active: method.active,
         payment_steps: normalizeSteps(method.payment_steps),
         image: (method as any).image || undefined,
+        mdr_rate: (method as any).mdr_rate ?? 0,
       })) || [];
       
       setPaymentMethods(processedData);
@@ -182,6 +184,7 @@ export const useDatabase = () => {
           ...paymentMethod,
           payment_steps: (paymentMethod.payment_steps || DEFAULT_STEPS) as unknown as any,
           image: paymentMethod.image || null,
+          mdr_rate: paymentMethod.mdr_rate ?? 0,
           updated_at: new Date().toISOString()
         } as any);
 
