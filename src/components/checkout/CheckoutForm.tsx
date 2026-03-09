@@ -226,17 +226,31 @@ const CheckoutForm = ({
         </div>
 
         {/* Consent Checkbox */}
-        <div
-          className="flex items-start gap-3 p-4 border border-border rounded-lg bg-muted/50 cursor-pointer"
-          onClick={handleConsentClick}
-        >
+        <div className="flex items-start gap-3 p-4 border border-border rounded-lg bg-muted/50 cursor-pointer">
           <Checkbox
             id="consent"
             checked={consentChecked}
-            onCheckedChange={() => handleConsentClick()}
+            onCheckedChange={(checked) => {
+              if (checked) {
+                setShowTermsDialog(true);
+              } else {
+                setConsentChecked(false);
+              }
+            }}
             className="mt-0.5"
           />
-          <label htmlFor="consent" className="text-sm leading-relaxed cursor-pointer select-none">
+          <label
+            htmlFor="consent"
+            className="text-sm leading-relaxed cursor-pointer select-none"
+            onClick={(e) => {
+              e.preventDefault();
+              if (!consentChecked) {
+                setShowTermsDialog(true);
+              } else {
+                setConsentChecked(false);
+              }
+            }}
+          >
             {lang === 'id'
               ? 'Saya telah membaca dan menyetujui syarat & ketentuan yang berlaku'
               : 'I have read and agree to the applicable terms & conditions'}
