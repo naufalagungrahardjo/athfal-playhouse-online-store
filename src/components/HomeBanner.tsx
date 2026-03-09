@@ -60,13 +60,13 @@ export const HomeBanner = () => {
     return (
       <div className="bg-athfal-pink/5 pt-10 pb-20 md:pt-20 md:pb-28">
         <div className="athfal-container flex flex-col gap-8 md:flex-row items-center">
-          <div className="flex-1 flex flex-col gap-6 text-center md:text-left animate-pulse">
-            <div className="bg-gray-200 h-10 w-3/4 rounded"></div>
-            <div className="bg-gray-200 h-5 w-full rounded"></div>
-            <div className="bg-gray-200 h-12 w-40 rounded-xl mt-5"></div>
+          <div className="flex-1 flex flex-col gap-6 text-center md:text-left">
+            <div className="bg-muted h-10 w-3/4 rounded animate-pulse"></div>
+            <div className="bg-muted h-5 w-full rounded animate-pulse"></div>
+            <div className="bg-muted h-12 w-40 rounded-xl mt-5 animate-pulse"></div>
           </div>
-          <div className="relative">
-            <div className="bg-gray-200 w-full h-64 md:h-80 rounded-3xl" style={{ width: 600, maxWidth: '100%' }}></div>
+          <div className="relative" style={{ minWidth: 300, minHeight: 256 }}>
+            <div className="bg-muted w-full h-64 md:h-80 rounded-3xl animate-pulse" style={{ maxWidth: '100%' }}></div>
           </div>
         </div>
       </div>
