@@ -225,6 +225,7 @@ export default function AdminTeacher() {
           <TabsTrigger value="attendance">Daily Attendance</TabsTrigger>
           <TabsTrigger value="recap">Attendance Recap</TabsTrigger>
           <TabsTrigger value="leave">Leave Request</TabsTrigger>
+          <TabsTrigger value="materials">Class Materials</TabsTrigger>
         </TabsList>
 
         {/* DAILY ATTENDANCE TAB */}
