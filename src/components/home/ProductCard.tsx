@@ -11,6 +11,7 @@ interface Product {
   image: string;
   stock?: number;
   is_sold_out?: boolean;
+  admission_date?: string | null;
 }
 
 interface ProductCardProps {
@@ -63,10 +64,17 @@ export const ProductCard = ({ product, lowestPrice }: ProductCardProps) => {
           {isSoldOut ? (
             <p className="font-bold text-red-600">SOLD OUT</p>
           ) : (
-            <p className="font-bold text-athfal-green">
-              {hasVariants && <span className="text-xs text-gray-500 font-normal mr-1">Mulai dari</span>}
-              {formatCurrency(displayPrice)}
-            </p>
+            <>
+              <p className="font-bold text-athfal-green">
+                {hasVariants && <span className="text-xs text-gray-500 font-normal mr-1">Mulai dari</span>}
+                {formatCurrency(displayPrice)}
+              </p>
+              {product.admission_date && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  📅 Masuk: {new Date(product.admission_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

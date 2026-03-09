@@ -71,7 +71,15 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
         {effectiveStock <= 0 ? (
           <p className="text-2xl font-bold text-red-600 mb-4">SOLD OUT</p>
         ) : (
-          <p className="text-2xl font-bold text-athfal-green mb-4">{formatCurrency(activePrice)}</p>
+          <>
+            <p className="text-2xl font-bold text-athfal-green mb-1">{formatCurrency(activePrice)}</p>
+            {product.admission_date && (
+              <p className="text-sm text-muted-foreground mb-4">
+                📅 {language === 'id' ? 'Tanggal Masuk' : 'Admission Date'}: {new Date(product.admission_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+            )}
+            {!product.admission_date && <div className="mb-4" />}
+          </>
         )}
         <div className="border-t border-b border-gray-200 py-4 my-6">
           <div className="flex items-center mb-4">

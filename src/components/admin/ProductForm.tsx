@@ -27,6 +27,7 @@ interface ProductFormData {
   first_payment: number;
   installment: number;
   installment_months: number;
+  admission_date?: string;
 }
 
 interface ProductFormProps {
@@ -54,6 +55,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
     first_payment: 0,
     installment: 0,
     installment_months: 0,
+    admission_date: '',
   });
 
   useEffect(() => {
@@ -91,6 +93,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         first_payment: (editingProduct as any).first_payment || 0,
         installment: (editingProduct as any).installment || 0,
         installment_months: (editingProduct as any).installment_months || 0,
+        admission_date: (editingProduct as any).admission_date || '',
       });
     } else {
       setFormData({
@@ -106,6 +109,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         first_payment: 0,
         installment: 0,
         installment_months: 0,
+        admission_date: '',
       });
     }
   }, [editingProduct, isOpen]);
@@ -139,6 +143,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             first_payment: formData.first_payment,
             installment: formData.installment,
             installment_months: formData.installment_months,
+            admission_date: formData.admission_date || null,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingProduct.id);
@@ -164,7 +169,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             stock: formData.stock,
             first_payment: formData.first_payment,
             installment: formData.installment,
-            installment_months: formData.installment_months
+            installment_months: formData.installment_months,
+            admission_date: formData.admission_date || null
           }]);
         
         if (error) {
@@ -302,6 +308,16 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             </div>
           </div>
 
+
+          <div>
+            <Label htmlFor="admission_date">Admission Date (optional)</Label>
+            <Input
+              id="admission_date"
+              type="date"
+              value={formData.admission_date || ''}
+              onChange={(e) => setFormData({...formData, admission_date: e.target.value})}
+            />
+          </div>
 
           {/* Variant Manager - only for existing products */}
           <ProductVariantManager productDbId={editingProduct?.id} />

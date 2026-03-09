@@ -39,6 +39,7 @@ export const useProducts = () => {
         media: product.media as any,
         is_hidden: product.is_hidden ?? false,
         is_sold_out: product.is_sold_out ?? false,
+        admission_date: product.admission_date ?? null,
       }));
 
       setProducts(formattedProducts);

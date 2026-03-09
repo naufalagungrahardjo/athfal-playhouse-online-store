@@ -651,6 +651,7 @@ export type Database = {
       }
       products: {
         Row: {
+          admission_date: string | null
           category: string
           created_at: string | null
           description: string
@@ -671,6 +672,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          admission_date?: string | null
           category: string
           created_at?: string | null
           description: string
@@ -691,6 +693,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          admission_date?: string | null
           category?: string
           created_at?: string | null
           description?: string
