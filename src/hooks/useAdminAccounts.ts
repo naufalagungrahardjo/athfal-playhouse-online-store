@@ -12,6 +12,7 @@ export interface AdminAccount {
   role: AdminRole;
   created_at: string;
   order_alerts: boolean;
+  allowed_menus: string[] | null;
 }
 
 export function useAdminAccounts() {
