@@ -2,18 +2,21 @@
 import { Link, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ChevronDown } from "lucide-react";
+import { Menu, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NavigationGroup } from "./helpers/getAdminNavigation";
 import React, { useState } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Props = {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   navigation: NavigationGroup[];
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
 };
 
-const SidebarNav: React.FC<{ groups: NavigationGroup[]; onItemClick?: () => void }> = ({ groups, onItemClick }) => {
+const SidebarNav: React.FC<{ groups: NavigationGroup[]; onItemClick?: () => void; collapsed?: boolean }> = ({ groups, onItemClick, collapsed = false }) => {
   const location = useLocation();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     // Auto-open group containing current route
@@ -41,31 +44,60 @@ const SidebarNav: React.FC<{ groups: NavigationGroup[]; onItemClick?: () => void
             <button
               onClick={() => toggle(group.label)}
               className={cn(
-                "flex items-center justify-between w-full px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors",
+                "flex items-center justify-between w-full py-2.5 text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors",
+                collapsed ? "px-2" : "px-6",
                 hasActive && "text-gray-700"
               )}
               aria-label={`Toggle ${group.label} menu`}
             >
-              <span>{group.label}</span>
-              <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", isOpen && "rotate-180")} />
+              {collapsed ? (
+                <span className="truncate w-full text-center">{group.label.substring(0, 1)}</span>
+              ) : (
+                <>
+                  <span>{group.label}</span>
+                  <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", isOpen && "rotate-180")} />
+                </>
+              )}
             </button>
             {isOpen && (
               <ul className="space-y-0.5 pb-1">
-                {group.items.map((item) => (
-                  <li key={item.name}>
-                    <Link
-                      to={item.href}
-                      className={cn(
-                        "flex items-center pl-8 pr-6 py-2 text-sm font-medium hover:bg-gray-200 transition-colors",
-                        location.pathname === item.href ? "bg-gray-200 text-gray-900" : "text-gray-600"
-                      )}
-                      onClick={onItemClick}
-                    >
+                {group.items.map((item) => {
+                  const linkContent = collapsed ? (
+                    <TooltipProvider delayDuration={100}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center justify-center w-full">
+                            <item.icon className="h-4 w-4" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          <p>{item.name}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <>
                       <item.icon className="mr-2 h-4 w-4" />
                       {item.name}
-                    </Link>
-                  </li>
-                ))}
+                    </>
+                  );
+
+                  return (
+                    <li key={item.name}>
+                      <Link
+                        to={item.href}
+                        className={cn(
+                          "flex items-center py-2 text-sm font-medium hover:bg-gray-200 transition-colors",
+                          collapsed ? "px-2 justify-center" : "pl-8 pr-6",
+                          location.pathname === item.href ? "bg-gray-200 text-gray-900" : "text-gray-600"
+                        )}
+                        onClick={onItemClick}
+                      >
+                        {linkContent}
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
@@ -75,7 +107,7 @@ const SidebarNav: React.FC<{ groups: NavigationGroup[]; onItemClick?: () => void
   );
 };
 
-const AdminSidebar: React.FC<Props> = ({ sidebarOpen, setSidebarOpen, navigation }) => {
+const AdminSidebar: React.FC<Props> = ({ sidebarOpen, setSidebarOpen, navigation, collapsed, setCollapsed }) => {
   return (
     <>
       {/* Mobile Sidebar */}
@@ -100,14 +132,28 @@ const AdminSidebar: React.FC<Props> = ({ sidebarOpen, setSidebarOpen, navigation
       </Sheet>
 
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex flex-col w-64 border-r border-gray-200">
-        <div className="px-6 py-4">
-          <Link to="/admin" className="flex items-center text-lg font-semibold">
-            Athfal Admin
+      <div className={cn(
+        "hidden md:flex flex-col border-r border-gray-200 transition-all duration-300 relative",
+        collapsed ? "w-16" : "w-64"
+      )}>
+        <div className={cn("py-4 transition-all", collapsed ? "px-2" : "px-6")}>
+          <Link to="/admin" className={cn("flex items-center text-lg font-semibold", collapsed && "justify-center")}>
+            {collapsed ? "A" : "Athfal Admin"}
           </Link>
         </div>
         <div className="flex-1 overflow-y-auto">
-          <SidebarNav groups={navigation} />
+          <SidebarNav groups={navigation} collapsed={collapsed} />
+        </div>
+        <div className="border-t border-gray-200 p-2 flex justify-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCollapsed(!collapsed)}
+            className="h-8 w-8"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
         </div>
       </div>
     </>
