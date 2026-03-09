@@ -141,6 +141,7 @@ const App = () => (
                         <Route path="students" element={<AdminStudents />} />
                         <Route path="expense" element={<AdminExpense />} />
                         <Route path="other-income" element={<AdminOtherIncome />} />
+                        <Route path="checkout-terms" element={<AdminCheckoutTerms />} />
                       </Route>
                       
                       <Route path="*" element={<NotFound />} />

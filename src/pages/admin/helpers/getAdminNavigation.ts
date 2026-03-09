@@ -133,6 +133,7 @@ export function getAllMenuItems(): { href: string; name: string }[] {
     { href: '/admin/accounts', name: 'Admin Accounts' },
     { href: '/admin/users', name: 'Users' },
     { href: '/admin/website-copy', name: 'Website Content' },
+    { href: '/admin/checkout-terms', name: 'Checkout Terms' },
     { href: '/admin/settings', name: 'Settings' },
     { href: '/admin/logs', name: 'Logs' },
     { href: '/admin/all-teachers', name: 'All Teachers' },
