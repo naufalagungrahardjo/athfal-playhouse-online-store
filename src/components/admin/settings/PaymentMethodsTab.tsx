@@ -18,7 +18,7 @@ interface PaymentMethodsTabProps {
   newPayment: any;
   setNewPayment: (n: any) => void;
   handleAddPayment: () => void;
-  handleUpdatePayment: (id: string, field: string, value: string | boolean | string[] | BilingualStep[]) => void;
+  handleUpdatePayment: (id: string, field: string, value: string | boolean | string[] | BilingualStep[] | number) => void;
   handleAddPaymentStep: (paymentId: string) => void;
   handleRemovePaymentStep: (paymentId: string, stepIndex: number) => void;
   handleUpdatePaymentStep: (paymentId: string, stepIndex: number, lang: 'id' | 'en', value: string) => void;
