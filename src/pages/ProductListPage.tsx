@@ -112,10 +112,17 @@ const ProductListPage = () => {
                     {isSoldOut ? (
                       <p className="font-bold text-destructive">SOLD OUT</p>
                     ) : (
-                      <p className="font-bold text-athfal-green">
-                        {hasVariants && <span className="text-xs text-muted-foreground font-normal mr-1">Mulai dari</span>}
-                        {formatCurrency(displayPrice)}
-                      </p>
+                      <>
+                        <p className="font-bold text-athfal-green">
+                          {hasVariants && <span className="text-xs text-muted-foreground font-normal mr-1">Mulai dari</span>}
+                          {formatCurrency(displayPrice)}
+                        </p>
+                        {product.admission_date && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            📅 Masuk: {new Date(product.admission_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </p>
+                        )}
+                      </>
                     )}
                   </CardContent>
                 </Card>
