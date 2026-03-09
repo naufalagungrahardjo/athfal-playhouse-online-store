@@ -72,18 +72,22 @@ export default function BlogSlider() {
             {sortedBlogs.map((blog, idx) => (
               <CarouselItem
                 key={blog.id}
-                className="basis-[85%] sm:basis-[340px] px-2 sm:px-4 flex items-center justify-center"
+                className="basis-[85%] sm:basis-[340px] px-2 sm:px-4"
               >
-                <Link to={`/blog/${blog.slug || blog.id}`} className="block w-full h-full group">
-                  <div className="bg-white border border-athfal-pink/15 rounded-2xl shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300 h-full flex flex-col">
-                    <div className="w-full aspect-video rounded-t-2xl overflow-hidden">
+                <Link to={`/blog/${blog.slug || blog.id}`} className="block w-full group">
+                  <div className="bg-white border border-athfal-pink/15 rounded-2xl shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300 h-full flex flex-col overflow-hidden">
+                    <div className="w-full relative" style={{ paddingBottom: '56.25%' }}>
                       <img
-                        src={getOptimizedImageUrl(blog.image, { width: 340, quality: 75 })}
+                        src={getOptimizedImageUrl(blog.image, { width: 400, quality: 75 })}
                         alt={blog.title}
-                        className="object-cover w-full h-full transition-transform group-hover:scale-105"
-                        loading="lazy"
-                        width={340}
-                        height={191}
+                        className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
+                        loading={idx < 2 ? "eager" : "lazy"}
+                        width={400}
+                        height={225}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://images.unsplash.com/photo-1516733968668-dbdce39c4651?w=400&h=225&fit=crop';
+                        }}
                       />
                     </div>
                     <div className="p-4 flex-1 flex flex-col">
