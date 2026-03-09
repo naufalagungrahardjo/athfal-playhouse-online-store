@@ -169,7 +169,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             stock: formData.stock,
             first_payment: formData.first_payment,
             installment: formData.installment,
-            installment_months: formData.installment_months
+            installment_months: formData.installment_months,
+            admission_date: formData.admission_date || null
           }]);
         
         if (error) {
