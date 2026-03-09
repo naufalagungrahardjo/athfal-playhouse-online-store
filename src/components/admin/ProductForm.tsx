@@ -109,6 +109,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         first_payment: 0,
         installment: 0,
         installment_months: 0,
+        admission_date: '',
       });
     }
   }, [editingProduct, isOpen]);
