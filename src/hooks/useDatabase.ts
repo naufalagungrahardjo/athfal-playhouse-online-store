@@ -184,6 +184,7 @@ export const useDatabase = () => {
           ...paymentMethod,
           payment_steps: (paymentMethod.payment_steps || DEFAULT_STEPS) as unknown as any,
           image: paymentMethod.image || null,
+          mdr_rate: paymentMethod.mdr_rate ?? 0,
           updated_at: new Date().toISOString()
         } as any);
 
