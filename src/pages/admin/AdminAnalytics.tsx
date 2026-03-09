@@ -662,13 +662,13 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>{expGranLabel} Expense by Category</CardTitle></CardHeader>
             <CardContent>
               {expenseByCategoryData.data.length === 0 ? <p className="text-muted-foreground text-center py-8">No expense data</p> : (
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={expenseByCategoryData.data}>
+                <ResponsiveContainer width="100%" height={isMobile ? 280 : 350}>
+                  <BarChart data={expenseByCategoryData.data} margin={isMobile ? { left: -10, right: 10 } : undefined}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
                     {expenseByCategoryData.categories.map((cat, i) => (
                       <Bar key={cat} dataKey={cat} stackId="a" fill={COLORS[i % COLORS.length]} />
                     ))}
