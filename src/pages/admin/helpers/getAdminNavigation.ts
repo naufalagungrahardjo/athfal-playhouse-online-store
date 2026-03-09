@@ -14,7 +14,7 @@ export type NavigationGroup = {
   items: NavigationItem[];
 };
 
-export function getAdminNavigation(role: string | null): NavigationGroup[] {
+export function getAdminNavigation(role: string | null, allowedMenus?: string[] | null): NavigationGroup[] {
   const allGroups: NavigationGroup[] = [
     {
       label: 'Business',
@@ -57,10 +57,40 @@ export function getAdminNavigation(role: string | null): NavigationGroup[] {
     },
   ];
 
-  if (role === "super_admin") return allGroups;
+  // Super admin with no custom menu override gets everything
+  if (role === "super_admin" && !allowedMenus) return allGroups;
 
-  // For other roles, filter items within groups and remove empty groups
+  // If allowedMenus is explicitly set (by super admin), use that as final access
+  if (allowedMenus && allowedMenus.length > 0) {
+    // For teacher role, add teacher-specific item if allowed
+    const teacherItems: NavigationItem[] = [];
+    if (role === "teacher" && allowedMenus.includes("/admin/teacher")) {
+      teacherItems.push({ name: 'Teacher', href: '/admin/teacher', icon: ClipboardList });
+    }
+
+    const filtered = allGroups
+      .map(group => ({
+        ...group,
+        items: group.items.filter(item => allowedMenus.includes(item.href)),
+      }))
+      .filter(group => group.items.length > 0);
+
+    // Add teacher-specific items if any
+    if (teacherItems.length > 0) {
+      const classGroup = filtered.find(g => g.label === 'Class');
+      if (classGroup) {
+        classGroup.items = [...teacherItems, ...classGroup.items];
+      } else {
+        filtered.push({ label: 'Class', items: teacherItems });
+      }
+    }
+
+    return filtered;
+  }
+
+  // Default role-based access (no custom override)
   const allAllowed: Record<string, string[]> = {
+    super_admin: [], // handled above
     orders_manager: ["/admin", "/admin/products", "/admin/orders", "/admin/analytics", "/admin/promo-codes", "/admin/expense", "/admin/other-income"],
     order_staff: ["/admin/orders"],
     content_manager: ["/admin/blogs", "/admin/banners", "/admin/website-copy", "/admin/categories", "/admin/faq", "/admin/testimonials"],
@@ -86,4 +116,30 @@ export function getAdminNavigation(role: string | null): NavigationGroup[] {
       items: group.items.filter(item => allowed.includes(item.href)),
     }))
     .filter(group => group.items.length > 0);
+}
+
+/** Returns all possible menu items (for the edit dialog) */
+export function getAllMenuItems(): { href: string; name: string }[] {
+  return [
+    { href: '/admin', name: 'Dashboard' },
+    { href: '/admin/analytics', name: 'Analytics' },
+    { href: '/admin/products', name: 'Products' },
+    { href: '/admin/orders', name: 'Orders' },
+    { href: '/admin/promo-codes', name: 'Promo Codes' },
+    { href: '/admin/expense', name: 'Expense' },
+    { href: '/admin/other-income', name: 'Other Income' },
+    { href: '/admin/categories', name: 'Categories' },
+    { href: '/admin/accounts', name: 'Admin Accounts' },
+    { href: '/admin/users', name: 'Users' },
+    { href: '/admin/website-copy', name: 'Website Content' },
+    { href: '/admin/settings', name: 'Settings' },
+    { href: '/admin/logs', name: 'Logs' },
+    { href: '/admin/all-teachers', name: 'All Teachers' },
+    { href: '/admin/students', name: 'Students' },
+    { href: '/admin/teacher', name: 'Teacher (Personal)' },
+    { href: '/admin/blogs', name: 'Blogs' },
+    { href: '/admin/banners', name: 'Banners' },
+    { href: '/admin/faq', name: 'FAQ' },
+    { href: '/admin/testimonials', name: 'Testimonials' },
+  ];
 }
