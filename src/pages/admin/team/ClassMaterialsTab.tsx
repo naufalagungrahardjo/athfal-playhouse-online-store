@@ -41,12 +41,19 @@ export default function ClassMaterialsTab() {
   const [programs, setPrograms] = useState<ClassProgram[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Filter state
+  const [filterProgramId, setFilterProgramId] = useState<string>("all");
+
   // Form state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formProgramId, setFormProgramId] = useState("");
   const [formDetail, setFormDetail] = useState("");
   const [formLink, setFormLink] = useState("");
   const [showForm, setShowForm] = useState(false);
+
+  const filteredMaterials = filterProgramId === "all"
+    ? materials
+    : materials.filter(m => m.program_id === filterProgramId);
 
   const fetchData = async () => {
     setLoading(true);
