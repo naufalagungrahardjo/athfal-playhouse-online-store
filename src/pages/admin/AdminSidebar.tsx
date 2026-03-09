@@ -2,10 +2,11 @@
 import { Link, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ChevronDown } from "lucide-react";
+import { Menu, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NavigationGroup } from "./helpers/getAdminNavigation";
 import React, { useState } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Props = {
   sidebarOpen: boolean;
