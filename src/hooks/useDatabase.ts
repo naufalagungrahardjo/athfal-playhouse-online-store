@@ -26,6 +26,7 @@ export interface DatabasePaymentMethod {
   active: boolean;
   payment_steps?: BilingualStep[];
   image?: string;
+  mdr_rate?: number;
 }
 
 const DEFAULT_STEPS: BilingualStep[] = [
