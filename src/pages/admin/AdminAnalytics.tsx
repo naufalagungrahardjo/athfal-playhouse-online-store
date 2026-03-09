@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
 import { formatCurrency } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -58,6 +59,7 @@ const formatDateKey = (dateStr: string, granularity: TimeGranularity): string =>
 };
 
 const AdminAnalytics = () => {
+  const isMobile = useIsMobile();
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
   const [categories, setCategories] = useState<{ slug: string; title: string }[]>([]);
   const [products, setProducts] = useState<{ product_id: string; category: string }[]>([]);
@@ -506,13 +508,13 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>{granularityLabel} Product Sales Quantity</CardTitle></CardHeader>
             <CardContent>
               {salesQuantityData.length === 0 ? <p className="text-muted-foreground text-center py-8">No sales data available</p> : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={salesQuantityData}>
+                <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
+                  <LineChart data={salesQuantityData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis allowDecimals={false} />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 35 : 60} />
                     <Tooltip />
-                    <Line type="monotone" dataKey="quantity" stroke="#8884d8" strokeWidth={2} dot={{ r: 3 }} name="Quantity Sold" />
+                    <Line type="monotone" dataKey="quantity" stroke="#8884d8" strokeWidth={2} dot={{ r: isMobile ? 2 : 3 }} name="Quantity Sold" />
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -523,13 +525,13 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>{granularityLabel} Product Sales Value</CardTitle></CardHeader>
             <CardContent>
               {salesValueData.length === 0 ? <p className="text-muted-foreground text-center py-8">No sales data available</p> : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={salesValueData}>
+                <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
+                  <LineChart data={salesValueData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                    <Line type="monotone" dataKey="value" stroke="#82ca9d" strokeWidth={2} dot={{ r: 3 }} name="Sales Value" />
+                    <Line type="monotone" dataKey="value" stroke="#82ca9d" strokeWidth={2} dot={{ r: isMobile ? 2 : 3 }} name="Sales Value" />
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -541,13 +543,13 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Product Sales Proportion</CardTitle></CardHeader>
               <CardContent>
                 {productProportionData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={400}>
+                  <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
                     <PieChart>
-                      <Pie data={productProportionData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={50} outerRadius={110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                      <Pie data={productProportionData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={isMobile ? 30 : 50} outerRadius={isMobile ? 70 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                         {productProportionData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number, name: string, props: any) => [`${value} units (${props.payload.percentage}%)`, name]} />
-                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
+                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 11, paddingTop: 16 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
@@ -558,13 +560,13 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Payment Method Proportion</CardTitle></CardHeader>
               <CardContent>
                 {paymentProportionData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={400}>
+                  <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
                     <PieChart>
-                      <Pie data={paymentProportionData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={50} outerRadius={110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                      <Pie data={paymentProportionData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={isMobile ? 30 : 50} outerRadius={isMobile ? 70 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                         {paymentProportionData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number, name: string, props: any) => [`${value} orders (${props.payload.percentage}%)`, name]} />
-                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
+                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 11, paddingTop: 16 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
@@ -576,13 +578,13 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>Product Sales Ranking (Quantity & Value)</CardTitle></CardHeader>
             <CardContent>
               {productSalesBarData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                <ResponsiveContainer width="100%" height={Math.max(300, productSalesBarData.length * 40)}>
-                  <BarChart data={productSalesBarData} layout="vertical" margin={{ left: 120 }}>
+                <ResponsiveContainer width="100%" height={Math.max(300, productSalesBarData.length * (isMobile ? 50 : 40))}>
+                  <BarChart data={productSalesBarData} layout="vertical" margin={{ left: isMobile ? 10 : 120 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11 }} />
+                    <XAxis type="number" tick={{ fontSize: isMobile ? 9 : 12 }} tickFormatter={isMobile ? (v) => `${(v / 1000).toFixed(0)}k` : undefined} />
+                    <YAxis type="category" dataKey="name" width={isMobile ? 80 : 110} tick={{ fontSize: isMobile ? 9 : 11 }} />
                     <Tooltip formatter={(value: number, name: string) => name === 'value' ? formatCurrency(value) : value} />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
                     <Bar dataKey="quantity" fill="#8884d8" name="Quantity" />
                     <Bar dataKey="value" fill="#82ca9d" name="Sales Value (Rp)" />
                   </BarChart>
@@ -633,7 +635,7 @@ const AdminAnalytics = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="text-sm text-muted-foreground">Total Expense (filtered)</div>
-              <div className="text-3xl font-bold">{formatCurrency(totalExpense)}</div>
+              <div className="text-xl sm:text-3xl font-bold truncate">{formatCurrency(totalExpense)}</div>
             </CardContent>
           </Card>
 
@@ -642,11 +644,11 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>{expGranLabel} Expense Trend</CardTitle></CardHeader>
             <CardContent>
               {expenseTrendData.length === 0 ? <p className="text-muted-foreground text-center py-8">No expense data</p> : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={expenseTrendData}>
+                <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
+                  <AreaChart data={expenseTrendData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
                     <Area type="monotone" dataKey="total" stroke="#ef4444" fill="#ef4444" fillOpacity={0.15} strokeWidth={2} name="Expense" />
                   </AreaChart>
@@ -660,13 +662,13 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>{expGranLabel} Expense by Category</CardTitle></CardHeader>
             <CardContent>
               {expenseByCategoryData.data.length === 0 ? <p className="text-muted-foreground text-center py-8">No expense data</p> : (
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={expenseByCategoryData.data}>
+                <ResponsiveContainer width="100%" height={isMobile ? 280 : 350}>
+                  <BarChart data={expenseByCategoryData.data} margin={isMobile ? { left: -10, right: 10 } : undefined}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
                     {expenseByCategoryData.categories.map((cat, i) => (
                       <Bar key={cat} dataKey={cat} stackId="a" fill={COLORS[i % COLORS.length]} />
                     ))}
@@ -682,13 +684,13 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Expense by Category</CardTitle></CardHeader>
               <CardContent>
                 {expenseCatPieData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={400}>
+                  <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
                     <PieChart>
-                      <Pie data={expenseCatPieData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={50} outerRadius={110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                      <Pie data={expenseCatPieData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={isMobile ? 30 : 50} outerRadius={isMobile ? 70 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                         {expenseCatPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
-                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
+                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 11, paddingTop: 16 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
@@ -699,13 +701,13 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Expense by Fund Source</CardTitle></CardHeader>
               <CardContent>
                 {expenseFundPieData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={400}>
+                  <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
                     <PieChart>
-                      <Pie data={expenseFundPieData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={50} outerRadius={110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                      <Pie data={expenseFundPieData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={isMobile ? 30 : 50} outerRadius={isMobile ? 70 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                         {expenseFundPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
-                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
+                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 11, paddingTop: 16 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
@@ -742,7 +744,7 @@ const AdminAnalytics = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="text-sm text-muted-foreground">Total Other Income (filtered)</div>
-              <div className="text-3xl font-bold text-green-600">{formatCurrency(totalIncome)}</div>
+              <div className="text-xl sm:text-3xl font-bold text-green-600 truncate">{formatCurrency(totalIncome)}</div>
             </CardContent>
           </Card>
 
@@ -751,11 +753,11 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>{incGranLabel} Other Income Trend</CardTitle></CardHeader>
             <CardContent>
               {incomeTrendData.length === 0 ? <p className="text-muted-foreground text-center py-8">No income data</p> : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={incomeTrendData}>
+                <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
+                  <BarChart data={incomeTrendData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
                     <Bar dataKey="total" fill="#22c55e" name="Other Income" radius={[4, 4, 0, 0]} />
                   </BarChart>
@@ -769,15 +771,15 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>Income by Fund Destination</CardTitle></CardHeader>
             <CardContent>
               {incomeFundPieData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                <ResponsiveContainer width="100%" height={400}>
-                  <PieChart>
-                    <Pie data={incomeFundPieData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={50} outerRadius={110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
-                      {incomeFundPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
-                    <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
-                  </PieChart>
-                </ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
+                    <PieChart>
+                      <Pie data={incomeFundPieData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={isMobile ? 30 : 50} outerRadius={isMobile ? 70 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                        {incomeFundPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
+                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 11, paddingTop: 16 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
               )}
             </CardContent>
           </Card>
@@ -785,29 +787,29 @@ const AdminAnalytics = () => {
         {/* Net Income Tab */}
         <TabsContent value="net" className="space-y-6">
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-sm text-muted-foreground">Sales Revenue</div>
-                <div className="text-2xl font-bold">{formatCurrency(totalSalesRevenue)}</div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <Card className="overflow-hidden">
+              <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+                <div className="text-xs sm:text-sm text-muted-foreground">Sales Revenue</div>
+                <div className="text-base sm:text-2xl font-bold truncate">{formatCurrency(totalSalesRevenue)}</div>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-sm text-muted-foreground">Other Income</div>
-                <div className="text-2xl font-bold">{formatCurrency(totalOtherIncome)}</div>
+            <Card className="overflow-hidden">
+              <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+                <div className="text-xs sm:text-sm text-muted-foreground">Other Income</div>
+                <div className="text-base sm:text-2xl font-bold truncate">{formatCurrency(totalOtherIncome)}</div>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-sm text-muted-foreground">Total Expenses</div>
-                <div className="text-2xl font-bold text-destructive">{formatCurrency(totalAllExpenses)}</div>
+            <Card className="overflow-hidden">
+              <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+                <div className="text-xs sm:text-sm text-muted-foreground">Total Expenses</div>
+                <div className="text-base sm:text-2xl font-bold text-destructive truncate">{formatCurrency(totalAllExpenses)}</div>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-sm text-muted-foreground">Net Income</div>
-                <div className={`text-2xl font-bold ${netIncome >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+            <Card className="overflow-hidden">
+              <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+                <div className="text-xs sm:text-sm text-muted-foreground">Net Income</div>
+                <div className={`text-base sm:text-2xl font-bold truncate ${netIncome >= 0 ? 'text-green-600' : 'text-destructive'}`}>
                   {netIncome < 0 ? '-' : ''}{formatCurrency(Math.abs(netIncome))}
                 </div>
               </CardContent>
@@ -834,13 +836,13 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>{netGranLabel} Revenue vs Expense</CardTitle></CardHeader>
             <CardContent>
               {revenueVsExpenseData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={revenueVsExpenseData}>
+                <ResponsiveContainer width="100%" height={isMobile ? 280 : 350}>
+                  <BarChart data={revenueVsExpenseData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
                     <Bar dataKey="revenue" fill="#22c55e" name="Revenue (Sales + Other)" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="expense" fill="#ef4444" name="Expenses" radius={[4, 4, 0, 0]} />
                   </BarChart>
@@ -854,11 +856,11 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>{netGranLabel} Net Income</CardTitle></CardHeader>
             <CardContent>
               {revenueVsExpenseData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={revenueVsExpenseData}>
+                <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
+                  <AreaChart data={revenueVsExpenseData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
                     <defs>
                       <linearGradient id="netGradient" x1="0" y1="0" x2="0" y2="1">
@@ -878,13 +880,13 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>Cumulative Net Income</CardTitle></CardHeader>
             <CardContent>
               {cumulativeNetData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={cumulativeNetData}>
+                <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
+                  <LineChart data={cumulativeNetData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                    <Line type="monotone" dataKey="cumulative" stroke="#0ea5e9" strokeWidth={2} dot={{ r: 3 }} name="Cumulative Net" />
+                    <Line type="monotone" dataKey="cumulative" stroke="#0ea5e9" strokeWidth={2} dot={{ r: isMobile ? 2 : 3 }} name="Cumulative Net" />
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -897,13 +899,13 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Revenue Composition</CardTitle></CardHeader>
               <CardContent>
                 {revenueCompositionData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={350}>
+                  <ResponsiveContainer width="100%" height={isMobile ? 280 : 350}>
                     <PieChart>
-                      <Pie data={revenueCompositionData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={50} outerRadius={110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                      <Pie data={revenueCompositionData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={isMobile ? 30 : 50} outerRadius={isMobile ? 70 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                         {revenueCompositionData.map((_, i) => <Cell key={i} fill={['#22c55e', '#0ea5e9'][i]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
-                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
+                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 11, paddingTop: 16 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
@@ -912,26 +914,26 @@ const AdminAnalytics = () => {
 
             <Card>
               <CardHeader><CardTitle>Money Flow Summary</CardTitle></CardHeader>
-              <CardContent className="flex flex-col justify-center h-[350px] space-y-4">
-                <div className="flex justify-between items-center p-3 rounded-lg bg-green-50 dark:bg-green-950/20">
-                  <span className="text-sm font-medium">Sales Revenue</span>
-                  <span className="font-bold text-green-600">{formatCurrency(totalSalesRevenue)}</span>
+              <CardContent className="flex flex-col justify-center h-auto sm:h-[350px] space-y-3 sm:space-y-4">
+                <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-green-50 dark:bg-green-950/20">
+                  <span className="text-xs sm:text-sm font-medium">Sales Revenue</span>
+                  <span className="font-bold text-green-600 text-xs sm:text-base truncate ml-2">{formatCurrency(totalSalesRevenue)}</span>
                 </div>
-                <div className="flex justify-between items-center p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20">
-                  <span className="text-sm font-medium">+ Other Income</span>
-                  <span className="font-bold text-blue-600">{formatCurrency(totalOtherIncome)}</span>
+                <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20">
+                  <span className="text-xs sm:text-sm font-medium">+ Other Income</span>
+                  <span className="font-bold text-blue-600 text-xs sm:text-base truncate ml-2">{formatCurrency(totalOtherIncome)}</span>
                 </div>
-                <div className="border-t pt-2 flex justify-between items-center p-3">
-                  <span className="text-sm font-medium">Total Revenue</span>
-                  <span className="font-bold">{formatCurrency(totalSalesRevenue + totalOtherIncome)}</span>
+                <div className="border-t pt-2 flex justify-between items-center p-2 sm:p-3">
+                  <span className="text-xs sm:text-sm font-medium">Total Revenue</span>
+                  <span className="font-bold text-xs sm:text-base truncate ml-2">{formatCurrency(totalSalesRevenue + totalOtherIncome)}</span>
                 </div>
-                <div className="flex justify-between items-center p-3 rounded-lg bg-red-50 dark:bg-red-950/20">
-                  <span className="text-sm font-medium">- Total Expenses</span>
-                  <span className="font-bold text-destructive">{formatCurrency(totalAllExpenses)}</span>
+                <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-red-50 dark:bg-red-950/20">
+                  <span className="text-xs sm:text-sm font-medium">- Total Expenses</span>
+                  <span className="font-bold text-destructive text-xs sm:text-base truncate ml-2">{formatCurrency(totalAllExpenses)}</span>
                 </div>
-                <div className={`border-t-2 pt-2 flex justify-between items-center p-3 rounded-lg ${netIncome >= 0 ? 'bg-green-100 dark:bg-green-950/30' : 'bg-red-100 dark:bg-red-950/30'}`}>
-                  <span className="font-semibold">Net Income</span>
-                  <span className={`text-xl font-bold ${netIncome >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                <div className={`border-t-2 pt-2 flex justify-between items-center p-2 sm:p-3 rounded-lg ${netIncome >= 0 ? 'bg-green-100 dark:bg-green-950/30' : 'bg-red-100 dark:bg-red-950/30'}`}>
+                  <span className="font-semibold text-xs sm:text-base">Net Income</span>
+                  <span className={`text-sm sm:text-xl font-bold truncate ml-2 ${netIncome >= 0 ? 'text-green-600' : 'text-destructive'}`}>
                     {netIncome < 0 ? '-' : ''}{formatCurrency(Math.abs(netIncome))}
                   </span>
                 </div>
@@ -946,7 +948,7 @@ const AdminAnalytics = () => {
               <p className="text-sm text-muted-foreground mb-4">Where your money sits: inflows from sales & other income vs outflows from expenses per fund source.</p>
               {fundBalanceData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
                 <div className="overflow-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-xs sm:text-sm">
                     <thead>
                       <tr className="border-b">
                         <th className="text-left p-3 font-medium text-muted-foreground">Fund Source / Bank</th>
@@ -994,13 +996,13 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Inflow vs Outflow by Fund</CardTitle></CardHeader>
               <CardContent>
                 {fundBalanceData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={fundBalanceData} layout="vertical">
+                  <ResponsiveContainer width="100%" height={isMobile ? 280 : 350}>
+                    <BarChart data={fundBalanceData} layout="vertical" margin={{ left: isMobile ? 10 : 0 }}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                      <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11 }} />
+                      <XAxis type="number" tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 9 : 12 }} />
+                      <YAxis type="category" dataKey="name" width={isMobile ? 70 : 120} tick={{ fontSize: isMobile ? 9 : 11 }} />
                       <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
                       <Bar dataKey="totalIn" fill="#22c55e" name="Total Inflow" radius={[0, 4, 4, 0]} />
                       <Bar dataKey="expenseOut" fill="#ef4444" name="Expense Outflow" radius={[0, 4, 4, 0]} />
                     </BarChart>
@@ -1014,13 +1016,13 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Net Balance Distribution</CardTitle></CardHeader>
               <CardContent>
                 {fundBalancePieData.length === 0 ? <p className="text-muted-foreground text-center py-8">No positive balances</p> : (
-                  <ResponsiveContainer width="100%" height={350}>
+                  <ResponsiveContainer width="100%" height={isMobile ? 280 : 350}>
                     <PieChart>
-                      <Pie data={fundBalancePieData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={50} outerRadius={110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                      <Pie data={fundBalancePieData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={isMobile ? 30 : 50} outerRadius={isMobile ? 70 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                         {fundBalancePieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
-                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
+                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 11, paddingTop: 16 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
