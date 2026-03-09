@@ -357,9 +357,17 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                   <span className="font-mono text-sm">{order.id}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">{language === 'id' ? 'Status' : 'Status'}</span>
-                  <span className="text-yellow-600 font-medium">
-                    {language === 'id' ? 'Menunggu Pembayaran' : 'Awaiting Payment'}
+                   <span className="text-gray-600">{language === 'id' ? 'Status' : 'Status'}</span>
+                   <span className={`font-medium ${
+                     order.status === 'completed' ? 'text-green-600' :
+                     order.status === 'cancelled' ? 'text-red-600' :
+                     order.status === 'processing' || order.status === 'shipped' ? 'text-blue-600' :
+                     'text-yellow-600'
+                   }`}>
+                    {language === 'id'
+                      ? { pending: 'Menunggu Pembayaran', processing: 'Diproses', shipped: 'Dikirim', completed: 'Selesai', cancelled: 'Dibatalkan', refund: 'Refund' }[order.status] || order.status
+                      : { pending: 'Awaiting Payment', processing: 'Processing', shipped: 'Shipped', completed: 'Completed', cancelled: 'Cancelled', refund: 'Refund' }[order.status] || order.status
+                    }
                   </span>
                 </div>
                 <div className="flex justify-between">
