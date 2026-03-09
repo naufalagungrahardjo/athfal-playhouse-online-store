@@ -914,26 +914,26 @@ const AdminAnalytics = () => {
 
             <Card>
               <CardHeader><CardTitle>Money Flow Summary</CardTitle></CardHeader>
-              <CardContent className="flex flex-col justify-center h-[350px] space-y-4">
-                <div className="flex justify-between items-center p-3 rounded-lg bg-green-50 dark:bg-green-950/20">
-                  <span className="text-sm font-medium">Sales Revenue</span>
-                  <span className="font-bold text-green-600">{formatCurrency(totalSalesRevenue)}</span>
+              <CardContent className="flex flex-col justify-center h-auto sm:h-[350px] space-y-3 sm:space-y-4">
+                <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-green-50 dark:bg-green-950/20">
+                  <span className="text-xs sm:text-sm font-medium">Sales Revenue</span>
+                  <span className="font-bold text-green-600 text-xs sm:text-base truncate ml-2">{formatCurrency(totalSalesRevenue)}</span>
                 </div>
-                <div className="flex justify-between items-center p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20">
-                  <span className="text-sm font-medium">+ Other Income</span>
-                  <span className="font-bold text-blue-600">{formatCurrency(totalOtherIncome)}</span>
+                <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20">
+                  <span className="text-xs sm:text-sm font-medium">+ Other Income</span>
+                  <span className="font-bold text-blue-600 text-xs sm:text-base truncate ml-2">{formatCurrency(totalOtherIncome)}</span>
                 </div>
-                <div className="border-t pt-2 flex justify-between items-center p-3">
-                  <span className="text-sm font-medium">Total Revenue</span>
-                  <span className="font-bold">{formatCurrency(totalSalesRevenue + totalOtherIncome)}</span>
+                <div className="border-t pt-2 flex justify-between items-center p-2 sm:p-3">
+                  <span className="text-xs sm:text-sm font-medium">Total Revenue</span>
+                  <span className="font-bold text-xs sm:text-base truncate ml-2">{formatCurrency(totalSalesRevenue + totalOtherIncome)}</span>
                 </div>
-                <div className="flex justify-between items-center p-3 rounded-lg bg-red-50 dark:bg-red-950/20">
-                  <span className="text-sm font-medium">- Total Expenses</span>
-                  <span className="font-bold text-destructive">{formatCurrency(totalAllExpenses)}</span>
+                <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-red-50 dark:bg-red-950/20">
+                  <span className="text-xs sm:text-sm font-medium">- Total Expenses</span>
+                  <span className="font-bold text-destructive text-xs sm:text-base truncate ml-2">{formatCurrency(totalAllExpenses)}</span>
                 </div>
-                <div className={`border-t-2 pt-2 flex justify-between items-center p-3 rounded-lg ${netIncome >= 0 ? 'bg-green-100 dark:bg-green-950/30' : 'bg-red-100 dark:bg-red-950/30'}`}>
-                  <span className="font-semibold">Net Income</span>
-                  <span className={`text-xl font-bold ${netIncome >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                <div className={`border-t-2 pt-2 flex justify-between items-center p-2 sm:p-3 rounded-lg ${netIncome >= 0 ? 'bg-green-100 dark:bg-green-950/30' : 'bg-red-100 dark:bg-red-950/30'}`}>
+                  <span className="font-semibold text-xs sm:text-base">Net Income</span>
+                  <span className={`text-sm sm:text-xl font-bold truncate ml-2 ${netIncome >= 0 ? 'text-green-600' : 'text-destructive'}`}>
                     {netIncome < 0 ? '-' : ''}{formatCurrency(Math.abs(netIncome))}
                   </span>
                 </div>
