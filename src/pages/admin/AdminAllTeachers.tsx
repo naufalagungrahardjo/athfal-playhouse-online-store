@@ -633,6 +633,10 @@ export default function AdminAllTeachers() {
             </CardContent>
           </Card>
         </TabsContent>
+        {/* CLASS MATERIALS TAB */}
+        <TabsContent value="materials">
+          <ClassMaterialsTab />
+        </TabsContent>
       </Tabs>
     </div>
   );
