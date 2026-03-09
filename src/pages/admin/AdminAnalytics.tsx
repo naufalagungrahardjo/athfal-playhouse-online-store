@@ -508,13 +508,13 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>{granularityLabel} Product Sales Quantity</CardTitle></CardHeader>
             <CardContent>
               {salesQuantityData.length === 0 ? <p className="text-muted-foreground text-center py-8">No sales data available</p> : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={salesQuantityData}>
+                <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
+                  <LineChart data={salesQuantityData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis allowDecimals={false} />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 35 : 60} />
                     <Tooltip />
-                    <Line type="monotone" dataKey="quantity" stroke="#8884d8" strokeWidth={2} dot={{ r: 3 }} name="Quantity Sold" />
+                    <Line type="monotone" dataKey="quantity" stroke="#8884d8" strokeWidth={2} dot={{ r: isMobile ? 2 : 3 }} name="Quantity Sold" />
                   </LineChart>
                 </ResponsiveContainer>
               )}
