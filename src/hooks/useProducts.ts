@@ -44,7 +44,7 @@ export const useProducts = () => {
       setProducts(formattedProducts);
       logger.log('Products fetched and formatted:', formattedProducts.length);
     } catch (err) {
-      console.error('Error fetching products:', err);
+      logger.error('Error fetching products:', err);
       setError('Failed to fetch products');
       toast({
         variant: "destructive",
