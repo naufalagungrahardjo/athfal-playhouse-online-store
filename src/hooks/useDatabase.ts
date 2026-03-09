@@ -103,6 +103,7 @@ export const useDatabase = () => {
         active: method.active,
         payment_steps: normalizeSteps(method.payment_steps),
         image: (method as any).image || undefined,
+        mdr_rate: (method as any).mdr_rate ?? 0,
       })) || [];
       
       setPaymentMethods(processedData);
