@@ -856,11 +856,11 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>{netGranLabel} Net Income</CardTitle></CardHeader>
             <CardContent>
               {revenueVsExpenseData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={revenueVsExpenseData}>
+                <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
+                  <AreaChart data={revenueVsExpenseData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
                     <defs>
                       <linearGradient id="netGradient" x1="0" y1="0" x2="0" y2="1">
