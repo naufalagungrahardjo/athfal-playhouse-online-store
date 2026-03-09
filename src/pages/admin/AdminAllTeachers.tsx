@@ -300,6 +300,7 @@ export default function AdminAllTeachers() {
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="settings">Teacher Drive Folders</TabsTrigger>
           <TabsTrigger value="leaves">Leave Requests</TabsTrigger>
+          <TabsTrigger value="materials">Class Materials</TabsTrigger>
         </TabsList>
 
         {/* ATTENDANCE TAB */}
