@@ -91,6 +91,7 @@ function mergeCopy(stored: any): WebsiteCopy {
     navigation: { ...DEFAULT_COPY.navigation, ...stored.navigation },
     productCategories: { ...DEFAULT_COPY.productCategories, ...stored.productCategories },
     paymentConfirmation: { ...DEFAULT_COPY.paymentConfirmation, ...stored.paymentConfirmation },
+    checkoutTerms: { ...DEFAULT_COPY.checkoutTerms, ...stored.checkoutTerms },
   };
 }
 
