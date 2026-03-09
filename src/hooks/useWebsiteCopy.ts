@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type CopyField = { id: string; en: string };
 type HomePageCopy = {
@@ -83,58 +84,44 @@ function mergeCopy(stored: any): WebsiteCopy {
   };
 }
 
+async function fetchWebsiteCopy(): Promise<WebsiteCopy> {
+  const { data, error } = await supabase
+    .from('website_copy')
+    .select('content')
+    .eq('id', 'main')
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching website copy:', error);
+    return DEFAULT_COPY;
+  }
+
+  if (data?.content && typeof data.content === 'object' && Object.keys(data.content as object).length > 0) {
+    return mergeCopy(data.content);
+  }
+  return DEFAULT_COPY;
+}
+
 export function useWebsiteCopy() {
-  const [copy, setCopy] = useState<WebsiteCopy>(DEFAULT_COPY);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchCopy = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('website_copy')
-        .select('content')
-        .eq('id', 'main')
-        .maybeSingle();
+  const { data: copy = DEFAULT_COPY, isLoading: loading } = useQuery({
+    queryKey: ["website-copy"],
+    queryFn: fetchWebsiteCopy,
+  });
 
-      if (error) {
-        console.error('Error fetching website copy:', error);
-        return;
-      }
+  // Listen for in-app event (for same-tab updates from admin)
+  // Real-time handled by React Query refetch
+  const invalidate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["website-copy"] });
+  }, [queryClient]);
 
-      if (data?.content && typeof data.content === 'object' && Object.keys(data.content as object).length > 0) {
-        setCopy(mergeCopy(data.content));
-      }
-    } catch (err) {
-      console.error('Error fetching website copy:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchCopy();
-
-    // Listen for real-time updates
-    const channel = supabase
-      .channel('website_copy_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'website_copy',
-        filter: 'id=eq.main'
-      }, () => {
-        fetchCopy();
-      })
-      .subscribe();
-
-    // Also listen for in-app event (for same-tab updates)
-    const handleUpdate = () => fetchCopy();
-    window.addEventListener("websiteCopyUpdated", handleUpdate);
-
-    return () => {
-      supabase.removeChannel(channel);
-      window.removeEventListener("websiteCopyUpdated", handleUpdate);
-    };
-  }, [fetchCopy]);
+  // Dispatch listener for admin edits
+  if (typeof window !== 'undefined') {
+    const handler = () => invalidate();
+    window.removeEventListener("websiteCopyUpdated", handler);
+    window.addEventListener("websiteCopyUpdated", handler);
+  }
 
   return { copy, loading };
 }

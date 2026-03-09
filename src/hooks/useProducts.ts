@@ -1,77 +1,55 @@
-
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product, ProductCategory } from '@/contexts/CartContext';
-import { useToast } from '@/hooks/use-toast';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/utils/logger';
 
+async function fetchProductsFromDb(): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  return (data || []).map(product => ({
+    id: product.product_id,
+    dbId: product.id,
+    name: product.name,
+    description: product.description,
+    price: product.price,
+    image: product.image,
+    category: product.category as ProductCategory,
+    tax: product.tax,
+    stock: product.stock,
+    first_payment: product.first_payment,
+    installment: product.installment,
+    installment_months: product.installment_months,
+    media: product.media as any,
+    is_hidden: product.is_hidden ?? false,
+    is_sold_out: product.is_sold_out ?? false,
+    admission_date: product.admission_date ?? null,
+  }));
+}
+
 export const useProducts = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const { data: products = [], isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['products'],
+    queryFn: fetchProductsFromDb,
+  });
 
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const formattedProducts: Product[] = (data || []).map(product => ({
-        id: product.product_id,
-        dbId: product.id,
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        image: product.image,
-        category: product.category as ProductCategory,
-        tax: product.tax,
-        stock: product.stock,
-        first_payment: product.first_payment,
-        installment: product.installment,
-        installment_months: product.installment_months,
-        media: product.media as any,
-        is_hidden: product.is_hidden ?? false,
-        is_sold_out: product.is_sold_out ?? false,
-        admission_date: product.admission_date ?? null,
-      }));
-
-      setProducts(formattedProducts);
-      logger.log('Products fetched and formatted:', formattedProducts.length);
-    } catch (err) {
-      logger.error('Error fetching products:', err);
-      setError('Failed to fetch products');
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch products from database"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Real-time subscription to invalidate cache
   useEffect(() => {
-    fetchProducts();
-
     const channel = supabase
       .channel('products-changes')
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'products'
-        },
+        { event: '*', schema: 'public', table: 'products' },
         () => {
           logger.log('Products table changed, refetching...');
-          fetchProducts();
+          queryClient.invalidateQueries({ queryKey: ['products'] });
         }
       )
       .subscribe();
@@ -79,7 +57,7 @@ export const useProducts = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [queryClient]);
 
   const getProductsByCategory = (category: ProductCategory) => {
     return products.filter(product => product.category === category);
@@ -89,18 +67,15 @@ export const useProducts = () => {
     return products.find(product => product.id === id);
   };
 
-  // Public-facing: filter out hidden products
   const visibleProducts = products.filter(p => !p.is_hidden);
 
   return {
     products,
     visibleProducts,
     loading,
-    error,
-    fetchProducts,
+    error: queryError ? 'Failed to fetch products' : null,
+    fetchProducts: () => queryClient.invalidateQueries({ queryKey: ['products'] }),
     getProductsByCategory,
     getProductById
   };
 };
-
-// ... end of file
