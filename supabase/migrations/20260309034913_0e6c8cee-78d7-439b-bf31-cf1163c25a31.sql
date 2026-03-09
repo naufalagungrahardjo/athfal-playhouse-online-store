@@ -1,0 +1,1 @@
+ALTER TABLE public.admin_accounts ADD COLUMN allowed_menus text[] DEFAULT NULL;

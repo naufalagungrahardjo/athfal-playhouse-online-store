@@ -6,7 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Trash2, Bell, BellOff } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Trash2, Bell, BellOff, Pencil } from "lucide-react";
+import { getAllMenuItems } from "./helpers/getAdminNavigation";
 
 const ROLES: { value: AdminRole; label: string }[] = [
   { value: "super_admin", label: "Super Admin" },
@@ -26,10 +29,51 @@ const ROLE_DESCRIPTIONS: Record<AdminRole, string> = {
   teacher: "Can access the Teacher menu to record attendance, submit leave requests, and view attendance history."
 };
 
+// Default menus per role (for reference when editing)
+const DEFAULT_MENUS: Record<string, string[]> = {
+  super_admin: getAllMenuItems().map(m => m.href),
+  orders_manager: ["/admin", "/admin/products", "/admin/orders", "/admin/analytics", "/admin/promo-codes", "/admin/expense", "/admin/other-income"],
+  order_staff: ["/admin/orders"],
+  content_manager: ["/admin/blogs", "/admin/banners", "/admin/website-copy", "/admin/categories", "/admin/faq", "/admin/testimonials"],
+  content_staff: ["/admin/blogs"],
+  teacher: ["/admin/teacher", "/admin/students"],
+};
+
 const AdminAccounts = () => {
-  const { accounts, loading, addOrUpdateAccount, deleteAccount, toggleOrderAlerts } = useAdminAccounts();
+  const { accounts, loading, addOrUpdateAccount, deleteAccount, toggleOrderAlerts, updateAllowedMenus } = useAdminAccounts();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<AdminRole>("content_staff");
+
+  // Edit menu dialog state
+  const [editingAccount, setEditingAccount] = useState<typeof accounts[0] | null>(null);
+  const [selectedMenus, setSelectedMenus] = useState<string[]>([]);
+
+  const allMenuItems = getAllMenuItems();
+
+  const openEditDialog = (acc: typeof accounts[0]) => {
+    setEditingAccount(acc);
+    // If custom menus exist, use them; otherwise use defaults for the role
+    const current = acc.allowed_menus ?? DEFAULT_MENUS[acc.role] ?? [];
+    setSelectedMenus([...current]);
+  };
+
+  const toggleMenu = (href: string) => {
+    setSelectedMenus(prev =>
+      prev.includes(href) ? prev.filter(h => h !== href) : [...prev, href]
+    );
+  };
+
+  const saveMenus = async () => {
+    if (!editingAccount) return;
+    await updateAllowedMenus(editingAccount.email, selectedMenus.length > 0 ? selectedMenus : null);
+    setEditingAccount(null);
+  };
+
+  const resetToDefault = () => {
+    if (!editingAccount) return;
+    const defaults = DEFAULT_MENUS[editingAccount.role] ?? [];
+    setSelectedMenus([...defaults]);
+  };
 
   return (
     <div className="space-y-6">
@@ -91,6 +135,7 @@ const AdminAccounts = () => {
                       <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
                       <th className="px-4 py-3 text-left text-sm font-medium">Role</th>
                       <th className="px-4 py-3 text-center text-sm font-medium">Order Alerts</th>
+                      <th className="px-4 py-3 text-center text-sm font-medium">Custom Menu</th>
                       <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
                     </tr>
                   </thead>
@@ -112,15 +157,34 @@ const AdminAccounts = () => {
                             />
                           </div>
                         </td>
+                        <td className="px-4 py-3 text-center">
+                          {acc.allowed_menus ? (
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                              Custom ({acc.allowed_menus.length})
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Default</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            disabled={acc.role === "super_admin"}
-                            onClick={() => deleteAccount(acc.email)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => openEditDialog(acc)}
+                              title="Edit menu access"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              disabled={acc.role === "super_admin"}
+                              onClick={() => deleteAccount(acc.email)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -131,6 +195,43 @@ const AdminAccounts = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Menu Access Dialog */}
+      <Dialog open={!!editingAccount} onOpenChange={(open) => !open && setEditingAccount(null)}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Menu Access</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              {editingAccount?.email} ({editingAccount?.role.replace(/_/g, " ")})
+            </p>
+          </DialogHeader>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium">Accessible Menus</p>
+              <Button variant="ghost" size="sm" onClick={resetToDefault} className="text-xs">
+                Reset to Default
+              </Button>
+            </div>
+            {allMenuItems.map(item => (
+              <label
+                key={item.href}
+                className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted cursor-pointer"
+              >
+                <Checkbox
+                  checked={selectedMenus.includes(item.href)}
+                  onCheckedChange={() => toggleMenu(item.href)}
+                />
+                <span className="text-sm">{item.name}</span>
+                <span className="text-xs text-muted-foreground ml-auto">{item.href}</span>
+              </label>
+            ))}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEditingAccount(null)}>Cancel</Button>
+            <Button onClick={saveMenus} className="bg-athfal-pink text-white">Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
