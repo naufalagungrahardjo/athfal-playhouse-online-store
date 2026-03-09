@@ -644,11 +644,11 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>{expGranLabel} Expense Trend</CardTitle></CardHeader>
             <CardContent>
               {expenseTrendData.length === 0 ? <p className="text-muted-foreground text-center py-8">No expense data</p> : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={expenseTrendData}>
+                <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
+                  <AreaChart data={expenseTrendData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
                     <Area type="monotone" dataKey="total" stroke="#ef4444" fill="#ef4444" fillOpacity={0.15} strokeWidth={2} name="Expense" />
                   </AreaChart>
