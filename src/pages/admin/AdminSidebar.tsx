@@ -107,7 +107,7 @@ const SidebarNav: React.FC<{ groups: NavigationGroup[]; onItemClick?: () => void
   );
 };
 
-const AdminSidebar: React.FC<Props> = ({ sidebarOpen, setSidebarOpen, navigation }) => {
+const AdminSidebar: React.FC<Props> = ({ sidebarOpen, setSidebarOpen, navigation, collapsed, setCollapsed }) => {
   return (
     <>
       {/* Mobile Sidebar */}
