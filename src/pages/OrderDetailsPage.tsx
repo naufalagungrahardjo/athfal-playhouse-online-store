@@ -144,8 +144,9 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
     );
   }
 
-  // Show timeout page if time is up
-  if (timeLeft <= 0) {
+  // Show timeout page only for pending orders
+  const isPending = order.status === 'pending';
+  if (isPending && timeLeft <= 0) {
     return <PaymentTimeoutPage orderId={order.id} totalAmount={order.total_amount} />;
   }
 
