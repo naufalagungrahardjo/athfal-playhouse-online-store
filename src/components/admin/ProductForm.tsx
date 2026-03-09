@@ -309,6 +309,16 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
           </div>
 
 
+          <div>
+            <Label htmlFor="admission_date">Admission Date (optional)</Label>
+            <Input
+              id="admission_date"
+              type="date"
+              value={formData.admission_date || ''}
+              onChange={(e) => setFormData({...formData, admission_date: e.target.value})}
+            />
+          </div>
+
           {/* Variant Manager - only for existing products */}
           <ProductVariantManager productDbId={editingProduct?.id} />
 
