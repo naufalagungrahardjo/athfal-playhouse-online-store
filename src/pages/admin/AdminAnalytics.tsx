@@ -578,13 +578,13 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>Product Sales Ranking (Quantity & Value)</CardTitle></CardHeader>
             <CardContent>
               {productSalesBarData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                <ResponsiveContainer width="100%" height={Math.max(300, productSalesBarData.length * 40)}>
-                  <BarChart data={productSalesBarData} layout="vertical" margin={{ left: 120 }}>
+                <ResponsiveContainer width="100%" height={Math.max(300, productSalesBarData.length * (isMobile ? 50 : 40))}>
+                  <BarChart data={productSalesBarData} layout="vertical" margin={{ left: isMobile ? 10 : 120 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11 }} />
+                    <XAxis type="number" tick={{ fontSize: isMobile ? 9 : 12 }} tickFormatter={isMobile ? (v) => `${(v / 1000).toFixed(0)}k` : undefined} />
+                    <YAxis type="category" dataKey="name" width={isMobile ? 80 : 110} tick={{ fontSize: isMobile ? 9 : 11 }} />
                     <Tooltip formatter={(value: number, name: string) => name === 'value' ? formatCurrency(value) : value} />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
                     <Bar dataKey="quantity" fill="#8884d8" name="Quantity" />
                     <Bar dataKey="value" fill="#82ca9d" name="Sales Value (Rp)" />
                   </BarChart>
