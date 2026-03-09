@@ -77,9 +77,27 @@ export function useAdminAccounts() {
     return true;
   };
 
+  const updateAllowedMenus = async (email: string, menus: string[] | null) => {
+    const { error } = await supabase
+      .from("admin_accounts")
+      .update({ allowed_menus: menus })
+      .eq("email", email);
+    if (error) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to update menu access" });
+      return false;
+    }
+    toast({ title: "Updated", description: `Menu access updated for ${email}` });
+    await logAdminAction({
+      user,
+      action: `Updated menu access for ${email}`,
+    });
+    fetchAccounts();
+    return true;
+  };
+
   useEffect(() => {
     fetchAccounts();
   }, []);
 
-  return { accounts, loading, addOrUpdateAccount, deleteAccount, toggleOrderAlerts, fetchAccounts };
+  return { accounts, loading, addOrUpdateAccount, deleteAccount, toggleOrderAlerts, updateAllowedMenus, fetchAccounts };
 }
