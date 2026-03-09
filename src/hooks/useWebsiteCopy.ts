@@ -78,6 +78,10 @@ const DEFAULT_COPY: WebsiteCopy = {
     title: { id: "Konfirmasi Pembayaran", en: "Payment Confirmation" },
     description: { id: "Setelah melakukan pembayaran, mohon kirimkan bukti pembayaran Anda ke WhatsApp admin kami dengan menekan tombol di bawah ini.", en: "After making the payment, please send your payment proof to our admin via WhatsApp by clicking the button below." },
   },
+  checkoutTerms: {
+    title: { id: "Syarat & Ketentuan", en: "Terms & Conditions" },
+    content: { id: "Dengan melanjutkan pemesanan ini, saya menyetujui syarat dan ketentuan yang berlaku.", en: "By proceeding with this order, I agree to the applicable terms and conditions." },
+  },
 };
 
 function mergeCopy(stored: any): WebsiteCopy {
