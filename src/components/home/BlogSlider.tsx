@@ -72,8 +72,7 @@ export default function BlogSlider() {
             {sortedBlogs.map((blog, idx) => (
               <CarouselItem
                 key={blog.id}
-                className="basis-auto px-2 sm:px-4 flex items-center justify-center"
-                style={{ width: 340, maxWidth: 360 }}
+                className="basis-[85%] sm:basis-[340px] px-2 sm:px-4 flex items-center justify-center"
               >
                 <Link to={`/blog/${blog.slug || blog.id}`} className="block w-full h-full group">
                   <div className="bg-white border border-athfal-pink/15 rounded-2xl shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300 h-full flex flex-col">
