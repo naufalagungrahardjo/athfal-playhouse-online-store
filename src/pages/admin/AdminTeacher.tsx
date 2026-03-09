@@ -12,7 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Send, CalendarDays, FileText } from "lucide-react";
+import { Clock, Send, CalendarDays, FileText, BookOpen } from "lucide-react";
+import ClassMaterialsTab from "./team/ClassMaterialsTab";
 import { format } from "date-fns";
 
 const SESSION_OPTIONS = [
@@ -224,6 +225,7 @@ export default function AdminTeacher() {
           <TabsTrigger value="attendance">Daily Attendance</TabsTrigger>
           <TabsTrigger value="recap">Attendance Recap</TabsTrigger>
           <TabsTrigger value="leave">Leave Request</TabsTrigger>
+          <TabsTrigger value="materials">Class Materials</TabsTrigger>
         </TabsList>
 
         {/* DAILY ATTENDANCE TAB */}
@@ -391,6 +393,10 @@ export default function AdminTeacher() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+        {/* CLASS MATERIALS TAB */}
+        <TabsContent value="materials">
+          <ClassMaterialsTab />
         </TabsContent>
       </Tabs>
     </div>

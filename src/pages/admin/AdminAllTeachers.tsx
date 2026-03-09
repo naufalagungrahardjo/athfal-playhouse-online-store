@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Check, X, Save, Trash2, Download } from "lucide-react";
+import ClassMaterialsTab from "./team/ClassMaterialsTab";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -299,6 +300,7 @@ export default function AdminAllTeachers() {
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="settings">Teacher Drive Folders</TabsTrigger>
           <TabsTrigger value="leaves">Leave Requests</TabsTrigger>
+          <TabsTrigger value="materials">Class Materials</TabsTrigger>
         </TabsList>
 
         {/* ATTENDANCE TAB */}
@@ -630,6 +632,10 @@ export default function AdminAllTeachers() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+        {/* CLASS MATERIALS TAB */}
+        <TabsContent value="materials">
+          <ClassMaterialsTab />
         </TabsContent>
       </Tabs>
     </div>
