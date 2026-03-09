@@ -82,17 +82,24 @@ export const RelatedProducts = ({ currentProductId, currentCategory }: RelatedPr
                 <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                   {product.description}
                 </p>
-                {product.stock !== undefined && product.stock <= 0 ? (
+                {product.is_sold_out || (product.stock !== undefined && product.stock <= 0) ? (
                   <p className="font-bold text-red-600">SOLD OUT</p>
                 ) : (
                   (() => {
                     const lowest = getLowestPrice(product.dbId, product.price);
                     const hasVariants = lowest < product.price;
                     return (
-                      <p className="font-bold text-athfal-green">
-                        {hasVariants && <span className="text-xs text-gray-500 font-normal mr-1">Mulai dari</span>}
-                        {formatCurrency(lowest)}
-                      </p>
+                      <>
+                        <p className="font-bold text-athfal-green">
+                          {hasVariants && <span className="text-xs text-gray-500 font-normal mr-1">Mulai dari</span>}
+                          {formatCurrency(lowest)}
+                        </p>
+                        {product.admission_date && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            📅 Masuk: {new Date(product.admission_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </p>
+                        )}
+                      </>
                     );
                   })()
                 )}
