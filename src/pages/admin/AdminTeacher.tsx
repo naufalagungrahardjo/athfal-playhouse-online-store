@@ -12,7 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Send, CalendarDays, FileText } from "lucide-react";
+import { Clock, Send, CalendarDays, FileText, BookOpen } from "lucide-react";
+import ClassMaterialsTab from "./team/ClassMaterialsTab";
 import { format } from "date-fns";
 
 const SESSION_OPTIONS = [
