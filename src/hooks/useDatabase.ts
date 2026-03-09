@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/utils/logger';
 
 export interface DatabaseFAQ {
   id: string;
@@ -62,39 +63,35 @@ export const useDatabase = () => {
 
   const fetchFAQs = async () => {
     try {
-      console.log('Fetching FAQs from database...');
       const { data, error } = await supabase
         .from('faqs')
         .select('*')
         .order('order_num');
 
       if (error) {
-        console.error('Error fetching FAQs:', error);
+        logger.error('Error fetching FAQs:', error);
         throw error;
       }
       
-      console.log('FAQs fetched:', data);
       setFaqs(data || []);
     } catch (error) {
-      console.error('Error fetching FAQs:', error);
+      logger.error('Error fetching FAQs:', error);
       setFaqs([]);
     }
   };
 
   const fetchPaymentMethods = async () => {
     try {
-      console.log('Fetching payment methods from database...');
       const { data, error } = await supabase
         .from('payment_methods')
         .select('*')
         .order('created_at');
 
       if (error) {
-        console.error('Error fetching payment methods:', error);
+        logger.error('Error fetching payment methods:', error);
         throw error;
       }
       
-      console.log('Payment methods fetched:', data);
       const processedData: DatabasePaymentMethod[] = data?.map(method => ({
         id: method.id,
         bank_name: method.bank_name,
@@ -108,14 +105,13 @@ export const useDatabase = () => {
       
       setPaymentMethods(processedData);
     } catch (error) {
-      console.error('Error fetching payment methods:', error);
+      logger.error('Error fetching payment methods:', error);
       setPaymentMethods([]);
     }
   };
 
   const saveFAQ = async (faq: Omit<DatabaseFAQ, 'id'> & { id?: string }) => {
     try {
-      console.log('Saving FAQ:', faq);
       const { error } = await supabase
         .from('faqs')
         .upsert({
@@ -124,11 +120,10 @@ export const useDatabase = () => {
         });
 
       if (error) {
-        console.error('Error saving FAQ:', error);
+        logger.error('Error saving FAQ:', error);
         throw error;
       }
 
-      console.log('FAQ saved successfully');
       toast({
         title: "Success",
         description: "FAQ saved successfully"
@@ -136,7 +131,7 @@ export const useDatabase = () => {
 
       await fetchFAQs();
     } catch (error) {
-      console.error('Error saving FAQ:', error);
+      logger.error('Error saving FAQ:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -147,18 +142,16 @@ export const useDatabase = () => {
 
   const deleteFAQ = async (id: string) => {
     try {
-      console.log('Deleting FAQ:', id);
       const { error } = await supabase
         .from('faqs')
         .delete()
         .eq('id', id);
 
       if (error) {
-        console.error('Error deleting FAQ:', error);
+        logger.error('Error deleting FAQ:', error);
         throw error;
       }
 
-      console.log('FAQ deleted successfully');
       toast({
         title: "Success",
         description: "FAQ deleted successfully"
@@ -166,7 +159,7 @@ export const useDatabase = () => {
 
       await fetchFAQs();
     } catch (error) {
-      console.error('Error deleting FAQ:', error);
+      logger.error('Error deleting FAQ:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -177,7 +170,6 @@ export const useDatabase = () => {
 
   const savePaymentMethod = async (paymentMethod: Omit<DatabasePaymentMethod, 'id'> & { id?: string }) => {
     try {
-      console.log('Saving payment method:', paymentMethod);
       const { error } = await supabase
         .from('payment_methods')
         .upsert({
@@ -189,11 +181,10 @@ export const useDatabase = () => {
         } as any);
 
       if (error) {
-        console.error('Error saving payment method:', error);
+        logger.error('Error saving payment method:', error);
         throw error;
       }
 
-      console.log('Payment method saved successfully');
       toast({
         title: "Success",
         description: "Payment method saved successfully"
@@ -201,7 +192,7 @@ export const useDatabase = () => {
 
       await fetchPaymentMethods();
     } catch (error) {
-      console.error('Error saving payment method:', error);
+      logger.error('Error saving payment method:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -212,18 +203,16 @@ export const useDatabase = () => {
 
   const deletePaymentMethod = async (id: string) => {
     try {
-      console.log('Deleting payment method:', id);
       const { error } = await supabase
         .from('payment_methods')
         .delete()
         .eq('id', id);
 
       if (error) {
-        console.error('Error deleting payment method:', error);
+        logger.error('Error deleting payment method:', error);
         throw error;
       }
 
-      console.log('Payment method deleted successfully');
       toast({
         title: "Success",
         description: "Payment method deleted successfully"
@@ -231,7 +220,7 @@ export const useDatabase = () => {
 
       await fetchPaymentMethods();
     } catch (error) {
-      console.error('Error deleting payment method:', error);
+      logger.error('Error deleting payment method:', error);
       toast({
         variant: "destructive",
         title: "Error",

@@ -6,13 +6,14 @@ export function useOrderFilters(orders: any[], dateRange: DateRange | undefined)
   // Defensive filter for well-formed orders
   const filtered = useMemo(() => {
     if (!orders) return [];
-    return orders.filter(order => {
+      return orders.filter(order => {
       if (dateRange?.from && dateRange?.to) {
         const orderDate = new Date(order.created_at);
-        return (
-          orderDate >= new Date(dateRange.from.setHours(0,0,0,0)) &&
-          orderDate <= new Date(dateRange.to.setHours(23,59,59,999))
-        );
+        const fromDate = new Date(dateRange.from);
+        fromDate.setHours(0, 0, 0, 0);
+        const toDate = new Date(dateRange.to);
+        toDate.setHours(23, 59, 59, 999);
+        return orderDate >= fromDate && orderDate <= toDate;
       }
       return true;
     }).filter(order =>

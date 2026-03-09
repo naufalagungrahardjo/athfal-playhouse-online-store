@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product, ProductCategory } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/utils/logger';
 
 export const useProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -41,9 +42,9 @@ export const useProducts = () => {
       }));
 
       setProducts(formattedProducts);
-      console.log('Products fetched and formatted:', formattedProducts.length);
+      logger.log('Products fetched and formatted:', formattedProducts.length);
     } catch (err) {
-      console.error('Error fetching products:', err);
+      logger.error('Error fetching products:', err);
       setError('Failed to fetch products');
       toast({
         variant: "destructive",
@@ -68,7 +69,7 @@ export const useProducts = () => {
           table: 'products'
         },
         () => {
-          console.log('Products table changed, refetching...');
+          logger.log('Products table changed, refetching...');
           fetchProducts();
         }
       )

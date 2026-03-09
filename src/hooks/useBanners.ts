@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/utils/logger';
 
 export interface Banner {
   id: string;
@@ -22,21 +23,18 @@ export const useBanners = () => {
   const fetchBanners = async () => {
     try {
       setLoading(true);
-      console.log('Fetching banners from database...');
       const { data, error } = await supabase
         .from('banners')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Supabase banners error:', error);
+        logger.error('Supabase banners error:', error);
         throw error;
       }
-      // Admin view: show ALL banners including expired ones
       setBanners(data || []);
-      console.log('Banners fetched:', data);
     } catch (error) {
-      console.error('Error fetching banners:', error);
+      logger.error('Error fetching banners:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -49,9 +47,6 @@ export const useBanners = () => {
 
   const saveBanner = async (banner: Banner) => {
     try {
-      console.log('Saving banner:', banner);
-
-      // Validate required fields
       if (!banner.title?.trim()) {
         throw new Error('Banner title is required');
       }
@@ -70,24 +65,21 @@ export const useBanners = () => {
 
       let result;
       if (banner.id && banner.id !== '' && !banner.id.startsWith('banner_')) {
-        // Update existing banner
         result = await supabase
           .from('banners')
           .update(bannerData)
           .eq('id', banner.id);
       } else {
-        // Insert new banner
         result = await supabase
           .from('banners')
           .insert([bannerData]);
       }
 
       if (result.error) {
-        console.error('Save banner error:', result.error);
+        logger.error('Save banner error:', result.error);
         throw result.error;
       }
 
-      console.log('Banner saved successfully');
       toast({
         title: "Success",
         description: "Banner saved successfully"
@@ -95,7 +87,7 @@ export const useBanners = () => {
 
       await fetchBanners();
     } catch (error) {
-      console.error('Error saving banner:', error);
+      logger.error('Error saving banner:', error);
       toast({
         variant: "destructive",
         title: "Error", 
@@ -107,18 +99,16 @@ export const useBanners = () => {
 
   const deleteBanner = async (id: string) => {
     try {
-      console.log('Deleting banner:', id);
       const { error } = await supabase
         .from('banners')
         .delete()
         .eq('id', id);
 
       if (error) {
-        console.error('Delete banner error:', error);
+        logger.error('Delete banner error:', error);
         throw error;
       }
 
-      console.log('Banner deleted successfully');
       toast({
         title: "Success",
         description: "Banner deleted successfully"
@@ -126,7 +116,7 @@ export const useBanners = () => {
 
       await fetchBanners();
     } catch (error) {
-      console.error('Error deleting banner:', error);
+      logger.error('Error deleting banner:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -136,7 +126,6 @@ export const useBanners = () => {
   };
 
   const getActiveBanner = () => {
-    // For public display: filter out expired banners
     const now = new Date();
     const validBanners = banners.filter((b) => {
       if (!b.expiry_date) return true;
@@ -148,7 +137,6 @@ export const useBanners = () => {
   useEffect(() => {
     fetchBanners();
 
-    // Set up real-time subscription
     const channel = supabase
       .channel('banners-changes')
       .on(
@@ -159,7 +147,7 @@ export const useBanners = () => {
           table: 'banners'
         },
         () => {
-          console.log('Banners table changed, refetching...');
+          logger.log('Banners table changed, refetching...');
           fetchBanners();
         }
       )

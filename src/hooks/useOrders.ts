@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { logAdminAction } from '@/utils/logAdminAction';
+import { logger } from '@/utils/logger';
 
 interface OrderItem {
   id: string;
@@ -40,45 +41,52 @@ export const useOrders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      console.log('Fetching orders from database...');
+      logger.log('Fetching orders from database...');
       
-      // Fetch orders
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (ordersError) {
-        console.error('Orders fetch error:', ordersError);
+        logger.error('Orders fetch error:', ordersError);
         throw ordersError;
       }
 
-      console.log('Orders fetched:', ordersData);
+      // Batch fetch all order items in a single query
+      const orderIds = (ordersData || []).map(o => o.id);
+      let allItems: any[] = [];
 
-      // Fetch order items for each order
-      const ordersWithItems: Order[] = [];
-      
-      for (const order of ordersData || []) {
+      if (orderIds.length > 0) {
         const { data: itemsData, error: itemsError } = await supabase
           .from('order_items')
           .select('*')
-          .eq('order_id', order.id);
+          .in('order_id', orderIds);
 
         if (itemsError) {
-          console.error('Order items fetch error:', itemsError);
-          // Continue without items if there's an error
+          logger.error('Order items batch fetch error:', itemsError);
+        } else {
+          allItems = itemsData || [];
         }
-
-        ordersWithItems.push({
-          ...order,
-          items: itemsData || []
-        });
       }
 
-      console.log('Orders with items:', ordersWithItems);
+      // Map items to their orders in memory
+      const itemsByOrderId = new Map<string, OrderItem[]>();
+      for (const item of allItems) {
+        const existing = itemsByOrderId.get(item.order_id) || [];
+        existing.push(item);
+        itemsByOrderId.set(item.order_id, existing);
+      }
+
+      const ordersWithItems: Order[] = (ordersData || []).map(order => ({
+        ...order,
+        items: itemsByOrderId.get(order.id) || [],
+      }));
+
+      logger.log('Orders fetched:', ordersWithItems.length);
       setOrders(ordersWithItems);
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      logger.error('Error fetching orders:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -92,17 +100,16 @@ export const useOrders = () => {
 
   const updateOrderStatus = async (orderId: string, status: string) => {
     try {
-      // Get current order to check previous status and payment method
       const currentOrder = orders.find(o => o.id === orderId);
       const previousStatus = currentOrder?.status;
 
-      // If cancelling, restore stock via RPC (handles stock_deducted check internally)
+      // If cancelling, restore stock via RPC
       if (status === 'cancelled') {
         const { error: restoreError } = await supabase
           .rpc('restore_stock_for_order', { p_order_id: orderId });
 
         if (restoreError) {
-          console.error('Stock restoration failed:', restoreError);
+          logger.error('Stock restoration failed:', restoreError);
           toast({
             variant: 'destructive',
             title: 'Error',
@@ -123,7 +130,7 @@ export const useOrders = () => {
 
       if (error) throw error;
 
-      // Auto-create MDR expense when order moves to "completed" (from any other status)
+      // Auto-create MDR expense when order moves to "completed" (deduplicated)
       if (status === 'completed' && previousStatus !== 'completed' && currentOrder) {
         await createMdrExpense(currentOrder);
       }
@@ -140,7 +147,7 @@ export const useOrders = () => {
 
       await fetchOrders();
     } catch (error) {
-      console.error('Error updating order status:', error);
+      logger.error('Error updating order status:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -149,9 +156,21 @@ export const useOrders = () => {
     }
   };
 
-  // Create MDR expense based on payment method's MDR rate
+  // Create MDR expense based on payment method's MDR rate (with dedup check)
   const createMdrExpense = async (order: Order) => {
     try {
+      // Check if MDR expense already exists for this order
+      const { data: existingExpense } = await supabase
+        .from('expenses')
+        .select('id')
+        .like('description', `MDR Fee - Order #${order.id.slice(0, 8)}%`)
+        .maybeSingle();
+
+      if (existingExpense) {
+        logger.log('MDR expense already exists for this order, skipping');
+        return;
+      }
+
       // Get payment method with MDR rate
       const { data: paymentMethod, error: pmError } = await supabase
         .from('payment_methods')
@@ -160,17 +179,16 @@ export const useOrders = () => {
         .maybeSingle();
 
       if (pmError) {
-        console.error('Error fetching payment method for MDR:', pmError);
+        logger.error('Error fetching payment method for MDR:', pmError);
         return;
       }
 
       const mdrRate = (paymentMethod as any)?.mdr_rate ?? 0;
       if (mdrRate <= 0) {
-        console.log('No MDR rate set for this payment method, skipping expense creation');
+        logger.log('No MDR rate set for this payment method, skipping');
         return;
       }
 
-      // Calculate MDR amount
       const mdrAmount = Math.round((order.total_amount * mdrRate) / 100);
       if (mdrAmount <= 0) return;
 
@@ -190,10 +208,7 @@ export const useOrders = () => {
           .insert({ name: 'MDR Fee' })
           .select('id')
           .single();
-        
-        if (!catError && newCategory) {
-          categoryId = newCategory.id;
-        }
+        if (!catError && newCategory) categoryId = newCategory.id;
       }
 
       // Get or create fund source matching the payment method
@@ -212,13 +227,9 @@ export const useOrders = () => {
           .insert({ name: order.payment_method })
           .select('id')
           .single();
-        
-        if (!srcError && newSource) {
-          fundSourceId = newSource.id;
-        }
+        if (!srcError && newSource) fundSourceId = newSource.id;
       }
 
-      // Insert MDR expense
       const { error: expenseError } = await supabase
         .from('expenses')
         .insert({
@@ -230,18 +241,27 @@ export const useOrders = () => {
         });
 
       if (expenseError) {
-        console.error('Error creating MDR expense:', expenseError);
+        logger.error('Error creating MDR expense:', expenseError);
       } else {
-        console.log(`MDR expense created: Rp ${mdrAmount} (${mdrRate}% of ${order.total_amount})`);
+        logger.log(`MDR expense created: Rp ${mdrAmount} (${mdrRate}% of ${order.total_amount})`);
       }
     } catch (error) {
-      console.error('Error in createMdrExpense:', error);
+      logger.error('Error in createMdrExpense:', error);
     }
   };
 
   const deleteOrder = async (orderId: string) => {
     try {
-      // First delete order items
+      // Restore stock before deleting if it was deducted
+      const { error: restoreError } = await supabase
+        .rpc('restore_stock_for_order', { p_order_id: orderId });
+
+      if (restoreError) {
+        logger.error('Stock restoration failed before delete:', restoreError);
+        // Continue with deletion even if restore fails (RPC handles already-restored case)
+      }
+
+      // Delete order items first
       const { error: itemsError } = await supabase
         .from('order_items')
         .delete()
@@ -269,7 +289,7 @@ export const useOrders = () => {
 
       await fetchOrders();
     } catch (error) {
-      console.error('Error deleting order:', error);
+      logger.error('Error deleting order:', error);
       toast({
         variant: "destructive",
         title: "Error",

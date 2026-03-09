@@ -134,6 +134,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         first_payment: product.first_payment,
         installment: product.installment,
         installment_months: product.installment_months,
+        media: product.media as any,
+        is_hidden: product.is_hidden ?? false,
+        is_sold_out: product.is_sold_out ?? false,
       }));
 
       setProducts(formattedProducts);

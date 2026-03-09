@@ -144,8 +144,9 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
     );
   }
 
-  // Show timeout page if time is up
-  if (timeLeft <= 0) {
+  // Show timeout page only for pending orders
+  const isPending = order.status === 'pending';
+  if (isPending && timeLeft <= 0) {
     return <PaymentTimeoutPage orderId={order.id} totalAmount={order.total_amount} />;
   }
 
@@ -156,18 +157,20 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
           {language === 'id' ? 'Detail Pesanan' : 'Order Details'}
         </h1>
         
-        {/* Countdown timer */}
-        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-8 flex items-center">
-          <Clock className="text-yellow-600 mr-3" />
-          <div>
-            <p className="font-medium text-yellow-800">
-              {language === 'id' ? 'Batas Waktu Pembayaran:' : 'Payment Time Limit:'}
-            </p>
-            <p className={`text-2xl font-bold ${timeLeft < 300 ? 'text-red-500' : 'text-yellow-600'}`}>
-              {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
-            </p>
+        {/* Countdown timer - only for pending orders */}
+        {isPending && (
+          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-8 flex items-center">
+            <Clock className="text-yellow-600 mr-3" />
+            <div>
+              <p className="font-medium text-yellow-800">
+                {language === 'id' ? 'Batas Waktu Pembayaran:' : 'Payment Time Limit:'}
+              </p>
+              <p className={`text-2xl font-bold ${timeLeft < 300 ? 'text-red-500' : 'text-yellow-600'}`}>
+                {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Order details */}
@@ -354,9 +357,17 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                   <span className="font-mono text-sm">{order.id}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">{language === 'id' ? 'Status' : 'Status'}</span>
-                  <span className="text-yellow-600 font-medium">
-                    {language === 'id' ? 'Menunggu Pembayaran' : 'Awaiting Payment'}
+                   <span className="text-gray-600">{language === 'id' ? 'Status' : 'Status'}</span>
+                   <span className={`font-medium ${
+                     order.status === 'completed' ? 'text-green-600' :
+                     order.status === 'cancelled' ? 'text-red-600' :
+                     order.status === 'processing' || order.status === 'shipped' ? 'text-blue-600' :
+                     'text-yellow-600'
+                   }`}>
+                    {language === 'id'
+                      ? { pending: 'Menunggu Pembayaran', processing: 'Diproses', shipped: 'Dikirim', completed: 'Selesai', cancelled: 'Dibatalkan', refund: 'Refund' }[order.status] || order.status
+                      : { pending: 'Awaiting Payment', processing: 'Processing', shipped: 'Shipped', completed: 'Completed', cancelled: 'Cancelled', refund: 'Refund' }[order.status] || order.status
+                    }
                   </span>
                 </div>
                 <div className="flex justify-between">
