@@ -11,6 +11,7 @@ interface Product {
   image: string;
   stock?: number;
   is_sold_out?: boolean;
+  admission_date?: string | null;
 }
 
 interface ProductCardProps {
