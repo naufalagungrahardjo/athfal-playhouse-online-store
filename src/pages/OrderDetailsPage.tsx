@@ -157,18 +157,20 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
           {language === 'id' ? 'Detail Pesanan' : 'Order Details'}
         </h1>
         
-        {/* Countdown timer */}
-        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-8 flex items-center">
-          <Clock className="text-yellow-600 mr-3" />
-          <div>
-            <p className="font-medium text-yellow-800">
-              {language === 'id' ? 'Batas Waktu Pembayaran:' : 'Payment Time Limit:'}
-            </p>
-            <p className={`text-2xl font-bold ${timeLeft < 300 ? 'text-red-500' : 'text-yellow-600'}`}>
-              {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
-            </p>
+        {/* Countdown timer - only for pending orders */}
+        {isPending && (
+          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-8 flex items-center">
+            <Clock className="text-yellow-600 mr-3" />
+            <div>
+              <p className="font-medium text-yellow-800">
+                {language === 'id' ? 'Batas Waktu Pembayaran:' : 'Payment Time Limit:'}
+              </p>
+              <p className={`text-2xl font-bold ${timeLeft < 300 ? 'text-red-500' : 'text-yellow-600'}`}>
+                {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Order details */}
