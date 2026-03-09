@@ -836,13 +836,13 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>{netGranLabel} Revenue vs Expense</CardTitle></CardHeader>
             <CardContent>
               {revenueVsExpenseData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={revenueVsExpenseData}>
+                <ResponsiveContainer width="100%" height={isMobile ? 280 : 350}>
+                  <BarChart data={revenueVsExpenseData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
                     <Bar dataKey="revenue" fill="#22c55e" name="Revenue (Sales + Other)" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="expense" fill="#ef4444" name="Expenses" radius={[4, 4, 0, 0]} />
                   </BarChart>
