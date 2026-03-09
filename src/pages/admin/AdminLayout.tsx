@@ -65,6 +65,8 @@ const AdminLayout = () => {
       <AdminSidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
+        collapsed={sidebarCollapsed}
+        setCollapsed={setSidebarCollapsed}
         navigation={navigation}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
