@@ -36,13 +36,18 @@ type PromoCode = {
 const getBaseProductId = (cartId: string) => cartId.split('__')[0];
 
 const CartPage = () => {
-  const { items, removeItem, updateQuantity, clearCart, getSubtotal, getTaxAmount, getTotal } = useCart();
+  const { items, removeItem, updateQuantity, clearCart, getSubtotal, getTaxAmount, getTotal, refreshCartStock } = useCart();
   const { language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [couponCode, setCouponCode] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
   const [isCheckingPromo, setIsCheckingPromo] = useState(false);
+
+  // Refresh product stock & sold-out status on mount
+  useEffect(() => {
+    refreshCartStock();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Calculate aggregate quantity for a base product across all variants in the cart
   const getAggregateQuantity = (cartId: string, excludeId?: string) => {

@@ -49,6 +49,7 @@ interface CartContextType {
   getTotal: () => number;
   products: Product[];
   fetchProducts: () => Promise<void>;
+  refreshCartStock: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -87,16 +88,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         { event: 'UPDATE', schema: 'public', table: 'products' },
         (payload) => {
           const updated = payload.new as any;
-          // Update the stock in cart items that match this product
-          setItems(prev => prev.map(item =>
-            item.product.id === updated.product_id
-              ? { ...item, product: { ...item.product, stock: updated.stock } }
-              : item
-          ));
+          // Update stock and sold-out status in cart items that match this product
+          setItems(prev => prev.map(item => {
+            const baseId = item.product.id.split('__')[0];
+            return baseId === updated.product_id
+              ? { ...item, product: { ...item.product, stock: updated.stock, is_sold_out: updated.is_sold_out ?? false, is_hidden: updated.is_hidden ?? false } }
+              : item;
+          }));
           // Also update products list
           setProducts(prev => prev.map(p =>
             p.id === updated.product_id
-              ? { ...p, stock: updated.stock }
+              ? { ...p, stock: updated.stock, is_sold_out: updated.is_sold_out ?? false, is_hidden: updated.is_hidden ?? false }
               : p
           ));
         }
@@ -235,6 +237,33 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     return getSubtotal() + getTaxAmount();
   };
 
+  const refreshCartStock = async () => {
+    if (items.length === 0) return;
+    const baseIds = [...new Set(items.map(item => item.product.id.split('__')[0]))];
+    const { data } = await supabase
+      .from('products')
+      .select('product_id, stock, is_sold_out, is_hidden')
+      .in('product_id', baseIds);
+    if (!data) return;
+    const stockMap = new Map(data.map(p => [p.product_id, p]));
+    setItems(prev => prev.map(item => {
+      const baseId = item.product.id.split('__')[0];
+      const fresh = stockMap.get(baseId);
+      if (fresh) {
+        return {
+          ...item,
+          product: {
+            ...item.product,
+            stock: fresh.stock,
+            is_sold_out: fresh.is_sold_out ?? false,
+            is_hidden: fresh.is_hidden ?? false,
+          }
+        };
+      }
+      return item;
+    }));
+  };
+
   return (
     <CartContext.Provider
       value={{
@@ -254,6 +283,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         getTotal,
         products,
         fetchProducts,
+        refreshCartStock,
       }}
     >
       {children}
