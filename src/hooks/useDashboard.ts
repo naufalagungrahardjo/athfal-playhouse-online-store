@@ -6,6 +6,8 @@ export interface DashboardStats {
   totalOrders: number;
   revenueBeforeTax: number;
   revenueAfterTax: number;
+  revenueAfterDiscount: number;
+  totalDiscount: number;
   totalProducts: number;
   totalCustomers: number;
   pendingOrders: number;
@@ -20,6 +22,8 @@ export const useDashboard = () => {
     totalOrders: 0,
     revenueBeforeTax: 0,
     revenueAfterTax: 0,
+    revenueAfterDiscount: 0,
+    totalDiscount: 0,
     totalProducts: 0,
     totalCustomers: 0,
     pendingOrders: 0,
@@ -37,7 +41,7 @@ export const useDashboard = () => {
       // Fetch orders data with all required fields
       const { data: orders, error: ordersError } = await supabase
         .from('orders')
-        .select('total_amount, subtotal, status, customer_email');
+        .select('total_amount, subtotal, tax_amount, discount_amount, status, customer_email');
 
       if (ordersError) throw ordersError;
 
@@ -51,7 +55,9 @@ export const useDashboard = () => {
       // Calculate stats
       const totalOrders = orders?.length || 0;
       const revenueBeforeTax = orders?.reduce((sum, order) => sum + (order.subtotal || 0), 0) || 0;
-      const revenueAfterTax = orders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
+      const revenueAfterTax = orders?.reduce((sum, order) => sum + (order.subtotal || 0) + (order.tax_amount || 0), 0) || 0;
+      const totalDiscount = orders?.reduce((sum, order) => sum + (order.discount_amount || 0), 0) || 0;
+      const revenueAfterDiscount = revenueBeforeTax - totalDiscount;
       const totalProducts = productsCount || 0;
       const totalCustomers = new Set(orders?.map(order => order.customer_email)).size || 0;
       
@@ -65,6 +71,8 @@ export const useDashboard = () => {
         totalOrders,
         revenueBeforeTax,
         revenueAfterTax,
+        revenueAfterDiscount,
+        totalDiscount,
         totalProducts,
         totalCustomers,
         pendingOrders,

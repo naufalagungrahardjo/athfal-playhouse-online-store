@@ -15,7 +15,9 @@ import {
   XCircle,
   TrendingUp,
   PackageCheck,
-  Truck
+  Truck,
+  BadgePercent,
+  Receipt
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -61,7 +63,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Revenue & Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {showRevenue && (
           <>
             <ClickableStatsCard
@@ -75,6 +77,19 @@ const AdminDashboard = () => {
               value={formatCurrency(stats.revenueAfterTax)}
               icon={TrendingUp}
               onClick={() => setSelectedView('orders')}
+            />
+            <ClickableStatsCard
+              title="Revenue (After Discount)"
+              value={formatCurrency(stats.revenueAfterDiscount)}
+              icon={Receipt}
+              onClick={() => setSelectedView('orders')}
+            />
+            <ClickableStatsCard
+              title="Discount Given"
+              value={formatCurrency(stats.totalDiscount)}
+              icon={BadgePercent}
+              onClick={() => setSelectedView('orders')}
+              className="border-orange-200 bg-orange-50"
             />
           </>
         )}
