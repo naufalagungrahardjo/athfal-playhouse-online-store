@@ -307,6 +307,7 @@ const AdminExpense = () => {
                     <TableRow>
                       <TableHead>Date</TableHead>
                       <TableHead>Description</TableHead>
+                      <TableHead>Order ID</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead>Fund Source</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
