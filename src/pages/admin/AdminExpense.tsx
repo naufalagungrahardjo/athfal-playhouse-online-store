@@ -22,6 +22,7 @@ type Expense = {
   amount: number;
   date: string;
   created_at: string;
+  order_id: string | null;
 };
 
 const AdminExpense = () => {
@@ -306,6 +307,7 @@ const AdminExpense = () => {
                     <TableRow>
                       <TableHead>Date</TableHead>
                       <TableHead>Description</TableHead>
+                      <TableHead>Order ID</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead>Fund Source</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
@@ -317,6 +319,7 @@ const AdminExpense = () => {
                       <TableRow key={exp.id}>
                         <TableCell className="whitespace-nowrap">{format(new Date(exp.date), 'dd MMM yyyy')}</TableCell>
                         <TableCell className="max-w-[250px] truncate">{exp.description}</TableCell>
+                        <TableCell className="text-xs font-mono max-w-[120px] truncate">{exp.order_id ? exp.order_id.slice(0, 8) + '...' : '-'}</TableCell>
                         <TableCell>{exp.category_id ? catMap[exp.category_id] || '-' : '-'}</TableCell>
                         <TableCell>{exp.fund_source_id ? fundMap[exp.fund_source_id] || '-' : '-'}</TableCell>
                         <TableCell className="text-right font-medium">{formatCurrency(exp.amount)}</TableCell>

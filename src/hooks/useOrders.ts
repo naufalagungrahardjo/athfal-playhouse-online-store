@@ -176,7 +176,7 @@ export const useOrders = () => {
         await supabase
           .from('expenses')
           .delete()
-          .like('description', `MDR%${orderId}%`);
+          .eq('order_id', orderId);
       } catch (mdrErr) {
         logger.error('MDR expense cleanup failed (non-blocking):', mdrErr);
       }
