@@ -55,7 +55,9 @@ export const useDashboard = () => {
       // Calculate stats
       const totalOrders = orders?.length || 0;
       const revenueBeforeTax = orders?.reduce((sum, order) => sum + (order.subtotal || 0), 0) || 0;
-      const revenueAfterTax = orders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
+      const revenueAfterTax = orders?.reduce((sum, order) => sum + (order.subtotal || 0) + (order.tax_amount || 0), 0) || 0;
+      const totalDiscount = orders?.reduce((sum, order) => sum + (order.discount_amount || 0), 0) || 0;
+      const revenueAfterDiscount = revenueBeforeTax - totalDiscount;
       const totalProducts = productsCount || 0;
       const totalCustomers = new Set(orders?.map(order => order.customer_email)).size || 0;
       
