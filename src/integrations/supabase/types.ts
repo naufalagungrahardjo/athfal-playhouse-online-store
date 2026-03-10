@@ -352,6 +352,7 @@ export type Database = {
           description: string
           fund_source_id: string | null
           id: string
+          order_id: string | null
           updated_at: string
         }
         Insert: {
@@ -362,6 +363,7 @@ export type Database = {
           description: string
           fund_source_id?: string | null
           id?: string
+          order_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -372,6 +374,7 @@ export type Database = {
           description?: string
           fund_source_id?: string | null
           id?: string
+          order_id?: string | null
           updated_at?: string
         }
         Relationships: [
