@@ -11,10 +11,12 @@ import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 
 type FundSource = { id: string; name: string };
+type PaymentMethod = { bank_name: string; mdr_rate: number };
 type OtherIncome = { id: string; description: string; amount: number; fund_source_id: string | null; date: string };
 
 const AdminOtherIncome = () => {
   const [fundSources, setFundSources] = useState<FundSource[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [incomes, setIncomes] = useState<OtherIncome[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,12 +34,14 @@ const AdminOtherIncome = () => {
   const [editDate, setEditDate] = useState('');
 
   const fetchAll = async () => {
-    const [fundsRes, incomeRes] = await Promise.all([
+    const [fundsRes, incomeRes, pmRes] = await Promise.all([
       supabase.from('expense_fund_sources' as any).select('id, name'),
       supabase.from('other_income' as any).select('*').order('date', { ascending: false }),
+      supabase.from('payment_methods').select('bank_name, mdr_rate'),
     ]);
     setFundSources((fundsRes.data as any) || []);
     setIncomes((incomeRes.data as any) || []);
+    setPaymentMethods((pmRes.data as any) || []);
     setLoading(false);
   };
 
@@ -50,13 +54,45 @@ const AdminOtherIncome = () => {
       toast.error('Please fill in description and amount');
       return;
     }
+    const incomeAmount = parseInt(amount);
     const { error } = await supabase.from('other_income' as any).insert({
       description: description.trim(),
-      amount: parseInt(amount),
+      amount: incomeAmount,
       fund_source_id: fundSourceId || null,
       date,
     } as any);
     if (error) { toast.error(error.message); return; }
+
+    // Auto-create MDR expense if fund source matches a payment method with MDR rate
+    if (fundSourceId) {
+      const fundName = fundMap[fundSourceId];
+      if (fundName) {
+        const pm = paymentMethods.find(p => p.bank_name.toLowerCase() === fundName.toLowerCase());
+        if (pm && pm.mdr_rate > 0) {
+          const mdrAmount = Math.round((incomeAmount * pm.mdr_rate) / 100);
+          if (mdrAmount > 0) {
+            // Get or find MDR Fee category
+            let catId: string | null = null;
+            const { data: cats } = await supabase.from('expense_categories' as any).select('id').eq('name', 'MDR Fee').limit(1);
+            if (cats && cats.length > 0) {
+              catId = (cats[0] as any).id;
+            } else {
+              const { data: newCat } = await supabase.from('expense_categories' as any).insert({ name: 'MDR Fee' } as any).select('id').single();
+              if (newCat) catId = (newCat as any).id;
+            }
+
+            await supabase.from('expenses' as any).insert({
+              description: `MDR - Other Income: ${description.trim()}`,
+              amount: mdrAmount,
+              category_id: catId,
+              fund_source_id: fundSourceId,
+              date,
+            } as any);
+          }
+        }
+      }
+    }
+
     toast.success('Income added');
     setDescription(''); setAmount(''); setFundSourceId(''); setDate(format(new Date(), 'yyyy-MM-dd'));
     fetchAll();
