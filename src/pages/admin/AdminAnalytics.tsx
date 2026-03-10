@@ -333,8 +333,8 @@ const AdminAnalytics = () => {
   const totalSalesRevenue = useMemo(() => {
     return orders
       .filter(o => o.status !== 'cancelled')
-      .reduce((s, o) => s + o.total_amount, 0);
-  }, [orders]);
+      .reduce((s, o) => s + getOrderRevenue(o, netRevenueType), 0);
+  }, [orders, netRevenueType]);
 
   const totalOtherIncome = useMemo(() => otherIncomes.reduce((s, i) => s + i.amount, 0), [otherIncomes]);
   const totalAllExpenses = useMemo(() => expenses.reduce((s, e) => s + e.amount, 0), [expenses]);
