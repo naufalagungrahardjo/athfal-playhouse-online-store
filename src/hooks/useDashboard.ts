@@ -41,7 +41,7 @@ export const useDashboard = () => {
       // Fetch orders data with all required fields
       const { data: orders, error: ordersError } = await supabase
         .from('orders')
-        .select('total_amount, subtotal, status, customer_email');
+        .select('total_amount, subtotal, tax_amount, discount_amount, status, customer_email');
 
       if (ordersError) throw ordersError;
 
