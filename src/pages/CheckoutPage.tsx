@@ -169,10 +169,12 @@ const CheckoutPage = () => {
     console.log('Processing order with payment method:', formData.paymentMethod);
     console.log('Available payment methods:', paymentMethods);
 
-    const subtotal = appliedPromo ? getDiscountedSubtotal() : getTotalPrice();
-    const taxAmount = appliedPromo ? getDiscountedTax() : getTotalTax();
-    const totalAmount = subtotal + taxAmount;
+    // Send the ORIGINAL (non-discounted) subtotal to the DB.
+    // The validate_order_totals trigger computes: total = subtotal + tax - discount
     const discountAmount = appliedPromo ? getDiscountAmount() : 0;
+    const originalSubtotal = getTotalPrice();
+    const taxAmount = appliedPromo ? getDiscountedTax() : getTotalTax();
+    const totalAmount = Math.round(originalSubtotal) + Math.round(taxAmount) - Math.round(discountAmount);
 
     console.log('Order totals:', { subtotal, taxAmount, totalAmount, discountAmount });
 
