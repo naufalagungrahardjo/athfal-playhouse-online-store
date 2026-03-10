@@ -346,7 +346,7 @@ const AdminAnalytics = () => {
   const revenueVsExpenseData = useMemo(() => {
     const map: Record<string, { revenue: number; expense: number; net: number }> = {};
     // Sales revenue
-    orders.filter(o => o.status !== 'cancelled').forEach(o => {
+    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').forEach(o => {
       const key = formatDateKey(o.created_at, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
       map[key].revenue += getOrderRevenue(o, netRevenueType);
