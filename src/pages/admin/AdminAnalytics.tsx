@@ -35,14 +35,33 @@ const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent
 
 type TimeGranularity = 'daily' | 'monthly' | 'yearly';
 
+type RevenueType = 'before_tax' | 'after_tax' | 'after_discount';
+
 interface OrderWithItems {
   id: string;
   created_at: string;
   payment_method: string;
   status: string;
   total_amount: number;
+  subtotal: number;
+  tax_amount: number;
+  discount_amount: number;
   items: { product_id: string; product_name: string; quantity: number; product_price: number }[];
 }
+
+const getOrderRevenue = (order: OrderWithItems, revenueType: RevenueType): number => {
+  switch (revenueType) {
+    case 'before_tax': return order.subtotal || 0;
+    case 'after_tax': return (order.subtotal || 0) + (order.tax_amount || 0);
+    case 'after_discount': return (order.subtotal || 0) - (order.discount_amount || 0);
+  }
+};
+
+const revenueTypeLabels: Record<RevenueType, string> = {
+  before_tax: 'Revenue Before Tax',
+  after_tax: 'Revenue After Tax',
+  after_discount: 'Revenue After Discount',
+};
 
 type ExpenseRow = { id: string; description: string; category_id: string | null; fund_source_id: string | null; amount: number; date: string };
 type ExpenseCategory = { id: string; name: string };
