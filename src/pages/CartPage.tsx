@@ -98,6 +98,10 @@ const CartPage = () => {
 
   // Check if any cart item is sold out (either by stock or admin toggle)
   const hasSoldOutItems = items.some(item => item.product.is_sold_out || item.product.stock <= 0);
+  // Check if any cart item is hidden by admin
+  const hasHiddenItems = items.some(item => item.product.is_hidden);
+  // Combined: any unavailable items
+  const hasUnavailableItems = hasSoldOutItems || hasHiddenItems;
   // Check if any item exceeds available stock
   const hasOverStockItems = items.some(item => {
     const eff = item.product.is_sold_out ? 0 : item.product.stock;
@@ -107,14 +111,14 @@ const CartPage = () => {
   const handleCheckout = async () => {
     if (items.length === 0) return;
 
-    // Block checkout if any item is sold out
-    if (hasSoldOutItems) {
+    // Block checkout if any item is unavailable (sold out or hidden)
+    if (hasUnavailableItems) {
       toast({
         variant: 'destructive',
-        title: language === 'id' ? 'Produk habis' : 'Product sold out',
+        title: language === 'id' ? 'Produk tidak tersedia' : 'Product unavailable',
         description: language === 'id' 
-          ? 'Beberapa produk di keranjang Anda sudah habis. Silakan hapus terlebih dahulu.'
-          : 'Some products in your cart are sold out. Please remove them first.'
+          ? 'Beberapa produk di keranjang Anda sudah tidak tersedia. Silakan hapus terlebih dahulu sebelum melanjutkan checkout.'
+          : 'Some products in your cart are no longer available. Please remove them before proceeding to checkout.'
       });
       return;
     }
