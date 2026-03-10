@@ -427,7 +427,7 @@ const AdminAnalytics = () => {
         net: v.salesIn + v.otherIn - v.expenseOut,
       }))
       .sort((a, b) => b.net - a.net);
-  }, [orders, otherIncomes, expenses, expFundMap]);
+  }, [orders, otherIncomes, expenses, expFundMap, netRevenueType]);
 
   // Fund balance pie (net positive only)
   const fundBalancePieData = useMemo(() => {
