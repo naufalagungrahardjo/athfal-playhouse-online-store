@@ -226,7 +226,11 @@ const CheckoutForm = ({
         </div>
 
         {/* Consent Checkbox */}
-        <div className="flex items-start gap-3 p-4 border border-border rounded-lg bg-muted/50 cursor-pointer">
+        <div className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+          consentChecked 
+            ? 'border-green-500 bg-green-50' 
+            : 'border-amber-400 bg-amber-50 animate-pulse'
+        }`}>
           <Checkbox
             id="consent"
             checked={consentChecked}
@@ -237,11 +241,13 @@ const CheckoutForm = ({
                 setConsentChecked(false);
               }
             }}
-            className="mt-0.5"
+            className="mt-0.5 border-2 border-amber-500 data-[state=checked]:border-green-500 data-[state=checked]:bg-green-500"
           />
           <label
             htmlFor="consent"
-            className="text-sm leading-relaxed cursor-pointer select-none"
+            className={`text-sm leading-relaxed cursor-pointer select-none font-medium ${
+              consentChecked ? 'text-green-700' : 'text-amber-800'
+            }`}
             onClick={(e) => {
               e.preventDefault();
               if (!consentChecked) {
@@ -252,8 +258,8 @@ const CheckoutForm = ({
             }}
           >
             {lang === 'id'
-              ? 'Saya telah membaca dan menyetujui syarat & ketentuan yang berlaku'
-              : 'I have read and agree to the applicable terms & conditions'}
+              ? '⚠️ Saya telah membaca dan menyetujui syarat & ketentuan yang berlaku'
+              : '⚠️ I have read and agree to the applicable terms & conditions'}
           </label>
         </div>
 
