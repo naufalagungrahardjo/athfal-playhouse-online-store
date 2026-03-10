@@ -71,6 +71,8 @@ export const useDashboard = () => {
         totalOrders,
         revenueBeforeTax,
         revenueAfterTax,
+        revenueAfterDiscount,
+        totalDiscount,
         totalProducts,
         totalCustomers,
         pendingOrders,
