@@ -49,6 +49,7 @@ interface CartContextType {
   getTotal: () => number;
   products: Product[];
   fetchProducts: () => Promise<void>;
+  refreshCartStock: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
