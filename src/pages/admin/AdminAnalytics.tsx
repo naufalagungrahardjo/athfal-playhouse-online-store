@@ -187,11 +187,11 @@ const AdminAnalytics = () => {
     const map: Record<string, number> = {};
     filteredOrders.forEach(order => {
       const key = formatDateKey(order.created_at, timeGranularity);
-      const val = getFilteredItems(order).reduce((sum, item) => sum + item.product_price * item.quantity, 0);
+      const val = getOrderRevenue(order, salesRevenueType);
       map[key] = (map[key] || 0) + val;
     });
     return Object.entries(map).sort().map(([date, value]) => ({ date, value }));
-  }, [filteredOrders, categoryFilter, timeGranularity]);
+  }, [filteredOrders, salesRevenueType, timeGranularity]);
 
   const productProportionData = useMemo(() => {
     const map: Record<string, number> = {};
