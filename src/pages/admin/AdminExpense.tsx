@@ -22,6 +22,7 @@ type Expense = {
   amount: number;
   date: string;
   created_at: string;
+  order_id: string | null;
 };
 
 const AdminExpense = () => {
