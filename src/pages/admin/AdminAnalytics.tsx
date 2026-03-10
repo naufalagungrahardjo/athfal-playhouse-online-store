@@ -332,7 +332,7 @@ const AdminAnalytics = () => {
   // Use all non-cancelled orders for net income (no category/status filter)
   const totalSalesRevenue = useMemo(() => {
     return orders
-      .filter(o => o.status !== 'cancelled')
+      .filter(o => o.status !== 'cancelled' && o.status !== 'refund')
       .reduce((s, o) => s + getOrderRevenue(o, netRevenueType), 0);
   }, [orders, netRevenueType]);
 
