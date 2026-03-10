@@ -130,9 +130,13 @@ export const useOrders = () => {
 
       if (error) throw error;
 
-      // Auto-create MDR expense when order moves to "completed" (deduplicated)
-      if (status === 'completed' && previousStatus !== 'completed' && currentOrder) {
-        await createMdrExpense(currentOrder);
+      // Auto-create MDR expense as fallback when order moves to "completed" (deduplicated via RPC)
+      if (status === 'completed' && previousStatus !== 'completed') {
+        try {
+          await supabase.rpc('create_mdr_expense_for_order' as any, { p_order_id: orderId });
+        } catch (mdrErr) {
+          logger.error('MDR expense fallback failed (non-blocking):', mdrErr);
+        }
       }
 
       toast({
