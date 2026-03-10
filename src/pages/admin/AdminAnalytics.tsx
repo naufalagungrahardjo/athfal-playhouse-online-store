@@ -112,7 +112,7 @@ const AdminAnalytics = () => {
     const fetchData = async () => {
       setLoading(true);
       const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes, incRes] = await Promise.all([
-        supabase.from('orders').select('id, created_at, payment_method, status, total_amount').order('created_at', { ascending: true }),
+        supabase.from('orders').select('id, created_at, payment_method, status, total_amount, subtotal, tax_amount, discount_amount').order('created_at', { ascending: true }),
         supabase.from('order_items').select('order_id, product_id, product_name, quantity, product_price'),
         supabase.from('categories').select('slug, title'),
         supabase.from('products').select('product_id, category'),
