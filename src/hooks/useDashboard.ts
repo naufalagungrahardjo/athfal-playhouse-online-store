@@ -52,11 +52,12 @@ export const useDashboard = () => {
 
       if (productsError) throw productsError;
 
-      // Calculate stats
+      // Calculate stats - exclude cancelled and refund orders from revenue
       const totalOrders = orders?.length || 0;
-      const revenueBeforeTax = orders?.reduce((sum, order) => sum + (order.subtotal || 0), 0) || 0;
-      const revenueAfterTax = orders?.reduce((sum, order) => sum + (order.subtotal || 0) + (order.tax_amount || 0), 0) || 0;
-      const totalDiscount = orders?.reduce((sum, order) => sum + (order.discount_amount || 0), 0) || 0;
+      const revenueOrders = orders?.filter(o => o.status !== 'cancelled' && o.status !== 'refund') || [];
+      const revenueBeforeTax = revenueOrders.reduce((sum, order) => sum + (order.subtotal || 0), 0);
+      const revenueAfterTax = revenueOrders.reduce((sum, order) => sum + (order.subtotal || 0) + (order.tax_amount || 0), 0);
+      const totalDiscount = revenueOrders.reduce((sum, order) => sum + (order.discount_amount || 0), 0);
       const revenueAfterDiscount = revenueBeforeTax - totalDiscount;
       const totalProducts = productsCount || 0;
       const totalCustomers = new Set(orders?.map(order => order.customer_email)).size || 0;

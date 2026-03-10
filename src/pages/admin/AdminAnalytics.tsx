@@ -151,7 +151,7 @@ const AdminAnalytics = () => {
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
       if (statusFilter === 'all') {
-        if (order.status === 'cancelled') return false;
+        if (order.status === 'cancelled' || order.status === 'refund') return false;
       } else if (order.status !== statusFilter) {
         return false;
       }
@@ -332,7 +332,7 @@ const AdminAnalytics = () => {
   // Use all non-cancelled orders for net income (no category/status filter)
   const totalSalesRevenue = useMemo(() => {
     return orders
-      .filter(o => o.status !== 'cancelled')
+      .filter(o => o.status !== 'cancelled' && o.status !== 'refund')
       .reduce((s, o) => s + getOrderRevenue(o, netRevenueType), 0);
   }, [orders, netRevenueType]);
 
@@ -346,7 +346,7 @@ const AdminAnalytics = () => {
   const revenueVsExpenseData = useMemo(() => {
     const map: Record<string, { revenue: number; expense: number; net: number }> = {};
     // Sales revenue
-    orders.filter(o => o.status !== 'cancelled').forEach(o => {
+    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').forEach(o => {
       const key = formatDateKey(o.created_at, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
       map[key].revenue += getOrderRevenue(o, netRevenueType);
@@ -397,7 +397,7 @@ const AdminAnalytics = () => {
     };
 
     // Sales revenue by payment_method (text field like "BCA", "Mandiri")
-    orders.filter(o => o.status !== 'cancelled').forEach(o => {
+    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').forEach(o => {
       const method = o.payment_method || 'Unknown';
       ensure(method);
       balanceMap[method].salesIn += getOrderRevenue(o, netRevenueType);
