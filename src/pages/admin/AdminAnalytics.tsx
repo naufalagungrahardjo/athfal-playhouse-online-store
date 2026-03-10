@@ -525,6 +525,17 @@ const AdminAnalytics = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Revenue Type</label>
+              <Select value={salesRevenueType} onValueChange={(v) => setSalesRevenueType(v as RevenueType)}>
+                <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="before_tax">Revenue Before Tax</SelectItem>
+                  <SelectItem value="after_tax">Revenue After Tax</SelectItem>
+                  <SelectItem value="after_discount">Revenue After Discount</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <Card>
