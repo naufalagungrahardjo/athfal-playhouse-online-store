@@ -184,7 +184,7 @@ const CheckoutPage = () => {
       childAge: formData.childAge,
       childBirthdate: formData.childBirthdate,
       items,
-      subtotal: Math.round(subtotal),
+      subtotal: Math.round(originalSubtotal),
       taxAmount: Math.round(taxAmount),
       totalAmount: Math.round(totalAmount),
       promoCode: appliedPromo?.code || null,
