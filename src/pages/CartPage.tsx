@@ -127,7 +127,7 @@ const CartPage = () => {
     const baseProductIds = [...new Set(items.map(item => getBaseProductId(item.product.id)))];
     const { data: freshStock, error: stockError } = await supabase
       .from('products')
-      .select('product_id, stock, name, is_sold_out')
+      .select('product_id, stock, name, is_sold_out, is_hidden')
       .in('product_id', baseProductIds);
 
     if (stockError || !freshStock) {
@@ -148,6 +148,15 @@ const CartPage = () => {
 
     for (const [baseId, totalQty] of Object.entries(qtyByBase)) {
       const fresh = freshStock.find(p => p.product_id === baseId);
+      // Block hidden products
+      if (fresh?.is_hidden) {
+        toast({
+          variant: 'destructive',
+          title: language === 'id' ? 'Produk tidak tersedia' : 'Product unavailable',
+          description: `${fresh.name} ${language === 'id' ? 'saat ini tidak tersedia.' : 'is currently unavailable.'}`
+        });
+        return;
+      }
       const effectiveStock = fresh?.is_sold_out ? 0 : (fresh?.stock ?? 0);
       if (!fresh || effectiveStock <= 0) {
         toast({
