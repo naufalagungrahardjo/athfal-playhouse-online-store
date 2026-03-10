@@ -556,7 +556,7 @@ const AdminAnalytics = () => {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>{granularityLabel} Product Sales Value</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{granularityLabel} {revenueTypeLabels[salesRevenueType]}</CardTitle></CardHeader>
             <CardContent>
               {salesValueData.length === 0 ? <p className="text-muted-foreground text-center py-8">No sales data available</p> : (
                 <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
