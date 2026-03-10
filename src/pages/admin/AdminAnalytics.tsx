@@ -349,7 +349,7 @@ const AdminAnalytics = () => {
     orders.filter(o => o.status !== 'cancelled').forEach(o => {
       const key = formatDateKey(o.created_at, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
-      map[key].revenue += o.total_amount;
+      map[key].revenue += getOrderRevenue(o, netRevenueType);
     });
     // Other income
     otherIncomes.forEach(i => {
