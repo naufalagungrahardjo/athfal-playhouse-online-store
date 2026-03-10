@@ -203,6 +203,13 @@ export const useOrderProcessing = () => {
         logger.error(`[${errorId}] Stock deduction failed: ${stockDeductError.message}`);
       }
 
+      // Auto-create MDR expense via SECURITY DEFINER RPC (bypasses RLS)
+      try {
+        await supabase.rpc('create_mdr_expense_for_order' as any, { p_order_id: order.id });
+      } catch (mdrError) {
+        logger.error(`[${errorId}] MDR expense creation failed (non-blocking):`, mdrError);
+      }
+
       // Increment promo code usage count if promo was applied
       // Promo code usage is now validated and incremented BEFORE order creation to strictly enforce quota.
       // No action needed here.

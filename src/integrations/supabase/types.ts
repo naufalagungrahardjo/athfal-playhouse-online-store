@@ -1077,6 +1077,10 @@ export type Database = {
     }
     Functions: {
       auto_cancel_stale_orders: { Args: never; Returns: number }
+      create_mdr_expense_for_order: {
+        Args: { p_order_id: string }
+        Returns: boolean
+      }
       deduct_stock_for_order: { Args: { p_order_id: string }; Returns: boolean }
       get_order_by_token: {
         Args: { p_order_id: string; p_token: string }
