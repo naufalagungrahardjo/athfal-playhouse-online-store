@@ -359,17 +359,17 @@ const CartPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Cart items */}
             <div className="lg:col-span-2">
-              {hasSoldOutItems && (
+              {hasUnavailableItems && (
                 <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                   <span className="text-red-600 text-lg">⚠️</span>
                   <div>
                     <p className="font-semibold text-red-700">
-                      {language === 'id' ? 'Beberapa produk sudah habis' : 'Some products are sold out'}
+                      {language === 'id' ? 'Beberapa produk tidak tersedia' : 'Some products are unavailable'}
                     </p>
                     <p className="text-red-600 text-sm">
                       {language === 'id' 
-                        ? 'Hapus produk yang bertanda "SOLD OUT" dari keranjang sebelum melanjutkan checkout.' 
-                        : 'Remove items marked "SOLD OUT" from your cart before proceeding to checkout.'}
+                        ? 'Hapus produk yang bertanda "SOLD OUT" atau "TIDAK TERSEDIA" dari keranjang sebelum melanjutkan checkout.' 
+                        : 'Remove items marked "SOLD OUT" or "UNAVAILABLE" from your cart before proceeding to checkout.'}
                     </p>
                   </div>
                 </div>
@@ -379,11 +379,13 @@ const CartPage = () => {
                   <div className="space-y-6">
                     {items.map((item) => {
                       const isSoldOut = item.product.is_sold_out || item.product.stock <= 0;
+                      const isHidden = item.product.is_hidden;
+                      const isUnavailable = isSoldOut || isHidden;
                       return (
                       <div key={item.product.id}>
-                        <div className={`flex flex-col sm:flex-row items-start gap-4 ${isSoldOut ? 'opacity-60' : ''}`}>
+                        <div className={`flex flex-col sm:flex-row items-start gap-4 ${isUnavailable ? 'opacity-60' : ''}`}>
                           {/* Product image */}
-                          <div className={`w-full sm:w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative ${isSoldOut ? 'grayscale' : ''}`}>
+                          <div className={`w-full sm:w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative ${isUnavailable ? 'grayscale' : ''}`}>
                             <img 
                               src={item.product.image} 
                               alt={item.product.name} 
@@ -392,6 +394,13 @@ const CartPage = () => {
                             {isSoldOut && (
                               <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                                 <span className="bg-red-600 text-white font-bold px-2 py-1 rounded text-xs">SOLD OUT</span>
+                              </div>
+                            )}
+                            {!isSoldOut && isHidden && (
+                              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                <span className="bg-amber-600 text-white font-bold px-2 py-1 rounded text-xs">
+                                  {language === 'id' ? 'TIDAK TERSEDIA' : 'UNAVAILABLE'}
+                                </span>
                               </div>
                             )}
                           </div>
@@ -408,6 +417,10 @@ const CartPage = () => {
                               <div className="mt-2 sm:mt-0">
                                 {isSoldOut ? (
                                   <p className="font-bold text-red-600">SOLD OUT</p>
+                                ) : isHidden ? (
+                                  <p className="font-bold text-amber-600">
+                                    {language === 'id' ? 'TIDAK TERSEDIA' : 'UNAVAILABLE'}
+                                  </p>
                                 ) : (
                                   <p className="font-bold text-athfal-green">
                                     {formatCurrency(item.product.price * item.quantity)}
@@ -425,10 +438,13 @@ const CartPage = () => {
                               'Merchandise & Others'}
                             </p>
                             
-                            {isSoldOut ? (
+                            {isUnavailable ? (
                               <div className="flex justify-between items-center">
-                                <p className="text-red-600 text-sm font-medium">
-                                  {language === 'id' ? 'Produk ini sudah habis' : 'This product is sold out'}
+                                <p className={`text-sm font-medium ${isSoldOut ? 'text-red-600' : 'text-amber-600'}`}>
+                                  {isSoldOut
+                                    ? (language === 'id' ? 'Produk ini sudah habis' : 'This product is sold out')
+                                    : (language === 'id' ? 'Produk ini saat ini tidak tersedia' : 'This product is currently unavailable')
+                                  }
                                 </p>
                                 <Button
                                   variant="ghost" 
