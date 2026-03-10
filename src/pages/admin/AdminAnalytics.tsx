@@ -35,14 +35,33 @@ const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent
 
 type TimeGranularity = 'daily' | 'monthly' | 'yearly';
 
+type RevenueType = 'before_tax' | 'after_tax' | 'after_discount';
+
 interface OrderWithItems {
   id: string;
   created_at: string;
   payment_method: string;
   status: string;
   total_amount: number;
+  subtotal: number;
+  tax_amount: number;
+  discount_amount: number;
   items: { product_id: string; product_name: string; quantity: number; product_price: number }[];
 }
+
+const getOrderRevenue = (order: OrderWithItems, revenueType: RevenueType): number => {
+  switch (revenueType) {
+    case 'before_tax': return order.subtotal || 0;
+    case 'after_tax': return (order.subtotal || 0) + (order.tax_amount || 0);
+    case 'after_discount': return (order.subtotal || 0) - (order.discount_amount || 0);
+  }
+};
+
+const revenueTypeLabels: Record<RevenueType, string> = {
+  before_tax: 'Revenue Before Tax',
+  after_tax: 'Revenue After Tax',
+  after_discount: 'Revenue After Discount',
+};
 
 type ExpenseRow = { id: string; description: string; category_id: string | null; fund_source_id: string | null; amount: number; date: string };
 type ExpenseCategory = { id: string; name: string };
@@ -85,11 +104,15 @@ const AdminAnalytics = () => {
   // Net Income
   const [netGranularity, setNetGranularity] = useState<TimeGranularity>('monthly');
 
+  // Revenue type filter (shared for Sales & Net Income)
+  const [salesRevenueType, setSalesRevenueType] = useState<RevenueType>('before_tax');
+  const [netRevenueType, setNetRevenueType] = useState<RevenueType>('before_tax');
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes, incRes] = await Promise.all([
-        supabase.from('orders').select('id, created_at, payment_method, status, total_amount').order('created_at', { ascending: true }),
+        supabase.from('orders').select('id, created_at, payment_method, status, total_amount, subtotal, tax_amount, discount_amount').order('created_at', { ascending: true }),
         supabase.from('order_items').select('order_id, product_id, product_name, quantity, product_price'),
         supabase.from('categories').select('slug, title'),
         supabase.from('products').select('product_id, category'),
@@ -164,11 +187,11 @@ const AdminAnalytics = () => {
     const map: Record<string, number> = {};
     filteredOrders.forEach(order => {
       const key = formatDateKey(order.created_at, timeGranularity);
-      const val = getFilteredItems(order).reduce((sum, item) => sum + item.product_price * item.quantity, 0);
+      const val = getOrderRevenue(order, salesRevenueType);
       map[key] = (map[key] || 0) + val;
     });
     return Object.entries(map).sort().map(([date, value]) => ({ date, value }));
-  }, [filteredOrders, categoryFilter, timeGranularity]);
+  }, [filteredOrders, salesRevenueType, timeGranularity]);
 
   const productProportionData = useMemo(() => {
     const map: Record<string, number> = {};
@@ -310,8 +333,8 @@ const AdminAnalytics = () => {
   const totalSalesRevenue = useMemo(() => {
     return orders
       .filter(o => o.status !== 'cancelled')
-      .reduce((s, o) => s + o.total_amount, 0);
-  }, [orders]);
+      .reduce((s, o) => s + getOrderRevenue(o, netRevenueType), 0);
+  }, [orders, netRevenueType]);
 
   const totalOtherIncome = useMemo(() => otherIncomes.reduce((s, i) => s + i.amount, 0), [otherIncomes]);
   const totalAllExpenses = useMemo(() => expenses.reduce((s, e) => s + e.amount, 0), [expenses]);
@@ -326,7 +349,7 @@ const AdminAnalytics = () => {
     orders.filter(o => o.status !== 'cancelled').forEach(o => {
       const key = formatDateKey(o.created_at, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
-      map[key].revenue += o.total_amount;
+      map[key].revenue += getOrderRevenue(o, netRevenueType);
     });
     // Other income
     otherIncomes.forEach(i => {
@@ -343,7 +366,7 @@ const AdminAnalytics = () => {
     // Calculate net
     Object.values(map).forEach(v => { v.net = v.revenue - v.expense; });
     return Object.entries(map).sort().map(([date, vals]) => ({ date, ...vals }));
-  }, [orders, otherIncomes, expenses, netGranularity]);
+  }, [orders, otherIncomes, expenses, netGranularity, netRevenueType]);
 
   // Cumulative net income over time
   const cumulativeNetData = useMemo(() => {
@@ -377,7 +400,7 @@ const AdminAnalytics = () => {
     orders.filter(o => o.status !== 'cancelled').forEach(o => {
       const method = o.payment_method || 'Unknown';
       ensure(method);
-      balanceMap[method].salesIn += o.total_amount;
+      balanceMap[method].salesIn += getOrderRevenue(o, netRevenueType);
     });
 
     // Other income by fund_source_id
@@ -404,7 +427,7 @@ const AdminAnalytics = () => {
         net: v.salesIn + v.otherIn - v.expenseOut,
       }))
       .sort((a, b) => b.net - a.net);
-  }, [orders, otherIncomes, expenses, expFundMap]);
+  }, [orders, otherIncomes, expenses, expFundMap, netRevenueType]);
 
   // Fund balance pie (net positive only)
   const fundBalancePieData = useMemo(() => {
@@ -502,6 +525,17 @@ const AdminAnalytics = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Revenue Type</label>
+              <Select value={salesRevenueType} onValueChange={(v) => setSalesRevenueType(v as RevenueType)}>
+                <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="before_tax">Revenue Before Tax</SelectItem>
+                  <SelectItem value="after_tax">Revenue After Tax</SelectItem>
+                  <SelectItem value="after_discount">Revenue After Discount</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <Card>
@@ -522,7 +556,7 @@ const AdminAnalytics = () => {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>{granularityLabel} Product Sales Value</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{granularityLabel} {revenueTypeLabels[salesRevenueType]}</CardTitle></CardHeader>
             <CardContent>
               {salesValueData.length === 0 ? <p className="text-muted-foreground text-center py-8">No sales data available</p> : (
                 <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
@@ -816,7 +850,7 @@ const AdminAnalytics = () => {
             </Card>
           </div>
 
-          {/* Granularity Filter */}
+          {/* Granularity & Revenue Type Filter */}
           <div className="flex flex-wrap gap-4 items-end">
             <div>
               <label className="text-sm font-medium block mb-1">Time Granularity</label>
@@ -826,6 +860,17 @@ const AdminAnalytics = () => {
                   <SelectItem value="daily">Daily</SelectItem>
                   <SelectItem value="monthly">Monthly</SelectItem>
                   <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Revenue Type</label>
+              <Select value={netRevenueType} onValueChange={(v) => setNetRevenueType(v as RevenueType)}>
+                <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="before_tax">Revenue Before Tax</SelectItem>
+                  <SelectItem value="after_tax">Revenue After Tax</SelectItem>
+                  <SelectItem value="after_discount">Revenue After Discount</SelectItem>
                 </SelectContent>
               </Select>
             </div>
