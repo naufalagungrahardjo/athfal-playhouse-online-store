@@ -6,6 +6,8 @@ export interface DashboardStats {
   totalOrders: number;
   revenueBeforeTax: number;
   revenueAfterTax: number;
+  revenueAfterDiscount: number;
+  totalDiscount: number;
   totalProducts: number;
   totalCustomers: number;
   pendingOrders: number;
