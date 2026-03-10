@@ -16,6 +16,7 @@ type OtherIncome = { id: string; description: string; amount: number; fund_sourc
 
 const AdminOtherIncome = () => {
   const [fundSources, setFundSources] = useState<FundSource[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [incomes, setIncomes] = useState<OtherIncome[]>([]);
   const [loading, setLoading] = useState(true);
 
