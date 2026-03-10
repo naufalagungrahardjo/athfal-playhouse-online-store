@@ -366,7 +366,7 @@ const AdminAnalytics = () => {
     // Calculate net
     Object.values(map).forEach(v => { v.net = v.revenue - v.expense; });
     return Object.entries(map).sort().map(([date, vals]) => ({ date, ...vals }));
-  }, [orders, otherIncomes, expenses, netGranularity]);
+  }, [orders, otherIncomes, expenses, netGranularity, netRevenueType]);
 
   // Cumulative net income over time
   const cumulativeNetData = useMemo(() => {
