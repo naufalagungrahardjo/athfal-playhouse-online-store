@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 
 type FundSource = { id: string; name: string };
+type PaymentMethod = { bank_name: string; mdr_rate: number };
 type OtherIncome = { id: string; description: string; amount: number; fund_source_id: string | null; date: string };
 
 const AdminOtherIncome = () => {
