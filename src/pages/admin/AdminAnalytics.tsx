@@ -400,7 +400,7 @@ const AdminAnalytics = () => {
     orders.filter(o => o.status !== 'cancelled').forEach(o => {
       const method = o.payment_method || 'Unknown';
       ensure(method);
-      balanceMap[method].salesIn += o.total_amount;
+      balanceMap[method].salesIn += getOrderRevenue(o, netRevenueType);
     });
 
     // Other income by fund_source_id
