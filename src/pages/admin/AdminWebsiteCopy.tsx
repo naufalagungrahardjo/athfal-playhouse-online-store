@@ -300,10 +300,7 @@ const AdminWebsiteCopy = () => {
         
         {/* Product Categories (Website Copy Section) */}
         <TabsContent value="categories" className="space-y-4">
-          <ProductCategoriesEditor
-            productCategories={copy.productCategories}
-            onChange={handleProductCategoriesChange}
-          />
+          <ProductCategoriesEditor />
         </TabsContent>
         
         {/* Partners/Collaborators Editor */}
