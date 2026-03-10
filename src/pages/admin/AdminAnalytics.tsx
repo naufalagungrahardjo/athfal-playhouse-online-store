@@ -850,7 +850,7 @@ const AdminAnalytics = () => {
             </Card>
           </div>
 
-          {/* Granularity Filter */}
+          {/* Granularity & Revenue Type Filter */}
           <div className="flex flex-wrap gap-4 items-end">
             <div>
               <label className="text-sm font-medium block mb-1">Time Granularity</label>
@@ -860,6 +860,17 @@ const AdminAnalytics = () => {
                   <SelectItem value="daily">Daily</SelectItem>
                   <SelectItem value="monthly">Monthly</SelectItem>
                   <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Revenue Type</label>
+              <Select value={netRevenueType} onValueChange={(v) => setNetRevenueType(v as RevenueType)}>
+                <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="before_tax">Revenue Before Tax</SelectItem>
+                  <SelectItem value="after_tax">Revenue After Tax</SelectItem>
+                  <SelectItem value="after_discount">Revenue After Discount</SelectItem>
                 </SelectContent>
               </Select>
             </div>
