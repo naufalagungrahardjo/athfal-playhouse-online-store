@@ -87,16 +87,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         { event: 'UPDATE', schema: 'public', table: 'products' },
         (payload) => {
           const updated = payload.new as any;
-          // Update the stock in cart items that match this product
-          setItems(prev => prev.map(item =>
-            item.product.id === updated.product_id
-              ? { ...item, product: { ...item.product, stock: updated.stock } }
-              : item
-          ));
+          // Update stock and sold-out status in cart items that match this product
+          setItems(prev => prev.map(item => {
+            const baseId = item.product.id.split('__')[0];
+            return baseId === updated.product_id
+              ? { ...item, product: { ...item.product, stock: updated.stock, is_sold_out: updated.is_sold_out ?? false, is_hidden: updated.is_hidden ?? false } }
+              : item;
+          }));
           // Also update products list
           setProducts(prev => prev.map(p =>
             p.id === updated.product_id
-              ? { ...p, stock: updated.stock }
+              ? { ...p, stock: updated.stock, is_sold_out: updated.is_sold_out ?? false, is_hidden: updated.is_hidden ?? false }
               : p
           ));
         }

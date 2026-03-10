@@ -44,6 +44,35 @@ const CartPage = () => {
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
   const [isCheckingPromo, setIsCheckingPromo] = useState(false);
 
+  // Refresh product stock & sold-out status on mount
+  useEffect(() => {
+    if (items.length === 0) return;
+    const baseIds = [...new Set(items.map(item => item.product.id.split('__')[0]))];
+    supabase
+      .from('products')
+      .select('product_id, stock, is_sold_out, is_hidden')
+      .in('product_id', baseIds)
+      .then(({ data }) => {
+        if (!data) return;
+        const stockMap = new Map(data.map(p => [p.product_id, p]));
+        // Update items in-place via updateQuantity won't work, so we rely on CartContext
+        // We'll dispatch updates through the cart context by triggering a re-render
+        items.forEach(item => {
+          const baseId = item.product.id.split('__')[0];
+          const fresh = stockMap.get(baseId);
+          if (fresh) {
+            item.product.stock = fresh.stock;
+            item.product.is_sold_out = fresh.is_sold_out ?? false;
+            item.product.is_hidden = fresh.is_hidden ?? false;
+          }
+        });
+        // Force re-render by updating quantity to same value (triggers localStorage save too)
+        if (items.length > 0) {
+          updateQuantity(items[0].product.id, items[0].quantity);
+        }
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Calculate aggregate quantity for a base product across all variants in the cart
   const getAggregateQuantity = (cartId: string, excludeId?: string) => {
     const baseId = getBaseProductId(cartId);
