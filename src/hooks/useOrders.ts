@@ -169,7 +169,16 @@ export const useOrders = () => {
 
       if (restoreError) {
         logger.error('Stock restoration failed before delete:', restoreError);
-        // Continue with deletion even if restore fails (RPC handles already-restored case)
+      }
+
+      // Delete associated MDR expense
+      try {
+        await supabase
+          .from('expenses')
+          .delete()
+          .like('description', `MDR%${orderId}%`);
+      } catch (mdrErr) {
+        logger.error('MDR expense cleanup failed (non-blocking):', mdrErr);
       }
 
       // Delete order items first

@@ -397,7 +397,7 @@ const AdminAnalytics = () => {
     };
 
     // Sales revenue by payment_method (text field like "BCA", "Mandiri")
-    orders.filter(o => o.status !== 'cancelled').forEach(o => {
+    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').forEach(o => {
       const method = o.payment_method || 'Unknown';
       ensure(method);
       balanceMap[method].salesIn += getOrderRevenue(o, netRevenueType);
