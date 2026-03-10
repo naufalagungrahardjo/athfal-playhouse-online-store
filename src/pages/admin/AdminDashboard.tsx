@@ -15,7 +15,9 @@ import {
   XCircle,
   TrendingUp,
   PackageCheck,
-  Truck
+  Truck,
+  BadgePercent,
+  Receipt
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
