@@ -34,12 +34,14 @@ const AdminOtherIncome = () => {
   const [editDate, setEditDate] = useState('');
 
   const fetchAll = async () => {
-    const [fundsRes, incomeRes] = await Promise.all([
+    const [fundsRes, incomeRes, pmRes] = await Promise.all([
       supabase.from('expense_fund_sources' as any).select('id, name'),
       supabase.from('other_income' as any).select('*').order('date', { ascending: false }),
+      supabase.from('payment_methods').select('bank_name, mdr_rate'),
     ]);
     setFundSources((fundsRes.data as any) || []);
     setIncomes((incomeRes.data as any) || []);
+    setPaymentMethods((pmRes.data as any) || []);
     setLoading(false);
   };
 
