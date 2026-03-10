@@ -151,7 +151,7 @@ const AdminAnalytics = () => {
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
       if (statusFilter === 'all') {
-        if (order.status === 'cancelled') return false;
+        if (order.status === 'cancelled' || order.status === 'refund') return false;
       } else if (order.status !== statusFilter) {
         return false;
       }
