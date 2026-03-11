@@ -16,7 +16,7 @@ interface AboutUsAdminTabProps {
   content: any;
   onContentChange: (section: string, language: 'id' | 'en', value: string) => void;
   onImageChange: (field: string, value: string) => void;
-  onSaveImmediate?: () => void;
+  onSaveVideoUrl?: (url: string) => void;
   onAddTeamMember: (member: Omit<TeamMember, 'id'>) => void;
   onUpdateTeamMember: (id: string, member: Partial<TeamMember>) => void;
   onDeleteTeamMember: (id: string) => void;
