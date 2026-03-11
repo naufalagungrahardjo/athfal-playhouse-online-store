@@ -279,6 +279,10 @@ const AdminWebsiteCopy = () => {
             content={aboutContentDraft}
             onContentChange={handleAboutContentChange}
             onImageChange={handleAboutImageChange}
+            onSaveVideoUrl={(url) => {
+              saveAboutContent({ ...aboutContentDraft, aboutVideoUrl: url });
+              setHasAboutChanges(false);
+            }}
             onAddTeamMember={addTeamMember}
             onUpdateTeamMember={updateTeamMember}
             onDeleteTeamMember={deleteTeamMember}

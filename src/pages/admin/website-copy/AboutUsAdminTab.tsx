@@ -16,6 +16,7 @@ interface AboutUsAdminTabProps {
   content: any;
   onContentChange: (section: string, language: 'id' | 'en', value: string) => void;
   onImageChange: (field: string, value: string) => void;
+  onSaveVideoUrl?: (url: string) => void;
   onAddTeamMember: (member: Omit<TeamMember, 'id'>) => void;
   onUpdateTeamMember: (id: string, member: Partial<TeamMember>) => void;
   onDeleteTeamMember: (id: string) => void;
@@ -25,6 +26,7 @@ const AboutUsAdminTab = ({
   content: aboutContent,
   onContentChange,
   onImageChange,
+  onSaveVideoUrl,
   onAddTeamMember,
   onUpdateTeamMember,
   onDeleteTeamMember
@@ -89,7 +91,10 @@ const AboutUsAdminTab = ({
           <div className="mt-6">
             <VideoUrlInput
               value={aboutContent.aboutVideoUrl || ""}
-              onChange={(url) => onImageChange('aboutVideoUrl', url)}
+              onChange={(url) => {
+                onImageChange('aboutVideoUrl', url);
+                onSaveVideoUrl?.(url);
+              }}
               label="About Section Video (YouTube or Instagram Reel)"
             />
           </div>
