@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import Header from "@/components/layout/Header";
 import ScrollToTop from "@/components/layout/ScrollToTop";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Retry wrapper for lazy imports — handles stale chunk errors after rebuilds
 function lazyRetry<T extends ComponentType<any>>(
@@ -88,77 +89,81 @@ const queryClient = new QueryClient({
 });
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <LanguageProvider>
-        <AuthProvider>
-          <CartProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <ScrollToTop />
-              <div className="min-h-screen flex flex-col">
-                <Header />
-                <main className="flex-1">
-                  <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading...</div>}>
-                    <Routes>
-                      <Route path="/" element={<HomePage />} />
-                      <Route path="/about" element={<AboutPage />} />
-                      <Route path="/products" element={<AllProductsPage />} />
-                      <Route path="/products/:category" element={<ProductListPage />} />
-                      <Route path="/product/:id" element={<ProductDetailPage />} />
-                      <Route path="/cart" element={<CartPage />} />
-                      <Route path="/checkout" element={<CheckoutPage />} />
-                      <Route path="/order-details/:id" element={<OrderDetailsPage />} />
-                      <Route path="/blog" element={<BlogPage />} />
-                      <Route path="/blog/:slug" element={<BlogDetailPage />} />
-                      <Route path="/faq" element={<FAQPage />} />
-                      <Route path="/gallery" element={<GalleryPage />} />
-                      <Route path="/auth" element={<AuthPage />} />
-                      <Route path="/auth/:mode" element={<AuthPage />} />
-                      <Route path="/profile" element={<ProfilePage />} />
-                      
-                      {/* Admin Routes */}
-                      <Route path="/admin" element={<AdminLayout />}>
-                        <Route index element={<AdminDashboard />} />
-                        <Route path="products" element={<AdminProducts />} />
-                        <Route path="orders" element={<AdminOrders />} />
-                        <Route path="analytics" element={<AdminAnalytics />} />
-                        <Route path="blogs" element={<AdminBlogs />} />
-                        <Route path="banners" element={<AdminBanners />} />
-                        <Route path="testimonials" element={<AdminTestimonials />} />
-                        <Route path="content" element={<AdminContent />} />
-                        <Route path="users" element={<AdminUsers />} />
-                        <Route path="faq" element={<AdminFAQ />} />
-                        <Route path="promo-codes" element={<AdminPromoCodes />} />
-                        <Route path="website-copy" element={<AdminWebsiteCopy />} />
-                        <Route path="settings" element={<AdminSettings />} />
-                        <Route path="categories" element={<AdminCategories />} />
-                        <Route path="accounts" element={<AdminAccounts />} />
-                        <Route path="logs" element={<AdminLogs />} />
-                        <Route path="teacher" element={<AdminTeacher />} />
-                        <Route path="all-teachers" element={<AdminAllTeachers />} />
-                        <Route path="students" element={<AdminStudents />} />
-                        <Route path="expense" element={<AdminExpense />} />
-                        <Route path="other-income" element={<AdminOtherIncome />} />
-                        <Route path="checkout-terms" element={<AdminCheckoutTerms />} />
-                      </Route>
-                      
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <CartProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <ScrollToTop />
+                <div className="min-h-screen flex flex-col">
+                  <Header />
+                  <main className="flex-1">
+                    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading...</div>}>
+                      <ErrorBoundary>
+                        <Routes>
+                          <Route path="/" element={<HomePage />} />
+                          <Route path="/about" element={<AboutPage />} />
+                          <Route path="/products" element={<AllProductsPage />} />
+                          <Route path="/products/:category" element={<ProductListPage />} />
+                          <Route path="/product/:id" element={<ProductDetailPage />} />
+                          <Route path="/cart" element={<CartPage />} />
+                          <Route path="/checkout" element={<CheckoutPage />} />
+                          <Route path="/order-details/:id" element={<OrderDetailsPage />} />
+                          <Route path="/blog" element={<BlogPage />} />
+                          <Route path="/blog/:slug" element={<BlogDetailPage />} />
+                          <Route path="/faq" element={<FAQPage />} />
+                          <Route path="/gallery" element={<GalleryPage />} />
+                          <Route path="/auth" element={<AuthPage />} />
+                          <Route path="/auth/:mode" element={<AuthPage />} />
+                          <Route path="/profile" element={<ProfilePage />} />
+                          
+                          {/* Admin Routes */}
+                          <Route path="/admin" element={<AdminLayout />}>
+                            <Route index element={<AdminDashboard />} />
+                            <Route path="products" element={<AdminProducts />} />
+                            <Route path="orders" element={<AdminOrders />} />
+                            <Route path="analytics" element={<AdminAnalytics />} />
+                            <Route path="blogs" element={<AdminBlogs />} />
+                            <Route path="banners" element={<AdminBanners />} />
+                            <Route path="testimonials" element={<AdminTestimonials />} />
+                            <Route path="content" element={<AdminContent />} />
+                            <Route path="users" element={<AdminUsers />} />
+                            <Route path="faq" element={<AdminFAQ />} />
+                            <Route path="promo-codes" element={<AdminPromoCodes />} />
+                            <Route path="website-copy" element={<AdminWebsiteCopy />} />
+                            <Route path="settings" element={<AdminSettings />} />
+                            <Route path="categories" element={<AdminCategories />} />
+                            <Route path="accounts" element={<AdminAccounts />} />
+                            <Route path="logs" element={<AdminLogs />} />
+                            <Route path="teacher" element={<AdminTeacher />} />
+                            <Route path="all-teachers" element={<AdminAllTeachers />} />
+                            <Route path="students" element={<AdminStudents />} />
+                            <Route path="expense" element={<AdminExpense />} />
+                            <Route path="other-income" element={<AdminOtherIncome />} />
+                            <Route path="checkout-terms" element={<AdminCheckoutTerms />} />
+                          </Route>
+                          
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </ErrorBoundary>
+                    </Suspense>
+                  </main>
+                  <Suspense fallback={null}>
+                    <Footer />
+                    <WhatsAppFloatButton />
                   </Suspense>
-                </main>
-                <Suspense fallback={null}>
-                  <Footer />
-                  <WhatsAppFloatButton />
-                </Suspense>
-              </div>
-            </BrowserRouter>
-          </CartProvider>
-        </AuthProvider>
-      </LanguageProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+                </div>
+              </BrowserRouter>
+            </CartProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
