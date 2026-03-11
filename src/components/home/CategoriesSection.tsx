@@ -14,7 +14,7 @@ export const CategoriesSection = () => {
     align: 'center',
     loop: true,
     slidesToScroll: 1,
-    containScroll: false,
+    containScroll: 'trimSnaps',
   });
 
   const [canScrollPrev, setCanScrollPrev] = useState(false);
@@ -64,18 +64,18 @@ export const CategoriesSection = () => {
           </div>
 
           {/* Right side - carousel with focus effect */}
-          <div className="w-3/5 relative">
+          <div className="w-3/5 relative px-6">
             {/* Navigation arrows */}
             <button
               onClick={scrollPrev}
-              className="absolute -left-3 md:-left-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-10 md:h-10 rounded-full border border-athfal-pink/30 bg-background/80 backdrop-blur flex items-center justify-center shadow-md hover:bg-background transition-colors"
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-10 md:h-10 rounded-full border border-athfal-pink/30 bg-background/80 backdrop-blur flex items-center justify-center shadow-md hover:bg-background transition-colors"
               aria-label="Previous"
             >
               <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 text-athfal-pink" />
             </button>
             <button
               onClick={scrollNext}
-              className="absolute -right-3 md:-right-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-10 md:h-10 rounded-full border border-athfal-pink/30 bg-background/80 backdrop-blur flex items-center justify-center shadow-md hover:bg-background transition-colors"
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-10 md:h-10 rounded-full border border-athfal-pink/30 bg-background/80 backdrop-blur flex items-center justify-center shadow-md hover:bg-background transition-colors"
               aria-label="Next"
             >
               <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-athfal-pink" />
