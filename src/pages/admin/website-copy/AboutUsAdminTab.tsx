@@ -91,7 +91,11 @@ const AboutUsAdminTab = ({
           <div className="mt-6">
             <VideoUrlInput
               value={aboutContent.aboutVideoUrl || ""}
-              onChange={(url) => onImageChange('aboutVideoUrl', url)}
+              onChange={(url) => {
+                onImageChange('aboutVideoUrl', url);
+                // Auto-save after a tick so draft is updated
+                setTimeout(() => onSaveImmediate?.(), 100);
+              }}
               label="About Section Video (YouTube or Instagram Reel)"
             />
           </div>

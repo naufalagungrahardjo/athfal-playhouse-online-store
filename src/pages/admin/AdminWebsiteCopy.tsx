@@ -279,6 +279,11 @@ const AdminWebsiteCopy = () => {
             content={aboutContentDraft}
             onContentChange={handleAboutContentChange}
             onImageChange={handleAboutImageChange}
+            onSaveImmediate={() => {
+              // Save aboutContentDraft immediately
+              saveAboutContent(aboutContentDraft);
+              setHasAboutChanges(false);
+            }}
             onAddTeamMember={addTeamMember}
             onUpdateTeamMember={updateTeamMember}
             onDeleteTeamMember={deleteTeamMember}
