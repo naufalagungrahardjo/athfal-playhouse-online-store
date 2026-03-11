@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import Header from "@/components/layout/Header";
 import ScrollToTop from "@/components/layout/ScrollToTop";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Retry wrapper for lazy imports — handles stale chunk errors after rebuilds
 function lazyRetry<T extends ComponentType<any>>(
