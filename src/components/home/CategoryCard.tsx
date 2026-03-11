@@ -14,7 +14,7 @@ export const CategoryCard = ({ title, href, image, bgColor }: CategoryCardProps)
   const bg = isHex ? bgColor : pastel;
 
   return (
-    <Link to={href} className="group shrink-0 snap-start w-40 md:w-48">
+    <Link to={href} className="group block w-full">
       <div
         className="relative rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-200 aspect-square flex flex-col items-center justify-end"
         style={{ background: bg }}
