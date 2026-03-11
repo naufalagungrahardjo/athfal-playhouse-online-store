@@ -86,6 +86,13 @@ const AboutUsAdminTab = ({
             value={aboutContent.aboutDecorativeImage || ""}
             onChange={(url) => onImageChange('aboutDecorativeImage', url)}
           />
+          <div className="mt-6">
+            <VideoUrlInput
+              value={aboutContent.aboutVideoUrl || ""}
+              onChange={(url) => onImageChange('aboutVideoUrl', url)}
+              label="About Section Video (YouTube or Instagram Reel)"
+            />
+          </div>
         </CardContent>
       </Card>
 

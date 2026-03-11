@@ -1,16 +1,19 @@
 import React from 'react';
 import { getOptimizedImageUrl } from '@/utils/imageOptimizer';
+import { convertToEmbedUrl } from '@/components/admin/VideoUrlInput';
 
 interface AboutSectionImageProps {
   heroImage: string;
   aboutDecorativeImage?: string;
+  aboutVideoUrl?: string;
 }
 
 export const AboutSectionImage: React.FC<AboutSectionImageProps> = ({
   heroImage,
-  aboutDecorativeImage
+  aboutDecorativeImage,
+  aboutVideoUrl
 }) => (
-  <div className="relative">
+  <div className="relative space-y-6">
     <div className="rounded-3xl overflow-hidden shadow-xl">
       <img
         src={getOptimizedImageUrl(heroImage, { width: 665, quality: 80 })}
@@ -21,6 +24,20 @@ export const AboutSectionImage: React.FC<AboutSectionImageProps> = ({
         height={223}
       />
     </div>
+    {aboutVideoUrl && (
+      <div className="rounded-3xl overflow-hidden shadow-xl">
+        <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+          <iframe
+            src={convertToEmbedUrl(aboutVideoUrl)}
+            title="About Athfal Playhouse"
+            className="absolute inset-0 w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            loading="lazy"
+          />
+        </div>
+      </div>
+    )}
     <div className="absolute -bottom-6 -left-6 bg-athfal-yellow rounded-full p-4 shadow-lg animate-bounce-slow">
       <img
         src={aboutDecorativeImage || "/lovable-uploads/banner_1.png"}
