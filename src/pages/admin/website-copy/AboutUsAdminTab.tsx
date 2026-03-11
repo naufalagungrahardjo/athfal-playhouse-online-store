@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Edit, FileText } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
+import { VideoUrlInput } from "@/components/admin/VideoUrlInput";
 import TeamMemberForm from "../team/TeamMemberForm";
 import { TeamMember } from "@/hooks/useAboutContent";
 import { useState } from "react";
