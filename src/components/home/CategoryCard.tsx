@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { getOptimizedImageUrl } from '@/utils/imageOptimizer';
 
@@ -10,40 +9,31 @@ interface CategoryCardProps {
 }
 
 export const CategoryCard = ({ title, href, image, bgColor }: CategoryCardProps) => {
-  // If bgColor is a hex color, apply it; else fallback to pastel color
   const isHex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(bgColor);
   const pastel = "#eecdc4";
+  const bg = isHex ? bgColor : pastel;
 
   return (
-    <Link to={href} className="group">
-      <div className="bg-white rounded-3xl shadow-md p-6 flex flex-col items-center text-center hover:shadow-lg transition-shadow duration-200">
-        <div
-          className="relative rounded-full p-4 mb-4 group-hover:scale-105 transition-transform flex items-center justify-center"
-          style={{ width: 56, height: 56 }}
-        >
-          {/* Background layer, explicitly behind */}
-          <div
-            className="absolute inset-0 rounded-full z-0"
-            style={{
-              background: isHex ? bgColor : pastel,
-              opacity: 0.20,
-            }}
-          />
-          {/* Image layer, explicitly above */}
-          <img
-            src={getOptimizedImageUrl(image, { width: 80, quality: 75 })}
-            alt={title}
-            className="relative w-10 h-10 object-cover rounded-full z-10"
-            loading="lazy"
-            width={40}
-            height={40}
-            style={{
-              display: "block",
-              margin: "auto",
-            }}
-          />
+    <Link to={href} className="group shrink-0 snap-start w-40 md:w-48">
+      <div
+        className="relative rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-200 aspect-square flex flex-col items-center justify-end"
+        style={{ background: bg }}
+      >
+        {/* Category image */}
+        <img
+          src={getOptimizedImageUrl(image, { width: 300, quality: 80 })}
+          alt={title}
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          loading="lazy"
+          width={300}
+          height={300}
+        />
+        {/* Title overlay */}
+        <div className="relative z-10 w-full bg-gradient-to-t from-black/60 to-transparent p-3 pt-8">
+          <h3 className="font-semibold text-white text-sm md:text-base text-center leading-tight">
+            {title}
+          </h3>
         </div>
-        <h3 className="font-semibold text-athfal-pink">{title}</h3>
       </div>
     </Link>
   );
