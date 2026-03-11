@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Edit, FileText } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
+import { VideoUrlInput } from "@/components/admin/VideoUrlInput";
 import TeamMemberForm from "../team/TeamMemberForm";
 import { TeamMember } from "@/hooks/useAboutContent";
 import { useState } from "react";
@@ -85,6 +86,13 @@ const AboutUsAdminTab = ({
             value={aboutContent.aboutDecorativeImage || ""}
             onChange={(url) => onImageChange('aboutDecorativeImage', url)}
           />
+          <div className="mt-6">
+            <VideoUrlInput
+              value={aboutContent.aboutVideoUrl || ""}
+              onChange={(url) => onImageChange('aboutVideoUrl', url)}
+              label="About Section Video (YouTube or Instagram Reel)"
+            />
+          </div>
         </CardContent>
       </Card>
 

@@ -23,6 +23,7 @@ export interface AboutContent {
   teamDescription: { id: string; en: string };
   heroImage: string;
   aboutDecorativeImage?: string;
+  aboutVideoUrl?: string;
   teamMembers: TeamMember[];
 }
 
