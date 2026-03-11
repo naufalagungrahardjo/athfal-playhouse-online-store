@@ -14,7 +14,7 @@ export const CategoriesSection = () => {
     align: 'center',
     loop: true,
     slidesToScroll: 1,
-    containScroll: false,
+    containScroll: 'trimSnaps',
   });
 
   const [canScrollPrev, setCanScrollPrev] = useState(false);
