@@ -26,7 +26,7 @@ const AboutUsAdminTab = ({
   content: aboutContent,
   onContentChange,
   onImageChange,
-  onSaveImmediate,
+  onSaveVideoUrl,
   onAddTeamMember,
   onUpdateTeamMember,
   onDeleteTeamMember
