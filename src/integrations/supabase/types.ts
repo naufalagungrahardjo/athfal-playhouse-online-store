@@ -179,6 +179,44 @@ export type Database = {
         }
         Relationships: []
       }
+      capital_inflows: {
+        Row: {
+          amount: number
+          created_at: string
+          date: string
+          detail: string
+          fund_source_id: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          date?: string
+          detail: string
+          fund_source_id?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          date?: string
+          detail?: string
+          fund_source_id?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capital_inflows_fund_source_id_fkey"
+            columns: ["fund_source_id"]
+            isOneToOne: false
+            referencedRelation: "expense_fund_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           bg_color: string

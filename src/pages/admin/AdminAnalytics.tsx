@@ -67,6 +67,7 @@ type ExpenseRow = { id: string; description: string; category_id: string | null;
 type ExpenseCategory = { id: string; name: string };
 type FundSource = { id: string; name: string };
 type OtherIncomeRow = { id: string; description: string; amount: number; fund_source_id: string | null; date: string };
+type CapitalRow = { id: string; detail: string; amount: number; fund_source_id: string | null; date: string };
 
 const formatDateKey = (dateStr: string, granularity: TimeGranularity): string => {
   const d = new Date(dateStr);
@@ -101,6 +102,11 @@ const AdminAnalytics = () => {
   const [incGranularity, setIncGranularity] = useState<TimeGranularity>('monthly');
   const [incFundFilter, setIncFundFilter] = useState('all');
 
+  // Capital data
+  const [capitalInflows, setCapitalInflows] = useState<CapitalRow[]>([]);
+  const [capGranularity, setCapGranularity] = useState<TimeGranularity>('monthly');
+  const [capFundFilter, setCapFundFilter] = useState('all');
+
   // Net Income
   const [netGranularity, setNetGranularity] = useState<TimeGranularity>('monthly');
 
@@ -111,7 +117,7 @@ const AdminAnalytics = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes, incRes] = await Promise.all([
+      const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes, incRes, capRes] = await Promise.all([
         supabase.from('orders').select('id, created_at, payment_method, status, total_amount, subtotal, tax_amount, discount_amount').order('created_at', { ascending: true }),
         supabase.from('order_items').select('order_id, product_id, product_name, quantity, product_price'),
         supabase.from('categories').select('slug, title'),
@@ -120,6 +126,7 @@ const AdminAnalytics = () => {
         supabase.from('expense_categories' as any).select('id, name'),
         supabase.from('expense_fund_sources' as any).select('id, name'),
         supabase.from('other_income' as any).select('*').order('date', { ascending: true }),
+        supabase.from('capital_inflows' as any).select('*').order('date', { ascending: true }),
       ]);
 
       const itemsByOrder: Record<string, any[]> = {};
@@ -135,6 +142,7 @@ const AdminAnalytics = () => {
       setExpenseCategories((expCatsRes.data as any) || []);
       setFundSources((fundsRes.data as any) || []);
       setOtherIncomes((incRes.data as any) || []);
+      setCapitalInflows((capRes.data as any) || []);
       setLoading(false);
     };
     fetchData();
@@ -328,6 +336,76 @@ const AdminAnalytics = () => {
 
   const totalIncome = useMemo(() => filteredIncomes.reduce((s, i) => s + i.amount, 0), [filteredIncomes]);
 
+  // === Capital analytics ===
+  const filteredCapitals = useMemo(() => {
+    return capitalInflows.filter(c => {
+      if (capFundFilter !== 'all' && c.fund_source_id !== capFundFilter) return false;
+      return true;
+    });
+  }, [capitalInflows, capFundFilter]);
+
+  const capitalTrendData = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredCapitals.forEach(c => {
+      const key = formatDateKey(c.date, capGranularity);
+      map[key] = (map[key] || 0) + c.amount;
+    });
+    return Object.entries(map).sort().map(([date, total]) => ({ date, total }));
+  }, [filteredCapitals, capGranularity]);
+
+  // Capital by investor (detail text) - pie
+  const capitalByInvestorData = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredCapitals.forEach(c => {
+      // Extract investor name (first part before " - " if present)
+      const investor = c.detail.includes(' - ') ? c.detail.split(' - ')[0].trim() : c.detail.trim();
+      map[investor] = (map[investor] || 0) + c.amount;
+    });
+    const total = Object.values(map).reduce((s, v) => s + v, 0);
+    return Object.entries(map)
+      .map(([name, value]) => ({ name, value, percentage: total > 0 ? ((value / total) * 100).toFixed(1) : '0' }))
+      .sort((a, b) => b.value - a.value);
+  }, [filteredCapitals]);
+
+  // Capital by fund destination - pie
+  const capitalByFundData = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredCapitals.forEach(c => {
+      const fundName = c.fund_source_id ? (expFundMap[c.fund_source_id] || 'Unknown') : 'Unknown';
+      map[fundName] = (map[fundName] || 0) + c.amount;
+    });
+    const total = Object.values(map).reduce((s, v) => s + v, 0);
+    return Object.entries(map)
+      .map(([name, value]) => ({ name, value, percentage: total > 0 ? ((value / total) * 100).toFixed(1) : '0' }))
+      .sort((a, b) => b.value - a.value);
+  }, [filteredCapitals, expFundMap]);
+
+  // Capital by investor over time - stacked bar
+  const capitalByInvestorTimeData = useMemo(() => {
+    const dateMap: Record<string, Record<string, number>> = {};
+    const investors = new Set<string>();
+    filteredCapitals.forEach(c => {
+      const key = formatDateKey(c.date, capGranularity);
+      const investor = c.detail.includes(' - ') ? c.detail.split(' - ')[0].trim() : c.detail.trim();
+      investors.add(investor);
+      if (!dateMap[key]) dateMap[key] = {};
+      dateMap[key][investor] = (dateMap[key][investor] || 0) + c.amount;
+    });
+    const sortedDates = Object.keys(dateMap).sort();
+    return { data: sortedDates.map(date => ({ date, ...dateMap[date] })), investors: Array.from(investors) };
+  }, [filteredCapitals, capGranularity]);
+
+  // Cumulative capital over time
+  const cumulativeCapitalData = useMemo(() => {
+    let cumulative = 0;
+    return capitalTrendData.map(d => {
+      cumulative += d.total;
+      return { date: d.date, cumulative };
+    });
+  }, [capitalTrendData]);
+
+  const totalCapital = useMemo(() => filteredCapitals.reduce((s, c) => s + c.amount, 0), [filteredCapitals]);
+
   // === Net Income analytics ===
   // Use all non-cancelled orders for net income (no category/status filter)
   const totalSalesRevenue = useMemo(() => {
@@ -441,6 +519,7 @@ const AdminAnalytics = () => {
   const granularityLabel = timeGranularity === 'daily' ? 'Daily' : timeGranularity === 'monthly' ? 'Monthly' : 'Yearly';
   const expGranLabel = expGranularity === 'daily' ? 'Daily' : expGranularity === 'monthly' ? 'Monthly' : 'Yearly';
   const incGranLabel = incGranularity === 'daily' ? 'Daily' : incGranularity === 'monthly' ? 'Monthly' : 'Yearly';
+  const capGranLabel = capGranularity === 'daily' ? 'Daily' : capGranularity === 'monthly' ? 'Monthly' : 'Yearly';
 
   if (loading) {
     return (
@@ -460,6 +539,7 @@ const AdminAnalytics = () => {
           <TabsTrigger value="sales">Sales</TabsTrigger>
           <TabsTrigger value="expense">Expense</TabsTrigger>
           <TabsTrigger value="income">Other Income</TabsTrigger>
+          <TabsTrigger value="capital">Capital</TabsTrigger>
           <TabsTrigger value="net">Net Income</TabsTrigger>
         </TabsList>
 
@@ -1065,6 +1145,134 @@ const AdminAnalytics = () => {
                     <PieChart>
                       <Pie data={fundBalancePieData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={isMobile ? 30 : 50} outerRadius={isMobile ? 70 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                         {fundBalancePieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
+                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 11, paddingTop: 16 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Capital Tab */}
+        <TabsContent value="capital" className="space-y-6">
+          <div className="flex flex-wrap gap-4 items-end">
+            <div>
+              <label className="text-sm font-medium block mb-1">Time Granularity</label>
+              <Select value={capGranularity} onValueChange={(v) => setCapGranularity(v as TimeGranularity)}>
+                <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Fund Destination</label>
+              <Select value={capFundFilter} onValueChange={setCapFundFilter}>
+                <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Destinations</SelectItem>
+                  {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-sm text-muted-foreground">Total Capital Inflow (filtered)</div>
+              <div className="text-xl sm:text-3xl font-bold text-indigo-600 truncate">{formatCurrency(totalCapital)}</div>
+            </CardContent>
+          </Card>
+
+          {/* Bar Chart - Capital Inflow Trend */}
+          <Card>
+            <CardHeader><CardTitle>{capGranLabel} Capital Inflow Trend</CardTitle></CardHeader>
+            <CardContent>
+              {capitalTrendData.length === 0 ? <p className="text-muted-foreground text-center py-8">No capital data</p> : (
+                <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
+                  <BarChart data={capitalTrendData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Bar dataKey="total" fill="#6366f1" name="Capital Inflow" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Stacked Bar - Capital by Investor over Time */}
+          <Card>
+            <CardHeader><CardTitle>{capGranLabel} Capital by Investor</CardTitle></CardHeader>
+            <CardContent>
+              {capitalByInvestorTimeData.data.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                <ResponsiveContainer width="100%" height={isMobile ? 280 : 350}>
+                  <BarChart data={capitalByInvestorTimeData.data} margin={isMobile ? { left: -10, right: 10 } : undefined}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
+                    {capitalByInvestorTimeData.investors.map((inv, i) => (
+                      <Bar key={inv} dataKey={inv} stackId="a" fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Cumulative Capital Line */}
+          <Card>
+            <CardHeader><CardTitle>Cumulative Capital Inflow</CardTitle></CardHeader>
+            <CardContent>
+              {cumulativeCapitalData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
+                  <LineChart data={cumulativeCapitalData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Line type="monotone" dataKey="cumulative" stroke="#6366f1" strokeWidth={2} dot={{ r: isMobile ? 2 : 3 }} name="Cumulative Capital" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Pie Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader><CardTitle>Capital by Investor</CardTitle></CardHeader>
+              <CardContent>
+                {capitalByInvestorData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                  <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
+                    <PieChart>
+                      <Pie data={capitalByInvestorData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={isMobile ? 30 : 50} outerRadius={isMobile ? 70 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                        {capitalByInvestorData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
+                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 11, paddingTop: 16 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Capital by Fund Destination</CardTitle></CardHeader>
+              <CardContent>
+                {capitalByFundData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                  <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
+                    <PieChart>
+                      <Pie data={capitalByFundData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={isMobile ? 30 : 50} outerRadius={isMobile ? 70 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                        {capitalByFundData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
                       <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 11, paddingTop: 16 }} />
