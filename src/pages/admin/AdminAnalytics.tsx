@@ -142,6 +142,7 @@ const AdminAnalytics = () => {
       setExpenseCategories((expCatsRes.data as any) || []);
       setFundSources((fundsRes.data as any) || []);
       setOtherIncomes((incRes.data as any) || []);
+      setCapitalInflows((capRes.data as any) || []);
       setLoading(false);
     };
     fetchData();
