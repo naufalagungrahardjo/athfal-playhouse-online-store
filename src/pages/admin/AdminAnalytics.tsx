@@ -519,6 +519,7 @@ const AdminAnalytics = () => {
   const granularityLabel = timeGranularity === 'daily' ? 'Daily' : timeGranularity === 'monthly' ? 'Monthly' : 'Yearly';
   const expGranLabel = expGranularity === 'daily' ? 'Daily' : expGranularity === 'monthly' ? 'Monthly' : 'Yearly';
   const incGranLabel = incGranularity === 'daily' ? 'Daily' : incGranularity === 'monthly' ? 'Monthly' : 'Yearly';
+  const capGranLabel = capGranularity === 'daily' ? 'Daily' : capGranularity === 'monthly' ? 'Monthly' : 'Yearly';
 
   if (loading) {
     return (
