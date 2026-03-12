@@ -336,6 +336,76 @@ const AdminAnalytics = () => {
 
   const totalIncome = useMemo(() => filteredIncomes.reduce((s, i) => s + i.amount, 0), [filteredIncomes]);
 
+  // === Capital analytics ===
+  const filteredCapitals = useMemo(() => {
+    return capitalInflows.filter(c => {
+      if (capFundFilter !== 'all' && c.fund_source_id !== capFundFilter) return false;
+      return true;
+    });
+  }, [capitalInflows, capFundFilter]);
+
+  const capitalTrendData = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredCapitals.forEach(c => {
+      const key = formatDateKey(c.date, capGranularity);
+      map[key] = (map[key] || 0) + c.amount;
+    });
+    return Object.entries(map).sort().map(([date, total]) => ({ date, total }));
+  }, [filteredCapitals, capGranularity]);
+
+  // Capital by investor (detail text) - pie
+  const capitalByInvestorData = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredCapitals.forEach(c => {
+      // Extract investor name (first part before " - " if present)
+      const investor = c.detail.includes(' - ') ? c.detail.split(' - ')[0].trim() : c.detail.trim();
+      map[investor] = (map[investor] || 0) + c.amount;
+    });
+    const total = Object.values(map).reduce((s, v) => s + v, 0);
+    return Object.entries(map)
+      .map(([name, value]) => ({ name, value, percentage: total > 0 ? ((value / total) * 100).toFixed(1) : '0' }))
+      .sort((a, b) => b.value - a.value);
+  }, [filteredCapitals]);
+
+  // Capital by fund destination - pie
+  const capitalByFundData = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredCapitals.forEach(c => {
+      const fundName = c.fund_source_id ? (expFundMap[c.fund_source_id] || 'Unknown') : 'Unknown';
+      map[fundName] = (map[fundName] || 0) + c.amount;
+    });
+    const total = Object.values(map).reduce((s, v) => s + v, 0);
+    return Object.entries(map)
+      .map(([name, value]) => ({ name, value, percentage: total > 0 ? ((value / total) * 100).toFixed(1) : '0' }))
+      .sort((a, b) => b.value - a.value);
+  }, [filteredCapitals, expFundMap]);
+
+  // Capital by investor over time - stacked bar
+  const capitalByInvestorTimeData = useMemo(() => {
+    const dateMap: Record<string, Record<string, number>> = {};
+    const investors = new Set<string>();
+    filteredCapitals.forEach(c => {
+      const key = formatDateKey(c.date, capGranularity);
+      const investor = c.detail.includes(' - ') ? c.detail.split(' - ')[0].trim() : c.detail.trim();
+      investors.add(investor);
+      if (!dateMap[key]) dateMap[key] = {};
+      dateMap[key][investor] = (dateMap[key][investor] || 0) + c.amount;
+    });
+    const sortedDates = Object.keys(dateMap).sort();
+    return { data: sortedDates.map(date => ({ date, ...dateMap[date] })), investors: Array.from(investors) };
+  }, [filteredCapitals, capGranularity]);
+
+  // Cumulative capital over time
+  const cumulativeCapitalData = useMemo(() => {
+    let cumulative = 0;
+    return capitalTrendData.map(d => {
+      cumulative += d.total;
+      return { date: d.date, cumulative };
+    });
+  }, [capitalTrendData]);
+
+  const totalCapital = useMemo(() => filteredCapitals.reduce((s, c) => s + c.amount, 0), [filteredCapitals]);
+
   // === Net Income analytics ===
   // Use all non-cancelled orders for net income (no category/status filter)
   const totalSalesRevenue = useMemo(() => {
