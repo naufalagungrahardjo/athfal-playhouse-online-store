@@ -102,6 +102,11 @@ const AdminAnalytics = () => {
   const [incGranularity, setIncGranularity] = useState<TimeGranularity>('monthly');
   const [incFundFilter, setIncFundFilter] = useState('all');
 
+  // Capital data
+  const [capitalInflows, setCapitalInflows] = useState<CapitalRow[]>([]);
+  const [capGranularity, setCapGranularity] = useState<TimeGranularity>('monthly');
+  const [capFundFilter, setCapFundFilter] = useState('all');
+
   // Net Income
   const [netGranularity, setNetGranularity] = useState<TimeGranularity>('monthly');
 
