@@ -1156,6 +1156,134 @@ const AdminAnalytics = () => {
           </div>
         </TabsContent>
 
+        {/* Capital Tab */}
+        <TabsContent value="capital" className="space-y-6">
+          <div className="flex flex-wrap gap-4 items-end">
+            <div>
+              <label className="text-sm font-medium block mb-1">Time Granularity</label>
+              <Select value={capGranularity} onValueChange={(v) => setCapGranularity(v as TimeGranularity)}>
+                <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Fund Destination</label>
+              <Select value={capFundFilter} onValueChange={setCapFundFilter}>
+                <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Destinations</SelectItem>
+                  {fundSources.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-sm text-muted-foreground">Total Capital Inflow (filtered)</div>
+              <div className="text-xl sm:text-3xl font-bold text-indigo-600 truncate">{formatCurrency(totalCapital)}</div>
+            </CardContent>
+          </Card>
+
+          {/* Bar Chart - Capital Inflow Trend */}
+          <Card>
+            <CardHeader><CardTitle>{capGranLabel} Capital Inflow Trend</CardTitle></CardHeader>
+            <CardContent>
+              {capitalTrendData.length === 0 ? <p className="text-muted-foreground text-center py-8">No capital data</p> : (
+                <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
+                  <BarChart data={capitalTrendData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Bar dataKey="total" fill="#6366f1" name="Capital Inflow" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Stacked Bar - Capital by Investor over Time */}
+          <Card>
+            <CardHeader><CardTitle>{capGranLabel} Capital by Investor</CardTitle></CardHeader>
+            <CardContent>
+              {capitalByInvestorTimeData.data.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                <ResponsiveContainer width="100%" height={isMobile ? 280 : 350}>
+                  <BarChart data={capitalByInvestorTimeData.data} margin={isMobile ? { left: -10, right: 10 } : undefined}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
+                    {capitalByInvestorTimeData.investors.map((inv, i) => (
+                      <Bar key={inv} dataKey={inv} stackId="a" fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Cumulative Capital Line */}
+          <Card>
+            <CardHeader><CardTitle>Cumulative Capital Inflow</CardTitle></CardHeader>
+            <CardContent>
+              {cumulativeCapitalData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
+                  <LineChart data={cumulativeCapitalData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Line type="monotone" dataKey="cumulative" stroke="#6366f1" strokeWidth={2} dot={{ r: isMobile ? 2 : 3 }} name="Cumulative Capital" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Pie Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader><CardTitle>Capital by Investor</CardTitle></CardHeader>
+              <CardContent>
+                {capitalByInvestorData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                  <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
+                    <PieChart>
+                      <Pie data={capitalByInvestorData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={isMobile ? 30 : 50} outerRadius={isMobile ? 70 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                        {capitalByInvestorData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
+                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 11, paddingTop: 16 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Capital by Fund Destination</CardTitle></CardHeader>
+              <CardContent>
+                {capitalByFundData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                  <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
+                    <PieChart>
+                      <Pie data={capitalByFundData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={isMobile ? 30 : 50} outerRadius={isMobile ? 70 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                        {capitalByFundData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip formatter={(value: number, _: string, props: any) => [formatCurrency(value) + ` (${props.payload.percentage}%)`, props.payload.name]} />
+                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 11, paddingTop: 16 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
       </Tabs>
     </div>
   );
