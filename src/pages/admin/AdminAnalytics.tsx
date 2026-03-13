@@ -983,6 +983,16 @@ const AdminAnalytics = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Capital Inflow</label>
+              <Select value={includeCapital ? 'include' : 'exclude'} onValueChange={(v) => setIncludeCapital(v === 'include')}>
+                <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="exclude">Exclude Capital</SelectItem>
+                  <SelectItem value="include">Include Capital</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Grouped Bar: Revenue vs Expense */}
