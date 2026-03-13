@@ -16,8 +16,8 @@ export const AboutSection = () => {
   return (
     <section className="py-16 bg-gradient-to-br from-athfal-light-pink/20 to-athfal-peach/30">
       <div className="athfal-container">
-        <div className="flex flex-col md:flex-row items-center gap-8">
-          <div className="md:w-1/2">
+        <div className="flex flex-col lg:flex-row items-center gap-8">
+          <div className="lg:w-1/2">
             <h2 className="text-3xl font-bold mb-6 text-athfal-pink">
               {language === 'id' ? copy.homePage.aboutTitle.id : copy.homePage.aboutTitle.en}
             </h2>
@@ -37,7 +37,7 @@ export const AboutSection = () => {
               </Button>
             </a>
           </div>
-          <div className="md:w-1/2 mt-6 md:mt-0">
+          <div className="lg:w-1/2 mt-6 lg:mt-0">
             <AboutSectionImage
               heroImage={aboutContent.heroImage}
               aboutDecorativeImage={aboutContent.aboutDecorativeImage}
