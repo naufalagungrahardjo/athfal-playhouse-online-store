@@ -1007,7 +1007,7 @@ const AdminAnalytics = () => {
                     <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
                     <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
-                    <Bar dataKey="revenue" fill="#22c55e" name="Revenue (Sales + Other)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="revenue" fill="#22c55e" name={includeCapital ? "Revenue (Sales + Other + Capital)" : "Revenue (Sales + Other)"} radius={[4, 4, 0, 0]} />
                     <Bar dataKey="expense" fill="#ef4444" name="Expenses" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
