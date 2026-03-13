@@ -478,15 +478,14 @@ const AdminAnalytics = () => {
   }, [totalSalesRevenue, totalOtherIncome, totalAllCapital, includeCapital]);
 
   // === Fund Balance Breakdown ===
-  // Sales inflow by payment method (text) → map to fund source name
   const fundBalanceData = useMemo(() => {
-    const balanceMap: Record<string, { salesIn: number; otherIn: number; expenseOut: number }> = {};
+    const balanceMap: Record<string, { salesIn: number; otherIn: number; capitalIn: number; expenseOut: number }> = {};
 
     const ensure = (name: string) => {
-      if (!balanceMap[name]) balanceMap[name] = { salesIn: 0, otherIn: 0, expenseOut: 0 };
+      if (!balanceMap[name]) balanceMap[name] = { salesIn: 0, otherIn: 0, capitalIn: 0, expenseOut: 0 };
     };
 
-    // Sales revenue by payment_method (text field like "BCA", "Mandiri")
+    // Sales revenue by payment_method
     orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').forEach(o => {
       const method = o.payment_method || 'Unknown';
       ensure(method);
@@ -500,6 +499,15 @@ const AdminAnalytics = () => {
       balanceMap[name].otherIn += i.amount;
     });
 
+    // Capital by fund_source_id (if included)
+    if (includeCapital) {
+      capitalInflows.forEach(c => {
+        const name = c.fund_source_id ? (expFundMap[c.fund_source_id] || 'Unknown') : 'Unknown';
+        ensure(name);
+        balanceMap[name].capitalIn += c.amount;
+      });
+    }
+
     // Expenses by fund_source_id
     expenses.forEach(e => {
       const name = e.fund_source_id ? (expFundMap[e.fund_source_id] || 'Unknown') : 'Unknown';
@@ -512,12 +520,13 @@ const AdminAnalytics = () => {
         name,
         salesIn: v.salesIn,
         otherIn: v.otherIn,
-        totalIn: v.salesIn + v.otherIn,
+        capitalIn: v.capitalIn,
+        totalIn: v.salesIn + v.otherIn + v.capitalIn,
         expenseOut: v.expenseOut,
-        net: v.salesIn + v.otherIn - v.expenseOut,
+        net: v.salesIn + v.otherIn + v.capitalIn - v.expenseOut,
       }))
       .sort((a, b) => b.net - a.net);
-  }, [orders, otherIncomes, expenses, expFundMap, netRevenueType]);
+  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, expFundMap, netRevenueType]);
 
   // Fund balance pie (net positive only)
   const fundBalancePieData = useMemo(() => {
