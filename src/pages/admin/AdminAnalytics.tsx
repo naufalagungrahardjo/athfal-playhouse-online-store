@@ -109,6 +109,7 @@ const AdminAnalytics = () => {
 
   // Net Income
   const [netGranularity, setNetGranularity] = useState<TimeGranularity>('monthly');
+  const [includeCapital, setIncludeCapital] = useState(false);
 
   // Revenue type filter (shared for Sales & Net Income)
   const [salesRevenueType, setSalesRevenueType] = useState<RevenueType>('before_tax');
@@ -416,7 +417,9 @@ const AdminAnalytics = () => {
 
   const totalOtherIncome = useMemo(() => otherIncomes.reduce((s, i) => s + i.amount, 0), [otherIncomes]);
   const totalAllExpenses = useMemo(() => expenses.reduce((s, e) => s + e.amount, 0), [expenses]);
-  const netIncome = totalSalesRevenue + totalOtherIncome - totalAllExpenses;
+  const totalAllCapital = useMemo(() => capitalInflows.reduce((s, c) => s + c.amount, 0), [capitalInflows]);
+  const effectiveOtherIncome = includeCapital ? totalOtherIncome + totalAllCapital : totalOtherIncome;
+  const netIncome = totalSalesRevenue + effectiveOtherIncome - totalAllExpenses;
 
   const netGranLabel = netGranularity === 'daily' ? 'Daily' : netGranularity === 'monthly' ? 'Monthly' : 'Yearly';
 
@@ -435,6 +438,14 @@ const AdminAnalytics = () => {
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
       map[key].revenue += i.amount;
     });
+    // Capital (if included)
+    if (includeCapital) {
+      capitalInflows.forEach(c => {
+        const key = formatDateKey(c.date, netGranularity);
+        if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
+        map[key].revenue += c.amount;
+      });
+    }
     // Expenses
     expenses.forEach(e => {
       const key = formatDateKey(e.date, netGranularity);
@@ -444,7 +455,7 @@ const AdminAnalytics = () => {
     // Calculate net
     Object.values(map).forEach(v => { v.net = v.revenue - v.expense; });
     return Object.entries(map).sort().map(([date, vals]) => ({ date, ...vals }));
-  }, [orders, otherIncomes, expenses, netGranularity, netRevenueType]);
+  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, netGranularity, netRevenueType]);
 
   // Cumulative net income over time
   const cumulativeNetData = useMemo(() => {
@@ -460,21 +471,21 @@ const AdminAnalytics = () => {
     const data = [
       { name: 'Sales Revenue', value: totalSalesRevenue },
       { name: 'Other Income', value: totalOtherIncome },
+      ...(includeCapital ? [{ name: 'Capital Inflow', value: totalAllCapital }] : []),
     ].filter(d => d.value > 0);
     const total = data.reduce((s, d) => s + d.value, 0);
     return data.map(d => ({ ...d, percentage: total > 0 ? ((d.value / total) * 100).toFixed(1) : '0' }));
-  }, [totalSalesRevenue, totalOtherIncome]);
+  }, [totalSalesRevenue, totalOtherIncome, totalAllCapital, includeCapital]);
 
   // === Fund Balance Breakdown ===
-  // Sales inflow by payment method (text) → map to fund source name
   const fundBalanceData = useMemo(() => {
-    const balanceMap: Record<string, { salesIn: number; otherIn: number; expenseOut: number }> = {};
+    const balanceMap: Record<string, { salesIn: number; otherIn: number; capitalIn: number; expenseOut: number }> = {};
 
     const ensure = (name: string) => {
-      if (!balanceMap[name]) balanceMap[name] = { salesIn: 0, otherIn: 0, expenseOut: 0 };
+      if (!balanceMap[name]) balanceMap[name] = { salesIn: 0, otherIn: 0, capitalIn: 0, expenseOut: 0 };
     };
 
-    // Sales revenue by payment_method (text field like "BCA", "Mandiri")
+    // Sales revenue by payment_method
     orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').forEach(o => {
       const method = o.payment_method || 'Unknown';
       ensure(method);
@@ -488,6 +499,15 @@ const AdminAnalytics = () => {
       balanceMap[name].otherIn += i.amount;
     });
 
+    // Capital by fund_source_id (if included)
+    if (includeCapital) {
+      capitalInflows.forEach(c => {
+        const name = c.fund_source_id ? (expFundMap[c.fund_source_id] || 'Unknown') : 'Unknown';
+        ensure(name);
+        balanceMap[name].capitalIn += c.amount;
+      });
+    }
+
     // Expenses by fund_source_id
     expenses.forEach(e => {
       const name = e.fund_source_id ? (expFundMap[e.fund_source_id] || 'Unknown') : 'Unknown';
@@ -500,12 +520,13 @@ const AdminAnalytics = () => {
         name,
         salesIn: v.salesIn,
         otherIn: v.otherIn,
-        totalIn: v.salesIn + v.otherIn,
+        capitalIn: v.capitalIn,
+        totalIn: v.salesIn + v.otherIn + v.capitalIn,
         expenseOut: v.expenseOut,
-        net: v.salesIn + v.otherIn - v.expenseOut,
+        net: v.salesIn + v.otherIn + v.capitalIn - v.expenseOut,
       }))
       .sort((a, b) => b.net - a.net);
-  }, [orders, otherIncomes, expenses, expFundMap, netRevenueType]);
+  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, expFundMap, netRevenueType]);
 
   // Fund balance pie (net positive only)
   const fundBalancePieData = useMemo(() => {
@@ -901,7 +922,7 @@ const AdminAnalytics = () => {
         {/* Net Income Tab */}
         <TabsContent value="net" className="space-y-6">
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
             <Card className="overflow-hidden">
               <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
                 <div className="text-xs sm:text-sm text-muted-foreground">Sales Revenue</div>
@@ -914,6 +935,14 @@ const AdminAnalytics = () => {
                 <div className="text-base sm:text-2xl font-bold truncate">{formatCurrency(totalOtherIncome)}</div>
               </CardContent>
             </Card>
+            {includeCapital && (
+              <Card className="overflow-hidden">
+                <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+                  <div className="text-xs sm:text-sm text-muted-foreground">Capital Inflow</div>
+                  <div className="text-base sm:text-2xl font-bold truncate">{formatCurrency(totalAllCapital)}</div>
+                </CardContent>
+              </Card>
+            )}
             <Card className="overflow-hidden">
               <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
                 <div className="text-xs sm:text-sm text-muted-foreground">Total Expenses</div>
@@ -930,7 +959,7 @@ const AdminAnalytics = () => {
             </Card>
           </div>
 
-          {/* Granularity & Revenue Type Filter */}
+          {/* Granularity & Revenue Type & Capital Filter */}
           <div className="flex flex-wrap gap-4 items-end">
             <div>
               <label className="text-sm font-medium block mb-1">Time Granularity</label>
@@ -954,6 +983,16 @@ const AdminAnalytics = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Capital Inflow</label>
+              <Select value={includeCapital ? 'include' : 'exclude'} onValueChange={(v) => setIncludeCapital(v === 'include')}>
+                <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="exclude">Exclude Capital</SelectItem>
+                  <SelectItem value="include">Include Capital</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Grouped Bar: Revenue vs Expense */}
@@ -968,7 +1007,7 @@ const AdminAnalytics = () => {
                     <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
                     <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
-                    <Bar dataKey="revenue" fill="#22c55e" name="Revenue (Sales + Other)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="revenue" fill="#22c55e" name={includeCapital ? "Revenue (Sales + Other + Capital)" : "Revenue (Sales + Other)"} radius={[4, 4, 0, 0]} />
                     <Bar dataKey="expense" fill="#ef4444" name="Expenses" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -1070,7 +1109,7 @@ const AdminAnalytics = () => {
           <Card>
             <CardHeader><CardTitle>💰 Fund Balance by Source / Bank</CardTitle></CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">Where your money sits: inflows from sales & other income vs outflows from expenses per fund source.</p>
+              <p className="text-sm text-muted-foreground mb-4">Where your money sits: inflows from sales, other income{includeCapital ? ', & capital' : ''} vs outflows from expenses per fund source.</p>
               {fundBalanceData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
                 <div className="overflow-auto">
                   <table className="w-full text-xs sm:text-sm">
@@ -1079,6 +1118,7 @@ const AdminAnalytics = () => {
                         <th className="text-left p-3 font-medium text-muted-foreground">Fund Source / Bank</th>
                         <th className="text-right p-3 font-medium text-muted-foreground">Sales In</th>
                         <th className="text-right p-3 font-medium text-muted-foreground">Other Income In</th>
+                        {includeCapital && <th className="text-right p-3 font-medium text-muted-foreground">Capital In</th>}
                         <th className="text-right p-3 font-medium text-muted-foreground">Total In</th>
                         <th className="text-right p-3 font-medium text-muted-foreground">Expense Out</th>
                         <th className="text-right p-3 font-medium text-muted-foreground">Net Balance</th>
@@ -1090,6 +1130,7 @@ const AdminAnalytics = () => {
                           <td className="p-3 font-medium">{row.name}</td>
                           <td className="p-3 text-right text-green-600">{row.salesIn > 0 ? formatCurrency(row.salesIn) : '-'}</td>
                           <td className="p-3 text-right text-blue-600">{row.otherIn > 0 ? formatCurrency(row.otherIn) : '-'}</td>
+                          {includeCapital && <td className="p-3 text-right text-purple-600">{row.capitalIn > 0 ? formatCurrency(row.capitalIn) : '-'}</td>}
                           <td className="p-3 text-right font-medium">{formatCurrency(row.totalIn)}</td>
                           <td className="p-3 text-right text-destructive">{row.expenseOut > 0 ? formatCurrency(row.expenseOut) : '-'}</td>
                           <td className={`p-3 text-right font-bold ${row.net >= 0 ? 'text-green-600' : 'text-destructive'}`}>
@@ -1101,6 +1142,7 @@ const AdminAnalytics = () => {
                         <td className="p-3">Total</td>
                         <td className="p-3 text-right text-green-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.salesIn, 0))}</td>
                         <td className="p-3 text-right text-blue-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.otherIn, 0))}</td>
+                        {includeCapital && <td className="p-3 text-right text-purple-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.capitalIn, 0))}</td>}
                         <td className="p-3 text-right">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.totalIn, 0))}</td>
                         <td className="p-3 text-right text-destructive">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.expenseOut, 0))}</td>
                         <td className={`p-3 text-right ${netIncome >= 0 ? 'text-green-600' : 'text-destructive'}`}>
