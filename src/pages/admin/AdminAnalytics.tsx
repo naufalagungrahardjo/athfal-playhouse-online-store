@@ -438,6 +438,14 @@ const AdminAnalytics = () => {
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
       map[key].revenue += i.amount;
     });
+    // Capital (if included)
+    if (includeCapital) {
+      capitalInflows.forEach(c => {
+        const key = formatDateKey(c.date, netGranularity);
+        if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
+        map[key].revenue += c.amount;
+      });
+    }
     // Expenses
     expenses.forEach(e => {
       const key = formatDateKey(e.date, netGranularity);
@@ -447,7 +455,7 @@ const AdminAnalytics = () => {
     // Calculate net
     Object.values(map).forEach(v => { v.net = v.revenue - v.expense; });
     return Object.entries(map).sort().map(([date, vals]) => ({ date, ...vals }));
-  }, [orders, otherIncomes, expenses, netGranularity, netRevenueType]);
+  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, netGranularity, netRevenueType]);
 
   // Cumulative net income over time
   const cumulativeNetData = useMemo(() => {
