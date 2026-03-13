@@ -417,7 +417,9 @@ const AdminAnalytics = () => {
 
   const totalOtherIncome = useMemo(() => otherIncomes.reduce((s, i) => s + i.amount, 0), [otherIncomes]);
   const totalAllExpenses = useMemo(() => expenses.reduce((s, e) => s + e.amount, 0), [expenses]);
-  const netIncome = totalSalesRevenue + totalOtherIncome - totalAllExpenses;
+  const totalAllCapital = useMemo(() => capitalInflows.reduce((s, c) => s + c.amount, 0), [capitalInflows]);
+  const effectiveOtherIncome = includeCapital ? totalOtherIncome + totalAllCapital : totalOtherIncome;
+  const netIncome = totalSalesRevenue + effectiveOtherIncome - totalAllExpenses;
 
   const netGranLabel = netGranularity === 'daily' ? 'Daily' : netGranularity === 'monthly' ? 'Monthly' : 'Yearly';
 
