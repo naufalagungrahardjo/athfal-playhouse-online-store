@@ -922,7 +922,7 @@ const AdminAnalytics = () => {
         {/* Net Income Tab */}
         <TabsContent value="net" className="space-y-6">
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
             <Card className="overflow-hidden">
               <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
                 <div className="text-xs sm:text-sm text-muted-foreground">Sales Revenue</div>
@@ -935,6 +935,14 @@ const AdminAnalytics = () => {
                 <div className="text-base sm:text-2xl font-bold truncate">{formatCurrency(totalOtherIncome)}</div>
               </CardContent>
             </Card>
+            {includeCapital && (
+              <Card className="overflow-hidden">
+                <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+                  <div className="text-xs sm:text-sm text-muted-foreground">Capital Inflow</div>
+                  <div className="text-base sm:text-2xl font-bold truncate">{formatCurrency(totalAllCapital)}</div>
+                </CardContent>
+              </Card>
+            )}
             <Card className="overflow-hidden">
               <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
                 <div className="text-xs sm:text-sm text-muted-foreground">Total Expenses</div>
@@ -951,7 +959,7 @@ const AdminAnalytics = () => {
             </Card>
           </div>
 
-          {/* Granularity & Revenue Type Filter */}
+          {/* Granularity & Revenue Type & Capital Filter */}
           <div className="flex flex-wrap gap-4 items-end">
             <div>
               <label className="text-sm font-medium block mb-1">Time Granularity</label>
