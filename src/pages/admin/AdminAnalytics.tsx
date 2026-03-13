@@ -471,10 +471,11 @@ const AdminAnalytics = () => {
     const data = [
       { name: 'Sales Revenue', value: totalSalesRevenue },
       { name: 'Other Income', value: totalOtherIncome },
+      ...(includeCapital ? [{ name: 'Capital Inflow', value: totalAllCapital }] : []),
     ].filter(d => d.value > 0);
     const total = data.reduce((s, d) => s + d.value, 0);
     return data.map(d => ({ ...d, percentage: total > 0 ? ((d.value / total) * 100).toFixed(1) : '0' }));
-  }, [totalSalesRevenue, totalOtherIncome]);
+  }, [totalSalesRevenue, totalOtherIncome, totalAllCapital, includeCapital]);
 
   // === Fund Balance Breakdown ===
   // Sales inflow by payment method (text) → map to fund source name
