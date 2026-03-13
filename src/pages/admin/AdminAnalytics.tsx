@@ -109,6 +109,7 @@ const AdminAnalytics = () => {
 
   // Net Income
   const [netGranularity, setNetGranularity] = useState<TimeGranularity>('monthly');
+  const [includeCapital, setIncludeCapital] = useState(false);
 
   // Revenue type filter (shared for Sales & Net Income)
   const [salesRevenueType, setSalesRevenueType] = useState<RevenueType>('before_tax');
