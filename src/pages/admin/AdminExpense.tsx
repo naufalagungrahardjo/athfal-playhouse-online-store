@@ -283,6 +283,10 @@ const AdminExpense = () => {
                   <Input type="number" placeholder="0" value={expAmount} onChange={e => setExpAmount(e.target.value)} />
                 </div>
                 <div>
+                  <label className="text-sm font-medium block mb-1">Discount (Rp)</label>
+                  <Input type="number" placeholder="0" value={expDiscount} onChange={e => setExpDiscount(e.target.value)} />
+                </div>
+                <div>
                   <label className="text-sm font-medium block mb-1">Fund Source</label>
                   <Select value={expFundId} onValueChange={setExpFundId}>
                     <SelectTrigger><SelectValue placeholder="Select fund source" /></SelectTrigger>
@@ -315,6 +319,8 @@ const AdminExpense = () => {
                       <TableHead>Category</TableHead>
                       <TableHead>Fund Source</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="text-right">Discount</TableHead>
+                      <TableHead className="text-right">Final Price</TableHead>
                       <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -327,6 +333,8 @@ const AdminExpense = () => {
                         <TableCell>{exp.category_id ? catMap[exp.category_id] || '-' : '-'}</TableCell>
                         <TableCell>{exp.fund_source_id ? fundMap[exp.fund_source_id] || '-' : '-'}</TableCell>
                         <TableCell className="text-right font-medium">{formatCurrency(exp.amount)}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(exp.discount || 0)}</TableCell>
+                        <TableCell className="text-right font-bold">{formatCurrency(exp.amount - (exp.discount || 0))}</TableCell>
                         <TableCell>
                           <div className="flex gap-1">
                             <Button variant="ghost" size="icon" onClick={() => editExpense(exp)}><Pencil className="h-4 w-4" /></Button>
