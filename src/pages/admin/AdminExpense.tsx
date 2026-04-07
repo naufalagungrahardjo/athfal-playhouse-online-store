@@ -20,6 +20,7 @@ type Expense = {
   category_id: string | null;
   fund_source_id: string | null;
   amount: number;
+  discount: number;
   date: string;
   created_at: string;
   order_id: string | null;
@@ -45,6 +46,7 @@ const AdminExpense = () => {
   const [expCatId, setExpCatId] = useState('');
   const [expFundId, setExpFundId] = useState('');
   const [expAmount, setExpAmount] = useState('');
+  const [expDiscount, setExpDiscount] = useState('');
   const [expDate, setExpDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [editingExpense, setEditingExpense] = useState<string | null>(null);
   const expenseFormRef = useRef<HTMLDivElement>(null);
@@ -116,7 +118,7 @@ const AdminExpense = () => {
 
   // Expense CRUD
   const resetExpenseForm = () => {
-    setExpDesc(''); setExpCatId(''); setExpFundId(''); setExpAmount('');
+    setExpDesc(''); setExpCatId(''); setExpFundId(''); setExpAmount(''); setExpDiscount('');
     setExpDate(format(new Date(), 'yyyy-MM-dd')); setEditingExpense(null);
   };
 
@@ -130,6 +132,7 @@ const AdminExpense = () => {
       category_id: expCatId || null,
       fund_source_id: expFundId || null,
       amount: parseInt(expAmount),
+      discount: parseInt(expDiscount) || 0,
       date: expDate,
       updated_at: new Date().toISOString(),
     };
@@ -153,6 +156,7 @@ const AdminExpense = () => {
     setExpCatId(exp.category_id || '');
     setExpFundId(exp.fund_source_id || '');
     setExpAmount(String(exp.amount));
+    setExpDiscount(String(exp.discount || 0));
     setExpDate(exp.date);
     setTimeout(() => {
       expenseFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -279,6 +283,10 @@ const AdminExpense = () => {
                   <Input type="number" placeholder="0" value={expAmount} onChange={e => setExpAmount(e.target.value)} />
                 </div>
                 <div>
+                  <label className="text-sm font-medium block mb-1">Discount (Rp)</label>
+                  <Input type="number" placeholder="0" value={expDiscount} onChange={e => setExpDiscount(e.target.value)} />
+                </div>
+                <div>
                   <label className="text-sm font-medium block mb-1">Fund Source</label>
                   <Select value={expFundId} onValueChange={setExpFundId}>
                     <SelectTrigger><SelectValue placeholder="Select fund source" /></SelectTrigger>
@@ -311,6 +319,8 @@ const AdminExpense = () => {
                       <TableHead>Category</TableHead>
                       <TableHead>Fund Source</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="text-right">Discount</TableHead>
+                      <TableHead className="text-right">Final Price</TableHead>
                       <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -323,6 +333,8 @@ const AdminExpense = () => {
                         <TableCell>{exp.category_id ? catMap[exp.category_id] || '-' : '-'}</TableCell>
                         <TableCell>{exp.fund_source_id ? fundMap[exp.fund_source_id] || '-' : '-'}</TableCell>
                         <TableCell className="text-right font-medium">{formatCurrency(exp.amount)}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(exp.discount || 0)}</TableCell>
+                        <TableCell className="text-right font-bold">{formatCurrency(exp.amount - (exp.discount || 0))}</TableCell>
                         <TableCell>
                           <div className="flex gap-1">
                             <Button variant="ghost" size="icon" onClick={() => editExpense(exp)}><Pencil className="h-4 w-4" /></Button>
