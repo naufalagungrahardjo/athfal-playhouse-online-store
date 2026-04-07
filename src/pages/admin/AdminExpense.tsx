@@ -20,6 +20,7 @@ type Expense = {
   category_id: string | null;
   fund_source_id: string | null;
   amount: number;
+  discount: number;
   date: string;
   created_at: string;
   order_id: string | null;
@@ -45,6 +46,7 @@ const AdminExpense = () => {
   const [expCatId, setExpCatId] = useState('');
   const [expFundId, setExpFundId] = useState('');
   const [expAmount, setExpAmount] = useState('');
+  const [expDiscount, setExpDiscount] = useState('');
   const [expDate, setExpDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [editingExpense, setEditingExpense] = useState<string | null>(null);
   const expenseFormRef = useRef<HTMLDivElement>(null);
@@ -116,7 +118,7 @@ const AdminExpense = () => {
 
   // Expense CRUD
   const resetExpenseForm = () => {
-    setExpDesc(''); setExpCatId(''); setExpFundId(''); setExpAmount('');
+    setExpDesc(''); setExpCatId(''); setExpFundId(''); setExpAmount(''); setExpDiscount('');
     setExpDate(format(new Date(), 'yyyy-MM-dd')); setEditingExpense(null);
   };
 
@@ -130,6 +132,7 @@ const AdminExpense = () => {
       category_id: expCatId || null,
       fund_source_id: expFundId || null,
       amount: parseInt(expAmount),
+      discount: parseInt(expDiscount) || 0,
       date: expDate,
       updated_at: new Date().toISOString(),
     };
@@ -153,6 +156,7 @@ const AdminExpense = () => {
     setExpCatId(exp.category_id || '');
     setExpFundId(exp.fund_source_id || '');
     setExpAmount(String(exp.amount));
+    setExpDiscount(String(exp.discount || 0));
     setExpDate(exp.date);
     setTimeout(() => {
       expenseFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
