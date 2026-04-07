@@ -388,6 +388,7 @@ export type Database = {
           created_at: string
           date: string
           description: string
+          discount: number
           fund_source_id: string | null
           id: string
           order_id: string | null
@@ -399,6 +400,7 @@ export type Database = {
           created_at?: string
           date?: string
           description: string
+          discount?: number
           fund_source_id?: string | null
           id?: string
           order_id?: string | null
@@ -410,6 +412,7 @@ export type Database = {
           created_at?: string
           date?: string
           description?: string
+          discount?: number
           fund_source_id?: string | null
           id?: string
           order_id?: string | null
