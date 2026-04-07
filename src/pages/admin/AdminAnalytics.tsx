@@ -241,6 +241,9 @@ const AdminAnalytics = () => {
       .sort((a, b) => b.quantity - a.quantity);
   }, [filteredOrders, categoryFilter]);
 
+  // Helper: net expense = amount - discount
+  const getExpenseNet = (e: any) => (e.amount || 0) - (e.discount || 0);
+
   // === Expense analytics ===
   const expCatMap = useMemo(() => Object.fromEntries(expenseCategories.map(c => [c.id, c.name])), [expenseCategories]);
   const expFundMap = useMemo(() => Object.fromEntries(fundSources.map(f => [f.id, f.name])), [fundSources]);
