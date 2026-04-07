@@ -261,7 +261,7 @@ const AdminAnalytics = () => {
     const map: Record<string, number> = {};
     filteredExpenses.forEach(e => {
       const key = formatDateKey(e.date, expGranularity);
-      map[key] = (map[key] || 0) + e.amount;
+      map[key] = (map[key] || 0) + getExpenseNet(e);
     });
     return Object.entries(map).sort().map(([date, total]) => ({ date, total }));
   }, [filteredExpenses, expGranularity]);
@@ -275,7 +275,7 @@ const AdminAnalytics = () => {
       const catName = e.category_id ? (expCatMap[e.category_id] || 'Uncategorized') : 'Uncategorized';
       catNames.add(catName);
       if (!dateMap[key]) dateMap[key] = {};
-      dateMap[key][catName] = (dateMap[key][catName] || 0) + e.amount;
+      dateMap[key][catName] = (dateMap[key][catName] || 0) + getExpenseNet(e);
     });
     const sortedDates = Object.keys(dateMap).sort();
     return { data: sortedDates.map(date => ({ date, ...dateMap[date] })), categories: Array.from(catNames) };
@@ -286,7 +286,7 @@ const AdminAnalytics = () => {
     const map: Record<string, number> = {};
     filteredExpenses.forEach(e => {
       const catName = e.category_id ? (expCatMap[e.category_id] || 'Uncategorized') : 'Uncategorized';
-      map[catName] = (map[catName] || 0) + e.amount;
+      map[catName] = (map[catName] || 0) + getExpenseNet(e);
     });
     const total = Object.values(map).reduce((s, v) => s + v, 0);
     return Object.entries(map)
@@ -299,7 +299,7 @@ const AdminAnalytics = () => {
     const map: Record<string, number> = {};
     filteredExpenses.forEach(e => {
       const fundName = e.fund_source_id ? (expFundMap[e.fund_source_id] || 'Unknown') : 'Unknown';
-      map[fundName] = (map[fundName] || 0) + e.amount;
+      map[fundName] = (map[fundName] || 0) + getExpenseNet(e);
     });
     const total = Object.values(map).reduce((s, v) => s + v, 0);
     return Object.entries(map)
@@ -307,7 +307,7 @@ const AdminAnalytics = () => {
       .sort((a, b) => b.value - a.value);
   }, [filteredExpenses, expFundMap]);
 
-  const totalExpense = useMemo(() => filteredExpenses.reduce((s, e) => s + e.amount, 0), [filteredExpenses]);
+  const totalExpense = useMemo(() => filteredExpenses.reduce((s, e) => s + getExpenseNet(e), 0), [filteredExpenses]);
 
   // === Other Income analytics ===
   const filteredIncomes = useMemo(() => {
@@ -419,7 +419,7 @@ const AdminAnalytics = () => {
   }, [orders, netRevenueType]);
 
   const totalOtherIncome = useMemo(() => otherIncomes.reduce((s, i) => s + i.amount, 0), [otherIncomes]);
-  const totalAllExpenses = useMemo(() => expenses.reduce((s, e) => s + e.amount, 0), [expenses]);
+  const totalAllExpenses = useMemo(() => expenses.reduce((s, e) => s + getExpenseNet(e), 0), [expenses]);
   const totalAllCapital = useMemo(() => capitalInflows.reduce((s, c) => s + c.amount, 0), [capitalInflows]);
   const effectiveOtherIncome = includeCapital ? totalOtherIncome + totalAllCapital : totalOtherIncome;
   const netIncome = totalSalesRevenue + effectiveOtherIncome - totalAllExpenses;
@@ -453,7 +453,7 @@ const AdminAnalytics = () => {
     expenses.forEach(e => {
       const key = formatDateKey(e.date, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
-      map[key].expense += e.amount;
+      map[key].expense += getExpenseNet(e);
     });
     // Calculate net
     Object.values(map).forEach(v => { v.net = v.revenue - v.expense; });
@@ -515,7 +515,7 @@ const AdminAnalytics = () => {
     expenses.forEach(e => {
       const name = e.fund_source_id ? (expFundMap[e.fund_source_id] || 'Unknown') : 'Unknown';
       ensure(name);
-      balanceMap[name].expenseOut += e.amount;
+      balanceMap[name].expenseOut += getExpenseNet(e);
     });
 
     return Object.entries(balanceMap)
