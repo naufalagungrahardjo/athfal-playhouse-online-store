@@ -343,6 +343,8 @@ const AdminAnalytics = () => {
   // === Capital analytics ===
   const filteredCapitals = useMemo(() => {
     return capitalInflows.filter(c => {
+      // Exclude transfers from capital analytics - they are internal fund movements
+      if ((c.type || 'inflow') === 'transfer') return false;
       if (capFundFilter !== 'all' && c.fund_source_id !== capFundFilter) return false;
       return true;
     });
