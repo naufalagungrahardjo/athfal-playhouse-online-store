@@ -185,8 +185,10 @@ export type Database = {
           created_at: string
           date: string
           detail: string
+          from_fund_source_id: string | null
           fund_source_id: string | null
           id: string
+          type: string
           updated_at: string
         }
         Insert: {
@@ -194,8 +196,10 @@ export type Database = {
           created_at?: string
           date?: string
           detail: string
+          from_fund_source_id?: string | null
           fund_source_id?: string | null
           id?: string
+          type?: string
           updated_at?: string
         }
         Update: {
@@ -203,11 +207,20 @@ export type Database = {
           created_at?: string
           date?: string
           detail?: string
+          from_fund_source_id?: string | null
           fund_source_id?: string | null
           id?: string
+          type?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "capital_inflows_from_fund_source_id_fkey"
+            columns: ["from_fund_source_id"]
+            isOneToOne: false
+            referencedRelation: "expense_fund_sources"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "capital_inflows_fund_source_id_fkey"
             columns: ["fund_source_id"]

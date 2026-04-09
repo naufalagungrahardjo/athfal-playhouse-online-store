@@ -67,7 +67,7 @@ type ExpenseRow = { id: string; description: string; category_id: string | null;
 type ExpenseCategory = { id: string; name: string };
 type FundSource = { id: string; name: string };
 type OtherIncomeRow = { id: string; description: string; amount: number; fund_source_id: string | null; date: string };
-type CapitalRow = { id: string; detail: string; amount: number; fund_source_id: string | null; date: string };
+type CapitalRow = { id: string; detail: string; amount: number; fund_source_id: string | null; from_fund_source_id: string | null; type: string; date: string };
 
 const formatDateKey = (dateStr: string, granularity: TimeGranularity): string => {
   const d = new Date(dateStr);
@@ -343,6 +343,8 @@ const AdminAnalytics = () => {
   // === Capital analytics ===
   const filteredCapitals = useMemo(() => {
     return capitalInflows.filter(c => {
+      // Exclude transfers from capital analytics - they are internal fund movements
+      if ((c.type || 'inflow') === 'transfer') return false;
       if (capFundFilter !== 'all' && c.fund_source_id !== capFundFilter) return false;
       return true;
     });
