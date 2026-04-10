@@ -172,6 +172,22 @@ const AdminExpense = () => {
   const catMap = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c.name])), [categories]);
   const fundMap = useMemo(() => Object.fromEntries(fundSources.map(f => [f.id, f.name])), [fundSources]);
 
+  const [expSearch, setExpSearch] = useState('');
+
+  const filteredExpenses = useMemo(() => {
+    if (!expSearch.trim()) return expenses;
+    const q = expSearch.toLowerCase();
+    return expenses.filter(exp => {
+      const desc = exp.description?.toLowerCase() || '';
+      const cat = (exp.category_id ? catMap[exp.category_id] || '' : '').toLowerCase();
+      const fund = (exp.fund_source_id ? fundMap[exp.fund_source_id] || '' : '').toLowerCase();
+      const amount = String(exp.amount);
+      const finalPrice = String(exp.amount - (exp.discount || 0));
+      const dateStr = format(new Date(exp.date), 'dd MMM yyyy').toLowerCase();
+      return desc.includes(q) || cat.includes(q) || fund.includes(q) || amount.includes(q) || finalPrice.includes(q) || dateStr.includes(q);
+    });
+  }, [expenses, expSearch, catMap, fundMap]);
+
   if (loading) return <div className="p-6">Loading...</div>;
 
   return (
