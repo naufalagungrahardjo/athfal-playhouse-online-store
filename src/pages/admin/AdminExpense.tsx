@@ -321,10 +321,25 @@ const AdminExpense = () => {
 
           {/* Expense List */}
           <Card>
-            <CardHeader><CardTitle>Expense Records</CardTitle></CardHeader>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <CardTitle>Expense Records</CardTitle>
+                <div className="relative w-full sm:w-72">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name, amount, category, date..."
+                    className="pl-8"
+                    value={expSearch}
+                    onChange={e => setExpSearch(e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardHeader>
             <CardContent>
-              {expenses.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No expenses recorded yet</p>
+              {filteredExpenses.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  {expenses.length === 0 ? 'No expenses recorded yet' : 'No expenses match your search'}
+                </p>
               ) : (
                 <Table>
                   <TableHeader>
