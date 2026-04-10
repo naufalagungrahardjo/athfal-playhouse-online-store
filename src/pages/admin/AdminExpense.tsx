@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
-import { Trash2, Plus, Pencil } from 'lucide-react';
+import { Trash2, Plus, Pencil, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 
@@ -172,6 +172,22 @@ const AdminExpense = () => {
   const catMap = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c.name])), [categories]);
   const fundMap = useMemo(() => Object.fromEntries(fundSources.map(f => [f.id, f.name])), [fundSources]);
 
+  const [expSearch, setExpSearch] = useState('');
+
+  const filteredExpenses = useMemo(() => {
+    if (!expSearch.trim()) return expenses;
+    const q = expSearch.toLowerCase();
+    return expenses.filter(exp => {
+      const desc = exp.description?.toLowerCase() || '';
+      const cat = (exp.category_id ? catMap[exp.category_id] || '' : '').toLowerCase();
+      const fund = (exp.fund_source_id ? fundMap[exp.fund_source_id] || '' : '').toLowerCase();
+      const amount = String(exp.amount);
+      const finalPrice = String(exp.amount - (exp.discount || 0));
+      const dateStr = format(new Date(exp.date), 'dd MMM yyyy').toLowerCase();
+      return desc.includes(q) || cat.includes(q) || fund.includes(q) || amount.includes(q) || finalPrice.includes(q) || dateStr.includes(q);
+    });
+  }, [expenses, expSearch, catMap, fundMap]);
+
   if (loading) return <div className="p-6">Loading...</div>;
 
   return (
@@ -305,10 +321,25 @@ const AdminExpense = () => {
 
           {/* Expense List */}
           <Card>
-            <CardHeader><CardTitle>Expense Records</CardTitle></CardHeader>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <CardTitle>Expense Records</CardTitle>
+                <div className="relative w-full sm:w-72">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name, amount, category, date..."
+                    className="pl-8"
+                    value={expSearch}
+                    onChange={e => setExpSearch(e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardHeader>
             <CardContent>
-              {expenses.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No expenses recorded yet</p>
+              {filteredExpenses.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  {expenses.length === 0 ? 'No expenses recorded yet' : 'No expenses match your search'}
+                </p>
               ) : (
                 <Table>
                   <TableHeader>
@@ -325,7 +356,7 @@ const AdminExpense = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {expenses.map(exp => (
+                    {filteredExpenses.map(exp => (
                       <TableRow key={exp.id}>
                         <TableCell className="whitespace-nowrap">{format(new Date(exp.date), 'dd MMM yyyy')}</TableCell>
                         <TableCell className="max-w-[250px] truncate">{exp.description}</TableCell>
