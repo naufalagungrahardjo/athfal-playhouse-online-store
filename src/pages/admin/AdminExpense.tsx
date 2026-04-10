@@ -356,7 +356,7 @@ const AdminExpense = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {expenses.map(exp => (
+                    {filteredExpenses.map(exp => (
                       <TableRow key={exp.id}>
                         <TableCell className="whitespace-nowrap">{format(new Date(exp.date), 'dd MMM yyyy')}</TableCell>
                         <TableCell className="max-w-[250px] truncate">{exp.description}</TableCell>
