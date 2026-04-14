@@ -331,6 +331,29 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             />
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="active_from">Active From (optional)</Label>
+              <Input
+                id="active_from"
+                type="datetime-local"
+                value={formData.active_from ? formData.active_from.slice(0, 16) : ''}
+                onChange={(e) => setFormData({...formData, active_from: e.target.value ? new Date(e.target.value).toISOString() : ''})}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Leave empty to publish immediately</p>
+            </div>
+            <div>
+              <Label htmlFor="active_until">Active Until (optional)</Label>
+              <Input
+                id="active_until"
+                type="datetime-local"
+                value={formData.active_until ? formData.active_until.slice(0, 16) : ''}
+                onChange={(e) => setFormData({...formData, active_until: e.target.value ? new Date(e.target.value).toISOString() : ''})}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Leave empty for no expiry</p>
+            </div>
+          </div>
+
           {/* Variant Manager - only for existing products */}
           <ProductVariantManager productDbId={editingProduct?.id} />
 
