@@ -81,6 +81,8 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
       
       toast({ title: 'Success', description: 'Variants saved successfully' });
       await fetchVariants();
+      queryClient.invalidateQueries({ queryKey: ['product_variants'] });
+      queryClient.invalidateQueries({ queryKey: ['all_product_variants'] });
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Error', description: error?.message || 'Failed to save variants' });
     } finally {
