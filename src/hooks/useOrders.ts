@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { logAdminAction } from '@/utils/logAdminAction';
 import { logger } from '@/utils/logger';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface OrderItem {
   id: string;
@@ -37,6 +38,7 @@ export const useOrders = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const fetchOrders = async () => {
     try {
@@ -149,6 +151,8 @@ export const useOrders = () => {
         action: `Updated order status to "${status}" (order id: ${orderId})`,
       });
 
+      // Invalidate products cache so storefront reflects stock changes
+      queryClient.invalidateQueries({ queryKey: ['products'] });
       await fetchOrders();
     } catch (error) {
       logger.error('Error updating order status:', error);
@@ -207,6 +211,8 @@ export const useOrders = () => {
         action: `Deleted order (order id: ${orderId})`,
       });
 
+      // Invalidate products cache so storefront reflects stock changes
+      queryClient.invalidateQueries({ queryKey: ['products'] });
       await fetchOrders();
     } catch (error) {
       logger.error('Error deleting order:', error);
