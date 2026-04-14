@@ -29,6 +29,8 @@ async function fetchProductsFromDb(): Promise<Product[]> {
     is_hidden: product.is_hidden ?? false,
     is_sold_out: product.is_sold_out ?? false,
     admission_date: product.admission_date ?? null,
+    active_from: product.active_from ?? null,
+    active_until: product.active_until ?? null,
   }));
 }
 
