@@ -86,6 +86,7 @@ export const useProducts = () => {
     error: queryError ? 'Failed to fetch products' : null,
     fetchProducts: () => queryClient.invalidateQueries({ queryKey: ['products'] }),
     getProductsByCategory,
-    getProductById
+    getProductById,
+    isProductActive,
   };
 };
