@@ -98,6 +98,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         installment: (editingProduct as any).installment || 0,
         installment_months: (editingProduct as any).installment_months || 0,
         admission_date: (editingProduct as any).admission_date || '',
+        active_from: (editingProduct as any).active_from || '',
+        active_until: (editingProduct as any).active_until || '',
       });
     } else {
       setFormData({
