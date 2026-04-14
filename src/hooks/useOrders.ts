@@ -38,6 +38,7 @@ export const useOrders = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const fetchOrders = async () => {
     try {
