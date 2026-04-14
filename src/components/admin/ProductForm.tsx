@@ -39,6 +39,14 @@ interface ProductFormProps {
   onProductSaved: () => void;
 }
 
+// Convert ISO string to local datetime-local input value (YYYY-MM-DDTHH:MM)
+const toLocalDatetimeString = (iso: string): string => {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }: ProductFormProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
