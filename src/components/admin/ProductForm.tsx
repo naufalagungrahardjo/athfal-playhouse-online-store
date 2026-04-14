@@ -39,12 +39,23 @@ interface ProductFormProps {
   onProductSaved: () => void;
 }
 
-// Convert ISO string to local datetime-local input value (YYYY-MM-DDTHH:MM)
-const toLocalDatetimeString = (iso: string): string => {
+// Convert ISO string to { date, time } for separate inputs
+const isoToDateAndTime = (iso: string): { date: string; time: string } => {
+  if (!iso) return { date: '', time: '' };
   const d = new Date(iso);
-  if (isNaN(d.getTime())) return '';
+  if (isNaN(d.getTime())) return { date: '', time: '' };
   const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return {
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+  };
+};
+
+// Combine date + time strings into ISO
+const dateTimeToIso = (date: string, time: string): string => {
+  if (!date) return '';
+  const t = time || '00:00';
+  return new Date(`${date}T${t}`).toISOString();
 };
 
 export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }: ProductFormProps) => {
