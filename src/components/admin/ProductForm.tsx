@@ -350,10 +350,10 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Active From (optional)</Label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   type="date"
                   value={isoToDateAndTime(formData.active_from || '').date}
@@ -361,7 +361,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
                     const time = isoToDateAndTime(formData.active_from || '').time || '00:00';
                     setFormData({...formData, active_from: e.target.value ? dateTimeToIso(e.target.value, time) : ''});
                   }}
-                  className="flex-1"
+                  className="flex-1 min-w-0"
                 />
                 <Input
                   type="time"
@@ -370,14 +370,14 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
                     const date = isoToDateAndTime(formData.active_from || '').date;
                     if (date) setFormData({...formData, active_from: dateTimeToIso(date, e.target.value)});
                   }}
-                  className="w-28"
+                  className="w-full sm:w-28 min-w-0"
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1">Leave empty to publish immediately</p>
             </div>
             <div>
               <Label>Active Until (optional)</Label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   type="date"
                   value={isoToDateAndTime(formData.active_until || '').date}
@@ -385,7 +385,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
                     const time = isoToDateAndTime(formData.active_until || '').time || '00:00';
                     setFormData({...formData, active_until: e.target.value ? dateTimeToIso(e.target.value, time) : ''});
                   }}
-                  className="flex-1"
+                  className="flex-1 min-w-0"
                 />
                 <Input
                   type="time"
@@ -394,7 +394,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
                     const date = isoToDateAndTime(formData.active_until || '').date;
                     if (date) setFormData({...formData, active_until: dateTimeToIso(date, e.target.value)});
                   }}
-                  className="w-28"
+                  className="w-full sm:w-28 min-w-0"
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1">Leave empty for no expiry</p>
