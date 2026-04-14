@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { logAdminAction } from '@/utils/logAdminAction';
 import { logger } from '@/utils/logger';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface OrderItem {
   id: string;
