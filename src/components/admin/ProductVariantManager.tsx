@@ -15,7 +15,7 @@ interface Variant {
 }
 
 interface ProductVariantManagerProps {
-  productDbId: string | undefined; // UUID of the product
+  productDbId: string | undefined;
 }
 
 export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProps) => {
@@ -65,7 +65,6 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
     }
     setLoading(true);
     try {
-      // Delete existing then re-insert
       await supabase.from('product_variants').delete().eq('product_id', productDbId);
       
       if (variants.length > 0) {
@@ -81,6 +80,7 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
       
       toast({ title: 'Success', description: 'Variants saved successfully' });
       await fetchVariants();
+      // Invalidate all variant caches so storefront reflects changes
       queryClient.invalidateQueries({ queryKey: ['product_variants'] });
       queryClient.invalidateQueries({ queryKey: ['all_product_variants'] });
     } catch (error: any) {
@@ -89,9 +89,6 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
       setLoading(false);
     }
   };
-
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
   if (!productDbId) {
     return (
