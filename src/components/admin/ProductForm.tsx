@@ -12,6 +12,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { ProductMediaUpload, ProductMedia } from '@/components/admin/ProductMediaUpload';
 import { RichTextEditor } from '@/components/admin/RichTextEditor';
 import { ProductVariantManager } from '@/components/admin/ProductVariantManager';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ProductFormData {
   id?: string;
@@ -62,6 +63,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { categories } = useCategories();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState<ProductFormData>({
     product_id: '',
@@ -215,6 +217,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         });
       }
 
+      // Invalidate React Query cache so public pages update immediately
+      await queryClient.invalidateQueries({ queryKey: ['products'] });
       onProductSaved();
       onClose();
     } catch (error: any) {
