@@ -217,6 +217,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         });
       }
 
+      // Invalidate React Query cache so public pages update immediately
+      await queryClient.invalidateQueries({ queryKey: ['products'] });
       onProductSaved();
       onClose();
     } catch (error: any) {
