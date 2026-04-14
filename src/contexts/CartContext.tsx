@@ -22,6 +22,8 @@ export interface Product {
   is_hidden?: boolean;
   is_sold_out?: boolean;
   admission_date?: string | null;
+  active_from?: string | null;
+  active_until?: string | null;
 }
 
 export interface CartItem {
