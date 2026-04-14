@@ -352,25 +352,51 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="active_from">Active From (optional)</Label>
-              <Input
-                id="active_from"
-                type="datetime-local"
-                step="60"
-                value={formData.active_from ? toLocalDatetimeString(formData.active_from) : ''}
-                onChange={(e) => setFormData({...formData, active_from: e.target.value ? new Date(e.target.value).toISOString() : ''})}
-              />
+              <Label>Active From (optional)</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="date"
+                  value={isoToDateAndTime(formData.active_from || '').date}
+                  onChange={(e) => {
+                    const time = isoToDateAndTime(formData.active_from || '').time || '00:00';
+                    setFormData({...formData, active_from: e.target.value ? dateTimeToIso(e.target.value, time) : ''});
+                  }}
+                  className="flex-1"
+                />
+                <Input
+                  type="time"
+                  value={isoToDateAndTime(formData.active_from || '').time}
+                  onChange={(e) => {
+                    const date = isoToDateAndTime(formData.active_from || '').date;
+                    if (date) setFormData({...formData, active_from: dateTimeToIso(date, e.target.value)});
+                  }}
+                  className="w-28"
+                />
+              </div>
               <p className="text-xs text-muted-foreground mt-1">Leave empty to publish immediately</p>
             </div>
             <div>
-              <Label htmlFor="active_until">Active Until (optional)</Label>
-              <Input
-                id="active_until"
-                type="datetime-local"
-                step="60"
-                value={formData.active_until ? toLocalDatetimeString(formData.active_until) : ''}
-                onChange={(e) => setFormData({...formData, active_until: e.target.value ? new Date(e.target.value).toISOString() : ''})}
-              />
+              <Label>Active Until (optional)</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="date"
+                  value={isoToDateAndTime(formData.active_until || '').date}
+                  onChange={(e) => {
+                    const time = isoToDateAndTime(formData.active_until || '').time || '00:00';
+                    setFormData({...formData, active_until: e.target.value ? dateTimeToIso(e.target.value, time) : ''});
+                  }}
+                  className="flex-1"
+                />
+                <Input
+                  type="time"
+                  value={isoToDateAndTime(formData.active_until || '').time}
+                  onChange={(e) => {
+                    const date = isoToDateAndTime(formData.active_until || '').date;
+                    if (date) setFormData({...formData, active_until: dateTimeToIso(date, e.target.value)});
+                  }}
+                  className="w-28"
+                />
+              </div>
               <p className="text-xs text-muted-foreground mt-1">Leave empty for no expiry</p>
             </div>
           </div>
