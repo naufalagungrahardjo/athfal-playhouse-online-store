@@ -211,6 +211,8 @@ export const useOrders = () => {
         action: `Deleted order (order id: ${orderId})`,
       });
 
+      // Invalidate products cache so storefront reflects stock changes
+      queryClient.invalidateQueries({ queryKey: ['products'] });
       await fetchOrders();
     } catch (error) {
       logger.error('Error deleting order:', error);
