@@ -41,7 +41,7 @@ export const RelatedProducts = ({ currentProductId, currentCategory }: RelatedPr
   }
 
   // Filter products: same category but exclude current product
-  const relatedProducts = products
+  const relatedProducts = visibleProducts
     .filter(product => 
       product.category === currentCategory && 
       product.id !== currentProductId

@@ -25,18 +25,18 @@ const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { addItem } = useCart();
   const { language } = useLanguage();
-  const { products, loading: productsLoading, getProductById } = useProducts();
+  const { visibleProducts, loading: productsLoading } = useProducts();
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!productsLoading && id) {
-      const foundProduct = getProductById(id);
+      const foundProduct = visibleProducts.find(p => p.id === id);
       setProduct(foundProduct || null);
       setLoading(false);
     }
-  }, [id, products, productsLoading, getProductById]);
+  }, [id, visibleProducts, productsLoading]);
 
   const handleAddToCart = () => {
     if (product) {
