@@ -22,6 +22,7 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
   const [variants, setVariants] = useState<Variant[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (productDbId) {
