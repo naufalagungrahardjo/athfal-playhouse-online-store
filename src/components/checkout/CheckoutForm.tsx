@@ -162,12 +162,13 @@ const CheckoutForm = ({
           />
         </div>
         <div>
-          <Label htmlFor="childBirthdate">{t('childBirthdate')}</Label>
+         <Label htmlFor="childBirthdate">{t('childBirthdate')}</Label>
           <Input
             id="childBirthdate"
             type="date"
             value={formData.childBirthdate}
             onChange={(e) => handleInputChange('childBirthdate', e.target.value)}
+            max={new Date().toISOString().split('T')[0]}
             placeholder={t('childFieldNote')}
             className="placeholder:text-muted-foreground/50"
           />
