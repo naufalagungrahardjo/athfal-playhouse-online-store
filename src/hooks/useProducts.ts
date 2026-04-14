@@ -69,13 +69,15 @@ export const useProducts = () => {
     return products.find(product => product.id === id);
   };
 
-  const visibleProducts = products.filter(p => {
+  const isProductActive = (p: Product): boolean => {
     if (p.is_hidden) return false;
     const now = new Date();
     if (p.active_from && new Date(p.active_from) > now) return false;
     if (p.active_until && new Date(p.active_until) < now) return false;
     return true;
-  });
+  };
+
+  const visibleProducts = products.filter(isProductActive);
 
   return {
     products,

@@ -20,7 +20,7 @@ const formatCurrency = (amount: number) => {
 };
 
 export const RelatedProducts = ({ currentProductId, currentCategory }: RelatedProductsProps) => {
-  const { products, loading } = useProducts();
+  const { visibleProducts, loading } = useProducts();
   const { getLowestPrice } = useAllProductVariants();
 
   if (loading) {
