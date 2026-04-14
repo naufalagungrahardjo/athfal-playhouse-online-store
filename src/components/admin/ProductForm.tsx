@@ -63,6 +63,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { categories } = useCategories();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState<ProductFormData>({
     product_id: '',
