@@ -12,6 +12,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { ProductMediaUpload, ProductMedia } from '@/components/admin/ProductMediaUpload';
 import { RichTextEditor } from '@/components/admin/RichTextEditor';
 import { ProductVariantManager } from '@/components/admin/ProductVariantManager';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ProductFormData {
   id?: string;
