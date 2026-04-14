@@ -33,7 +33,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
     const cartId = `${product.id}__${variantKey}`;
     const cartProduct = selectedVariant 
       ? { ...product, id: cartId, price: selectedVariant.price, name: `${product.name} - ${selectedVariant.name}` }
-      : { ...product, id: cartId, name: `${product.name} - Normal Price` };
+      : { ...product, id: cartId, name: `${product.name} - Pembayaran Lunas` };
     addItem(cartProduct, quantity);
   };
 
@@ -42,7 +42,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
     const cartId = `${product.id}__${variantKey}`;
     const cartProduct = selectedVariant 
       ? { ...product, id: cartId, price: selectedVariant.price, name: `${product.name} - ${selectedVariant.name}` }
-      : { ...product, id: cartId, name: `${product.name} - Normal Price` };
+      : { ...product, id: cartId, name: `${product.name} - Pembayaran Lunas` };
     addItem(cartProduct, quantity);
     window.location.href = '/cart';
   };
