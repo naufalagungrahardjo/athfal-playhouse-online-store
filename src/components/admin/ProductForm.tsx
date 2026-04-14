@@ -116,6 +116,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         installment: 0,
         installment_months: 0,
         admission_date: '',
+        active_from: '',
+        active_until: '',
       });
     }
   }, [editingProduct, isOpen]);
