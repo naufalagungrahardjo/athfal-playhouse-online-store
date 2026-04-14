@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Variant {
   id?: string;
@@ -14,13 +15,14 @@ interface Variant {
 }
 
 interface ProductVariantManagerProps {
-  productDbId: string | undefined; // UUID of the product
+  productDbId: string | undefined;
 }
 
 export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProps) => {
   const [variants, setVariants] = useState<Variant[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (productDbId) {
@@ -63,7 +65,6 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
     }
     setLoading(true);
     try {
-      // Delete existing then re-insert
       await supabase.from('product_variants').delete().eq('product_id', productDbId);
       
       if (variants.length > 0) {
@@ -79,15 +80,15 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
       
       toast({ title: 'Success', description: 'Variants saved successfully' });
       await fetchVariants();
+      // Invalidate all variant caches so storefront reflects changes
+      queryClient.invalidateQueries({ queryKey: ['product_variants'] });
+      queryClient.invalidateQueries({ queryKey: ['all_product_variants'] });
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Error', description: error?.message || 'Failed to save variants' });
     } finally {
       setLoading(false);
     }
   };
-
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
   if (!productDbId) {
     return (
