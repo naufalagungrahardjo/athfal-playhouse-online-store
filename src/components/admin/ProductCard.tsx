@@ -85,8 +85,10 @@ export const ProductCard = ({ product, onEdit, onDelete, onToggleUpdated }: Prod
     }
   };
 
+  const effectiveHidden = isHidden || isScheduleInactive;
+
   return (
-    <Card className={isHidden ? 'opacity-60' : ''}>
+    <Card className={effectiveHidden ? 'opacity-60' : ''}>
       <CardContent className="p-6">
         <div className="flex justify-between items-start">
           <div className="flex space-x-4 flex-1 min-w-0">
@@ -109,15 +111,22 @@ export const ProductCard = ({ product, onEdit, onDelete, onToggleUpdated }: Prod
                   <span className="text-sm text-muted-foreground">Installment: {formatCurrency(product.installment)} x {product.installment_months}mo</span>
                 )}
               </div>
+              {isScheduleInactive && (
+                <div className="mt-2">
+                  <Badge variant="outline" className="text-xs">
+                    {isExpired ? '⏰ Expired' : '📅 Scheduled'}
+                  </Badge>
+                </div>
+              )}
               {/* Toggles row */}
               <div className="flex flex-wrap items-center gap-4 mt-3">
                 <label className="flex items-center gap-2 cursor-pointer text-sm">
-                  {isHidden ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                  {effectiveHidden ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                   <span className="text-muted-foreground">Hide</span>
                   <Switch
-                    checked={isHidden}
+                    checked={effectiveHidden}
                     onCheckedChange={(v) => handleToggle('is_hidden', v)}
-                    disabled={toggling}
+                    disabled={toggling || isScheduleInactive}
                   />
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer text-sm">
