@@ -33,7 +33,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
     const cartId = `${product.id}__${variantKey}`;
     const cartProduct = selectedVariant 
       ? { ...product, id: cartId, price: selectedVariant.price, name: `${product.name} - ${selectedVariant.name}` }
-      : { ...product, id: cartId, name: `${product.name} - Normal Price` };
+      : { ...product, id: cartId, name: `${product.name} - Pembayaran Lunas` };
     addItem(cartProduct, quantity);
   };
 
@@ -42,7 +42,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
     const cartId = `${product.id}__${variantKey}`;
     const cartProduct = selectedVariant 
       ? { ...product, id: cartId, price: selectedVariant.price, name: `${product.name} - ${selectedVariant.name}` }
-      : { ...product, id: cartId, name: `${product.name} - Normal Price` };
+      : { ...product, id: cartId, name: `${product.name} - Pembayaran Lunas` };
     addItem(cartProduct, quantity);
     window.location.href = '/cart';
   };
@@ -141,7 +141,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
                         : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
                     }`}
                   >
-                    <span className="block">{language === 'id' ? 'Harga Normal' : 'Normal Price'}</span>
+                    <span className="block">{language === 'id' ? 'Pembayaran Lunas' : 'Full Payment'}</span>
                     <span className="block text-xs mt-0.5">{formatCurrency(product.price)}</span>
                   </button>
                   {variants.map(variant => (
