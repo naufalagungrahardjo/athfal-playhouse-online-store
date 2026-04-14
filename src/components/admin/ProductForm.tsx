@@ -180,7 +180,9 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             first_payment: formData.first_payment,
             installment: formData.installment,
             installment_months: formData.installment_months,
-            admission_date: formData.admission_date || null
+            admission_date: formData.admission_date || null,
+            active_from: formData.active_from || null,
+            active_until: formData.active_until || null,
           }]);
         
         if (error) {
