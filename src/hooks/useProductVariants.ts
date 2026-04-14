@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ProductVariant {
@@ -10,63 +10,51 @@ export interface ProductVariant {
 }
 
 export const useProductVariants = (productId?: string) => {
-  const [variants, setVariants] = useState<ProductVariant[]>([]);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const fetchVariants = async (pid: string) => {
-    setLoading(true);
-    try {
+  const { data: variants = [], isLoading: loading } = useQuery({
+    queryKey: ['product_variants', productId],
+    queryFn: async () => {
+      if (!productId) return [];
       const { data, error } = await supabase
         .from('product_variants')
         .select('*')
-        .eq('product_id', pid)
+        .eq('product_id', productId)
         .order('order_num', { ascending: true });
       if (error) throw error;
-      setVariants(data || []);
-    } catch (err) {
-      console.error('Error fetching variants:', err);
-      setVariants([]);
-    } finally {
-      setLoading(false);
-    }
+      return (data || []) as ProductVariant[];
+    },
+    enabled: !!productId,
+  });
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['product_variants', productId] });
+    queryClient.invalidateQueries({ queryKey: ['all_product_variants'] });
   };
 
-  useEffect(() => {
-    if (productId) {
-      fetchVariants(productId);
-    }
-  }, [productId]);
-
-  return { variants, loading, fetchVariants };
+  return { variants, loading, invalidate };
 };
 
 // Fetch all variants for all products (for catalog lowest price display)
 export const useAllProductVariants = () => {
-  const [variantsByProduct, setVariantsByProduct] = useState<Record<string, ProductVariant[]>>({});
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['all_product_variants'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('product_variants')
+        .select('*')
+        .order('order_num', { ascending: true });
+      if (error) throw error;
+      const map: Record<string, ProductVariant[]> = {};
+      (data || []).forEach(v => {
+        if (!map[v.product_id]) map[v.product_id] = [];
+        map[v.product_id].push(v);
+      });
+      return map;
+    },
+  });
 
-  useEffect(() => {
-    const fetch = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('product_variants')
-          .select('*')
-          .order('order_num', { ascending: true });
-        if (error) throw error;
-        const map: Record<string, ProductVariant[]> = {};
-        (data || []).forEach(v => {
-          if (!map[v.product_id]) map[v.product_id] = [];
-          map[v.product_id].push(v);
-        });
-        setVariantsByProduct(map);
-      } catch {
-        setVariantsByProduct({});
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
-  }, []);
+  const variantsByProduct = data || {};
 
   const getLowestPrice = (productDbId: string, basePrice: number): number => {
     const variants = variantsByProduct[productDbId];
