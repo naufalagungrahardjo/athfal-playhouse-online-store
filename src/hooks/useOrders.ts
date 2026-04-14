@@ -151,6 +151,8 @@ export const useOrders = () => {
         action: `Updated order status to "${status}" (order id: ${orderId})`,
       });
 
+      // Invalidate products cache so storefront reflects stock changes
+      queryClient.invalidateQueries({ queryKey: ['products'] });
       await fetchOrders();
     } catch (error) {
       logger.error('Error updating order status:', error);
