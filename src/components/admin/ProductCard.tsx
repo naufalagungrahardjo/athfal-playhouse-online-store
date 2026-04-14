@@ -37,9 +37,21 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product, onEdit, onDelete, onToggleUpdated }: ProductCardProps) => {
   const { toast } = useToast();
+  
+  // Determine if product is inactive due to scheduling
+  const now = new Date();
+  const isScheduledFuture = product.active_from ? new Date(product.active_from) > now : false;
+  const isExpired = product.active_until ? new Date(product.active_until) < now : false;
+  const isScheduleInactive = isScheduledFuture || isExpired;
+  
   const [isHidden, setIsHidden] = useState(product.is_hidden ?? false);
   const [isSoldOut, setIsSoldOut] = useState(product.is_sold_out ?? false);
   const [toggling, setToggling] = useState(false);
+
+  // Sync hide state when scheduling makes product inactive
+  useEffect(() => {
+    setIsHidden(product.is_hidden ?? false);
+  }, [product.is_hidden]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
