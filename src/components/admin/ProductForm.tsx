@@ -39,6 +39,14 @@ interface ProductFormProps {
   onProductSaved: () => void;
 }
 
+// Convert ISO string to local datetime-local input value (YYYY-MM-DDTHH:MM)
+const toLocalDatetimeString = (iso: string): string => {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }: ProductFormProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -337,7 +345,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
               <Input
                 id="active_from"
                 type="datetime-local"
-                value={formData.active_from ? formData.active_from.slice(0, 16) : ''}
+                step="60"
+                value={formData.active_from ? toLocalDatetimeString(formData.active_from) : ''}
                 onChange={(e) => setFormData({...formData, active_from: e.target.value ? new Date(e.target.value).toISOString() : ''})}
               />
               <p className="text-xs text-muted-foreground mt-1">Leave empty to publish immediately</p>
@@ -347,7 +356,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
               <Input
                 id="active_until"
                 type="datetime-local"
-                value={formData.active_until ? formData.active_until.slice(0, 16) : ''}
+                step="60"
+                value={formData.active_until ? toLocalDatetimeString(formData.active_until) : ''}
                 onChange={(e) => setFormData({...formData, active_until: e.target.value ? new Date(e.target.value).toISOString() : ''})}
               />
               <p className="text-xs text-muted-foreground mt-1">Leave empty for no expiry</p>
