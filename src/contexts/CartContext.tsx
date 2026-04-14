@@ -142,6 +142,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         media: product.media as any,
         is_hidden: product.is_hidden ?? false,
         is_sold_out: product.is_sold_out ?? false,
+        active_from: product.active_from ?? null,
+        active_until: product.active_until ?? null,
       }));
 
       setProducts(formattedProducts);
@@ -151,9 +153,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addToCart = (product: Product, quantity: number = 1) => {
-    if (product.stock <= 0) {
-      return; // Cannot add out-of-stock products
-    }
+    if (product.stock <= 0) return;
+    if (product.is_hidden) return;
+    const now = new Date();
+    if (product.active_from && new Date(product.active_from) > now) return;
+    if (product.active_until && new Date(product.active_until) < now) return;
     setItems(prev => {
       const existingItem = prev.find(item => item.product.id === product.id);
       const currentQty = existingItem ? existingItem.quantity : 0;
