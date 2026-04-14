@@ -711,6 +711,8 @@ export type Database = {
       }
       products: {
         Row: {
+          active_from: string | null
+          active_until: string | null
           admission_date: string | null
           category: string
           created_at: string | null
@@ -732,6 +734,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          active_from?: string | null
+          active_until?: string | null
           admission_date?: string | null
           category: string
           created_at?: string | null
@@ -753,6 +757,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          active_from?: string | null
+          active_until?: string | null
           admission_date?: string | null
           category?: string
           created_at?: string | null

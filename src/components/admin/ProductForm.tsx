@@ -28,6 +28,8 @@ interface ProductFormData {
   installment: number;
   installment_months: number;
   admission_date?: string;
+  active_from?: string;
+  active_until?: string;
 }
 
 interface ProductFormProps {
@@ -56,6 +58,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
     installment: 0,
     installment_months: 0,
     admission_date: '',
+    active_from: '',
+    active_until: '',
   });
 
   useEffect(() => {
@@ -94,6 +98,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         installment: (editingProduct as any).installment || 0,
         installment_months: (editingProduct as any).installment_months || 0,
         admission_date: (editingProduct as any).admission_date || '',
+        active_from: (editingProduct as any).active_from || '',
+        active_until: (editingProduct as any).active_until || '',
       });
     } else {
       setFormData({
@@ -110,6 +116,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         installment: 0,
         installment_months: 0,
         admission_date: '',
+        active_from: '',
+        active_until: '',
       });
     }
   }, [editingProduct, isOpen]);
@@ -144,6 +152,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             installment: formData.installment,
             installment_months: formData.installment_months,
             admission_date: formData.admission_date || null,
+            active_from: formData.active_from || null,
+            active_until: formData.active_until || null,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingProduct.id);
@@ -170,7 +180,9 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             first_payment: formData.first_payment,
             installment: formData.installment,
             installment_months: formData.installment_months,
-            admission_date: formData.admission_date || null
+            admission_date: formData.admission_date || null,
+            active_from: formData.active_from || null,
+            active_until: formData.active_until || null,
           }]);
         
         if (error) {
@@ -317,6 +329,29 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
               value={formData.admission_date || ''}
               onChange={(e) => setFormData({...formData, admission_date: e.target.value})}
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="active_from">Active From (optional)</Label>
+              <Input
+                id="active_from"
+                type="datetime-local"
+                value={formData.active_from ? formData.active_from.slice(0, 16) : ''}
+                onChange={(e) => setFormData({...formData, active_from: e.target.value ? new Date(e.target.value).toISOString() : ''})}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Leave empty to publish immediately</p>
+            </div>
+            <div>
+              <Label htmlFor="active_until">Active Until (optional)</Label>
+              <Input
+                id="active_until"
+                type="datetime-local"
+                value={formData.active_until ? formData.active_until.slice(0, 16) : ''}
+                onChange={(e) => setFormData({...formData, active_until: e.target.value ? new Date(e.target.value).toISOString() : ''})}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Leave empty for no expiry</p>
+            </div>
           </div>
 
           {/* Variant Manager - only for existing products */}
