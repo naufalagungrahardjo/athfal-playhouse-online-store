@@ -28,6 +28,8 @@ interface ProductFormData {
   installment: number;
   installment_months: number;
   admission_date?: string;
+  active_from?: string;
+  active_until?: string;
 }
 
 interface ProductFormProps {
