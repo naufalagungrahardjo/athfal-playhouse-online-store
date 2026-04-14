@@ -141,7 +141,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
                         : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
                     }`}
                   >
-                    <span className="block">{language === 'id' ? 'Harga Normal' : 'Normal Price'}</span>
+                    <span className="block">{language === 'id' ? 'Pembayaran Lunas' : 'Full Payment'}</span>
                     <span className="block text-xs mt-0.5">{formatCurrency(product.price)}</span>
                   </button>
                   {variants.map(variant => (
