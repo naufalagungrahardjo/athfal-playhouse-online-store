@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Variant {
   id?: string;
