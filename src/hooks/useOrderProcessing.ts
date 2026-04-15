@@ -128,8 +128,12 @@ export const useOrderProcessing = () => {
       // Check current user status
       const { data: { user } } = await supabase.auth.getUser();
 
+      // Generate order ID client-side so we don't need .select() (which requires SELECT RLS permission)
+      const orderId = crypto.randomUUID();
+
       // Create the order with all required fields
       const orderInsert = {
+        id: orderId,
         user_id: user?.id || null, // Explicitly set user_id
         customer_name: orderData.customerName,
         customer_email: orderData.customerEmail,
@@ -148,11 +152,10 @@ export const useOrderProcessing = () => {
         child_birthdate: orderData.childBirthdate || null
       };
 
-      const { data: order, error: orderError } = await supabase
+      // Use plain insert without .select() to avoid SELECT RLS restrictions for guest users
+      const { error: orderError } = await supabase
         .from('orders')
-        .insert(orderInsert)
-        .select()
-        .single();
+        .insert(orderInsert);
 
       if (orderError) {
         logger.error(`[${errorId}] Order creation failed`);
@@ -169,7 +172,7 @@ export const useOrderProcessing = () => {
 
       // Create order items - store base product_id so stock trigger can match
       const orderItems = orderData.items.map(item => ({
-        order_id: order.id,
+        order_id: orderId,
         product_id: getBaseId(item.product.id),
         product_name: item.product.name,
         product_price: item.product.price,
@@ -197,7 +200,7 @@ export const useOrderProcessing = () => {
 
       // Deduct stock via SECURITY DEFINER RPC (bypasses RLS)
       const { error: stockDeductError } = await supabase
-        .rpc('deduct_stock_for_order', { p_order_id: order.id });
+        .rpc('deduct_stock_for_order', { p_order_id: orderId });
 
       if (stockDeductError) {
         logger.error(`[${errorId}] Stock deduction failed: ${stockDeductError.message}`);
@@ -205,7 +208,7 @@ export const useOrderProcessing = () => {
 
       // Auto-create MDR expense via SECURITY DEFINER RPC (bypasses RLS)
       try {
-        await supabase.rpc('create_mdr_expense_for_order' as any, { p_order_id: order.id });
+        await supabase.rpc('create_mdr_expense_for_order' as any, { p_order_id: orderId });
       } catch (mdrError) {
         logger.error(`[${errorId}] MDR expense creation failed (non-blocking):`, mdrError);
       }
@@ -220,14 +223,14 @@ export const useOrderProcessing = () => {
 
       toast({
         title: "Order Successful",
-        description: `Your order has been placed successfully! Order ID: ${order.id.slice(0, 8)}`
+        description: `Your order has been placed successfully! Order ID: ${orderId.slice(0, 8)}`
       });
 
       // Send order alert emails (fire-and-forget, don't block checkout)
       try {
         supabase.functions.invoke('order-alert-email', {
           body: {
-            orderId: order.id,
+            orderId: orderId,
             customerName: orderData.customerName,
             customerEmail: orderData.customerEmail,
             totalAmount: orderData.totalAmount,
@@ -238,8 +241,18 @@ export const useOrderProcessing = () => {
         logger.error('Order alert email failed (non-blocking):', alertError);
       }
 
+      // Retrieve lookup_token via SECURITY DEFINER RPC (works for guest users too)
+      let lookupToken: string | undefined;
+      try {
+        const { data: token } = await supabase
+          .rpc('get_order_lookup_token' as any, { p_order_id: orderId });
+        lookupToken = token || undefined;
+      } catch {
+        logger.error(`[${errorId}] Failed to retrieve lookup token (non-blocking)`);
+      }
+
       setProcessing(false);
-      return { success: true, orderId: order.id, lookupToken: order.lookup_token };
+      return { success: true, orderId: orderId, lookupToken };
     } catch (error: any) {
       const errorId = `ORD-${Date.now()}`;
       logger.error(`[${errorId}] Unexpected order error`);
