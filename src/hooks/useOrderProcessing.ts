@@ -128,8 +128,12 @@ export const useOrderProcessing = () => {
       // Check current user status
       const { data: { user } } = await supabase.auth.getUser();
 
+      // Generate order ID client-side so we don't need .select() (which requires SELECT RLS permission)
+      const orderId = crypto.randomUUID();
+
       // Create the order with all required fields
       const orderInsert = {
+        id: orderId,
         user_id: user?.id || null, // Explicitly set user_id
         customer_name: orderData.customerName,
         customer_email: orderData.customerEmail,
@@ -148,11 +152,10 @@ export const useOrderProcessing = () => {
         child_birthdate: orderData.childBirthdate || null
       };
 
-      const { data: order, error: orderError } = await supabase
+      // Use plain insert without .select() to avoid SELECT RLS restrictions for guest users
+      const { error: orderError } = await supabase
         .from('orders')
-        .insert(orderInsert)
-        .select('id, lookup_token')
-        .maybeSingle();
+        .insert(orderInsert);
 
       if (orderError) {
         logger.error(`[${errorId}] Order creation failed`);
