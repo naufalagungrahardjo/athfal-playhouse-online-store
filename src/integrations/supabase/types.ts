@@ -1180,6 +1180,7 @@ export type Database = {
           quantity: number
         }[]
       }
+      get_order_lookup_token: { Args: { p_order_id: string }; Returns: string }
       increment_promo_usage: {
         Args: { expected_count: number; promo_id: string }
         Returns: boolean
