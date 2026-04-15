@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Edit, Trash2, Eye, EyeOff, ShoppingBag } from 'lucide-react';
+import { Edit, Trash2, Eye, EyeOff, ShoppingBag, Copy } from 'lucide-react';
 import { ProductCategory } from '@/contexts/CartContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -32,10 +32,11 @@ interface ProductCardProps {
   product: ProductCardData;
   onEdit: (product: ProductCardData) => void;
   onDelete: (productId: string) => void;
+  onDuplicate?: (product: ProductCardData) => void;
   onToggleUpdated?: () => void;
 }
 
-export const ProductCard = ({ product, onEdit, onDelete, onToggleUpdated }: ProductCardProps) => {
+export const ProductCard = ({ product, onEdit, onDelete, onDuplicate, onToggleUpdated }: ProductCardProps) => {
   const { toast } = useToast();
   
   // Determine if product is inactive due to scheduling
@@ -142,6 +143,14 @@ export const ProductCard = ({ product, onEdit, onDelete, onToggleUpdated }: Prod
             </div>
           </div>
           <div className="flex space-x-2 flex-shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDuplicate?.(product)}
+              title="Duplicate"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
             <Button 
               variant="outline" 
               size="sm"
