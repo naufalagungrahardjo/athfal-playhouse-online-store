@@ -151,8 +151,8 @@ export const useOrderProcessing = () => {
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert(orderInsert)
-        .select()
-        .single();
+        .select('id, lookup_token')
+        .maybeSingle();
 
       if (orderError) {
         logger.error(`[${errorId}] Order creation failed`);
