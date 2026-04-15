@@ -26,10 +26,11 @@ interface ProductListProps {
   products: ProductListData[];
   onEdit: (product: ProductListData) => void;
   onDelete: (productId: string) => void;
+  onDuplicate?: (product: ProductListData) => void;
   onToggleUpdated?: () => void;
 }
 
-export const ProductList = ({ products, onEdit, onDelete, onToggleUpdated }: ProductListProps) => {
+export const ProductList = ({ products, onEdit, onDelete, onDuplicate, onToggleUpdated }: ProductListProps) => {
   if (products.length === 0) {
     return (
       <Card>
@@ -48,6 +49,7 @@ export const ProductList = ({ products, onEdit, onDelete, onToggleUpdated }: Pro
           product={product}
           onEdit={onEdit}
           onDelete={onDelete}
+          onDuplicate={onDuplicate}
           onToggleUpdated={onToggleUpdated}
         />
       ))}
