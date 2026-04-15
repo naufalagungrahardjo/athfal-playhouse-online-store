@@ -101,10 +101,6 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
                 : (language === 'id' ? 'Habis' : 'Out of stock')}
             </span>
           </div>
-          <div className="flex items-center">
-            <span className="font-medium text-gray-700 w-24">{language === 'id' ? 'Pajak' : 'Tax'}:</span>
-            <span className="text-gray-600">{product.tax}%</span>
-          </div>
           {product.first_payment > 0 && (
             <div className="flex items-center mt-4">
               <span className="font-medium text-gray-700 w-24">{language === 'id' ? 'DP' : 'First Payment'}:</span>

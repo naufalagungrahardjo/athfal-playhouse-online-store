@@ -85,10 +85,6 @@ const OrderSummary = ({
               <span>-{formatCurrency(getDiscountAmount())}</span>
             </div>
           )}
-          <div className="flex justify-between">
-            <span>Tax:</span>
-            <span>{formatCurrency(taxAmount)}</span>
-          </div>
           <div className="flex justify-between font-bold text-lg border-t pt-2">
             <span>Total:</span>
             <span>{formatCurrency(total)}</span>

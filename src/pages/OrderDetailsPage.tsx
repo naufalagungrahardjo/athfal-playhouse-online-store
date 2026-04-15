@@ -236,10 +236,6 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                     <span className="text-gray-600">{language === 'id' ? 'Subtotal' : 'Subtotal'}</span>
                     <span>{formatCurrency(order.subtotal)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">{language === 'id' ? 'Pajak' : 'Tax'}</span>
-                    <span>{formatCurrency(order.tax_amount)}</span>
-                  </div>
                   {order.discount_amount && order.discount_amount > 0 && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">{language === 'id' ? 'Diskon' : 'Discount'}</span>

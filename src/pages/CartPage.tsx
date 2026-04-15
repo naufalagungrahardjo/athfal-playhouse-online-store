@@ -601,13 +601,6 @@ const CartPage = () => {
                       </div>
                     )}
                     
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">{language === 'id' ? 'Pajak' : 'Tax'}</span>
-                      <span>
-                        {appliedPromo ? formatCurrency(getDiscountedTax()) : formatCurrency(getTaxAmount())}
-                      </span>
-                    </div>
-                    
                     <Separator className="my-3" />
                     <div className="flex justify-between font-bold">
                       <span>{language === 'id' ? 'Total' : 'Total'}</span>

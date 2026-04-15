@@ -72,10 +72,6 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ product, language, formatCurr
                 <span className="text-gray-600">{formatCurrency(product.price)}</span>
               </li>
               <li className="flex items-start">
-                <span className="font-medium text-gray-700 w-32">{language === 'id' ? 'Pajak' : 'Tax'}:</span>
-                <span className="text-gray-600">{product.tax}%</span>
-              </li>
-              <li className="flex items-start">
                 <span className="font-medium text-gray-700 w-32">{language === 'id' ? 'Total (1 item)' : 'Total (1 item)'}:</span>
                 <span className="text-gray-600">{formatCurrency(product.price + (product.price * product.tax / 100))}</span>
               </li>
