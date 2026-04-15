@@ -172,7 +172,7 @@ export const useOrderProcessing = () => {
 
       // Create order items - store base product_id so stock trigger can match
       const orderItems = orderData.items.map(item => ({
-        order_id: order.id,
+        order_id: orderId,
         product_id: getBaseId(item.product.id),
         product_name: item.product.name,
         product_price: item.product.price,
@@ -200,7 +200,7 @@ export const useOrderProcessing = () => {
 
       // Deduct stock via SECURITY DEFINER RPC (bypasses RLS)
       const { error: stockDeductError } = await supabase
-        .rpc('deduct_stock_for_order', { p_order_id: order.id });
+        .rpc('deduct_stock_for_order', { p_order_id: orderId });
 
       if (stockDeductError) {
         logger.error(`[${errorId}] Stock deduction failed: ${stockDeductError.message}`);
@@ -208,7 +208,7 @@ export const useOrderProcessing = () => {
 
       // Auto-create MDR expense via SECURITY DEFINER RPC (bypasses RLS)
       try {
-        await supabase.rpc('create_mdr_expense_for_order' as any, { p_order_id: order.id });
+        await supabase.rpc('create_mdr_expense_for_order' as any, { p_order_id: orderId });
       } catch (mdrError) {
         logger.error(`[${errorId}] MDR expense creation failed (non-blocking):`, mdrError);
       }
@@ -223,14 +223,14 @@ export const useOrderProcessing = () => {
 
       toast({
         title: "Order Successful",
-        description: `Your order has been placed successfully! Order ID: ${order.id.slice(0, 8)}`
+        description: `Your order has been placed successfully! Order ID: ${orderId.slice(0, 8)}`
       });
 
       // Send order alert emails (fire-and-forget, don't block checkout)
       try {
         supabase.functions.invoke('order-alert-email', {
           body: {
-            orderId: order.id,
+            orderId: orderId,
             customerName: orderData.customerName,
             customerEmail: orderData.customerEmail,
             totalAmount: orderData.totalAmount,
@@ -242,7 +242,7 @@ export const useOrderProcessing = () => {
       }
 
       setProcessing(false);
-      return { success: true, orderId: order.id, lookupToken: order.lookup_token };
+      return { success: true, orderId: orderId, lookupToken: undefined };
     } catch (error: any) {
       const errorId = `ORD-${Date.now()}`;
       logger.error(`[${errorId}] Unexpected order error`);
