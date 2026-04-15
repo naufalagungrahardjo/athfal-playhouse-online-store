@@ -41,6 +41,7 @@ const CheckoutPage = () => {
     customerEmail: '',
     customerPhone: '',
     customerAddress: '',
+    guardianStatus: '',
     paymentMethod: '',
     notes: '',
     childName: '',

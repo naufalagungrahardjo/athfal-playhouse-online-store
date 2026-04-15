@@ -18,6 +18,7 @@ type CheckoutFormProps = {
     customerEmail: string;
     customerPhone: string;
     customerAddress: string;
+    guardianStatus: string;
     paymentMethod: string;
     notes: string;
     childName: string;
@@ -148,6 +149,16 @@ const CheckoutForm = ({
             value={formData.customerAddress}
             onChange={(e) => handleInputChange('customerAddress', e.target.value)}
             rows={3}
+          />
+        </div>
+        <div>
+          <Label htmlFor="guardianStatus">Status Wali</Label>
+          <Input
+            id="guardianStatus"
+            type="text"
+            value={formData.guardianStatus}
+            onChange={(e) => handleInputChange('guardianStatus', e.target.value)}
+            placeholder="Contoh: Orang tua, Wali, Kakek/Nenek, dll."
           />
         </div>
         <div>

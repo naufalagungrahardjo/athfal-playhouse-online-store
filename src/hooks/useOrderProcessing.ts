@@ -9,6 +9,7 @@ interface OrderData {
   customerEmail: string;
   customerPhone: string;
   customerAddress?: string;
+  guardianStatus?: string;
   paymentMethod: string;
   notes?: string;
   childName?: string;
@@ -139,6 +140,7 @@ export const useOrderProcessing = () => {
         customer_email: orderData.customerEmail,
         customer_phone: orderData.customerPhone,
         customer_address: orderData.customerAddress || null,
+        guardian_status: orderData.guardianStatus || null,
         payment_method: orderData.paymentMethod,
         notes: orderData.notes || null,
         subtotal: orderData.subtotal,
