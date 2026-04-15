@@ -533,6 +533,7 @@ export type Database = {
           customer_name: string
           customer_phone: string
           discount_amount: number | null
+          guardian_status: string | null
           id: string
           lookup_token: string | null
           notes: string | null
@@ -556,6 +557,7 @@ export type Database = {
           customer_name: string
           customer_phone: string
           discount_amount?: number | null
+          guardian_status?: string | null
           id?: string
           lookup_token?: string | null
           notes?: string | null
@@ -579,6 +581,7 @@ export type Database = {
           customer_name?: string
           customer_phone?: string
           discount_amount?: number | null
+          guardian_status?: string | null
           id?: string
           lookup_token?: string | null
           notes?: string | null
