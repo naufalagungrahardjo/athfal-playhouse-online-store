@@ -1,7 +1,8 @@
-import { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, ReactNode, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { User } from '@/types/auth';
 import { useAuthState } from '@/hooks/useAuthState';
+import { useInactivityLogout } from '@/hooks/useInactivityLogout';
 import { logger } from '@/utils/logger';
 import {
   signInWithEmail,
@@ -139,8 +140,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const inactivityLogout = useCallback(() => {
+    logger.log('[AuthProvider] Auto-logout due to 12h inactivity');
+    logout();
+  }, []);
+
+  useInactivityLogout(!!user, inactivityLogout);
+
   const isAdmin = () => {
-    // Accept any recognized admin role
     return (
       user?.role === 'admin' ||
       user?.role === 'super_admin' ||

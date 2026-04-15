@@ -85,7 +85,10 @@ export const signUpWithEmail = async (email: string, password: string, name: str
 };
 
 export const signOut = async () => {
-  const { error } = await supabase.auth.signOut();
+  // Use 'local' scope to always clear local session tokens,
+  // even if the server session is already expired/missing.
+  // This prevents stale tokens from causing auto re-login.
+  const { error } = await supabase.auth.signOut({ scope: 'local' });
   if (error) {
     throw error;
   }
