@@ -58,6 +58,17 @@ const AdminProducts = () => {
     setIsDialogOpen(true);
   };
 
+  const handleDuplicate = (product: StrictProductFormData) => {
+    const duplicated: ProductFormData = {
+      ...product,
+      id: undefined,
+      product_id: product.product_id + '-copy',
+      name: product.name + ' (Copy)',
+    };
+    setEditingProduct(duplicated);
+    setIsDialogOpen(true);
+  };
+
   const handleAddNew = () => {
     setEditingProduct(null);
     setIsDialogOpen(true);
@@ -114,6 +125,7 @@ const AdminProducts = () => {
         products={products}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onDuplicate={handleDuplicate}
         onToggleUpdated={fetchAllProducts}
       />
 
