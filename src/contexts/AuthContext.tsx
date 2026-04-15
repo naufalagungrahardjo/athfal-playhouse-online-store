@@ -140,8 +140,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const inactivityLogout = useCallback(() => {
+    logger.log('[AuthProvider] Auto-logout due to 12h inactivity');
+    logout();
+  }, []);
+
+  useInactivityLogout(!!user, inactivityLogout);
+
   const isAdmin = () => {
-    // Accept any recognized admin role
     return (
       user?.role === 'admin' ||
       user?.role === 'super_admin' ||
