@@ -56,7 +56,7 @@ const AdminExpense = () => {
     const [catsRes, fundsRes, expRes] = await Promise.all([
       supabase.from('expense_categories' as any).select('id, name').order('name'),
       supabase.from('expense_fund_sources' as any).select('id, name').order('name'),
-      supabase.from('expenses' as any).select('*').order('date', { ascending: false }),
+      supabase.from('expenses' as any).select('*').order('created_at', { ascending: false }),
     ]);
     setCategories((catsRes.data as any) || []);
     setFundSources((fundsRes.data as any) || []);
