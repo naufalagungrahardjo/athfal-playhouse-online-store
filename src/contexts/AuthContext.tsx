@@ -1,7 +1,8 @@
-import { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, ReactNode, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { User } from '@/types/auth';
 import { useAuthState } from '@/hooks/useAuthState';
+import { useInactivityLogout } from '@/hooks/useInactivityLogout';
 import { logger } from '@/utils/logger';
 import {
   signInWithEmail,
