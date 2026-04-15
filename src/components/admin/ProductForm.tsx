@@ -152,7 +152,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
     console.log('[ProductForm] Data being saved:', formData);
 
     try {
-      if (editingProduct) {
+      if (editingProduct && editingProduct.id) {
         let imageUrl = formData.image;
         // Strip any existing cache-busting params to keep URL clean
         imageUrl = imageUrl.replace(/[?&]v=\d+$/, '');
