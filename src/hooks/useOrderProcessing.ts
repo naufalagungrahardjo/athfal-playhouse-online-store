@@ -241,8 +241,18 @@ export const useOrderProcessing = () => {
         logger.error('Order alert email failed (non-blocking):', alertError);
       }
 
+      // Retrieve lookup_token via SECURITY DEFINER RPC (works for guest users too)
+      let lookupToken: string | undefined;
+      try {
+        const { data: token } = await supabase
+          .rpc('get_order_lookup_token' as any, { p_order_id: orderId });
+        lookupToken = token || undefined;
+      } catch {
+        logger.error(`[${errorId}] Failed to retrieve lookup token (non-blocking)`);
+      }
+
       setProcessing(false);
-      return { success: true, orderId: orderId, lookupToken: undefined };
+      return { success: true, orderId: orderId, lookupToken };
     } catch (error: any) {
       const errorId = `ORD-${Date.now()}`;
       logger.error(`[${errorId}] Unexpected order error`);
