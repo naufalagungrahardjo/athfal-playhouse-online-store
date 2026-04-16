@@ -21,6 +21,10 @@ interface Order {
   customer_email: string;
   customer_phone: string;
   customer_address?: string;
+  guardian_status?: string | null;
+  child_name?: string | null;
+  child_age?: string | null;
+  child_birthdate?: string | null;
   payment_method: string;
   status: string;
   subtotal: number;
