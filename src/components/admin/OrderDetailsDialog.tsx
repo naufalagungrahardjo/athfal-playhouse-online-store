@@ -24,6 +24,10 @@ interface Order {
   customer_email: string;
   customer_phone: string;
   customer_address?: string;
+  guardian_status?: string | null;
+  child_name?: string | null;
+  child_age?: string | null;
+  child_birthdate?: string | null;
   payment_method: string;
   status: string;
   subtotal: number;
@@ -222,6 +226,30 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
                 <div className="md:col-span-2">
                   <label className="text-sm font-medium text-gray-500">Address</label>
                   <p className="text-sm">{order.customer_address}</p>
+                </div>
+              )}
+              {order.guardian_status && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Guardian Status</label>
+                  <p className="text-sm">{order.guardian_status}</p>
+                </div>
+              )}
+              {order.child_name && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Child Name</label>
+                  <p className="text-sm">{order.child_name}</p>
+                </div>
+              )}
+              {order.child_birthdate && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Child Birthdate</label>
+                  <p className="text-sm">{new Date(order.child_birthdate).toLocaleDateString()}</p>
+                </div>
+              )}
+              {order.child_age && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Child Age</label>
+                  <p className="text-sm">{order.child_age}</p>
                 </div>
               )}
             </div>
