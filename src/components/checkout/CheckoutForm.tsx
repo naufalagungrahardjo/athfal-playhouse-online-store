@@ -275,10 +275,17 @@ const CheckoutForm = ({
           </label>
         </div>
 
+        {!consentChecked && (
+          <p className="text-sm text-amber-600 mt-4 text-center font-medium animate-pulse">
+            ⚠️ {lang === 'id' 
+              ? 'Silakan centang kotak persetujuan di atas untuk melanjutkan' 
+              : 'Please check the consent box above to proceed'}
+          </p>
+        )}
         <Button 
           type="submit" 
-          className={`w-full mt-6 transition-all ${!consentChecked ? 'grayscale opacity-60 cursor-not-allowed' : ''}`}
-          disabled={processing || activePaymentMethods.length === 0}
+          className="w-full mt-2 transition-all"
+          disabled={processing || activePaymentMethods.length === 0 || !consentChecked}
         >
           {processing ? 'Processing...' : `Proceed Order - ${formatCurrency(total)}`}
         </Button>
