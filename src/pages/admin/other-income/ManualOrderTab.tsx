@@ -200,7 +200,28 @@ const ManualOrderTab = () => {
           <div><Label>Customer Name *</Label><Input value={customerName} onChange={e => setCustomerName(e.target.value)} /></div>
           <div><Label>Email *</Label><Input type="email" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} /></div>
           <div><Label>Phone *</Label><Input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} /></div>
-          <div><Label>Address</Label><Input value={customerAddress} onChange={e => setCustomerAddress(e.target.value)} /></div>
+          <div className="md:col-span-2"><Label>Address</Label><Textarea value={customerAddress} onChange={e => setCustomerAddress(e.target.value)} rows={2} /></div>
+          <div>
+            <Label>Status Wali</Label>
+            <Input value={guardianStatus} onChange={e => setGuardianStatus(e.target.value)} placeholder="Contoh: Orang tua, Wali, Kakek/Nenek, dll." />
+          </div>
+          <div>
+            <Label>Nama Anak</Label>
+            <Input value={childName} onChange={e => setChildName(e.target.value)} placeholder="Isi jika produk untuk anak" />
+          </div>
+          <div>
+            <Label>Tanggal Lahir Anak</Label>
+            <Input
+              type="date"
+              value={childBirthdate}
+              onChange={e => setChildBirthdate(e.target.value)}
+              max={new Date().toISOString().split('T')[0]}
+            />
+          </div>
+          <div>
+            <Label>Usia Anak</Label>
+            <Input value={childAge} readOnly className="bg-muted cursor-not-allowed" placeholder="Otomatis dari tanggal lahir" />
+          </div>
         </CardContent>
       </Card>
 
