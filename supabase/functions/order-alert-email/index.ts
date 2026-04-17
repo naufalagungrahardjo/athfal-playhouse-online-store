@@ -24,7 +24,25 @@ serve(async (req) => {
       throw new Error("Supabase credentials not configured");
     }
 
-    const { orderId, customerName, customerEmail, totalAmount, items } = await req.json();
+    const {
+      orderId,
+      customerName,
+      customerEmail,
+      customerPhone,
+      customerAddress,
+      childName,
+      childAge,
+      childBirthdate,
+      guardianStatus,
+      notes,
+      paymentMethod,
+      totalAmount,
+      subtotal,
+      taxAmount,
+      discountAmount,
+      promoCode,
+      items,
+    } = await req.json();
 
     if (!orderId) {
       throw new Error("orderId is required");
@@ -56,7 +74,42 @@ serve(async (req) => {
     ).join("<br>") || "No items";
 
     const formattedTotal = `Rp ${Number(totalAmount).toLocaleString("id-ID")}`;
+    const formattedSubtotal = `Rp ${Number(subtotal || 0).toLocaleString("id-ID")}`;
+    const formattedTax = `Rp ${Number(taxAmount || 0).toLocaleString("id-ID")}`;
+    const formattedDiscount = discountAmount ? `Rp ${Number(discountAmount).toLocaleString("id-ID")}` : null;
     const shortId = orderId.slice(0, 8).toUpperCase();
+
+    // Format child info section
+    let childInfoSection = "";
+    if (childName || childAge || childBirthdate || guardianStatus) {
+      childInfoSection = `
+          <tr>
+            <td colspan="2" style="padding: 12px; background: #fff3f4; border-top: 2px solid #e91e63;">
+              <h4 style="margin: 0 0 8px 0; color: #e91e63; font-size: 14px;">👶 Child Information</h4>
+            </td>
+          </tr>
+          ${childName ? `
+          <tr style="background: #fff3f4;">
+            <td style="padding: 8px; font-weight: bold; color: #555; width: 35%;">Child Name</td>
+            <td style="padding: 8px;">${childName}</td>
+          </tr>` : ""}
+          ${childAge ? `
+          <tr style="background: #fff3f4;">
+            <td style="padding: 8px; font-weight: bold; color: #555;">Child Age</td>
+            <td style="padding: 8px;">${childAge}</td>
+          </tr>` : ""}
+          ${childBirthdate ? `
+          <tr style="background: #fff3f4;">
+            <td style="padding: 8px; font-weight: bold; color: #555;">Child Birthdate</td>
+            <td style="padding: 8px;">${new Date(childBirthdate).toLocaleDateString("id-ID")}</td>
+          </tr>` : ""}
+          ${guardianStatus ? `
+          <tr style="background: #fff3f4;">
+            <td style="padding: 8px; font-weight: bold; color: #555;">Guardian Status</td>
+            <td style="padding: 8px;">${guardianStatus}</td>
+          </tr>` : ""}
+      `;
+    }
 
     const htmlBody = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -64,29 +117,80 @@ serve(async (req) => {
           🛒 New Order Alert
         </h2>
         <p>A new order has been placed on Athfal Playhouse!</p>
-        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
-          <tr>
-            <td style="padding: 8px; font-weight: bold; color: #555;">Order ID</td>
+        
+        <h3 style="color: #333; margin: 20px 0 10px 0;">📋 Order Details</h3>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
+          <tr style="background: #f9f9f9;">
+            <td style="padding: 8px; font-weight: bold; color: #555; width: 35%;">Order ID</td>
             <td style="padding: 8px;">#${shortId}</td>
           </tr>
+          <tr>
+            <td style="padding: 8px; font-weight: bold; color: #555;">Payment Method</td>
+            <td style="padding: 8px;">${paymentMethod || "N/A"}</td>
+          </tr>
+          ${promoCode ? `
           <tr style="background: #f9f9f9;">
-            <td style="padding: 8px; font-weight: bold; color: #555;">Customer</td>
+            <td style="padding: 8px; font-weight: bold; color: #555;">Promo Code Used</td>
+            <td style="padding: 8px;">${promoCode}</td>
+          </tr>` : ""}
+        </table>
+
+        <h3 style="color: #333; margin: 20px 0 10px 0;">👤 Customer Information</h3>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
+          <tr style="background: #f0f8ff;">
+            <td style="padding: 8px; font-weight: bold; color: #555; width: 35%;">Name</td>
             <td style="padding: 8px;">${customerName || "N/A"}</td>
           </tr>
           <tr>
             <td style="padding: 8px; font-weight: bold; color: #555;">Email</td>
             <td style="padding: 8px;">${customerEmail || "N/A"}</td>
           </tr>
+          <tr style="background: #f0f8ff;">
+            <td style="padding: 8px; font-weight: bold; color: #555;">Phone</td>
+            <td style="padding: 8px;">${customerPhone || "N/A"}</td>
+          </tr>
+          ${customerAddress ? `
+          <tr>
+            <td style="padding: 8px; font-weight: bold; color: #555; vertical-align: top;">Address</td>
+            <td style="padding: 8px; white-space: pre-line;">${customerAddress}</td>
+          </tr>` : ""}
+          ${childInfoSection}
+          ${notes ? `
+          <tr style="background: #fffbe6;">
+            <td style="padding: 8px; font-weight: bold; color: #555; vertical-align: top;">Notes</td>
+            <td style="padding: 8px; white-space: pre-line;">${notes}</td>
+          </tr>` : ""}
+        </table>
+
+        <h3 style="color: #333; margin: 20px 0 10px 0;">💰 Payment Summary</h3>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
           <tr style="background: #f9f9f9;">
-            <td style="padding: 8px; font-weight: bold; color: #555;">Total</td>
-            <td style="padding: 8px; font-weight: bold; color: #e91e63;">${formattedTotal}</td>
+            <td style="padding: 8px; font-weight: bold; color: #555; width: 35%;">Subtotal</td>
+            <td style="padding: 8px;">${formattedSubtotal}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; font-weight: bold; color: #555;">Tax</td>
+            <td style="padding: 8px;">${formattedTax}</td>
+          </tr>
+          ${formattedDiscount ? `
+          <tr style="background: #f9f9f9;">
+            <td style="padding: 8px; font-weight: bold; color: #555;">Discount</td>
+            <td style="padding: 8px; color: #e91e63;">-${formattedDiscount}</td>
+          </tr>` : ""}
+          <tr style="background: #e91e63; color: white;">
+            <td style="padding: 12px; font-weight: bold;">Total Amount</td>
+            <td style="padding: 12px; font-weight: bold; font-size: 16px;">${formattedTotal}</td>
           </tr>
         </table>
-        <h3 style="color: #333;">Items Ordered:</h3>
-        <p style="line-height: 1.8;">${itemsList}</p>
-        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-        <p style="color: #999; font-size: 12px;">
-          This is an automated notification from Athfal Playhouse order system.
+
+        <h3 style="color: #333; margin: 20px 0 10px 0;">📦 Items Ordered</h3>
+        <div style="background: #f9f9f9; padding: 16px; border-radius: 8px; line-height: 1.8;">
+          ${itemsList}
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0 20px 0;">
+        <p style="color: #999; font-size: 12px; line-height: 1.5;">
+          This is an automated notification from Athfal Playhouse order system.<br>
           You can disable these alerts in Admin → Accounts.
         </p>
       </div>
