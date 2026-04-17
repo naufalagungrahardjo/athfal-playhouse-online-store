@@ -242,7 +242,7 @@ export const useOrderProcessing = () => {
             childBirthdate: orderData.childBirthdate,
             guardianStatus: orderData.guardianStatus,
             notes: orderData.notes,
-            paymentMethod: paymentMethods?.find(pm => pm.id === orderData.paymentMethod)?.bank_name || orderData.paymentMethod,
+            paymentMethod: orderData.paymentMethod,
             totalAmount: orderData.totalAmount,
             subtotal: orderData.subtotal,
             taxAmount: orderData.taxAmount,
