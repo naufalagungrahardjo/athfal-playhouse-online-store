@@ -180,6 +180,7 @@ const ManualOrderTab = () => {
       toast.success(`Manual order created (#${orderId.slice(0, 8)})`);
       // Reset form
       setCustomerName(''); setCustomerEmail(''); setCustomerPhone(''); setCustomerAddress('');
+      setGuardianStatus(''); setChildName(''); setChildBirthdate('');
       setPaymentMethod(''); setNotes('');
       setItems([{ productDbId: '', variantId: null, quantity: 1 }]);
     } catch (e: any) {
