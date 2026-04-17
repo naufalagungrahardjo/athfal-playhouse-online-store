@@ -115,38 +115,59 @@ const AdminAnalytics = () => {
   const [salesRevenueType, setSalesRevenueType] = useState<RevenueType>('before_tax');
   const [netRevenueType, setNetRevenueType] = useState<RevenueType>('before_tax');
 
+  const fetchData = async () => {
+    const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes, incRes, capRes] = await Promise.all([
+      supabase.from('orders').select('id, created_at, payment_method, status, total_amount, subtotal, tax_amount, discount_amount').order('created_at', { ascending: true }),
+      supabase.from('order_items').select('order_id, product_id, product_name, quantity, product_price'),
+      supabase.from('categories').select('slug, title'),
+      supabase.from('products').select('product_id, category'),
+      supabase.from('expenses' as any).select('*').order('date', { ascending: true }),
+      supabase.from('expense_categories' as any).select('id, name'),
+      supabase.from('expense_fund_sources' as any).select('id, name'),
+      supabase.from('other_income' as any).select('*').order('date', { ascending: true }),
+      supabase.from('capital_inflows' as any).select('*').order('date', { ascending: true }),
+    ]);
+
+    const itemsByOrder: Record<string, any[]> = {};
+    (itemsRes.data || []).forEach(item => {
+      if (!itemsByOrder[item.order_id]) itemsByOrder[item.order_id] = [];
+      itemsByOrder[item.order_id].push(item);
+    });
+
+    setOrders((ordersRes.data || []).map(o => ({ ...o, items: itemsByOrder[o.id] || [] })));
+    setCategories(catsRes.data || []);
+    setProducts(prodsRes.data || []);
+    setExpenses((expRes.data as any) || []);
+    setExpenseCategories((expCatsRes.data as any) || []);
+    setFundSources((fundsRes.data as any) || []);
+    setOtherIncomes((incRes.data as any) || []);
+    setCapitalInflows((capRes.data as any) || []);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes, incRes, capRes] = await Promise.all([
-        supabase.from('orders').select('id, created_at, payment_method, status, total_amount, subtotal, tax_amount, discount_amount').order('created_at', { ascending: true }),
-        supabase.from('order_items').select('order_id, product_id, product_name, quantity, product_price'),
-        supabase.from('categories').select('slug, title'),
-        supabase.from('products').select('product_id, category'),
-        supabase.from('expenses' as any).select('*').order('date', { ascending: true }),
-        supabase.from('expense_categories' as any).select('id, name'),
-        supabase.from('expense_fund_sources' as any).select('id, name'),
-        supabase.from('other_income' as any).select('*').order('date', { ascending: true }),
-        supabase.from('capital_inflows' as any).select('*').order('date', { ascending: true }),
-      ]);
-
-      const itemsByOrder: Record<string, any[]> = {};
-      (itemsRes.data || []).forEach(item => {
-        if (!itemsByOrder[item.order_id]) itemsByOrder[item.order_id] = [];
-        itemsByOrder[item.order_id].push(item);
-      });
-
-      setOrders((ordersRes.data || []).map(o => ({ ...o, items: itemsByOrder[o.id] || [] })));
-      setCategories(catsRes.data || []);
-      setProducts(prodsRes.data || []);
-      setExpenses((expRes.data as any) || []);
-      setExpenseCategories((expCatsRes.data as any) || []);
-      setFundSources((fundsRes.data as any) || []);
-      setOtherIncomes((incRes.data as any) || []);
-      setCapitalInflows((capRes.data as any) || []);
-      setLoading(false);
-    };
+    setLoading(true);
     fetchData();
+
+    // Subscribe to realtime changes so analytics auto-updates when capital/expense/income change
+    const channel = supabase
+      .channel('analytics-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'capital_inflows' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'other_income' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'expense_fund_sources' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'expense_categories' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => fetchData())
+      .subscribe();
+
+    // Refetch when window regains focus
+    const onFocus = () => fetchData();
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener('focus', onFocus);
+    };
   }, []);
 
   // Product to category map
