@@ -37,9 +37,25 @@ const ManualOrderTab = () => {
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
+  const [guardianStatus, setGuardianStatus] = useState('');
+  const [childName, setChildName] = useState('');
+  const [childBirthdate, setChildBirthdate] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState<LineItem[]>([{ productDbId: '', variantId: null, quantity: 1 }]);
+
+  const childAge = useMemo(() => {
+    if (!childBirthdate) return '';
+    const birth = new Date(childBirthdate);
+    if (isNaN(birth.getTime())) return '';
+    const now = new Date();
+    let years = now.getFullYear() - birth.getFullYear();
+    let months = now.getMonth() - birth.getMonth();
+    if (now.getDate() < birth.getDate()) months -= 1;
+    if (months < 0) { years -= 1; months += 12; }
+    if (years < 0) return '';
+    return `${years} tahun ${months} bulan`;
+  }, [childBirthdate]);
 
   useEffect(() => {
     (async () => {
