@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 import { Pencil } from 'lucide-react';
+import { OrderItemsEditor } from './orders/OrderItemsEditor';
 
 interface OrderItem {
   id: string;
@@ -257,31 +258,15 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
 
           <Separator />
 
-          {/* Order Items */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">Order Items</h3>
-            <div className="space-y-3">
-              {order.items && order.items.length > 0 ? (
-                order.items.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">{item.product_name}</p>
-                      <p className="text-sm text-gray-500">Product ID: {item.product_id}</p>
-                      <p className="text-sm text-gray-500">Price: {formatCurrency(item.product_price)}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">Qty: {item.quantity}</p>
-                      <p className="text-sm text-gray-500">
-                        Total: {formatCurrency(item.product_price * item.quantity)}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 italic">No items found for this order</p>
-              )}
-            </div>
-          </div>
+          <OrderItemsEditor
+            orderId={order.id}
+            items={order.items || []}
+            currentSubtotal={order.subtotal}
+            currentTax={order.tax_amount}
+            currentDiscount={order.discount_amount || 0}
+            paymentMethod={order.payment_method}
+            onSaved={onOrderUpdated}
+          />
 
           <Separator />
 
