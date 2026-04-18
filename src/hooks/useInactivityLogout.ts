@@ -26,21 +26,10 @@ export const useInactivityLogout = (
       return;
     }
 
-    // Check if already expired from a previous session
-    const lastActivity = localStorage.getItem(LAST_ACTIVITY_KEY);
-    if (lastActivity) {
-      const elapsed = Date.now() - parseInt(lastActivity, 10);
-      if (elapsed >= INACTIVITY_TIMEOUT_MS) {
-        onLogout();
-        return;
-      }
-      // Set timer for remaining time
-      timerRef.current = setTimeout(() => {
-        onLogout();
-      }, INACTIVITY_TIMEOUT_MS - elapsed);
-    } else {
-      updateActivity();
-    }
+    // Always refresh activity timestamp when becoming logged in.
+    // This prevents stale timestamps (from a previous session, or another
+    // device/browser) from instantly logging the user out on fresh login.
+    updateActivity();
 
     // Throttle activity updates to once per minute
     let lastUpdate = 0;
