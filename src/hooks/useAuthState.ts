@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { User } from '@/types/auth';
@@ -10,6 +9,10 @@ export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const userRef = useRef<User | null>(null);
+
+  // Keep ref in sync with state so the auth listener closure can read the latest user.
+  userRef.current = user;
 
   useEffect(() => {
     let canceled = false;
@@ -30,7 +33,7 @@ export const useAuthState = () => {
         // If we already have a user and the new session is null (token refresh failure,
         // server error, transient issue), keep the current user logged in.
         // Only trust explicit SIGNED_OUT to clear user state.
-        if (!session && user) {
+        if (!session && userRef.current) {
           logger.warn('[useAuthState] Session became null but user exists, keeping current user (event:', event, ')');
           return;
         }
