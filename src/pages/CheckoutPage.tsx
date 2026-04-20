@@ -197,6 +197,17 @@ const CheckoutPage = () => {
       orderCompletedRef.current = true;
       clearCart();
       localStorage.removeItem('appliedPromo');
+
+      // Google Ads conversion tracking
+      if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
+        (window as any).gtag('event', 'conversion', {
+          send_to: 'AW-18098383286/LojgCMGX7p0cELbT_bVD',
+          value: Math.round(totalAmount),
+          currency: 'IDR',
+          transaction_id: result.orderId,
+        });
+      }
+
       const tokenParam = result.lookupToken ? `?token=${result.lookupToken}` : '';
       // Use replace to prevent back-button returning to empty checkout
       navigate(`/order-details/${result.orderId}${tokenParam}`, { replace: true });
