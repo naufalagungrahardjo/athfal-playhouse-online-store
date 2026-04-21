@@ -460,8 +460,8 @@ const AdminAnalytics = () => {
   const totalSalesRevenue = useMemo(() => {
     return orders
       .filter(o => o.status !== 'cancelled' && o.status !== 'refund')
-      .reduce((s, o) => s + getOrderRevenue(o, netRevenueType), 0);
-  }, [orders, netRevenueType]);
+      .reduce((s, o) => s + getOrderRevenueBasis(o, netRevenueType, netBasis), 0);
+  }, [orders, netRevenueType, netBasis]);
 
   const totalOtherIncome = useMemo(() => otherIncomes.reduce((s, i) => s + i.amount, 0), [otherIncomes]);
   const totalAllExpenses = useMemo(() => expenses.reduce((s, e) => s + getExpenseNet(e), 0), [expenses]);
