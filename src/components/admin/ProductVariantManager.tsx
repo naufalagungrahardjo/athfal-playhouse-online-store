@@ -123,25 +123,49 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
       )}
 
       {variants.map((variant, index) => (
-        <div key={index} className="flex items-center gap-3">
-          <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          <Input
-            placeholder="Variant name (e.g. Early Bird)"
-            value={variant.name}
-            onChange={(e) => updateVariant(index, 'name', e.target.value)}
-            className="flex-1"
-          />
-          <Input
-            type="number"
-            placeholder="Price"
-            value={variant.price === 0 ? '' : variant.price}
-            onChange={(e) => updateVariant(index, 'price', e.target.value ? Number(e.target.value) : 0)}
-            className="w-36"
-            min="0"
-          />
-          <Button type="button" variant="ghost" size="icon" onClick={() => removeVariant(index)}>
-            <Trash2 className="h-4 w-4 text-destructive" />
-          </Button>
+        <div key={index} className="border rounded-md p-3 space-y-2 bg-background">
+          <div className="flex items-center gap-2">
+            <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <Input
+              placeholder="Variant name (e.g. Bumi Class A)"
+              value={variant.name}
+              onChange={(e) => updateVariant(index, 'name', e.target.value)}
+              className="flex-1"
+            />
+            <Button type="button" variant="ghost" size="icon" onClick={() => removeVariant(index)}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-xs text-muted-foreground">Price (IDR)</Label>
+              <Input
+                type="number"
+                placeholder="Price"
+                value={variant.price === 0 ? '' : variant.price}
+                onChange={(e) => updateVariant(index, 'price', e.target.value ? Number(e.target.value) : 0)}
+                min="0"
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Stock</Label>
+              <Input
+                type="number"
+                placeholder="0"
+                value={variant.stock === 0 ? '' : variant.stock}
+                onChange={(e) => updateVariant(index, 'stock', e.target.value ? Number(e.target.value) : 0)}
+                min="0"
+              />
+            </div>
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={!!variant.is_sold_out}
+              onChange={(e) => updateVariant(index, 'is_sold_out', e.target.checked)}
+            />
+            Mark as Sold Out
+          </label>
         </div>
       ))}
 
