@@ -369,6 +369,23 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             />
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border rounded-lg p-4 bg-muted/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-base">Use Sessions</Label>
+                <p className="text-xs text-muted-foreground">Customers must pick a session time (Pagi/Siang/Sore)</p>
+              </div>
+              <Switch checked={!!formData.use_sessions} onCheckedChange={(v) => setFormData({...formData, use_sessions: v})} />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-base">Payment Reminders</Label>
+                <p className="text-xs text-muted-foreground">Email customer when an installment is overdue</p>
+              </div>
+              <Switch checked={formData.payment_reminders_enabled !== false} onCheckedChange={(v) => setFormData({...formData, payment_reminders_enabled: v})} />
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Active From (optional)</Label>
@@ -422,6 +439,14 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
 
           {/* Variant Manager - only for existing products */}
           <ProductVariantManager productDbId={editingProduct?.id} />
+
+          {/* Sessions (only when toggled on) */}
+          {formData.use_sessions && (
+            <ProductSessionManager productDbId={editingProduct?.id} />
+          )}
+
+          {/* Installment Plans */}
+          <InstallmentPlanManager productDbId={editingProduct?.id} productPrice={formData.price} />
 
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>
