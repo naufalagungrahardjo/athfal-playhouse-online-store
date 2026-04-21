@@ -46,14 +46,24 @@ interface OrderWithItems {
   subtotal: number;
   tax_amount: number;
   discount_amount: number;
+  amount_paid: number;
   items: { product_id: string; product_name: string; quantity: number; product_price: number }[];
 }
 
+const getPaidRatio = (order: OrderWithItems): number => {
+  const total = order.total_amount || 0;
+  if (total <= 0) return 0;
+  return Math.min(1, Math.max(0, (order.amount_paid || 0) / total));
+};
+
 const getOrderRevenue = (order: OrderWithItems, revenueType: RevenueType): number => {
+  // Cash basis: scale revenue components by the paid ratio so analytics
+  // reflect cash actually collected, not what is owed.
+  const ratio = getPaidRatio(order);
   switch (revenueType) {
-    case 'before_tax': return order.subtotal || 0;
-    case 'after_tax': return (order.subtotal || 0) + (order.tax_amount || 0);
-    case 'after_discount': return (order.subtotal || 0) - (order.discount_amount || 0);
+    case 'before_tax': return (order.subtotal || 0) * ratio;
+    case 'after_tax': return ((order.subtotal || 0) + (order.tax_amount || 0)) * ratio;
+    case 'after_discount': return ((order.subtotal || 0) - (order.discount_amount || 0)) * ratio;
   }
 };
 
@@ -117,7 +127,7 @@ const AdminAnalytics = () => {
 
   const fetchData = async () => {
     const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes, incRes, capRes] = await Promise.all([
-      supabase.from('orders').select('id, created_at, payment_method, status, total_amount, subtotal, tax_amount, discount_amount').order('created_at', { ascending: true }),
+      supabase.from('orders').select('id, created_at, payment_method, status, total_amount, subtotal, tax_amount, discount_amount, amount_paid').order('created_at', { ascending: true }),
       supabase.from('order_items').select('order_id, product_id, product_name, quantity, product_price'),
       supabase.from('categories').select('slug, title'),
       supabase.from('products').select('product_id, category'),
