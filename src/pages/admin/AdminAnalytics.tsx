@@ -478,7 +478,7 @@ const AdminAnalytics = () => {
     orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').forEach(o => {
       const key = formatDateKey(o.created_at, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
-      map[key].revenue += getOrderRevenue(o, netRevenueType);
+      map[key].revenue += getOrderRevenueBasis(o, netRevenueType, netBasis);
     });
     // Other income
     otherIncomes.forEach(i => {
@@ -503,7 +503,7 @@ const AdminAnalytics = () => {
     // Calculate net
     Object.values(map).forEach(v => { v.net = v.revenue - v.expense; });
     return Object.entries(map).sort().map(([date, vals]) => ({ date, ...vals }));
-  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, netGranularity, netRevenueType]);
+  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, netGranularity, netRevenueType, netBasis]);
 
   // Cumulative net income over time
   const cumulativeNetData = useMemo(() => {
