@@ -12,6 +12,8 @@ interface Variant {
   name: string;
   price: number;
   order_num: number;
+  stock: number;
+  is_sold_out: boolean;
 }
 
 interface ProductVariantManagerProps {
@@ -38,12 +40,19 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
       .eq('product_id', productDbId)
       .order('order_num', { ascending: true });
     if (!error && data) {
-      setVariants(data.map(v => ({ id: v.id, name: v.name, price: v.price, order_num: v.order_num })));
+      setVariants(data.map((v: any) => ({
+        id: v.id,
+        name: v.name,
+        price: v.price,
+        order_num: v.order_num,
+        stock: v.stock ?? 0,
+        is_sold_out: v.is_sold_out ?? false,
+      })));
     }
   };
 
   const addVariant = () => {
-    setVariants([...variants, { name: '', price: 0, order_num: variants.length + 1 }]);
+    setVariants([...variants, { name: '', price: 0, order_num: variants.length + 1, stock: 0, is_sold_out: false }]);
   };
 
   const removeVariant = async (index: number) => {
@@ -54,7 +63,7 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
     setVariants(variants.filter((_, i) => i !== index));
   };
 
-  const updateVariant = (index: number, field: keyof Variant, value: string | number) => {
+  const updateVariant = (index: number, field: keyof Variant, value: string | number | boolean) => {
     setVariants(variants.map((v, i) => i === index ? { ...v, [field]: value } : v));
   };
 
@@ -73,6 +82,8 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
           name: v.name,
           price: v.price,
           order_num: i + 1,
+          stock: v.stock ?? 0,
+          is_sold_out: v.is_sold_out ?? false,
         }));
         const { error } = await supabase.from('product_variants').insert(toInsert);
         if (error) throw error;

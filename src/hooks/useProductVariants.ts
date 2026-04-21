@@ -7,6 +7,8 @@ export interface ProductVariant {
   name: string;
   price: number;
   order_num: number;
+  stock: number;
+  is_sold_out: boolean;
 }
 
 export const useProductVariants = (productId?: string) => {
