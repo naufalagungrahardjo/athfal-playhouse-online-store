@@ -681,28 +681,34 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_sold_out: boolean
           name: string
           order_num: number
           price: number
           product_id: string
+          stock: number
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
+          is_sold_out?: boolean
           name: string
           order_num?: number
           price: number
           product_id: string
+          stock?: number
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
+          is_sold_out?: boolean
           name?: string
           order_num?: number
           price?: number
           product_id?: string
+          stock?: number
           updated_at?: string
         }
         Relationships: [
