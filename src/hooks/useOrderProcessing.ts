@@ -173,29 +173,13 @@ export const useOrderProcessing = () => {
       // Order created successfully
 
       // Create order items - store base product_id so stock trigger can match
-      // Parse session_id and installment_plan_id from composite cart id (format: BASE__variant_X__sess_Y__plan_Z)
-      const parseCompositeId = (id: string) => {
-        const parts = id.split('__');
-        let session_id: string | null = null;
-        let installment_plan_id: string | null = null;
-        for (const p of parts) {
-          if (p.startsWith('sess_')) session_id = p.slice(5);
-          if (p.startsWith('plan_')) installment_plan_id = p.slice(5);
-        }
-        return { session_id, installment_plan_id };
-      };
-      const orderItems = orderData.items.map(item => {
-        const { session_id, installment_plan_id } = parseCompositeId(item.product.id);
-        return {
-          order_id: orderId,
-          product_id: getBaseId(item.product.id),
-          product_name: item.product.name,
-          product_price: item.product.price,
-          quantity: item.quantity,
-          session_id,
-          installment_plan_id,
-        };
-      });
+      const orderItems = orderData.items.map(item => ({
+        order_id: orderId,
+        product_id: getBaseId(item.product.id),
+        product_name: item.product.name,
+        product_price: item.product.price,
+        quantity: item.quantity
+      }));
 
       // Creating order items
 
@@ -215,50 +199,6 @@ export const useOrderProcessing = () => {
       }
 
       // Order items created successfully
-
-      // Create order_payments rows from selected installment plans
-      try {
-        const planIds = [...new Set(orderItems.map(i => i.installment_plan_id).filter(Boolean) as string[])];
-        const planMap: Record<string, { num_payments: number; payment_amounts: number[] }> = {};
-        if (planIds.length > 0) {
-          const { data: planRows } = await supabase
-            .from('product_installment_plans' as any)
-            .select('id, num_payments, payment_amounts')
-            .in('id', planIds);
-          (planRows || []).forEach((p: any) => {
-            planMap[p.id] = { num_payments: p.num_payments, payment_amounts: Array.isArray(p.payment_amounts) ? p.payment_amounts : [] };
-          });
-        }
-
-        // Use the FIRST item's plan to drive the order's payment schedule
-        // (multi-plan orders default to a single full-payment row)
-        const firstPlanId = orderItems.find(i => i.installment_plan_id)?.installment_plan_id;
-        const plan = firstPlanId ? planMap[firstPlanId] : null;
-        const total = orderData.totalAmount;
-
-        if (plan && plan.num_payments > 1) {
-          const predef = plan.payment_amounts.slice(0, plan.num_payments - 1);
-          const sumPredef = predef.reduce((a, b) => a + (b || 0), 0);
-          const lastAmount = Math.max(0, total - sumPredef);
-          const rows = [
-            ...predef.map((amt, idx) => ({
-              order_id: orderId,
-              payment_number: idx + 1,
-              amount: amt || 0,
-              status: 'unpaid' as const,
-            })),
-            { order_id: orderId, payment_number: plan.num_payments, amount: lastAmount, status: 'unpaid' as const },
-          ];
-          await supabase.from('order_payments' as any).insert(rows);
-        } else {
-          // Single payment row
-          await supabase.from('order_payments' as any).insert({
-            order_id: orderId, payment_number: 1, amount: total, status: 'unpaid',
-          });
-        }
-      } catch (e) {
-        logger.error(`[${errorId}] Failed to create order payments (non-blocking)`, e);
-      }
 
       // Deduct stock via SECURITY DEFINER RPC (bypasses RLS)
       const { error: stockDeductError } = await supabase

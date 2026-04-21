@@ -12,9 +12,6 @@ import { useCategories } from '@/hooks/useCategories';
 import { ProductMediaUpload, ProductMedia } from '@/components/admin/ProductMediaUpload';
 import { RichTextEditor } from '@/components/admin/RichTextEditor';
 import { ProductVariantManager } from '@/components/admin/ProductVariantManager';
-import { ProductSessionManager } from '@/components/admin/ProductSessionManager';
-import { InstallmentPlanManager } from '@/components/admin/InstallmentPlanManager';
-import { Switch } from '@/components/ui/switch';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface ProductFormData {
@@ -34,8 +31,6 @@ interface ProductFormData {
   admission_date?: string;
   active_from?: string;
   active_until?: string;
-  use_sessions?: boolean;
-  payment_reminders_enabled?: boolean;
 }
 
 interface ProductFormProps {
@@ -86,8 +81,6 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
     admission_date: '',
     active_from: '',
     active_until: '',
-    use_sessions: false,
-    payment_reminders_enabled: true,
   });
 
   useEffect(() => {
@@ -128,8 +121,6 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         admission_date: (editingProduct as any).admission_date || '',
         active_from: (editingProduct as any).active_from || '',
         active_until: (editingProduct as any).active_until || '',
-        use_sessions: (editingProduct as any).use_sessions ?? false,
-        payment_reminders_enabled: (editingProduct as any).payment_reminders_enabled ?? true,
       });
     } else {
       setFormData({
@@ -148,8 +139,6 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         admission_date: '',
         active_from: '',
         active_until: '',
-        use_sessions: false,
-        payment_reminders_enabled: true,
       });
     }
   }, [editingProduct, isOpen]);
@@ -186,8 +175,6 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             admission_date: formData.admission_date || null,
             active_from: formData.active_from || null,
             active_until: formData.active_until || null,
-            use_sessions: formData.use_sessions ?? false,
-            payment_reminders_enabled: formData.payment_reminders_enabled ?? true,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingProduct.id);
@@ -217,8 +204,6 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             admission_date: formData.admission_date || null,
             active_from: formData.active_from || null,
             active_until: formData.active_until || null,
-            use_sessions: formData.use_sessions ?? false,
-            payment_reminders_enabled: formData.payment_reminders_enabled ?? true,
           }]);
         
         if (error) {
@@ -369,23 +354,6 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border rounded-lg p-4 bg-muted/30">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-base">Use Sessions</Label>
-                <p className="text-xs text-muted-foreground">Customers must pick a session time (Pagi/Siang/Sore)</p>
-              </div>
-              <Switch checked={!!formData.use_sessions} onCheckedChange={(v) => setFormData({...formData, use_sessions: v})} />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-base">Payment Reminders</Label>
-                <p className="text-xs text-muted-foreground">Email customer when an installment is overdue</p>
-              </div>
-              <Switch checked={formData.payment_reminders_enabled !== false} onCheckedChange={(v) => setFormData({...formData, payment_reminders_enabled: v})} />
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Active From (optional)</Label>
@@ -439,14 +407,6 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
 
           {/* Variant Manager - only for existing products */}
           <ProductVariantManager productDbId={editingProduct?.id} />
-
-          {/* Sessions (only when toggled on) */}
-          {formData.use_sessions && (
-            <ProductSessionManager productDbId={editingProduct?.id} />
-          )}
-
-          {/* Installment Plans */}
-          <InstallmentPlanManager productDbId={editingProduct?.id} productPrice={formData.price} />
 
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>

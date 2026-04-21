@@ -488,95 +488,33 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
-          installment_plan_id: string | null
-          installment_plan_name: string | null
           order_id: string
           product_id: string
           product_name: string
           product_price: number
           quantity: number
-          session_id: string | null
-          session_name: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
-          installment_plan_id?: string | null
-          installment_plan_name?: string | null
           order_id: string
           product_id: string
           product_name: string
           product_price: number
           quantity: number
-          session_id?: string | null
-          session_name?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
-          installment_plan_id?: string | null
-          installment_plan_name?: string | null
           order_id?: string
           product_id?: string
           product_name?: string
           product_price?: number
           quantity?: number
-          session_id?: string | null
-          session_name?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "order_items_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      order_payments: {
-        Row: {
-          amount: number
-          created_at: string
-          due_date: string | null
-          id: string
-          last_reminder_sent_at: string | null
-          notes: string | null
-          order_id: string
-          paid_at: string | null
-          payment_number: number
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          amount?: number
-          created_at?: string
-          due_date?: string | null
-          id?: string
-          last_reminder_sent_at?: string | null
-          notes?: string | null
-          order_id: string
-          paid_at?: string | null
-          payment_number: number
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          due_date?: string | null
-          id?: string
-          last_reminder_sent_at?: string | null
-          notes?: string | null
-          order_id?: string
-          paid_at?: string | null
-          payment_number?: number
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "order_payments_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
@@ -739,120 +677,32 @@ export type Database = {
         }
         Relationships: []
       }
-      product_installment_plans: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          num_payments: number
-          order_num: number
-          payment_amounts: Json
-          product_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          num_payments?: number
-          order_num?: number
-          payment_amounts?: Json
-          product_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          num_payments?: number
-          order_num?: number
-          payment_amounts?: Json
-          product_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_installment_plans_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      product_sessions: {
-        Row: {
-          created_at: string
-          id: string
-          is_sold_out: boolean
-          name: string
-          order_num: number
-          product_id: string
-          stock: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_sold_out?: boolean
-          name: string
-          order_num?: number
-          product_id: string
-          stock?: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_sold_out?: boolean
-          name?: string
-          order_num?: number
-          product_id?: string
-          stock?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_sessions_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       product_variants: {
         Row: {
           created_at: string
           id: string
-          is_sold_out: boolean
           name: string
           order_num: number
           price: number
           product_id: string
-          stock: number
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
-          is_sold_out?: boolean
           name: string
           order_num?: number
           price: number
           product_id: string
-          stock?: number
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
-          is_sold_out?: boolean
           name?: string
           order_num?: number
           price?: number
           product_id?: string
-          stock?: number
           updated_at?: string
         }
         Relationships: [
@@ -882,14 +732,12 @@ export type Database = {
           is_sold_out: boolean
           media: Json | null
           name: string
-          payment_reminders_enabled: boolean
           price: number
           product_id: string
           schedule: Json | null
           stock: number
           tax: number
           updated_at: string | null
-          use_sessions: boolean
         }
         Insert: {
           active_from?: string | null
@@ -907,14 +755,12 @@ export type Database = {
           is_sold_out?: boolean
           media?: Json | null
           name: string
-          payment_reminders_enabled?: boolean
           price: number
           product_id: string
           schedule?: Json | null
           stock?: number
           tax?: number
           updated_at?: string | null
-          use_sessions?: boolean
         }
         Update: {
           active_from?: string | null
@@ -932,14 +778,12 @@ export type Database = {
           is_sold_out?: boolean
           media?: Json | null
           name?: string
-          payment_reminders_enabled?: boolean
           price?: number
           product_id?: string
           schedule?: Json | null
           stock?: number
           tax?: number
           updated_at?: string | null
-          use_sessions?: boolean
         }
         Relationships: []
       }
