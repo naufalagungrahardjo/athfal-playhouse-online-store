@@ -137,6 +137,65 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
 
         {effectiveStock > 0 ? (
           <>
+            {/* Session selector */}
+            {useSessions && (
+              <div className="mb-6">
+                <label className="font-medium text-gray-700 block mb-3">
+                  {language === 'id' ? 'Pilih Sesi' : 'Choose Session'}:
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {sessions.map(s => {
+                    const stk = s.is_sold_out ? 0 : s.stock;
+                    const disabled = stk <= 0;
+                    return (
+                      <button
+                        key={s.id}
+                        disabled={disabled}
+                        onClick={() => { setSelectedSessionId(s.id); setQuantity(1); }}
+                        className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                          selectedSessionId === s.id
+                            ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
+                            : disabled
+                              ? 'border-gray-200 text-gray-400 line-through cursor-not-allowed'
+                              : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
+                        }`}
+                      >
+                        <span className="block">{s.name}</span>
+                        <span className="block text-xs mt-0.5">
+                          {disabled ? (language === 'id' ? 'Habis' : 'Sold out') : `${stk} ${language === 'id' ? 'tersisa' : 'left'}`}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Payment plan selector */}
+            {plans.length > 0 && (
+              <div className="mb-6">
+                <label className="font-medium text-gray-700 block mb-3">
+                  {language === 'id' ? 'Pilih Pembayaran' : 'Choose Payment Plan'}:
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {plans.map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => setSelectedPlan(p)}
+                      className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                        selectedPlan?.id === p.id
+                          ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
+                          : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
+                      }`}
+                    >
+                      <span className="block">{p.name}</span>
+                      <span className="block text-xs mt-0.5">{p.num_payments}x {language === 'id' ? 'pembayaran' : 'payment'}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Variant selector */}
             {!variantsLoading && variants.length > 0 && (
               <div className="mb-6">
