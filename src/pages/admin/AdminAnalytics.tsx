@@ -537,7 +537,7 @@ const AdminAnalytics = () => {
     orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').forEach(o => {
       const method = o.payment_method || 'Unknown';
       ensure(method);
-      balanceMap[method].salesIn += getOrderRevenue(o, netRevenueType);
+      balanceMap[method].salesIn += getOrderRevenueBasis(o, netRevenueType, netBasis);
     });
 
     // Other income by fund_source_id
@@ -574,7 +574,7 @@ const AdminAnalytics = () => {
         net: v.salesIn + v.otherIn + v.capitalIn - v.expenseOut,
       }))
       .sort((a, b) => b.net - a.net);
-  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, expFundMap, netRevenueType]);
+  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, expFundMap, netRevenueType, netBasis]);
 
   // Fund balance pie (net positive only)
   const fundBalancePieData = useMemo(() => {
