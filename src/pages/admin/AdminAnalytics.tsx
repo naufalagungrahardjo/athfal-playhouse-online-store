@@ -134,6 +134,8 @@ const AdminAnalytics = () => {
   // Revenue type filter (shared for Sales & Net Income)
   const [salesRevenueType, setSalesRevenueType] = useState<RevenueType>('before_tax');
   const [netRevenueType, setNetRevenueType] = useState<RevenueType>('before_tax');
+  const [salesBasis, setSalesBasis] = useState<RevenueBasis>('cash');
+  const [netBasis, setNetBasis] = useState<RevenueBasis>('cash');
 
   const fetchData = async () => {
     const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes, incRes, capRes] = await Promise.all([
