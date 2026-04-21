@@ -86,6 +86,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
     admission_date: '',
     active_from: '',
     active_until: '',
+    use_sessions: false,
+    payment_reminders_enabled: true,
   });
 
   useEffect(() => {
@@ -126,6 +128,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         admission_date: (editingProduct as any).admission_date || '',
         active_from: (editingProduct as any).active_from || '',
         active_until: (editingProduct as any).active_until || '',
+        use_sessions: (editingProduct as any).use_sessions ?? false,
+        payment_reminders_enabled: (editingProduct as any).payment_reminders_enabled ?? true,
       });
     } else {
       setFormData({
@@ -144,6 +148,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         admission_date: '',
         active_from: '',
         active_until: '',
+        use_sessions: false,
+        payment_reminders_enabled: true,
       });
     }
   }, [editingProduct, isOpen]);
