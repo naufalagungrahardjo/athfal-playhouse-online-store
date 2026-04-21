@@ -97,6 +97,31 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
   };
 
   const handleStatusUpdate = async () => {
+    void 0;
+  };
+
+  const handleAmountPaidSave = async () => {
+    if (!order) return;
+    const safeValue = Math.max(0, Math.floor(amountPaid || 0));
+    if (safeValue === (order.amount_paid || 0)) return;
+    try {
+      setSavingPayment(true);
+      const { error } = await supabase
+        .from('orders')
+        .update({ amount_paid: safeValue, updated_at: new Date().toISOString() })
+        .eq('id', order.id);
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Payment amount updated' });
+      onOrderUpdated();
+    } catch (error) {
+      console.error('Error updating amount paid:', error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update payment amount' });
+    } finally {
+      setSavingPayment(false);
+    }
+  };
+
+  const _handleStatusUpdate = async () => {
     if (!order) return;
     
     try {
