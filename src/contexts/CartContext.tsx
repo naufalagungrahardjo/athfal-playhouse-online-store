@@ -24,6 +24,8 @@ export interface Product {
   admission_date?: string | null;
   active_from?: string | null;
   active_until?: string | null;
+  use_sessions?: boolean;
+  payment_reminders_enabled?: boolean;
 }
 
 export interface CartItem {
@@ -144,6 +146,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         is_sold_out: product.is_sold_out ?? false,
         active_from: product.active_from ?? null,
         active_until: product.active_until ?? null,
+        use_sessions: (product as any).use_sessions ?? false,
+        payment_reminders_enabled: (product as any).payment_reminders_enabled ?? true,
       }));
 
       setProducts(formattedProducts);
