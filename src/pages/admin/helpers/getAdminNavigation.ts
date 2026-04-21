@@ -1,6 +1,6 @@
 
 import {
-  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList, BookOpen, Wallet, FileCheck
+  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList, BookOpen, Wallet, FileCheck, CalendarClock
 } from 'lucide-react';
 
 export type NavigationItem = {
@@ -23,6 +23,7 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
         { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
         { name: 'Products', href: '/admin/products', icon: Package },
         { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+        { name: 'Payment Schedule', href: '/admin/payment-schedule', icon: CalendarClock },
         { name: 'Promo Codes', href: '/admin/promo-codes', icon: CreditCard },
         { name: 'Expense', href: '/admin/expense', icon: Wallet },
         { name: 'Other Income', href: '/admin/other-income', icon: Wallet },
@@ -92,8 +93,8 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
   // Default role-based access (no custom override)
   const allAllowed: Record<string, string[]> = {
     super_admin: [], // handled above
-    orders_manager: ["/admin", "/admin/products", "/admin/orders", "/admin/analytics", "/admin/promo-codes", "/admin/expense", "/admin/other-income"],
-    order_staff: ["/admin/orders"],
+    orders_manager: ["/admin", "/admin/products", "/admin/orders", "/admin/payment-schedule", "/admin/analytics", "/admin/promo-codes", "/admin/expense", "/admin/other-income"],
+    order_staff: ["/admin/orders", "/admin/payment-schedule"],
     content_manager: ["/admin/blogs", "/admin/banners", "/admin/website-copy", "/admin/categories", "/admin/faq", "/admin/testimonials"],
     content_staff: ["/admin/blogs"],
     teacher: ["/admin/teacher", "/admin/students"],
@@ -126,6 +127,7 @@ export function getAllMenuItems(): { href: string; name: string }[] {
     { href: '/admin/analytics', name: 'Analytics' },
     { href: '/admin/products', name: 'Products' },
     { href: '/admin/orders', name: 'Orders' },
+    { href: '/admin/payment-schedule', name: 'Payment Schedule' },
     { href: '/admin/promo-codes', name: 'Promo Codes' },
     { href: '/admin/expense', name: 'Expense' },
     { href: '/admin/other-income', name: 'Other Income' },
