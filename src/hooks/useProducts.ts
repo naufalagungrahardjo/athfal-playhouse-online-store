@@ -77,7 +77,19 @@ export const useProducts = () => {
     return true;
   };
 
-  const visibleProducts = products.filter(isProductActive);
+  const isSoldOut = (p: Product): boolean => {
+    return !!p.is_sold_out || (p.stock !== undefined && p.stock <= 0);
+  };
+
+  const visibleProducts = products
+    .filter(isProductActive)
+    .slice()
+    .sort((a, b) => {
+      const soldA = isSoldOut(a) ? 1 : 0;
+      const soldB = isSoldOut(b) ? 1 : 0;
+      if (soldA !== soldB) return soldA - soldB;
+      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    });
 
   return {
     products,
