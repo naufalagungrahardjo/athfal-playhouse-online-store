@@ -93,7 +93,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           // Update stock and sold-out status in cart items that match this product
           setItems(prev => prev.map(item => {
             const baseId = item.product.id.split('__')[0];
-            return baseId === updated.product_id
+            // Only update base/non-variant lines from product table
+            const isVariantLine = item.product.id.includes('__variant_');
+            return baseId === updated.product_id && !isVariantLine
               ? { ...item, product: { ...item.product, stock: updated.stock, is_sold_out: updated.is_sold_out ?? false, is_hidden: updated.is_hidden ?? false } }
               : item;
           }));
@@ -103,6 +105,19 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
               ? { ...p, stock: updated.stock, is_sold_out: updated.is_sold_out ?? false, is_hidden: updated.is_hidden ?? false }
               : p
           ));
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'product_variants' },
+        (payload) => {
+          const updated = payload.new as any;
+          const variantTag = `__variant_${updated.id}`;
+          setItems(prev => prev.map(item => {
+            if (!item.product.id.endsWith(variantTag)) return item;
+            const newStock = updated.is_sold_out ? 0 : (updated.stock ?? 0);
+            return { ...item, product: { ...item.product, stock: newStock, is_sold_out: !!updated.is_sold_out } };
+          }));
         }
       )
       .subscribe();

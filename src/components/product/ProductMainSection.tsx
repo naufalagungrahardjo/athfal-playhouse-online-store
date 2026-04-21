@@ -32,12 +32,6 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
   const effectiveStock = selectedVariant ? variantEffectiveStock : baseEffectiveStock;
   const activePrice = selectedVariant ? selectedVariant.price : product.price;
 
-  // Reset quantity if it exceeds the effective stock after a variant change
-  if (quantity > effectiveStock && effectiveStock > 0 && quantity !== 1) {
-    // schedule a reset on next tick via setState in event would be cleaner,
-    // but a defensive cap here is harmless because the buttons clamp anyway.
-  }
-
   const handleAddToCart = () => {
     const variantKey = selectedVariant ? `variant_${selectedVariant.id}` : 'normal';
     const cartId = `${product.id}__${variantKey}`;
