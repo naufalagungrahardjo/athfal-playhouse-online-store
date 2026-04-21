@@ -96,10 +96,6 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
     }
   };
 
-  const handleStatusUpdate = async () => {
-    void 0;
-  };
-
   const handleAmountPaidSave = async () => {
     if (!order) return;
     const safeValue = Math.max(0, Math.floor(amountPaid || 0));
@@ -121,7 +117,7 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
     }
   };
 
-  const _handleStatusUpdate = async () => {
+  const handleStatusUpdate = async () => {
     if (!order) return;
     
     try {
