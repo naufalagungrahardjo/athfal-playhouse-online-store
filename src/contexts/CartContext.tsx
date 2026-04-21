@@ -260,16 +260,39 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshCartStock = async () => {
     if (items.length === 0) return;
-    const baseIds = [...new Set(items.map(item => item.product.id.split('__')[0]))];
-    const { data } = await supabase
-      .from('products')
-      .select('product_id, stock, is_sold_out, is_hidden')
-      .in('product_id', baseIds);
-    if (!data) return;
-    const stockMap = new Map(data.map(p => [p.product_id, p]));
+    const baseIds = [...new Set(
+      items.filter(i => !i.product.id.includes('__variant_'))
+           .map(item => item.product.id.split('__')[0])
+    )];
+    const variantIds = [...new Set(
+      items.filter(i => i.product.id.includes('__variant_'))
+           .map(i => i.product.id.split('__variant_')[1])
+    )];
+
+    const [productsRes, variantsRes] = await Promise.all([
+      baseIds.length
+        ? supabase.from('products').select('product_id, stock, is_sold_out, is_hidden').in('product_id', baseIds)
+        : Promise.resolve({ data: [] as any[] }),
+      variantIds.length
+        ? supabase.from('product_variants').select('id, stock, is_sold_out').in('id', variantIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+
+    const productMap = new Map(((productsRes as any).data || []).map((p: any) => [p.product_id, p]));
+    const variantMap = new Map(((variantsRes as any).data || []).map((v: any) => [v.id, v]));
+
     setItems(prev => prev.map(item => {
+      if (item.product.id.includes('__variant_')) {
+        const vid = item.product.id.split('__variant_')[1];
+        const fresh: any = variantMap.get(vid);
+        if (fresh) {
+          const newStock = fresh.is_sold_out ? 0 : (fresh.stock ?? 0);
+          return { ...item, product: { ...item.product, stock: newStock, is_sold_out: !!fresh.is_sold_out } };
+        }
+        return item;
+      }
       const baseId = item.product.id.split('__')[0];
-      const fresh = stockMap.get(baseId);
+      const fresh: any = productMap.get(baseId);
       if (fresh) {
         return {
           ...item,
@@ -278,7 +301,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             stock: fresh.stock,
             is_sold_out: fresh.is_sold_out ?? false,
             is_hidden: fresh.is_hidden ?? false,
-          }
+          },
         };
       }
       return item;
