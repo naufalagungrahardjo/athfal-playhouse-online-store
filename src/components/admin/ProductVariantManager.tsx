@@ -11,6 +11,7 @@ interface Variant {
   id?: string;
   name: string;
   price: number;
+  stock: number;
   order_num: number;
 }
 
@@ -38,12 +39,12 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
       .eq('product_id', productDbId)
       .order('order_num', { ascending: true });
     if (!error && data) {
-      setVariants(data.map(v => ({ id: v.id, name: v.name, price: v.price, order_num: v.order_num })));
+      setVariants(data.map(v => ({ id: v.id, name: v.name, price: v.price, stock: v.stock ?? 0, order_num: v.order_num })));
     }
   };
 
   const addVariant = () => {
-    setVariants([...variants, { name: '', price: 0, order_num: variants.length + 1 }]);
+    setVariants([...variants, { name: '', price: 0, stock: 0, order_num: variants.length + 1 }]);
   };
 
   const removeVariant = async (index: number) => {
@@ -72,6 +73,7 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
           product_id: productDbId,
           name: v.name,
           price: v.price,
+          stock: v.stock,
           order_num: i + 1,
         }));
         const { error } = await supabase.from('product_variants').insert(toInsert);
@@ -125,7 +127,15 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
             placeholder="Price"
             value={variant.price === 0 ? '' : variant.price}
             onChange={(e) => updateVariant(index, 'price', e.target.value ? Number(e.target.value) : 0)}
-            className="w-36"
+            className="w-32"
+            min="0"
+          />
+          <Input
+            type="number"
+            placeholder="Stock"
+            value={variant.stock === 0 ? '' : variant.stock}
+            onChange={(e) => updateVariant(index, 'stock', e.target.value ? Number(e.target.value) : 0)}
+            className="w-24"
             min="0"
           />
           <Button type="button" variant="ghost" size="icon" onClick={() => removeVariant(index)}>
