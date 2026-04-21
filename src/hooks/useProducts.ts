@@ -12,6 +12,18 @@ async function fetchProductsFromDb(): Promise<Product[]> {
 
   if (error) throw error;
 
+  // Fetch all variants to aggregate stock per product
+  const { data: variantsData } = await supabase
+    .from('product_variants')
+    .select('product_id, stock');
+
+  const variantStockMap: Record<string, number> = {};
+  const variantCountMap: Record<string, number> = {};
+  (variantsData || []).forEach((v: any) => {
+    variantStockMap[v.product_id] = (variantStockMap[v.product_id] || 0) + (v.stock ?? 0);
+    variantCountMap[v.product_id] = (variantCountMap[v.product_id] || 0) + 1;
+  });
+
   return (data || []).map(product => ({
     id: product.product_id,
     dbId: product.id,
@@ -21,7 +33,7 @@ async function fetchProductsFromDb(): Promise<Product[]> {
     image: product.image,
     category: product.category as ProductCategory,
     tax: product.tax,
-    stock: product.stock,
+    stock: variantCountMap[product.id] > 0 ? variantStockMap[product.id] : product.stock,
     first_payment: product.first_payment,
     installment: product.installment,
     installment_months: product.installment_months,
@@ -51,6 +63,13 @@ export const useProducts = () => {
         { event: '*', schema: 'public', table: 'products' },
         () => {
           logger.log('Products table changed, refetching...');
+          queryClient.invalidateQueries({ queryKey: ['products'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'product_variants' },
+        () => {
           queryClient.invalidateQueries({ queryKey: ['products'] });
         }
       )
