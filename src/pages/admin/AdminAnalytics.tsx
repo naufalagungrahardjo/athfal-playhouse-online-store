@@ -239,11 +239,11 @@ const AdminAnalytics = () => {
     const map: Record<string, number> = {};
     filteredOrders.forEach(order => {
       const key = formatDateKey(order.created_at, timeGranularity);
-      const val = getOrderRevenue(order, salesRevenueType);
+      const val = getOrderRevenueBasis(order, salesRevenueType, salesBasis);
       map[key] = (map[key] || 0) + val;
     });
     return Object.entries(map).sort().map(([date, value]) => ({ date, value }));
-  }, [filteredOrders, salesRevenueType, timeGranularity]);
+  }, [filteredOrders, salesRevenueType, salesBasis, timeGranularity]);
 
   const productProportionData = useMemo(() => {
     const map: Record<string, number> = {};
