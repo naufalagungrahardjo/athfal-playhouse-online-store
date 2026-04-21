@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 import { Pencil } from 'lucide-react';
 import { OrderItemsEditor } from './orders/OrderItemsEditor';
+import { Input } from '@/components/ui/input';
+import { getPaymentStatus, getPayable, getPaymentStatusColor, getPaymentStatusLabel } from '@/lib/paymentStatus';
 
 interface OrderItem {
   id: string;
@@ -34,6 +36,7 @@ interface Order {
   subtotal: number;
   tax_amount: number;
   total_amount: number;
+  amount_paid?: number;
   promo_code?: string;
   discount_amount?: number;
   notes?: string;
@@ -54,12 +57,15 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
   const [editingPayment, setEditingPayment] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState(order?.payment_method || '');
   const [paymentMethods, setPaymentMethods] = useState<{id: string; bank_name: string}[]>([]);
+  const [amountPaid, setAmountPaid] = useState<number>(order?.amount_paid || 0);
+  const [savingPayment, setSavingPayment] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (order) {
       setStatus(order.status);
       setPaymentMethod(order.payment_method);
+      setAmountPaid(order.amount_paid || 0);
     }
   }, [order]);
 
