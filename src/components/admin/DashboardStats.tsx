@@ -57,6 +57,24 @@ export const DashboardStats = () => {
 
       <Card>
         <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-gray-600">Total Paid (Received)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-green-600">{formatCurrency(stats.totalAmountPaid)}</div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-gray-600">Outstanding Receivables</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-red-600">{formatCurrency(stats.outstandingReceivables)}</div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-gray-600">Total Customers</CardTitle>
         </CardHeader>
         <CardContent>
