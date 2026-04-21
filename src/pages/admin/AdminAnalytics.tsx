@@ -685,6 +685,16 @@ const AdminAnalytics = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Revenue Basis</label>
+              <Select value={salesBasis} onValueChange={(v) => setSalesBasis(v as RevenueBasis)}>
+                <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash (Paid Only)</SelectItem>
+                  <SelectItem value="accrual">Accrual (Paid + Payable)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <Card>
