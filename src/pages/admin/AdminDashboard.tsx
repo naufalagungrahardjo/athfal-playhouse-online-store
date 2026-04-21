@@ -17,7 +17,9 @@ import {
   PackageCheck,
   Truck,
   BadgePercent,
-  Receipt
+  Receipt,
+  Wallet,
+  Coins
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -90,6 +92,27 @@ const AdminDashboard = () => {
               icon={BadgePercent}
               onClick={() => setSelectedView('orders')}
               className="border-orange-200 bg-orange-50"
+            />
+            <ClickableStatsCard
+              title="Total Paid (Received)"
+              value={formatCurrency(stats.totalAmountPaid)}
+              icon={Wallet}
+              onClick={() => setSelectedView('orders')}
+              className="border-green-200 bg-green-50"
+            />
+            <ClickableStatsCard
+              title="Outstanding Receivables"
+              value={formatCurrency(stats.outstandingReceivables)}
+              icon={DollarSign}
+              onClick={() => setSelectedView('orders')}
+              className="border-red-200 bg-red-50"
+            />
+            <ClickableStatsCard
+              title="Total Revenue (Paid + Payable)"
+              value={formatCurrency(stats.totalAmountPaid + stats.outstandingReceivables)}
+              icon={Coins}
+              onClick={() => setSelectedView('orders')}
+              className="border-blue-200 bg-blue-50"
             />
           </>
         )}
