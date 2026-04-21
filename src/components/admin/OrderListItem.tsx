@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { getPaymentStatus, getPaymentStatusColor, getPaymentStatusLabel, getPayable } from '@/lib/paymentStatus';
 
 interface OrderItem {
   id: string;
@@ -20,6 +21,7 @@ interface Order {
   customer_phone: string;
   payment_method: string;
   total_amount: number;
+  amount_paid?: number;
   created_at: string;
   items?: OrderItem[];
 }
@@ -44,6 +46,9 @@ export function OrderListItem({
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-3">
           <h3 className="font-semibold break-words flex-1 min-w-0">Order ID: {order.id}</h3>
+          <Badge className={`${getPaymentStatusColor(getPaymentStatus(order.amount_paid, order.total_amount))} shrink-0`}>
+            {getPaymentStatusLabel(getPaymentStatus(order.amount_paid, order.total_amount))}
+          </Badge>
           <Badge className={`${getStatusColor(order.status)} shrink-0`}>
             {order.status.toUpperCase()}
           </Badge>
@@ -55,6 +60,11 @@ export function OrderListItem({
           <div className="break-words"><span className="font-medium">Phone:</span> {order.customer_phone}</div>
           <div className="break-words"><span className="font-medium">Payment:</span> {order.payment_method}</div>
           <div><span className="font-medium">Total:</span> {formatCurrency(order.total_amount)}</div>
+          {getPayable(order.amount_paid, order.total_amount) > 0 && (
+            <div className="text-red-600">
+              <span className="font-medium">Payable:</span> {formatCurrency(getPayable(order.amount_paid, order.total_amount))}
+            </div>
+          )}
         </div>
         
         {order.items && order.items.length > 0 && (

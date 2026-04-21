@@ -7,18 +7,24 @@ export function exportOrdersToCSV(filteredOrders: any[], dateRange: DateRange | 
   const headers = [
     "Order ID","Created At","Status","Customer Name","Customer Email","Customer Phone",
     "Customer Address","Payment Method","Subtotal","Tax","Discount","Promo Code",
-    "Total","Notes","Order Items",
+    "Total","Amount Paid","Payable","Payment Status","Notes","Order Items",
   ];
-  const rows = filteredOrders.map(order => [
-    order.id, order.created_at, order.status, order.customer_name,
-    order.customer_email, order.customer_phone, order.customer_address || "",
-    order.payment_method, order.subtotal, order.tax_amount,
-    order.discount_amount || "", order.promo_code || "", order.total_amount,
-    order.notes || "",
-    (order.items ?? [])
-      .map(item => `${item.product_name} (x${item.quantity}; ${item.product_price})`)
-      .join(" | ")
-  ]);
+  const rows = filteredOrders.map(order => {
+    const paid = Math.max(0, order.amount_paid || 0);
+    const payable = Math.max(0, (order.total_amount || 0) - paid);
+    const paymentStatus = paid <= 0 ? 'Unpaid' : paid >= (order.total_amount || 0) ? 'Paid' : 'Partial';
+    return [
+      order.id, order.created_at, order.status, order.customer_name,
+      order.customer_email, order.customer_phone, order.customer_address || "",
+      order.payment_method, order.subtotal, order.tax_amount,
+      order.discount_amount || "", order.promo_code || "", order.total_amount,
+      paid, payable, paymentStatus,
+      order.notes || "",
+      (order.items ?? [])
+        .map(item => `${item.product_name} (x${item.quantity}; ${item.product_price})`)
+        .join(" | ")
+    ];
+  });
   const csvString = [
     headers.join(","),
     ...rows.map(row => row.map(field => {
