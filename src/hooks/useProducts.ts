@@ -31,6 +31,8 @@ async function fetchProductsFromDb(): Promise<Product[]> {
     admission_date: product.admission_date ?? null,
     active_from: product.active_from ?? null,
     active_until: product.active_until ?? null,
+    use_sessions: (product as any).use_sessions ?? false,
+    payment_reminders_enabled: (product as any).payment_reminders_enabled ?? true,
   }));
 }
 
