@@ -323,6 +323,61 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
             </div>
           </div>
 
+          <Separator />
+
+          {/* Payment Tracking */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              Payment Tracking
+              <Badge className={getPaymentStatusColor(getPaymentStatus(order.amount_paid, order.total_amount))}>
+                {getPaymentStatusLabel(getPaymentStatus(order.amount_paid, order.total_amount))}
+              </Badge>
+            </h3>
+            <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+              <div className="flex justify-between text-sm">
+                <span>Order Total:</span>
+                <span className="font-medium">{formatCurrency(order.total_amount)}</span>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600 block mb-1">Amount Paid (IDR)</label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    value={amountPaid}
+                    onChange={(e) => setAmountPaid(Number(e.target.value))}
+                    className="max-w-xs"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleAmountPaidSave}
+                    disabled={savingPayment || amountPaid === (order.amount_paid || 0)}
+                  >
+                    {savingPayment ? 'Saving...' : 'Save'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setAmountPaid(order.total_amount)}
+                    disabled={savingPayment}
+                  >
+                    Mark Fully Paid
+                  </Button>
+                </div>
+              </div>
+              <Separator />
+              <div className="flex justify-between font-bold">
+                <span>Payable (Outstanding):</span>
+                <span className={getPayable(amountPaid, order.total_amount) > 0 ? 'text-red-600' : 'text-green-600'}>
+                  {formatCurrency(getPayable(amountPaid, order.total_amount))}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500">
+                Analytics revenue reflects only the amount paid. Outstanding balance shows as receivable.
+              </p>
+            </div>
+          </div>
+
           {/* Notes */}
           {order.notes && (
             <>
