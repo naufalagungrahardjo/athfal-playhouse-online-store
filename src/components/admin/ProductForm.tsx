@@ -186,6 +186,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             admission_date: formData.admission_date || null,
             active_from: formData.active_from || null,
             active_until: formData.active_until || null,
+            use_sessions: formData.use_sessions ?? false,
+            payment_reminders_enabled: formData.payment_reminders_enabled ?? true,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingProduct.id);
@@ -215,6 +217,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             admission_date: formData.admission_date || null,
             active_from: formData.active_from || null,
             active_until: formData.active_until || null,
+            use_sessions: formData.use_sessions ?? false,
+            payment_reminders_enabled: formData.payment_reminders_enabled ?? true,
           }]);
         
         if (error) {
