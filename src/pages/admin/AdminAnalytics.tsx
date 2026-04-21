@@ -36,6 +36,7 @@ const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent
 type TimeGranularity = 'daily' | 'monthly' | 'yearly';
 
 type RevenueType = 'before_tax' | 'after_tax' | 'after_discount';
+type RevenueBasis = 'cash' | 'accrual'; // cash = paid only; accrual = total (paid + payable)
 
 interface OrderWithItems {
   id: string;
@@ -60,6 +61,15 @@ const getOrderRevenue = (order: OrderWithItems, revenueType: RevenueType): numbe
   // Cash basis: scale revenue components by the paid ratio so analytics
   // reflect cash actually collected, not what is owed.
   const ratio = getPaidRatio(order);
+  switch (revenueType) {
+    case 'before_tax': return (order.subtotal || 0) * ratio;
+    case 'after_tax': return ((order.subtotal || 0) + (order.tax_amount || 0)) * ratio;
+    case 'after_discount': return ((order.subtotal || 0) - (order.discount_amount || 0)) * ratio;
+  }
+};
+
+const getOrderRevenueBasis = (order: OrderWithItems, revenueType: RevenueType, basis: RevenueBasis): number => {
+  const ratio = basis === 'cash' ? getPaidRatio(order) : 1;
   switch (revenueType) {
     case 'before_tax': return (order.subtotal || 0) * ratio;
     case 'after_tax': return ((order.subtotal || 0) + (order.tax_amount || 0)) * ratio;

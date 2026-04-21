@@ -5,6 +5,8 @@ import { useState } from "react";
 import { Product } from "@/contexts/CartContext";
 import { ProductMediaCarousel, ProductMedia } from "@/components/product/ProductMediaCarousel";
 import { useProductVariants, ProductVariant } from "@/hooks/useProductVariants";
+import { useProductSessions } from "@/hooks/useProductSessions";
+import { useInstallmentPlans, InstallmentPlan } from "@/hooks/useInstallmentPlans";
 
 interface ProductMainSectionProps {
   product: Product;
@@ -22,28 +24,41 @@ const formatCurrency = (amount: number) =>
 const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, language, addItem }) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<InstallmentPlan | null>(null);
   const { variants, loading: variantsLoading } = useProductVariants(product.dbId);
+  const { sessions } = useProductSessions((product as any).use_sessions ? product.dbId : undefined);
+  const { plans } = useInstallmentPlans(product.dbId);
+
+  const useSessions = !!(product as any).use_sessions && sessions.length > 0;
+  const selectedSession = useSessions ? sessions.find(s => s.id === selectedSessionId) : null;
+  const sessionStock = selectedSession ? (selectedSession.is_sold_out ? 0 : selectedSession.stock) : product.stock;
 
   // If admin toggled sold out, treat stock as 0 for customers
-  const effectiveStock = product.is_sold_out ? 0 : product.stock;
+  const effectiveStock = product.is_sold_out
+    ? 0
+    : (useSessions ? (selectedSession ? sessionStock : Math.max(...sessions.map(s => s.is_sold_out ? 0 : s.stock), 0)) : product.stock);
   const activePrice = selectedVariant ? selectedVariant.price : product.price;
 
   const handleAddToCart = () => {
+    if (useSessions && !selectedSession) return;
+    if (plans.length > 0 && !selectedPlan) return;
     const variantKey = selectedVariant ? `variant_${selectedVariant.id}` : 'normal';
-    const cartId = `${product.id}__${variantKey}`;
-    const cartProduct = selectedVariant 
-      ? { ...product, id: cartId, price: selectedVariant.price, name: `${product.name} - ${selectedVariant.name}` }
-      : { ...product, id: cartId, name: `${product.name} - Pembayaran Lunas` };
+    const sessionKey = selectedSession ? `__sess_${selectedSession.id}` : '';
+    const planKey = selectedPlan ? `__plan_${selectedPlan.id}` : '';
+    const cartId = `${product.id}__${variantKey}${sessionKey}${planKey}`;
+    const planLabel = selectedPlan ? ` - ${selectedPlan.name}` : '';
+    const sessionLabel = selectedSession ? ` (${selectedSession.name})` : '';
+    const cartProduct = selectedVariant
+      ? { ...product, id: cartId, price: selectedVariant.price, name: `${product.name} - ${selectedVariant.name}${sessionLabel}${planLabel}`, stock: useSessions ? sessionStock : product.stock }
+      : { ...product, id: cartId, name: `${product.name}${sessionLabel}${planLabel || ' - Pembayaran Lunas'}`, stock: useSessions ? sessionStock : product.stock };
     addItem(cartProduct, quantity);
   };
 
   const handleBuyNow = () => {
-    const variantKey = selectedVariant ? `variant_${selectedVariant.id}` : 'normal';
-    const cartId = `${product.id}__${variantKey}`;
-    const cartProduct = selectedVariant 
-      ? { ...product, id: cartId, price: selectedVariant.price, name: `${product.name} - ${selectedVariant.name}` }
-      : { ...product, id: cartId, name: `${product.name} - Pembayaran Lunas` };
-    addItem(cartProduct, quantity);
+    handleAddToCart();
+    if (useSessions && !selectedSession) return;
+    if (plans.length > 0 && !selectedPlan) return;
     window.location.href = '/cart';
   };
 
@@ -122,6 +137,65 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
 
         {effectiveStock > 0 ? (
           <>
+            {/* Session selector */}
+            {useSessions && (
+              <div className="mb-6">
+                <label className="font-medium text-gray-700 block mb-3">
+                  {language === 'id' ? 'Pilih Sesi' : 'Choose Session'}:
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {sessions.map(s => {
+                    const stk = s.is_sold_out ? 0 : s.stock;
+                    const disabled = stk <= 0;
+                    return (
+                      <button
+                        key={s.id}
+                        disabled={disabled}
+                        onClick={() => { setSelectedSessionId(s.id); setQuantity(1); }}
+                        className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                          selectedSessionId === s.id
+                            ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
+                            : disabled
+                              ? 'border-gray-200 text-gray-400 line-through cursor-not-allowed'
+                              : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
+                        }`}
+                      >
+                        <span className="block">{s.name}</span>
+                        <span className="block text-xs mt-0.5">
+                          {disabled ? (language === 'id' ? 'Habis' : 'Sold out') : `${stk} ${language === 'id' ? 'tersisa' : 'left'}`}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Payment plan selector */}
+            {plans.length > 0 && (
+              <div className="mb-6">
+                <label className="font-medium text-gray-700 block mb-3">
+                  {language === 'id' ? 'Pilih Pembayaran' : 'Choose Payment Plan'}:
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {plans.map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => setSelectedPlan(p)}
+                      className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                        selectedPlan?.id === p.id
+                          ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
+                          : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
+                      }`}
+                    >
+                      <span className="block">{p.name}</span>
+                      <span className="block text-xs mt-0.5">{p.num_payments}x {language === 'id' ? 'pembayaran' : 'payment'}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Variant selector */}
             {!variantsLoading && variants.length > 0 && (
               <div className="mb-6">

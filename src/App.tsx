@@ -57,6 +57,7 @@ const AdminLayout = lazyRetry(() => import("./pages/admin/AdminLayout"));
 const AdminDashboard = lazyRetry(() => import("./pages/admin/AdminDashboard"));
 const AdminProducts = lazyRetry(() => import("./pages/admin/AdminProducts"));
 const AdminOrders = lazyRetry(() => import("./pages/admin/AdminOrders"));
+const AdminPaymentSchedule = lazyRetry(() => import("./pages/admin/AdminPaymentSchedule"));
 const AdminBlogs = lazyRetry(() => import("./pages/admin/AdminBlogs"));
 const AdminBanners = lazyRetry(() => import("./pages/admin/AdminBanners"));
 const AdminTestimonials = lazyRetry(() => import("./pages/admin/AdminTestimonials"));
@@ -126,6 +127,7 @@ const App = () => (
                             <Route index element={<AdminDashboard />} />
                             <Route path="products" element={<AdminProducts />} />
                             <Route path="orders" element={<AdminOrders />} />
+                            <Route path="payment-schedule" element={<AdminPaymentSchedule />} />
                             <Route path="analytics" element={<AdminAnalytics />} />
                             <Route path="blogs" element={<AdminBlogs />} />
                             <Route path="banners" element={<AdminBanners />} />
