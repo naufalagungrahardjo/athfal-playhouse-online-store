@@ -134,6 +134,8 @@ const AdminAnalytics = () => {
   // Revenue type filter (shared for Sales & Net Income)
   const [salesRevenueType, setSalesRevenueType] = useState<RevenueType>('before_tax');
   const [netRevenueType, setNetRevenueType] = useState<RevenueType>('before_tax');
+  const [salesBasis, setSalesBasis] = useState<RevenueBasis>('cash');
+  const [netBasis, setNetBasis] = useState<RevenueBasis>('cash');
 
   const fetchData = async () => {
     const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes, incRes, capRes] = await Promise.all([
@@ -237,11 +239,11 @@ const AdminAnalytics = () => {
     const map: Record<string, number> = {};
     filteredOrders.forEach(order => {
       const key = formatDateKey(order.created_at, timeGranularity);
-      const val = getOrderRevenue(order, salesRevenueType);
+      const val = getOrderRevenueBasis(order, salesRevenueType, salesBasis);
       map[key] = (map[key] || 0) + val;
     });
     return Object.entries(map).sort().map(([date, value]) => ({ date, value }));
-  }, [filteredOrders, salesRevenueType, timeGranularity]);
+  }, [filteredOrders, salesRevenueType, salesBasis, timeGranularity]);
 
   const productProportionData = useMemo(() => {
     const map: Record<string, number> = {};
@@ -458,8 +460,8 @@ const AdminAnalytics = () => {
   const totalSalesRevenue = useMemo(() => {
     return orders
       .filter(o => o.status !== 'cancelled' && o.status !== 'refund')
-      .reduce((s, o) => s + getOrderRevenue(o, netRevenueType), 0);
-  }, [orders, netRevenueType]);
+      .reduce((s, o) => s + getOrderRevenueBasis(o, netRevenueType, netBasis), 0);
+  }, [orders, netRevenueType, netBasis]);
 
   const totalOtherIncome = useMemo(() => otherIncomes.reduce((s, i) => s + i.amount, 0), [otherIncomes]);
   const totalAllExpenses = useMemo(() => expenses.reduce((s, e) => s + getExpenseNet(e), 0), [expenses]);
@@ -476,7 +478,7 @@ const AdminAnalytics = () => {
     orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').forEach(o => {
       const key = formatDateKey(o.created_at, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
-      map[key].revenue += getOrderRevenue(o, netRevenueType);
+      map[key].revenue += getOrderRevenueBasis(o, netRevenueType, netBasis);
     });
     // Other income
     otherIncomes.forEach(i => {
@@ -501,7 +503,7 @@ const AdminAnalytics = () => {
     // Calculate net
     Object.values(map).forEach(v => { v.net = v.revenue - v.expense; });
     return Object.entries(map).sort().map(([date, vals]) => ({ date, ...vals }));
-  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, netGranularity, netRevenueType]);
+  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, netGranularity, netRevenueType, netBasis]);
 
   // Cumulative net income over time
   const cumulativeNetData = useMemo(() => {
@@ -535,7 +537,7 @@ const AdminAnalytics = () => {
     orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').forEach(o => {
       const method = o.payment_method || 'Unknown';
       ensure(method);
-      balanceMap[method].salesIn += getOrderRevenue(o, netRevenueType);
+      balanceMap[method].salesIn += getOrderRevenueBasis(o, netRevenueType, netBasis);
     });
 
     // Other income by fund_source_id
@@ -572,7 +574,7 @@ const AdminAnalytics = () => {
         net: v.salesIn + v.otherIn + v.capitalIn - v.expenseOut,
       }))
       .sort((a, b) => b.net - a.net);
-  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, expFundMap, netRevenueType]);
+  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, expFundMap, netRevenueType, netBasis]);
 
   // Fund balance pie (net positive only)
   const fundBalancePieData = useMemo(() => {
@@ -680,6 +682,16 @@ const AdminAnalytics = () => {
                   <SelectItem value="before_tax">Revenue Before Tax</SelectItem>
                   <SelectItem value="after_tax">Revenue After Tax</SelectItem>
                   <SelectItem value="after_discount">Revenue After Discount</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Revenue Basis</label>
+              <Select value={salesBasis} onValueChange={(v) => setSalesBasis(v as RevenueBasis)}>
+                <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash (Paid Only)</SelectItem>
+                  <SelectItem value="accrual">Accrual (Paid + Payable)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1026,6 +1038,16 @@ const AdminAnalytics = () => {
                   <SelectItem value="before_tax">Revenue Before Tax</SelectItem>
                   <SelectItem value="after_tax">Revenue After Tax</SelectItem>
                   <SelectItem value="after_discount">Revenue After Discount</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Revenue Basis</label>
+              <Select value={netBasis} onValueChange={(v) => setNetBasis(v as RevenueBasis)}>
+                <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash (Paid Only)</SelectItem>
+                  <SelectItem value="accrual">Accrual (Paid + Payable)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
