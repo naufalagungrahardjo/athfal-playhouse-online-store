@@ -524,6 +524,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          amount_paid: number
           child_age: string | null
           child_birthdate: string | null
           child_name: string | null
@@ -548,6 +549,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          amount_paid?: number
           child_age?: string | null
           child_birthdate?: string | null
           child_name?: string | null
@@ -572,6 +574,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          amount_paid?: number
           child_age?: string | null
           child_birthdate?: string | null
           child_name?: string | null

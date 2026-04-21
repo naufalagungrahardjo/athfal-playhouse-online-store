@@ -30,6 +30,7 @@ interface Order {
   subtotal: number;
   tax_amount: number;
   total_amount: number;
+  amount_paid?: number;
   notes?: string;
   created_at: string;
   items?: OrderItem[];

@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 import { Pencil } from 'lucide-react';
 import { OrderItemsEditor } from './orders/OrderItemsEditor';
+import { Input } from '@/components/ui/input';
+import { getPaymentStatus, getPayable, getPaymentStatusColor, getPaymentStatusLabel } from '@/lib/paymentStatus';
 
 interface OrderItem {
   id: string;
@@ -34,6 +36,7 @@ interface Order {
   subtotal: number;
   tax_amount: number;
   total_amount: number;
+  amount_paid?: number;
   promo_code?: string;
   discount_amount?: number;
   notes?: string;
@@ -54,12 +57,15 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
   const [editingPayment, setEditingPayment] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState(order?.payment_method || '');
   const [paymentMethods, setPaymentMethods] = useState<{id: string; bank_name: string}[]>([]);
+  const [amountPaid, setAmountPaid] = useState<number>(order?.amount_paid || 0);
+  const [savingPayment, setSavingPayment] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (order) {
       setStatus(order.status);
       setPaymentMethod(order.payment_method);
+      setAmountPaid(order.amount_paid || 0);
     }
   }, [order]);
 
@@ -87,6 +93,27 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
       toast({ variant: "destructive", title: "Error", description: "Failed to update payment method" });
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleAmountPaidSave = async () => {
+    if (!order) return;
+    const safeValue = Math.max(0, Math.floor(amountPaid || 0));
+    if (safeValue === (order.amount_paid || 0)) return;
+    try {
+      setSavingPayment(true);
+      const { error } = await supabase
+        .from('orders')
+        .update({ amount_paid: safeValue, updated_at: new Date().toISOString() })
+        .eq('id', order.id);
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Payment amount updated' });
+      onOrderUpdated();
+    } catch (error) {
+      console.error('Error updating amount paid:', error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update payment amount' });
+    } finally {
+      setSavingPayment(false);
     }
   };
 
@@ -293,6 +320,61 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
                 <span>Total:</span>
                 <span>{formatCurrency(order.total_amount)}</span>
               </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Payment Tracking */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              Payment Tracking
+              <Badge className={getPaymentStatusColor(getPaymentStatus(order.amount_paid, order.total_amount))}>
+                {getPaymentStatusLabel(getPaymentStatus(order.amount_paid, order.total_amount))}
+              </Badge>
+            </h3>
+            <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+              <div className="flex justify-between text-sm">
+                <span>Order Total:</span>
+                <span className="font-medium">{formatCurrency(order.total_amount)}</span>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600 block mb-1">Amount Paid (IDR)</label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    value={amountPaid}
+                    onChange={(e) => setAmountPaid(Number(e.target.value))}
+                    className="max-w-xs"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleAmountPaidSave}
+                    disabled={savingPayment || amountPaid === (order.amount_paid || 0)}
+                  >
+                    {savingPayment ? 'Saving...' : 'Save'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setAmountPaid(order.total_amount)}
+                    disabled={savingPayment}
+                  >
+                    Mark Fully Paid
+                  </Button>
+                </div>
+              </div>
+              <Separator />
+              <div className="flex justify-between font-bold">
+                <span>Payable (Outstanding):</span>
+                <span className={getPayable(amountPaid, order.total_amount) > 0 ? 'text-red-600' : 'text-green-600'}>
+                  {formatCurrency(getPayable(amountPaid, order.total_amount))}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500">
+                Analytics revenue reflects only the amount paid. Outstanding balance shows as receivable.
+              </p>
             </div>
           </div>
 
