@@ -35,36 +35,83 @@ export const useOrderProcessing = () => {
 
       // Validate stock from database - aggregate quantities per base product
       const getBaseId = (id: string) => id.includes('__') ? id.split('__')[0] : id;
+      const getVariantId = (id: string): string | null => {
+        const parts = id.split('__');
+        if (parts.length < 2) return null;
+        const marker = parts[1];
+        if (marker.startsWith('variant_')) return marker.slice('variant_'.length);
+        return null;
+      };
+
+      // Aggregate quantities per cart-line key (base or base+variant)
       const qtyByBase: Record<string, number> = {};
+      const qtyByVariant: Record<string, { qty: number; name: string }> = {};
       for (const item of orderData.items) {
-        const base = getBaseId(item.product.id);
-        qtyByBase[base] = (qtyByBase[base] || 0) + item.quantity;
+        const variantId = getVariantId(item.product.id);
+        if (variantId) {
+          if (!qtyByVariant[variantId]) qtyByVariant[variantId] = { qty: 0, name: item.product.name };
+          qtyByVariant[variantId].qty += item.quantity;
+        } else {
+          const base = getBaseId(item.product.id);
+          qtyByBase[base] = (qtyByBase[base] || 0) + item.quantity;
+        }
       }
 
+      // Validate base product stock
       const baseIds = Object.keys(qtyByBase);
-      const { data: freshStock, error: stockError } = await supabase
-        .from('products')
-        .select('product_id, stock, name, is_sold_out')
-        .in('product_id', baseIds);
+      if (baseIds.length > 0) {
+        const { data: freshStock, error: stockError } = await supabase
+          .from('products')
+          .select('product_id, stock, name, is_sold_out')
+          .in('product_id', baseIds);
 
-      if (stockError || !freshStock) {
-        toast({ variant: "destructive", title: "Stock Error", description: `Could not verify stock. [${errorId}]` });
-        setProcessing(false);
-        return { success: false };
-      }
-
-      for (const [baseId, totalQty] of Object.entries(qtyByBase)) {
-        const product = freshStock.find(p => p.product_id === baseId);
-        const effectiveStock = product?.is_sold_out ? 0 : (product?.stock ?? 0);
-        if (!product || effectiveStock <= 0) {
-          toast({ variant: "destructive", title: "Product Sold Out", description: `${product?.name || baseId} is sold out.` });
+        if (stockError || !freshStock) {
+          toast({ variant: "destructive", title: "Stock Error", description: `Could not verify stock. [${errorId}]` });
           setProcessing(false);
           return { success: false };
         }
-        if (totalQty > effectiveStock) {
-          toast({ variant: "destructive", title: "Insufficient Stock", description: `There are only ${effectiveStock} stock available left for ${product.name}, please adjust your cart before proceeding check out` });
+
+        for (const [baseId, totalQty] of Object.entries(qtyByBase)) {
+          const product = freshStock.find(p => p.product_id === baseId);
+          const effectiveStock = product?.is_sold_out ? 0 : (product?.stock ?? 0);
+          if (!product || effectiveStock <= 0) {
+            toast({ variant: "destructive", title: "Product Sold Out", description: `${product?.name || baseId} is sold out.` });
+            setProcessing(false);
+            return { success: false };
+          }
+          if (totalQty > effectiveStock) {
+            toast({ variant: "destructive", title: "Insufficient Stock", description: `There are only ${effectiveStock} stock available left for ${product.name}, please adjust your cart before proceeding check out` });
+            setProcessing(false);
+            return { success: false };
+          }
+        }
+      }
+
+      // Validate variant stock
+      const variantIds = Object.keys(qtyByVariant);
+      if (variantIds.length > 0) {
+        const { data: freshVariants, error: vErr } = await supabase
+          .from('product_variants')
+          .select('id, name, stock, is_sold_out')
+          .in('id', variantIds);
+        if (vErr || !freshVariants) {
+          toast({ variant: "destructive", title: "Stock Error", description: `Could not verify variant stock. [${errorId}]` });
           setProcessing(false);
           return { success: false };
+        }
+        for (const [vid, info] of Object.entries(qtyByVariant)) {
+          const v = freshVariants.find(x => x.id === vid);
+          const effective = v?.is_sold_out ? 0 : (v?.stock ?? 0);
+          if (!v || effective <= 0) {
+            toast({ variant: "destructive", title: "Sold Out", description: `${info.name} is sold out.` });
+            setProcessing(false);
+            return { success: false };
+          }
+          if (info.qty > effective) {
+            toast({ variant: "destructive", title: "Insufficient Stock", description: `Only ${effective} left for ${info.name}. Please adjust your cart.` });
+            setProcessing(false);
+            return { success: false };
+          }
         }
       }
 
@@ -172,14 +219,21 @@ export const useOrderProcessing = () => {
 
       // Order created successfully
 
-      // Create order items - store base product_id so stock trigger can match
-      const orderItems = orderData.items.map(item => ({
-        order_id: orderId,
-        product_id: getBaseId(item.product.id),
-        product_name: item.product.name,
-        product_price: item.product.price,
-        quantity: item.quantity
-      }));
+      // Create order items - store composite id (BASE__variant_<uuid>) so RPC can deduct from variant stock.
+      // For non-variant lines, store the base product_id so existing logic still matches.
+      const orderItems = orderData.items.map(item => {
+        const variantId = getVariantId(item.product.id);
+        const storedProductId = variantId
+          ? `${getBaseId(item.product.id)}__variant_${variantId}`
+          : getBaseId(item.product.id);
+        return {
+          order_id: orderId,
+          product_id: storedProductId,
+          product_name: item.product.name,
+          product_price: item.product.price,
+          quantity: item.quantity,
+        };
+      });
 
       // Creating order items
 

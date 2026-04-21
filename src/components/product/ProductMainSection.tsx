@@ -24,15 +24,20 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const { variants, loading: variantsLoading } = useProductVariants(product.dbId);
 
-  // If admin toggled sold out, treat stock as 0 for customers
-  const effectiveStock = product.is_sold_out ? 0 : product.stock;
+  // Effective stock depends on whether a variant is selected
+  const baseEffectiveStock = product.is_sold_out ? 0 : product.stock;
+  const variantEffectiveStock = selectedVariant
+    ? (selectedVariant.is_sold_out ? 0 : selectedVariant.stock)
+    : 0;
+  const effectiveStock = selectedVariant ? variantEffectiveStock : baseEffectiveStock;
   const activePrice = selectedVariant ? selectedVariant.price : product.price;
 
   const handleAddToCart = () => {
     const variantKey = selectedVariant ? `variant_${selectedVariant.id}` : 'normal';
     const cartId = `${product.id}__${variantKey}`;
+    const cartStock = selectedVariant ? variantEffectiveStock : baseEffectiveStock;
     const cartProduct = selectedVariant 
-      ? { ...product, id: cartId, price: selectedVariant.price, name: `${product.name} - ${selectedVariant.name}` }
+      ? { ...product, id: cartId, price: selectedVariant.price, stock: cartStock, name: `${product.name} - ${selectedVariant.name}` }
       : { ...product, id: cartId, name: `${product.name} - Pembayaran Lunas` };
     addItem(cartProduct, quantity);
   };
@@ -40,8 +45,9 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
   const handleBuyNow = () => {
     const variantKey = selectedVariant ? `variant_${selectedVariant.id}` : 'normal';
     const cartId = `${product.id}__${variantKey}`;
+    const cartStock = selectedVariant ? variantEffectiveStock : baseEffectiveStock;
     const cartProduct = selectedVariant 
-      ? { ...product, id: cartId, price: selectedVariant.price, name: `${product.name} - ${selectedVariant.name}` }
+      ? { ...product, id: cartId, price: selectedVariant.price, stock: cartStock, name: `${product.name} - ${selectedVariant.name}` }
       : { ...product, id: cartId, name: `${product.name} - Pembayaran Lunas` };
     addItem(cartProduct, quantity);
     window.location.href = '/cart';
@@ -141,18 +147,28 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
                     <span className="block text-xs mt-0.5">{formatCurrency(product.price)}</span>
                   </button>
                   {variants.map(variant => (
-                    <button
-                      key={variant.id}
-                      onClick={() => setSelectedVariant(variant)}
-                      className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
-                        selectedVariant?.id === variant.id
-                          ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
-                          : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
-                      }`}
-                    >
-                      <span className="block">{variant.name}</span>
-                      <span className="block text-xs mt-0.5">{formatCurrency(variant.price)}</span>
-                    </button>
+                    (() => {
+                      const vEff = variant.is_sold_out ? 0 : variant.stock;
+                      const isOut = vEff <= 0;
+                      return (
+                        <button
+                          key={variant.id}
+                          disabled={isOut}
+                          onClick={() => { setSelectedVariant(variant); setQuantity(1); }}
+                          className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                            selectedVariant?.id === variant.id
+                              ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
+                              : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
+                          } ${isOut ? 'opacity-50 cursor-not-allowed line-through' : ''}`}
+                        >
+                          <span className="block">{variant.name}</span>
+                          <span className="block text-xs mt-0.5">{formatCurrency(variant.price)}</span>
+                          <span className="block text-[10px] mt-0.5 text-muted-foreground">
+                            {isOut ? (language === 'id' ? 'Habis' : 'Sold out') : (language === 'id' ? `${vEff} tersedia` : `${vEff} left`)}
+                          </span>
+                        </button>
+                      );
+                    })()
                   ))}
                 </div>
               </div>
