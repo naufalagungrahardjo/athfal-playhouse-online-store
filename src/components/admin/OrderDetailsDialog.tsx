@@ -122,6 +122,26 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
     }
   };
 
+  const handleChildGenderSave = async (newGender: string) => {
+    if (!order) return;
+    try {
+      setSavingGender(true);
+      setChildGender(newGender);
+      const { error } = await supabase
+        .from('orders')
+        .update({ child_gender: newGender || null, updated_at: new Date().toISOString() })
+        .eq('id', order.id);
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Child gender updated' });
+      onOrderUpdated();
+    } catch (error) {
+      console.error('Error updating child gender:', error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update child gender' });
+    } finally {
+      setSavingGender(false);
+    }
+  };
+
   const handleStatusUpdate = async () => {
     if (!order) return;
     
@@ -285,6 +305,23 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
                   <p className="text-sm">{order.child_age}</p>
                 </div>
               )}
+              <div>
+                <label className="text-sm font-medium text-gray-500 block mb-1">Child Gender</label>
+                <Select
+                  value={childGender || 'unset'}
+                  onValueChange={(v) => handleChildGenderSave(v === 'unset' ? '' : v)}
+                  disabled={savingGender}
+                >
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unset">— Not set —</SelectItem>
+                    <SelectItem value="boy">Boy</SelectItem>
+                    <SelectItem value="girl">Girl</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
