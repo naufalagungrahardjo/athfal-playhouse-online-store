@@ -46,7 +46,8 @@ const CheckoutPage = () => {
     notes: '',
     childName: '',
     childAge: '',
-    childBirthdate: ''
+    childBirthdate: '',
+    childGender: ''
   });
 
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
@@ -184,6 +185,7 @@ const CheckoutPage = () => {
       childName: formData.childName,
       childAge: formData.childAge,
       childBirthdate: formData.childBirthdate,
+      childGender: formData.childGender,
       items,
       subtotal: Math.round(originalSubtotal),
       taxAmount: Math.round(taxAmount),

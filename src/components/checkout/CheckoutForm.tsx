@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useWebsiteCopy } from "@/hooks/useWebsiteCopy";
@@ -24,6 +25,7 @@ type CheckoutFormProps = {
     childName: string;
     childAge: string;
     childBirthdate: string;
+    childGender: string;
   };
   handleInputChange: (field: string, value: string) => void;
   handleSubmit: (e: React.FormEvent) => void;
@@ -171,6 +173,27 @@ const CheckoutForm = ({
             placeholder={t('childFieldNote')}
             className="placeholder:text-muted-foreground/50"
           />
+        </div>
+        <div>
+          <Label>{lang === 'id' ? 'Jenis Kelamin Anak' : 'Child Gender'}</Label>
+          <RadioGroup
+            value={formData.childGender}
+            onValueChange={(value) => handleInputChange('childGender', value)}
+            className="flex gap-6 mt-2"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="boy" id="gender-boy" />
+              <Label htmlFor="gender-boy" className="font-normal cursor-pointer">
+                {lang === 'id' ? 'Laki-laki' : 'Boy'}
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="girl" id="gender-girl" />
+              <Label htmlFor="gender-girl" className="font-normal cursor-pointer">
+                {lang === 'id' ? 'Perempuan' : 'Girl'}
+              </Label>
+            </div>
+          </RadioGroup>
         </div>
         <div>
          <Label htmlFor="childBirthdate">{t('childBirthdate')}</Label>

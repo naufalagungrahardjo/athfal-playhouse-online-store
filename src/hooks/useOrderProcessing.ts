@@ -15,6 +15,7 @@ interface OrderData {
   childName?: string;
   childAge?: string;
   childBirthdate?: string;
+  childGender?: string;
   items: CartItem[];
   subtotal: number;
   taxAmount: number;
@@ -151,7 +152,8 @@ export const useOrderProcessing = () => {
         discount_amount: orderData.discountAmount || 0,
         child_name: orderData.childName || null,
         child_age: orderData.childAge || null,
-        child_birthdate: orderData.childBirthdate || null
+        child_birthdate: orderData.childBirthdate || null,
+        child_gender: orderData.childGender || null
       };
 
       // Use plain insert without .select() to avoid SELECT RLS restrictions for guest users
@@ -240,6 +242,7 @@ export const useOrderProcessing = () => {
             childName: orderData.childName,
             childAge: orderData.childAge,
             childBirthdate: orderData.childBirthdate,
+            childGender: orderData.childGender,
             guardianStatus: orderData.guardianStatus,
             notes: orderData.notes,
             paymentMethod: orderData.paymentMethod,

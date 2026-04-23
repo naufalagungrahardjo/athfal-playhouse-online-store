@@ -31,6 +31,7 @@ interface Order {
   child_name?: string | null;
   child_age?: string | null;
   child_birthdate?: string | null;
+  child_gender?: string | null;
   payment_method: string;
   status: string;
   subtotal: number;
@@ -59,6 +60,8 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
   const [paymentMethods, setPaymentMethods] = useState<{id: string; bank_name: string}[]>([]);
   const [amountPaid, setAmountPaid] = useState<number>(order?.amount_paid || 0);
   const [savingPayment, setSavingPayment] = useState(false);
+  const [childGender, setChildGender] = useState<string>(order?.child_gender || '');
+  const [savingGender, setSavingGender] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -66,6 +69,7 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
       setStatus(order.status);
       setPaymentMethod(order.payment_method);
       setAmountPaid(order.amount_paid || 0);
+      setChildGender(order.child_gender || '');
     }
   }, [order]);
 
@@ -114,6 +118,26 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to update payment amount' });
     } finally {
       setSavingPayment(false);
+    }
+  };
+
+  const handleChildGenderSave = async (newGender: string) => {
+    if (!order) return;
+    try {
+      setSavingGender(true);
+      setChildGender(newGender);
+      const { error } = await supabase
+        .from('orders')
+        .update({ child_gender: newGender || null, updated_at: new Date().toISOString() })
+        .eq('id', order.id);
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Child gender updated' });
+      onOrderUpdated();
+    } catch (error) {
+      console.error('Error updating child gender:', error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update child gender' });
+    } finally {
+      setSavingGender(false);
     }
   };
 
@@ -280,6 +304,23 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
                   <p className="text-sm">{order.child_age}</p>
                 </div>
               )}
+              <div>
+                <label className="text-sm font-medium text-gray-500 block mb-1">Child Gender</label>
+                <Select
+                  value={childGender || 'unset'}
+                  onValueChange={(v) => handleChildGenderSave(v === 'unset' ? '' : v)}
+                  disabled={savingGender}
+                >
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unset">— Not set —</SelectItem>
+                    <SelectItem value="boy">Boy</SelectItem>
+                    <SelectItem value="girl">Girl</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
