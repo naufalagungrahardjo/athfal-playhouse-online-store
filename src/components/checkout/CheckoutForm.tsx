@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useWebsiteCopy } from "@/hooks/useWebsiteCopy";
@@ -24,6 +25,7 @@ type CheckoutFormProps = {
     childName: string;
     childAge: string;
     childBirthdate: string;
+    childGender: string;
   };
   handleInputChange: (field: string, value: string) => void;
   handleSubmit: (e: React.FormEvent) => void;
