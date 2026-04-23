@@ -175,6 +175,27 @@ const CheckoutForm = ({
           />
         </div>
         <div>
+          <Label>{lang === 'id' ? 'Jenis Kelamin Anak' : 'Child Gender'}</Label>
+          <RadioGroup
+            value={formData.childGender}
+            onValueChange={(value) => handleInputChange('childGender', value)}
+            className="flex gap-6 mt-2"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="boy" id="gender-boy" />
+              <Label htmlFor="gender-boy" className="font-normal cursor-pointer">
+                {lang === 'id' ? 'Laki-laki' : 'Boy'}
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="girl" id="gender-girl" />
+              <Label htmlFor="gender-girl" className="font-normal cursor-pointer">
+                {lang === 'id' ? 'Perempuan' : 'Girl'}
+              </Label>
+            </div>
+          </RadioGroup>
+        </div>
+        <div>
          <Label htmlFor="childBirthdate">{t('childBirthdate')}</Label>
           <Input
             id="childBirthdate"

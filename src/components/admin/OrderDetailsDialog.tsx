@@ -11,6 +11,7 @@ import { formatCurrency } from '@/lib/utils';
 import { Pencil } from 'lucide-react';
 import { OrderItemsEditor } from './orders/OrderItemsEditor';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { getPaymentStatus, getPayable, getPaymentStatusColor, getPaymentStatusLabel } from '@/lib/paymentStatus';
 
 interface OrderItem {
@@ -31,6 +32,7 @@ interface Order {
   child_name?: string | null;
   child_age?: string | null;
   child_birthdate?: string | null;
+  child_gender?: string | null;
   payment_method: string;
   status: string;
   subtotal: number;
@@ -59,6 +61,8 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
   const [paymentMethods, setPaymentMethods] = useState<{id: string; bank_name: string}[]>([]);
   const [amountPaid, setAmountPaid] = useState<number>(order?.amount_paid || 0);
   const [savingPayment, setSavingPayment] = useState(false);
+  const [childGender, setChildGender] = useState<string>(order?.child_gender || '');
+  const [savingGender, setSavingGender] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -66,6 +70,7 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
       setStatus(order.status);
       setPaymentMethod(order.payment_method);
       setAmountPaid(order.amount_paid || 0);
+      setChildGender(order.child_gender || '');
     }
   }, [order]);
 
