@@ -11,7 +11,6 @@ import { formatCurrency } from '@/lib/utils';
 import { Pencil } from 'lucide-react';
 import { OrderItemsEditor } from './orders/OrderItemsEditor';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { getPaymentStatus, getPayable, getPaymentStatusColor, getPaymentStatusLabel } from '@/lib/paymentStatus';
 
 interface OrderItem {
