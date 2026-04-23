@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { DateRange } from 'react-day-picker';
 
 export interface DashboardStats {
   totalOrders: number;
@@ -19,7 +20,7 @@ export interface DashboardStats {
   cancelledOrders: number;
 }
 
-export const useDashboard = () => {
+export const useDashboard = (dateRange?: DateRange) => {
   const [stats, setStats] = useState<DashboardStats>({
     totalOrders: 0,
     revenueBeforeTax: 0,
@@ -43,9 +44,22 @@ export const useDashboard = () => {
       setLoading(true);
 
       // Fetch orders data with all required fields
-      const { data: orders, error: ordersError } = await supabase
+      let ordersQuery = supabase
         .from('orders')
         .select('total_amount, subtotal, tax_amount, discount_amount, amount_paid, status, customer_email');
+
+      if (dateRange?.from) {
+        const from = new Date(dateRange.from);
+        from.setHours(0, 0, 0, 0);
+        ordersQuery = ordersQuery.gte('created_at', from.toISOString());
+      }
+      if (dateRange?.to) {
+        const to = new Date(dateRange.to);
+        to.setHours(23, 59, 59, 999);
+        ordersQuery = ordersQuery.lte('created_at', to.toISOString());
+      }
+
+      const { data: orders, error: ordersError } = await ordersQuery;
 
       if (ordersError) throw ordersError;
 
@@ -108,7 +122,7 @@ export const useDashboard = () => {
 
   useEffect(() => {
     fetchDashboardStats();
-  }, []);
+  }, [dateRange?.from, dateRange?.to]);
 
   return { stats, loading, fetchDashboardStats };
 };

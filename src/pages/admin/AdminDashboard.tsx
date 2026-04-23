@@ -5,6 +5,12 @@ import { useDashboard } from '@/hooks/useDashboard';
 import { ClickableStatsCard } from '@/components/admin/ClickableStatsCard';
 import { OrderManagement } from '@/components/admin/OrderManagement';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { DateRange } from 'react-day-picker';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { 
   Package, 
   DollarSign, 
@@ -19,15 +25,17 @@ import {
   BadgePercent,
   Receipt,
   Wallet,
-  Coins
+  Coins,
+  CalendarIcon
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAdminRole } from './helpers/getAdminRole';
 
 const AdminDashboard = () => {
-  const { stats, loading, fetchDashboardStats } = useDashboard();
   const [selectedView, setSelectedView] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const { stats, loading, fetchDashboardStats } = useDashboard(dateRange);
   const { user } = useAuth();
   const adminRole = getAdminRole(user);
 
@@ -57,11 +65,55 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground">
-          Welcome to your admin dashboard. Click on any card to see detailed information.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+          <p className="text-muted-foreground">
+            Welcome to your admin dashboard. Click on any card to see detailed information.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "justify-start text-left font-normal",
+                  !dateRange && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "LLL dd, y")
+                  )
+                ) : (
+                  <span>Lifetime</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={2}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+          {dateRange && (
+            <Button variant="ghost" size="sm" onClick={() => setDateRange(undefined)}>
+              Reset
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Revenue & Summary Stats */}
