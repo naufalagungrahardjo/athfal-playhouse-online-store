@@ -589,6 +589,7 @@ export type Database = {
           amount_paid: number
           child_age: string | null
           child_birthdate: string | null
+          child_gender: string | null
           child_name: string | null
           created_at: string | null
           customer_address: string | null
@@ -614,6 +615,7 @@ export type Database = {
           amount_paid?: number
           child_age?: string | null
           child_birthdate?: string | null
+          child_gender?: string | null
           child_name?: string | null
           created_at?: string | null
           customer_address?: string | null
@@ -639,6 +641,7 @@ export type Database = {
           amount_paid?: number
           child_age?: string | null
           child_birthdate?: string | null
+          child_gender?: string | null
           child_name?: string | null
           created_at?: string | null
           customer_address?: string | null
