@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
@@ -40,6 +41,7 @@ const ManualOrderTab = () => {
   const [guardianStatus, setGuardianStatus] = useState('');
   const [childName, setChildName] = useState('');
   const [childBirthdate, setChildBirthdate] = useState('');
+  const [childGender, setChildGender] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState<LineItem[]>([{ productDbId: '', variantId: null, quantity: 1 }]);
@@ -148,6 +150,7 @@ const ManualOrderTab = () => {
         child_name: childName.trim() || null,
         child_birthdate: childBirthdate || null,
         child_age: childAge || null,
+        child_gender: childGender || null,
         payment_method: paymentMethod,
         notes: notes.trim() ? `[Manual Order] ${notes.trim()}` : '[Manual Order]',
         subtotal: totals.subtotal,
@@ -170,6 +173,23 @@ const ManualOrderTab = () => {
         return;
       }
 
+      // Mark as fully paid by inserting an order_payment record
+      try {
+        const { error: payErr } = await supabase.from('order_payments').insert({
+          order_id: orderId,
+          amount: totals.total,
+          status: 'paid',
+          payment_method: paymentMethod,
+          notes: 'Manual order - auto paid',
+        } as any);
+        if (payErr) {
+          // non-blocking; warn admin
+          toast.warning(`Order created but payment record failed: ${payErr.message}`);
+        }
+      } catch (e) {
+        // non-blocking
+      }
+
       // Auto-create MDR expense
       try {
         await supabase.rpc('create_mdr_expense_for_order' as any, { p_order_id: orderId });
@@ -180,7 +200,7 @@ const ManualOrderTab = () => {
       toast.success(`Manual order created (#${orderId.slice(0, 8)})`);
       // Reset form
       setCustomerName(''); setCustomerEmail(''); setCustomerPhone(''); setCustomerAddress('');
-      setGuardianStatus(''); setChildName(''); setChildBirthdate('');
+      setGuardianStatus(''); setChildName(''); setChildBirthdate(''); setChildGender('');
       setPaymentMethod(''); setNotes('');
       setItems([{ productDbId: '', variantId: null, quantity: 1 }]);
     } catch (e: any) {
@@ -208,6 +228,19 @@ const ManualOrderTab = () => {
           <div>
             <Label>Nama Anak</Label>
             <Input value={childName} onChange={e => setChildName(e.target.value)} placeholder="Isi jika produk untuk anak" />
+          </div>
+          <div>
+            <Label>Jenis Kelamin Anak</Label>
+            <RadioGroup value={childGender} onValueChange={setChildGender} className="flex gap-6 mt-2">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="boy" id="manual-gender-boy" />
+                <Label htmlFor="manual-gender-boy" className="font-normal cursor-pointer">Laki-laki</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="girl" id="manual-gender-girl" />
+                <Label htmlFor="manual-gender-girl" className="font-normal cursor-pointer">Perempuan</Label>
+              </div>
+            </RadioGroup>
           </div>
           <div>
             <Label>Tanggal Lahir Anak</Label>
