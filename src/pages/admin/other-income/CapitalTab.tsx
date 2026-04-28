@@ -251,7 +251,11 @@ const CapitalTab = () => {
                               {(c.type || 'inflow') === 'inflow' ? 'Inflow' : 'Transfer'}
                             </Badge>
                           </TableCell>
-                          <TableCell>{c.detail}</TableCell>
+                          <TableCell className="max-w-[250px]">
+                            <div className="overflow-x-auto whitespace-nowrap">
+                              {c.detail}
+                            </div>
+                          </TableCell>
                           <TableCell>{c.from_fund_source_id ? fundMap[c.from_fund_source_id] || '-' : '-'}</TableCell>
                           <TableCell>{c.fund_source_id ? fundMap[c.fund_source_id] || '-' : '-'}</TableCell>
                           <TableCell className="text-right">{formatCurrency(c.amount)}</TableCell>

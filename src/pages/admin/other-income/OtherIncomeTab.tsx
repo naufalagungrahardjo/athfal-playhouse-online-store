@@ -183,7 +183,11 @@ const OtherIncomeTab = () => {
                     ) : (
                       <>
                         <TableCell>{inc.date}</TableCell>
-                        <TableCell>{inc.description}</TableCell>
+                        <TableCell className="max-w-[250px]">
+                          <div className="overflow-x-auto whitespace-nowrap">
+                            {inc.description}
+                          </div>
+                        </TableCell>
                         <TableCell>{inc.fund_source_id ? fundMap[inc.fund_source_id] || '-' : '-'}</TableCell>
                         <TableCell className="text-right">{formatCurrency(inc.amount)}</TableCell>
                         <TableCell className="text-right space-x-1">
