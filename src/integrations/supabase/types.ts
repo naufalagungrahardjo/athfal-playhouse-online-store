@@ -1062,6 +1062,51 @@ export type Database = {
           },
         ]
       }
+      student_checkinout: {
+        Row: {
+          created_at: string
+          enrollment_id: string
+          event_time: string
+          event_type: string
+          id: string
+          meeting_number: number
+          photo_storage: string | null
+          photo_url: string | null
+          program_id: string
+          student_id: string
+          teacher_email: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enrollment_id: string
+          event_time?: string
+          event_type: string
+          id?: string
+          meeting_number: number
+          photo_storage?: string | null
+          photo_url?: string | null
+          program_id: string
+          student_id: string
+          teacher_email: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enrollment_id?: string
+          event_time?: string
+          event_type?: string
+          id?: string
+          meeting_number?: number
+          photo_storage?: string | null
+          photo_url?: string | null
+          program_id?: string
+          student_id?: string
+          teacher_email?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       student_enrollments: {
         Row: {
           created_at: string | null
