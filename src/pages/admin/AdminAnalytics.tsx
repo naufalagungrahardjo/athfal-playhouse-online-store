@@ -453,7 +453,12 @@ const AdminAnalytics = () => {
 
   const totalOtherIncome = useMemo(() => otherIncomes.reduce((s, i) => s + i.amount, 0), [otherIncomes]);
   const totalAllExpenses = useMemo(() => expenses.reduce((s, e) => s + getExpenseNet(e), 0), [expenses]);
-  const totalAllCapital = useMemo(() => capitalInflows.reduce((s, c) => s + c.amount, 0), [capitalInflows]);
+  const totalAllCapital = useMemo(
+    () => capitalInflows
+      .filter(c => (c.type || 'inflow') !== 'transfer')
+      .reduce((s, c) => s + c.amount, 0),
+    [capitalInflows]
+  );
   const effectiveOtherIncome = includeCapital ? totalOtherIncome + totalAllCapital : totalOtherIncome;
   const netIncome = totalSalesRevenue + effectiveOtherIncome - totalAllExpenses;
 
@@ -476,11 +481,13 @@ const AdminAnalytics = () => {
     });
     // Capital (if included)
     if (includeCapital) {
-      capitalInflows.forEach(c => {
+      capitalInflows
+        .filter(c => (c.type || 'inflow') !== 'transfer')
+        .forEach(c => {
         const key = formatDateKey(c.date, netGranularity);
         if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
         map[key].revenue += c.amount;
-      });
+        });
     }
     // Expenses
     expenses.forEach(e => {
@@ -515,10 +522,10 @@ const AdminAnalytics = () => {
 
   // === Fund Balance Breakdown ===
   const fundBalanceData = useMemo(() => {
-    const balanceMap: Record<string, { salesIn: number; otherIn: number; capitalIn: number; expenseOut: number }> = {};
+    const balanceMap: Record<string, { salesIn: number; otherIn: number; capitalIn: number; transferIn: number; transferOut: number; expenseOut: number }> = {};
 
     const ensure = (name: string) => {
-      if (!balanceMap[name]) balanceMap[name] = { salesIn: 0, otherIn: 0, capitalIn: 0, expenseOut: 0 };
+      if (!balanceMap[name]) balanceMap[name] = { salesIn: 0, otherIn: 0, capitalIn: 0, transferIn: 0, transferOut: 0, expenseOut: 0 };
     };
 
     // Seed with ALL known fund sources so funds with no activity still appear
@@ -540,14 +547,23 @@ const AdminAnalytics = () => {
       balanceMap[name].otherIn += i.amount;
     });
 
-    // Capital by fund_source_id (if included)
-    if (includeCapital) {
-      capitalInflows.forEach(c => {
-        const name = c.fund_source_id ? (expFundMap[c.fund_source_id] || 'Unknown') : 'Unknown';
-        ensure(name);
-        balanceMap[name].capitalIn += c.amount;
-      });
-    }
+    // Capital inflows and internal fund transfers
+    capitalInflows.forEach(c => {
+      const entryType = c.type || 'inflow';
+      if (entryType === 'transfer') {
+        const fromName = c.from_fund_source_id ? (expFundMap[c.from_fund_source_id] || 'Unknown') : 'Unknown';
+        const toName = c.fund_source_id ? (expFundMap[c.fund_source_id] || 'Unknown') : 'Unknown';
+        ensure(fromName);
+        ensure(toName);
+        balanceMap[fromName].transferOut += c.amount;
+        balanceMap[toName].transferIn += c.amount;
+        return;
+      }
+
+      const name = c.fund_source_id ? (expFundMap[c.fund_source_id] || 'Unknown') : 'Unknown';
+      ensure(name);
+      balanceMap[name].capitalIn += c.amount;
+    });
 
     // Expenses by fund_source_id
     expenses.forEach(e => {
@@ -562,12 +578,14 @@ const AdminAnalytics = () => {
         salesIn: v.salesIn,
         otherIn: v.otherIn,
         capitalIn: v.capitalIn,
-        totalIn: v.salesIn + v.otherIn + v.capitalIn,
+        transferIn: v.transferIn,
+        transferOut: v.transferOut,
+        totalIn: v.salesIn + v.otherIn + v.capitalIn + v.transferIn,
         expenseOut: v.expenseOut,
-        net: v.salesIn + v.otherIn + v.capitalIn - v.expenseOut,
+        net: v.salesIn + v.otherIn + v.capitalIn + v.transferIn - v.transferOut - v.expenseOut,
       }))
       .sort((a, b) => b.net - a.net);
-  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, expFundMap, netRevenueType]);
+  }, [orders, otherIncomes, expenses, capitalInflows, expFundMap, netRevenueType]);
 
   // Fund balance pie (net positive only)
   const fundBalancePieData = useMemo(() => {
@@ -1150,7 +1168,7 @@ const AdminAnalytics = () => {
           <Card>
             <CardHeader><CardTitle>💰 Fund Balance by Source / Bank</CardTitle></CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">Where your money sits: inflows from sales, other income{includeCapital ? ', & capital' : ''} vs outflows from expenses per fund source.</p>
+              <p className="text-sm text-muted-foreground mb-4">Where your money sits: inflows from sales, other income, capital, and fund transfers vs outflows from expenses per fund source.</p>
               {fundBalanceData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
                 <div className="overflow-auto">
                   <table className="w-full text-xs sm:text-sm">
@@ -1159,7 +1177,9 @@ const AdminAnalytics = () => {
                         <th className="text-left p-3 font-medium text-muted-foreground">Fund Source / Bank</th>
                         <th className="text-right p-3 font-medium text-muted-foreground">Sales In</th>
                         <th className="text-right p-3 font-medium text-muted-foreground">Other Income In</th>
-                        {includeCapital && <th className="text-right p-3 font-medium text-muted-foreground">Capital In</th>}
+                        <th className="text-right p-3 font-medium text-muted-foreground">Capital In</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground">Transfer In</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground">Transfer Out</th>
                         <th className="text-right p-3 font-medium text-muted-foreground">Total In</th>
                         <th className="text-right p-3 font-medium text-muted-foreground">Expense Out</th>
                         <th className="text-right p-3 font-medium text-muted-foreground">Net Balance</th>
@@ -1171,7 +1191,9 @@ const AdminAnalytics = () => {
                           <td className="p-3 font-medium">{row.name}</td>
                           <td className="p-3 text-right text-green-600">{row.salesIn > 0 ? formatCurrency(row.salesIn) : '-'}</td>
                           <td className="p-3 text-right text-blue-600">{row.otherIn > 0 ? formatCurrency(row.otherIn) : '-'}</td>
-                          {includeCapital && <td className="p-3 text-right text-purple-600">{row.capitalIn > 0 ? formatCurrency(row.capitalIn) : '-'}</td>}
+                          <td className="p-3 text-right text-purple-600">{row.capitalIn > 0 ? formatCurrency(row.capitalIn) : '-'}</td>
+                          <td className="p-3 text-right text-emerald-600">{row.transferIn > 0 ? formatCurrency(row.transferIn) : '-'}</td>
+                          <td className="p-3 text-right text-amber-600">{row.transferOut > 0 ? formatCurrency(row.transferOut) : '-'}</td>
                           <td className="p-3 text-right font-medium">{formatCurrency(row.totalIn)}</td>
                           <td className="p-3 text-right text-destructive">{row.expenseOut > 0 ? formatCurrency(row.expenseOut) : '-'}</td>
                           <td className={`p-3 text-right font-bold ${row.net >= 0 ? 'text-green-600' : 'text-destructive'}`}>
@@ -1183,11 +1205,13 @@ const AdminAnalytics = () => {
                         <td className="p-3">Total</td>
                         <td className="p-3 text-right text-green-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.salesIn, 0))}</td>
                         <td className="p-3 text-right text-blue-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.otherIn, 0))}</td>
-                        {includeCapital && <td className="p-3 text-right text-purple-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.capitalIn, 0))}</td>}
+                        <td className="p-3 text-right text-purple-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.capitalIn, 0))}</td>
+                        <td className="p-3 text-right text-emerald-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.transferIn, 0))}</td>
+                        <td className="p-3 text-right text-amber-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.transferOut, 0))}</td>
                         <td className="p-3 text-right">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.totalIn, 0))}</td>
                         <td className="p-3 text-right text-destructive">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.expenseOut, 0))}</td>
-                        <td className={`p-3 text-right ${netIncome >= 0 ? 'text-green-600' : 'text-destructive'}`}>
-                          {netIncome < 0 ? '-' : ''}{formatCurrency(Math.abs(netIncome))}
+                        <td className={`p-3 text-right ${fundBalanceData.reduce((s, d) => s + d.net, 0) >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                          {fundBalanceData.reduce((s, d) => s + d.net, 0) < 0 ? '-' : ''}{formatCurrency(Math.abs(fundBalanceData.reduce((s, d) => s + d.net, 0)))}
                         </td>
                       </tr>
                     </tbody>
