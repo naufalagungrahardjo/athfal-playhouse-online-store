@@ -118,7 +118,7 @@ const AdminOrders = () => {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
-          placeholder="Search by Order ID, Product Name, or Date..."
+          placeholder="Search by Order ID, Customer, Email, Phone, Child, Payment, Product, Date..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10"
