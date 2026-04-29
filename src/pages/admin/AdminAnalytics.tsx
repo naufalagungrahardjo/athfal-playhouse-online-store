@@ -1210,8 +1210,8 @@ const AdminAnalytics = () => {
                         <td className="p-3 text-right text-amber-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.transferOut, 0))}</td>
                         <td className="p-3 text-right">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.totalIn, 0))}</td>
                         <td className="p-3 text-right text-destructive">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.expenseOut, 0))}</td>
-                        <td className={`p-3 text-right ${netIncome >= 0 ? 'text-green-600' : 'text-destructive'}`}>
-                          {netIncome < 0 ? '-' : ''}{formatCurrency(Math.abs(netIncome))}
+                        <td className={`p-3 text-right ${fundBalanceData.reduce((s, d) => s + d.net, 0) >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                          {fundBalanceData.reduce((s, d) => s + d.net, 0) < 0 ? '-' : ''}{formatCurrency(Math.abs(fundBalanceData.reduce((s, d) => s + d.net, 0)))}
                         </td>
                       </tr>
                     </tbody>
