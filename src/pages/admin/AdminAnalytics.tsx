@@ -1168,7 +1168,7 @@ const AdminAnalytics = () => {
           <Card>
             <CardHeader><CardTitle>💰 Fund Balance by Source / Bank</CardTitle></CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">Where your money sits: inflows from sales, other income{includeCapital ? ', & capital' : ''} vs outflows from expenses per fund source.</p>
+              <p className="text-sm text-muted-foreground mb-4">Where your money sits: inflows from sales, other income, capital, and fund transfers vs outflows from expenses per fund source.</p>
               {fundBalanceData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
                 <div className="overflow-auto">
                   <table className="w-full text-xs sm:text-sm">
@@ -1177,7 +1177,9 @@ const AdminAnalytics = () => {
                         <th className="text-left p-3 font-medium text-muted-foreground">Fund Source / Bank</th>
                         <th className="text-right p-3 font-medium text-muted-foreground">Sales In</th>
                         <th className="text-right p-3 font-medium text-muted-foreground">Other Income In</th>
-                        {includeCapital && <th className="text-right p-3 font-medium text-muted-foreground">Capital In</th>}
+                        <th className="text-right p-3 font-medium text-muted-foreground">Capital In</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground">Transfer In</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground">Transfer Out</th>
                         <th className="text-right p-3 font-medium text-muted-foreground">Total In</th>
                         <th className="text-right p-3 font-medium text-muted-foreground">Expense Out</th>
                         <th className="text-right p-3 font-medium text-muted-foreground">Net Balance</th>
@@ -1189,7 +1191,9 @@ const AdminAnalytics = () => {
                           <td className="p-3 font-medium">{row.name}</td>
                           <td className="p-3 text-right text-green-600">{row.salesIn > 0 ? formatCurrency(row.salesIn) : '-'}</td>
                           <td className="p-3 text-right text-blue-600">{row.otherIn > 0 ? formatCurrency(row.otherIn) : '-'}</td>
-                          {includeCapital && <td className="p-3 text-right text-purple-600">{row.capitalIn > 0 ? formatCurrency(row.capitalIn) : '-'}</td>}
+                          <td className="p-3 text-right text-purple-600">{row.capitalIn > 0 ? formatCurrency(row.capitalIn) : '-'}</td>
+                          <td className="p-3 text-right text-emerald-600">{row.transferIn > 0 ? formatCurrency(row.transferIn) : '-'}</td>
+                          <td className="p-3 text-right text-amber-600">{row.transferOut > 0 ? formatCurrency(row.transferOut) : '-'}</td>
                           <td className="p-3 text-right font-medium">{formatCurrency(row.totalIn)}</td>
                           <td className="p-3 text-right text-destructive">{row.expenseOut > 0 ? formatCurrency(row.expenseOut) : '-'}</td>
                           <td className={`p-3 text-right font-bold ${row.net >= 0 ? 'text-green-600' : 'text-destructive'}`}>
@@ -1201,7 +1205,9 @@ const AdminAnalytics = () => {
                         <td className="p-3">Total</td>
                         <td className="p-3 text-right text-green-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.salesIn, 0))}</td>
                         <td className="p-3 text-right text-blue-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.otherIn, 0))}</td>
-                        {includeCapital && <td className="p-3 text-right text-purple-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.capitalIn, 0))}</td>}
+                        <td className="p-3 text-right text-purple-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.capitalIn, 0))}</td>
+                        <td className="p-3 text-right text-emerald-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.transferIn, 0))}</td>
+                        <td className="p-3 text-right text-amber-600">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.transferOut, 0))}</td>
                         <td className="p-3 text-right">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.totalIn, 0))}</td>
                         <td className="p-3 text-right text-destructive">{formatCurrency(fundBalanceData.reduce((s, d) => s + d.expenseOut, 0))}</td>
                         <td className={`p-3 text-right ${netIncome >= 0 ? 'text-green-600' : 'text-destructive'}`}>
