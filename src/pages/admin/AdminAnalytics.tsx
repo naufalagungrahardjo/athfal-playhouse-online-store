@@ -453,7 +453,12 @@ const AdminAnalytics = () => {
 
   const totalOtherIncome = useMemo(() => otherIncomes.reduce((s, i) => s + i.amount, 0), [otherIncomes]);
   const totalAllExpenses = useMemo(() => expenses.reduce((s, e) => s + getExpenseNet(e), 0), [expenses]);
-  const totalAllCapital = useMemo(() => capitalInflows.reduce((s, c) => s + c.amount, 0), [capitalInflows]);
+  const totalAllCapital = useMemo(
+    () => capitalInflows
+      .filter(c => (c.type || 'inflow') !== 'transfer')
+      .reduce((s, c) => s + c.amount, 0),
+    [capitalInflows]
+  );
   const effectiveOtherIncome = includeCapital ? totalOtherIncome + totalAllCapital : totalOtherIncome;
   const netIncome = totalSalesRevenue + effectiveOtherIncome - totalAllExpenses;
 
@@ -476,11 +481,13 @@ const AdminAnalytics = () => {
     });
     // Capital (if included)
     if (includeCapital) {
-      capitalInflows.forEach(c => {
+      capitalInflows
+        .filter(c => (c.type || 'inflow') !== 'transfer')
+        .forEach(c => {
         const key = formatDateKey(c.date, netGranularity);
         if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
         map[key].revenue += c.amount;
-      });
+        });
     }
     // Expenses
     expenses.forEach(e => {
@@ -515,10 +522,10 @@ const AdminAnalytics = () => {
 
   // === Fund Balance Breakdown ===
   const fundBalanceData = useMemo(() => {
-    const balanceMap: Record<string, { salesIn: number; otherIn: number; capitalIn: number; expenseOut: number }> = {};
+    const balanceMap: Record<string, { salesIn: number; otherIn: number; capitalIn: number; transferIn: number; transferOut: number; expenseOut: number }> = {};
 
     const ensure = (name: string) => {
-      if (!balanceMap[name]) balanceMap[name] = { salesIn: 0, otherIn: 0, capitalIn: 0, expenseOut: 0 };
+      if (!balanceMap[name]) balanceMap[name] = { salesIn: 0, otherIn: 0, capitalIn: 0, transferIn: 0, transferOut: 0, expenseOut: 0 };
     };
 
     // Seed with ALL known fund sources so funds with no activity still appear
@@ -540,14 +547,23 @@ const AdminAnalytics = () => {
       balanceMap[name].otherIn += i.amount;
     });
 
-    // Capital by fund_source_id (if included)
-    if (includeCapital) {
-      capitalInflows.forEach(c => {
-        const name = c.fund_source_id ? (expFundMap[c.fund_source_id] || 'Unknown') : 'Unknown';
-        ensure(name);
-        balanceMap[name].capitalIn += c.amount;
-      });
-    }
+    // Capital inflows and internal fund transfers
+    capitalInflows.forEach(c => {
+      const entryType = c.type || 'inflow';
+      if (entryType === 'transfer') {
+        const fromName = c.from_fund_source_id ? (expFundMap[c.from_fund_source_id] || 'Unknown') : 'Unknown';
+        const toName = c.fund_source_id ? (expFundMap[c.fund_source_id] || 'Unknown') : 'Unknown';
+        ensure(fromName);
+        ensure(toName);
+        balanceMap[fromName].transferOut += c.amount;
+        balanceMap[toName].transferIn += c.amount;
+        return;
+      }
+
+      const name = c.fund_source_id ? (expFundMap[c.fund_source_id] || 'Unknown') : 'Unknown';
+      ensure(name);
+      balanceMap[name].capitalIn += c.amount;
+    });
 
     // Expenses by fund_source_id
     expenses.forEach(e => {
@@ -562,12 +578,14 @@ const AdminAnalytics = () => {
         salesIn: v.salesIn,
         otherIn: v.otherIn,
         capitalIn: v.capitalIn,
-        totalIn: v.salesIn + v.otherIn + v.capitalIn,
+        transferIn: v.transferIn,
+        transferOut: v.transferOut,
+        totalIn: v.salesIn + v.otherIn + v.capitalIn + v.transferIn,
         expenseOut: v.expenseOut,
-        net: v.salesIn + v.otherIn + v.capitalIn - v.expenseOut,
+        net: v.salesIn + v.otherIn + v.capitalIn + v.transferIn - v.transferOut - v.expenseOut,
       }))
       .sort((a, b) => b.net - a.net);
-  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, expFundMap, netRevenueType]);
+  }, [orders, otherIncomes, expenses, capitalInflows, expFundMap, netRevenueType]);
 
   // Fund balance pie (net positive only)
   const fundBalancePieData = useMemo(() => {
