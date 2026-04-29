@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Edit2, Download } from "lucide-react";
 import { ClassProgram, Student } from "@/hooks/useStudents";
+import { useProducts } from "@/hooks/useProducts";
 import { format } from "date-fns";
 
 type Props = {
@@ -26,6 +28,10 @@ export default function ProgramsStudentsTab({
   programs, students, addProgram, updateProgram, deleteProgram,
   addStudent, updateStudent, updateStudentEnrollments, deleteStudent,
 }: Props) {
+  const { products } = useProducts();
+  const productNameOptions = Array.from(new Set(products.map(p => p.name).filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b, undefined, { sensitivity: "base" })
+  );
   // Program form
   const [progName, setProgName] = useState("");
   const [progMeetings, setProgMeetings] = useState(1);
@@ -109,7 +115,23 @@ export default function ProgramsStudentsTab({
           <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
             <div>
               <Label>Program Name</Label>
-              <Input value={progName} onChange={e => setProgName(e.target.value)} placeholder="Program name" />
+              <Select value={progName} onValueChange={setProgName}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a product" />
+                </SelectTrigger>
+                <SelectContent>
+                  {productNameOptions.length === 0 ? (
+                    <div className="px-2 py-1.5 text-sm text-muted-foreground">No products available</div>
+                  ) : (
+                    productNameOptions.map(name => (
+                      <SelectItem key={name} value={name}>{name}</SelectItem>
+                    ))
+                  )}
+                  {progName && !productNameOptions.includes(progName) && (
+                    <SelectItem value={progName}>{progName} (legacy)</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Number of Sessions</Label>
