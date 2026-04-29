@@ -173,23 +173,6 @@ const ManualOrderTab = () => {
         return;
       }
 
-      // Mark as fully paid by inserting an order_payment record
-      try {
-        const { error: payErr } = await supabase.from('order_payments').insert({
-          order_id: orderId,
-          amount: totals.total,
-          status: 'paid',
-          payment_method: paymentMethod,
-          notes: 'Manual order - auto paid',
-        } as any);
-        if (payErr) {
-          // non-blocking; warn admin
-          toast.warning(`Order created but payment record failed: ${payErr.message}`);
-        }
-      } catch (e) {
-        // non-blocking
-      }
-
       // Auto-create MDR expense
       try {
         await supabase.rpc('create_mdr_expense_for_order' as any, { p_order_id: orderId });
