@@ -521,6 +521,11 @@ const AdminAnalytics = () => {
       if (!balanceMap[name]) balanceMap[name] = { salesIn: 0, otherIn: 0, capitalIn: 0, expenseOut: 0 };
     };
 
+    // Seed with ALL known fund sources so funds with no activity still appear
+    Object.values(expFundMap).forEach(name => {
+      if (name) ensure(name);
+    });
+
     // Sales revenue by payment_method
     orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').forEach(o => {
       const method = o.payment_method || 'Unknown';
