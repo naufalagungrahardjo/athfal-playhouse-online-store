@@ -59,16 +59,31 @@ const AdminOrders = () => {
     
     const query = searchQuery.toLowerCase();
     return filteredOrders.filter(order => {
-      // Search by order ID
-      if (order.id.toLowerCase().includes(query)) return true;
-      
-      // Search by product name in order items
-      if (order.items?.some((item: any) => item.product_name.toLowerCase().includes(query))) return true;
-      
-      // Search by date
-      const orderDate = new Date(order.created_at).toLocaleDateString();
-      if (orderDate.toLowerCase().includes(query)) return true;
-      
+      const fields: (string | number | null | undefined)[] = [
+        order.id,
+        order.customer_name,
+        order.customer_email,
+        order.customer_phone,
+        order.customer_address,
+        order.payment_method,
+        order.status,
+        order.notes,
+        order.promo_code,
+        order.child_name,
+        order.child_gender,
+        order.child_age,
+        order.guardian_status,
+        order.total_amount,
+        order.amount_paid,
+        new Date(order.created_at).toLocaleDateString(),
+      ];
+      if (fields.some(v => v != null && String(v).toLowerCase().includes(query))) return true;
+
+      if (order.items?.some((item: any) =>
+        [item.product_name, item.session_name, item.installment_plan_name]
+          .some((v: any) => v && String(v).toLowerCase().includes(query))
+      )) return true;
+
       return false;
     });
   }, [filteredOrders, searchQuery]);
