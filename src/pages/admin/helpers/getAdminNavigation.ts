@@ -1,6 +1,6 @@
 
 import {
-  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList, BookOpen, Wallet, FileCheck
+  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList, BookOpen, Wallet, FileCheck, Camera
 } from 'lucide-react';
 
 export type NavigationItem = {
@@ -45,6 +45,7 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
       items: [
         { name: 'All Teachers', href: '/admin/all-teachers', icon: GraduationCap },
         { name: 'Students', href: '/admin/students', icon: BookOpen },
+        { name: 'Check-In/Out', href: '/admin/check-in-out', icon: Camera },
       ],
     },
     {
@@ -67,6 +68,9 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
     const teacherItems: NavigationItem[] = [];
     if (role === "teacher" && allowedMenus.includes("/admin/teacher")) {
       teacherItems.push({ name: 'Teacher', href: '/admin/teacher', icon: ClipboardList });
+    }
+    if (role === "teacher" && allowedMenus.includes("/admin/check-in-out")) {
+      teacherItems.push({ name: 'Check-In/Out', href: '/admin/check-in-out', icon: Camera });
     }
 
     const filtered = allGroups
@@ -96,7 +100,7 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
     order_staff: ["/admin/orders"],
     content_manager: ["/admin/blogs", "/admin/banners", "/admin/website-copy", "/admin/categories", "/admin/faq", "/admin/testimonials"],
     content_staff: ["/admin/blogs"],
-    teacher: ["/admin/teacher", "/admin/students"],
+    teacher: ["/admin/teacher", "/admin/students", "/admin/check-in-out"],
   };
 
   const allowed = allAllowed[role ?? ""] ?? [];
@@ -107,6 +111,7 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
       items: [
         { name: 'Teacher', href: '/admin/teacher', icon: ClipboardList },
         { name: 'Students', href: '/admin/students', icon: BookOpen },
+        { name: 'Check-In/Out', href: '/admin/check-in-out', icon: Camera },
       ],
     }];
   }
@@ -139,6 +144,7 @@ export function getAllMenuItems(): { href: string; name: string }[] {
     { href: '/admin/all-teachers', name: 'All Teachers' },
     { href: '/admin/students', name: 'Students' },
     { href: '/admin/teacher', name: 'Teacher (Personal)' },
+    { href: '/admin/check-in-out', name: 'Check-In/Out' },
     { href: '/admin/blogs', name: 'Blogs' },
     { href: '/admin/banners', name: 'Banners' },
     { href: '/admin/faq', name: 'FAQ' },
