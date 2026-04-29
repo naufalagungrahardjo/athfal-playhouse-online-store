@@ -4,6 +4,7 @@ import { useStudents } from "@/hooks/useStudents";
 import ProgramsStudentsTab from "./students/ProgramsStudentsTab";
 import AttendanceTab from "./students/AttendanceTab";
 import StudentReportTab from "./students/StudentReportTab";
+import CheckInOutLogTab from "./students/CheckInOutLogTab";
 
 const AdminStudents = () => {
   const [activeTab, setActiveTab] = useState("programs");
@@ -26,6 +27,7 @@ const AdminStudents = () => {
           <TabsTrigger value="programs">Programs & Students</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="report">Student Report</TabsTrigger>
+          <TabsTrigger value="checkinout">Check-In/Out Log</TabsTrigger>
         </TabsList>
         <TabsContent value="programs">
           <ProgramsStudentsTab
@@ -44,6 +46,9 @@ const AdminStudents = () => {
           <StudentReportTab
             programs={programs} students={students} enrollments={enrollments} attendance={attendance}
           />
+        </TabsContent>
+        <TabsContent value="checkinout">
+          <CheckInOutLogTab programs={programs} students={students} />
         </TabsContent>
       </Tabs>
     </div>
