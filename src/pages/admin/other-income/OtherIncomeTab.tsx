@@ -61,7 +61,7 @@ const OtherIncomeTab = () => {
     } as any);
     if (error) { toast.error(error.message); return; }
 
-    if (fundSourceId) {
+    if (fundSourceId && incomeAmount >= 500000) {
       const fundName = fundMap[fundSourceId];
       if (fundName) {
         const pm = paymentMethods.find(p => p.bank_name.toLowerCase() === fundName.toLowerCase());
