@@ -119,7 +119,7 @@ export default function ProgramsStudentsTab({
                 <SelectTrigger>
                   <SelectValue placeholder="Select a product" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[240px] overflow-y-auto">
                   {productNameOptions.length === 0 ? (
                     <div className="px-2 py-1.5 text-sm text-muted-foreground">No products available</div>
                   ) : (
