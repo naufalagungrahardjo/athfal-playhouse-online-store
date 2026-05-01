@@ -79,10 +79,11 @@ export function useStudents() {
 
   // Program CRUD
   const addProgram = async (p: Omit<ClassProgram, "id">) => {
-    const { error } = await supabase.from("class_programs" as any).insert(p as any);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    const { data, error } = await supabase.from("class_programs" as any).insert(p as any).select().single();
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return null; }
     toast({ title: "Program created" });
     fetchAll();
+    return (data as any)?.id as string | null;
   };
 
   const updateProgram = async (id: string, p: Partial<ClassProgram>) => {
