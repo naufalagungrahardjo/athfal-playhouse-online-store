@@ -12,7 +12,7 @@ const AdminStudents = () => {
     programs, students, enrollments, attendance, loading,
     addProgram, updateProgram, deleteProgram,
     addStudent, updateStudent, updateStudentEnrollments, deleteStudent,
-    saveAttendance,
+    saveAttendance, refetch,
   } = useStudents();
 
   if (loading) {
@@ -34,6 +34,7 @@ const AdminStudents = () => {
             programs={programs} students={students}
             addProgram={addProgram} updateProgram={updateProgram} deleteProgram={deleteProgram}
             addStudent={addStudent} updateStudent={updateStudent} updateStudentEnrollments={updateStudentEnrollments} deleteStudent={deleteStudent}
+            refetch={refetch}
           />
         </TabsContent>
         <TabsContent value="attendance">
