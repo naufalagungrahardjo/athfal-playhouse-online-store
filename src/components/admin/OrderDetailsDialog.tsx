@@ -12,6 +12,9 @@ import { Pencil } from 'lucide-react';
 import { OrderItemsEditor } from './orders/OrderItemsEditor';
 import { Input } from '@/components/ui/input';
 import { getPaymentStatus, getPayable, getPaymentStatusColor, getPaymentStatusLabel } from '@/lib/paymentStatus';
+import { useAuth } from '@/contexts/AuthContext';
+import { getAdminRole } from '@/pages/admin/helpers/getAdminRole';
+import { Textarea } from '@/components/ui/textarea';
 
 interface OrderItem {
   id: string;
@@ -63,6 +66,45 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
   const [childGender, setChildGender] = useState<string>(order?.child_gender || '');
   const [savingGender, setSavingGender] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isSuperAdmin = getAdminRole(user) === 'super_admin';
+
+  // Editable customer fields (super_admin only)
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [fieldValue, setFieldValue] = useState<string>('');
+  const [savingField, setSavingField] = useState(false);
+
+  const startEditField = (field: string, current: any) => {
+    setEditingField(field);
+    setFieldValue(current == null ? '' : String(current));
+  };
+
+  const cancelEditField = () => {
+    setEditingField(null);
+    setFieldValue('');
+  };
+
+  const saveField = async (field: string) => {
+    if (!order) return;
+    try {
+      setSavingField(true);
+      const payload: any = { updated_at: new Date().toISOString() };
+      payload[field] = fieldValue.trim() === '' ? null : fieldValue;
+      const { error } = await supabase
+        .from('orders')
+        .update(payload)
+        .eq('id', order.id);
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Customer info updated' });
+      setEditingField(null);
+      onOrderUpdated();
+    } catch (error: any) {
+      console.error('Error updating field:', error);
+      toast({ variant: 'destructive', title: 'Error', description: error?.message || 'Failed to update' });
+    } finally {
+      setSavingField(false);
+    }
+  };
 
   useEffect(() => {
     if (order) {
@@ -228,18 +270,39 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
           <div>
             <h3 className="text-lg font-semibold mb-3">Customer Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
-              <div>
-                <label className="text-sm font-medium text-gray-500">Name</label>
-                <p className="text-sm">{order.customer_name}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">Email</label>
-                <p className="text-sm">{order.customer_email}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">Phone</label>
-                <p className="text-sm">{order.customer_phone}</p>
-              </div>
+              {(['customer_name','customer_email','customer_phone'] as const).map((f) => {
+                const labels: Record<string,string> = {
+                  customer_name: 'Name',
+                  customer_email: 'Email',
+                  customer_phone: 'Phone',
+                };
+                const val = (order as any)[f];
+                return (
+                  <div key={f}>
+                    <label className="text-sm font-medium text-gray-500">{labels[f]}</label>
+                    {editingField === f ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <Input
+                          value={fieldValue}
+                          onChange={(e) => setFieldValue(e.target.value)}
+                          className="max-w-xs"
+                        />
+                        <Button size="sm" onClick={() => saveField(f)} disabled={savingField}>Save</Button>
+                        <Button size="sm" variant="outline" onClick={cancelEditField}>Cancel</Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm">{val || <span className="text-gray-400 italic">— Not set —</span>}</p>
+                        {isSuperAdmin && (
+                          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => startEditField(f, val)}>
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
               <div>
                 <label className="text-sm font-medium text-gray-500">Payment Method</label>
                 {editingPayment ? (
@@ -274,42 +337,118 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
                   </div>
                 )}
               </div>
-              {order.customer_address && (
-                <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-gray-500">Address</label>
-                  <p className="text-sm">{order.customer_address}</p>
-                </div>
-              )}
-              {order.guardian_status && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Guardian Status</label>
-                  <p className="text-sm">{order.guardian_status}</p>
-                </div>
-              )}
-              {order.child_name && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Child Name</label>
-                  <p className="text-sm">{order.child_name}</p>
-                </div>
-              )}
-              {order.child_birthdate && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Child Birthdate</label>
-                  <p className="text-sm">{new Date(order.child_birthdate).toLocaleDateString()}</p>
-                </div>
-              )}
-              {order.child_age && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Child Age</label>
-                  <p className="text-sm">{order.child_age}</p>
-                </div>
-              )}
+              {/* Address (always shown) */}
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium text-gray-500">Address</label>
+                {editingField === 'customer_address' ? (
+                  <div className="flex items-start gap-2 mt-1">
+                    <Textarea
+                      value={fieldValue}
+                      onChange={(e) => setFieldValue(e.target.value)}
+                      rows={2}
+                    />
+                    <div className="flex flex-col gap-1">
+                      <Button size="sm" onClick={() => saveField('customer_address')} disabled={savingField}>Save</Button>
+                      <Button size="sm" variant="outline" onClick={cancelEditField}>Cancel</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm">{order.customer_address || <span className="text-gray-400 italic">— Not set —</span>}</p>
+                    {isSuperAdmin && (
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => startEditField('customer_address', order.customer_address)}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Guardian Status (always shown) */}
+              <div>
+                <label className="text-sm font-medium text-gray-500">Guardian Status</label>
+                {editingField === 'guardian_status' ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input value={fieldValue} onChange={(e) => setFieldValue(e.target.value)} className="max-w-xs" placeholder="e.g. Bunda, Ayah" />
+                    <Button size="sm" onClick={() => saveField('guardian_status')} disabled={savingField}>Save</Button>
+                    <Button size="sm" variant="outline" onClick={cancelEditField}>Cancel</Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm">{order.guardian_status || <span className="text-gray-400 italic">— Not set —</span>}</p>
+                    {isSuperAdmin && (
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => startEditField('guardian_status', order.guardian_status)}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Child Name (always shown) */}
+              <div>
+                <label className="text-sm font-medium text-gray-500">Child Name</label>
+                {editingField === 'child_name' ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input value={fieldValue} onChange={(e) => setFieldValue(e.target.value)} className="max-w-xs" />
+                    <Button size="sm" onClick={() => saveField('child_name')} disabled={savingField}>Save</Button>
+                    <Button size="sm" variant="outline" onClick={cancelEditField}>Cancel</Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm">{order.child_name || <span className="text-gray-400 italic">— Not set —</span>}</p>
+                    {isSuperAdmin && (
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => startEditField('child_name', order.child_name)}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Child Birthdate (always shown) */}
+              <div>
+                <label className="text-sm font-medium text-gray-500">Child Birthdate</label>
+                {editingField === 'child_birthdate' ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input type="date" value={fieldValue} onChange={(e) => setFieldValue(e.target.value)} className="max-w-xs" />
+                    <Button size="sm" onClick={() => saveField('child_birthdate')} disabled={savingField}>Save</Button>
+                    <Button size="sm" variant="outline" onClick={cancelEditField}>Cancel</Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm">{order.child_birthdate ? new Date(order.child_birthdate).toLocaleDateString() : <span className="text-gray-400 italic">— Not set —</span>}</p>
+                    {isSuperAdmin && (
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => startEditField('child_birthdate', order.child_birthdate ? String(order.child_birthdate).slice(0,10) : '')}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Child Age (always shown) */}
+              <div>
+                <label className="text-sm font-medium text-gray-500">Child Age</label>
+                {editingField === 'child_age' ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input value={fieldValue} onChange={(e) => setFieldValue(e.target.value)} className="max-w-xs" />
+                    <Button size="sm" onClick={() => saveField('child_age')} disabled={savingField}>Save</Button>
+                    <Button size="sm" variant="outline" onClick={cancelEditField}>Cancel</Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm">{order.child_age || <span className="text-gray-400 italic">— Not set —</span>}</p>
+                    {isSuperAdmin && (
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => startEditField('child_age', order.child_age)}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
               <div>
                 <label className="text-sm font-medium text-gray-500 block mb-1">Child Gender</label>
                 <Select
                   value={childGender || 'unset'}
                   onValueChange={(v) => handleChildGenderSave(v === 'unset' ? '' : v)}
-                  disabled={savingGender}
+                  disabled={savingGender || !isSuperAdmin}
                 >
                   <SelectTrigger className="w-[160px]">
                     <SelectValue />
