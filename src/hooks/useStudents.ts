@@ -8,6 +8,7 @@ export type ClassProgram = {
   num_meetings: number;
   start_date: string;
   end_date: string;
+  source_product_names?: string[];
 };
 
 export type Student = {
