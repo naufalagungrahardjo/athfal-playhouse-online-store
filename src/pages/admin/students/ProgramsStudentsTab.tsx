@@ -56,159 +56,71 @@ export default function ProgramsStudentsTab({
   const [editStudentName, setEditStudentName] = useState("");
   const [enrollDialogOpen, setEnrollDialogOpen] = useState(false);
 
+  const getCleanProductNames = (names: string[]) =>
+    Array.from(new Set(names.map(name => name.trim()).filter(Boolean)));
+
+  const syncProgramEnrollments = async (programId: string, productNames?: string[]) => {
+    const cleanProductNames = getCleanProductNames(productNames ?? []);
+
+    try {
+      const { data, error } = await supabase.rpc("sync_program_enrollments" as any, {
+        p_program_id: programId,
+        p_source_product_names: cleanProductNames.length > 0 ? cleanProductNames : null,
+      });
+
+      if (error) throw error;
+
+      const addedCount = Number(data || 0);
+      toast({
+        title: "Sync complete",
+        description: addedCount > 0
+          ? `${addedCount} new student(s) enrolled.`
+          : "All matching students are already enrolled.",
+      });
+    } catch (err: any) {
+      toast({ title: "Sync failed", description: err.message, variant: "destructive" });
+    }
+  };
+
   const handleAddProgram = async () => {
-    const finalName = (customProgName.trim() || selectedProducts.join(" + ") || progName).trim();
+    const cleanSelectedProducts = getCleanProductNames(selectedProducts);
+    const finalName = (customProgName.trim() || cleanSelectedProducts.join(" + ") || progName).trim();
     if (!finalName || !progStart || !progEnd) return;
+
     if (editingProg) {
-      await updateProgram(editingProg.id, { name: finalName, num_meetings: progMeetings, start_date: progStart, end_date: progEnd });
+      await updateProgram(editingProg.id, {
+        name: finalName,
+        num_meetings: progMeetings,
+        start_date: progStart,
+        end_date: progEnd,
+        source_product_names: cleanSelectedProducts,
+      });
       setEditingProg(null);
+      await syncProgramEnrollments(editingProg.id, cleanSelectedProducts);
     } else {
-      const newProgramId = await addProgram({ name: finalName, num_meetings: progMeetings, start_date: progStart, end_date: progEnd });
-      // Auto-enroll children from orders that purchased any of the selected products
-      if (newProgramId && selectedProducts.length > 0) {
-        try {
-          const { data: ordersData } = await supabase
-            .from("orders")
-            .select("id, child_name, status")
-            .not("child_name", "is", null)
-            .neq("status", "cancelled");
-          const orderIds = (ordersData || []).map(o => o.id);
-          let matchedOrderIds = new Set<string>();
-          if (orderIds.length > 0) {
-            // Batch in chunks of 200 to avoid URL length limits
-            const chunks: string[][] = [];
-            for (let i = 0; i < orderIds.length; i += 200) chunks.push(orderIds.slice(i, i + 200));
-            const itemsData: { order_id: string; product_name: string }[] = [];
-            for (const ch of chunks) {
-              const { data } = await supabase
-                .from("order_items")
-                .select("order_id, product_name")
-                .in("order_id", ch);
-              if (data) itemsData.push(...(data as any));
-            }
-            // Normalize: lowercase + collapse whitespace; match by prefix so variant suffixes
-            // like " - Cicilan 3x" or " - Pembayaran Lunas" are included.
-            const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
-            const selectedNorm = selectedProducts.map(norm);
-            itemsData.forEach(it => {
-              if (!it.product_name) return;
-              const itName = norm(it.product_name);
-              if (selectedNorm.some(sel => itName === sel || itName.startsWith(sel))) {
-                matchedOrderIds.add(it.order_id);
-              }
-            });
-          }
-          // Collect unique child names
-          const childNames = new Set<string>();
-          (ordersData || []).forEach(o => {
-            if (matchedOrderIds.has(o.id) && o.child_name?.trim()) {
-              childNames.add(o.child_name.trim());
-            }
-          });
-          if (childNames.size > 0) {
-            // Find existing students by name
-            const { data: existingStudents } = await supabase
-              .from("students" as any)
-              .select("id, name")
-              .in("name", Array.from(childNames));
-            const existingMap = new Map<string, string>();
-            ((existingStudents as any) || []).forEach((s: any) => existingMap.set(s.name, s.id));
-            // Insert missing students
-            const toInsert = Array.from(childNames).filter(n => !existingMap.has(n)).map(name => ({ name }));
-            if (toInsert.length > 0) {
-              const { data: inserted } = await supabase
-                .from("students" as any)
-                .insert(toInsert as any)
-                .select();
-              ((inserted as any) || []).forEach((s: any) => existingMap.set(s.name, s.id));
-            }
-            // Insert enrollments
-            const enrollRows = Array.from(childNames).map(name => ({
-              student_id: existingMap.get(name)!,
-              program_id: newProgramId,
-            })).filter(r => r.student_id);
-            if (enrollRows.length > 0) {
-              await supabase.from("student_enrollments" as any).insert(enrollRows as any);
-            }
-            toast({ title: "Auto-enrolled", description: `${childNames.size} child(ren) enrolled from orders.` });
-          } else {
-            toast({ title: "No children found", description: "No orders with child names matched the selected products." });
-          }
-        } catch (err: any) {
-          toast({ title: "Auto-enroll failed", description: err.message, variant: "destructive" });
-        }
+      const newProgramId = await addProgram({
+        name: finalName,
+        num_meetings: progMeetings,
+        start_date: progStart,
+        end_date: progEnd,
+        source_product_names: cleanSelectedProducts,
+      });
+      if (newProgramId) {
+        await syncProgramEnrollments(newProgramId, cleanSelectedProducts);
       }
     }
     setProgName(""); setSelectedProducts([]); setCustomProgName("");
     setProgMeetings(1); setProgStart(""); setProgEnd("");
   };
 
-  // Retroactively sync students for an existing program based on currently selected products.
-  // Useful when a program was created before auto-enroll worked, or to refresh enrollments.
   const syncProgramFromProducts = async (programId: string, productNames: string[]) => {
-    if (productNames.length === 0) {
-      toast({ title: "Select products first", description: "Pick products in the form above, then click Sync.", variant: "destructive" });
+    const cleanProductNames = getCleanProductNames(productNames);
+    if (cleanProductNames.length === 0) {
+      await syncProgramEnrollments(programId);
       return;
     }
-    try {
-      const { data: ordersData } = await supabase
-        .from("orders")
-        .select("id, child_name, status")
-        .not("child_name", "is", null)
-        .neq("status", "cancelled");
-      const orderIds = (ordersData || []).map(o => o.id);
-      const matchedOrderIds = new Set<string>();
-      if (orderIds.length > 0) {
-        const chunks: string[][] = [];
-        for (let i = 0; i < orderIds.length; i += 200) chunks.push(orderIds.slice(i, i + 200));
-        const itemsData: { order_id: string; product_name: string }[] = [];
-        for (const ch of chunks) {
-          const { data } = await supabase.from("order_items").select("order_id, product_name").in("order_id", ch);
-          if (data) itemsData.push(...(data as any));
-        }
-        const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
-        const selectedNorm = productNames.map(norm);
-        itemsData.forEach(it => {
-          if (!it.product_name) return;
-          const itName = norm(it.product_name);
-          if (selectedNorm.some(sel => itName === sel || itName.startsWith(sel))) {
-            matchedOrderIds.add(it.order_id);
-          }
-        });
-      }
-      const childNames = new Set<string>();
-      (ordersData || []).forEach(o => {
-        if (matchedOrderIds.has(o.id) && o.child_name?.trim()) childNames.add(o.child_name.trim());
-      });
-      if (childNames.size === 0) {
-        toast({ title: "No matching children", description: "No orders with child names matched the selected products." });
-        return;
-      }
-      const { data: existingStudents } = await supabase
-        .from("students" as any).select("id, name").in("name", Array.from(childNames));
-      const existingMap = new Map<string, string>();
-      ((existingStudents as any) || []).forEach((s: any) => existingMap.set(s.name, s.id));
-      const toInsert = Array.from(childNames).filter(n => !existingMap.has(n)).map(name => ({ name }));
-      if (toInsert.length > 0) {
-        const { data: inserted } = await supabase.from("students" as any).insert(toInsert as any).select();
-        ((inserted as any) || []).forEach((s: any) => existingMap.set(s.name, s.id));
-      }
-      // Find existing enrollments to avoid duplicates
-      const studentIds = Array.from(childNames).map(n => existingMap.get(n)).filter(Boolean) as string[];
-      const { data: existingEnroll } = await supabase
-        .from("student_enrollments" as any)
-        .select("student_id")
-        .eq("program_id", programId)
-        .in("student_id", studentIds);
-      const enrolledSet = new Set(((existingEnroll as any) || []).map((e: any) => e.student_id));
-      const enrollRows = studentIds.filter(sid => !enrolledSet.has(sid)).map(sid => ({ student_id: sid, program_id: programId }));
-      if (enrollRows.length > 0) {
-        await supabase.from("student_enrollments" as any).insert(enrollRows as any);
-      }
-      toast({ title: "Sync complete", description: `${enrollRows.length} new student(s) enrolled (${childNames.size} matched).` });
-    } catch (err: any) {
-      toast({ title: "Sync failed", description: err.message, variant: "destructive" });
-    }
+    await updateProgram(programId, { source_product_names: cleanProductNames });
+    await syncProgramEnrollments(programId, cleanProductNames);
   };
 
   const handleAddStudent = async () => {
