@@ -17,7 +17,7 @@ import { format } from "date-fns";
 type Props = {
   programs: ClassProgram[];
   students: Student[];
-  addProgram: (p: Omit<ClassProgram, "id">) => Promise<void>;
+  addProgram: (p: Omit<ClassProgram, "id">) => Promise<string | null | void>;
   updateProgram: (id: string, p: Partial<ClassProgram>) => Promise<void>;
   deleteProgram: (id: string) => Promise<void>;
   addStudent: (name: string, programIds: string[]) => Promise<void>;
