@@ -173,6 +173,39 @@ const ManualOrderTab = () => {
         return;
       }
 
+      // Decrease stock by ordered qty, but never below 0
+      try {
+        for (const it of validItems) {
+          const product = products.find(p => p.id === it.productDbId);
+          if (!product) continue;
+          if (it.variantId) {
+            const { data: v } = await supabase
+              .from('product_variants')
+              .select('stock')
+              .eq('id', it.variantId)
+              .maybeSingle();
+            const current = (v as any)?.stock ?? 0;
+            if (current > 0) {
+              const newStock = Math.max(0, current - it.quantity);
+              await supabase.from('product_variants').update({ stock: newStock }).eq('id', it.variantId);
+            }
+          } else {
+            const { data: p } = await supabase
+              .from('products')
+              .select('stock')
+              .eq('id', product.id)
+              .maybeSingle();
+            const current = (p as any)?.stock ?? 0;
+            if (current > 0) {
+              const newStock = Math.max(0, current - it.quantity);
+              await supabase.from('products').update({ stock: newStock }).eq('id', product.id);
+            }
+          }
+        }
+      } catch (e) {
+        // non-blocking
+      }
+
       // Auto-create MDR expense
       try {
         await supabase.rpc('create_mdr_expense_for_order' as any, { p_order_id: orderId });
