@@ -26,11 +26,13 @@ type Props = {
   updateStudent: (id: string, name: string) => Promise<void>;
   updateStudentEnrollments: (studentId: string, programIds: string[]) => Promise<void>;
   deleteStudent: (id: string) => Promise<void>;
+  refetch: () => Promise<void>;
 };
 
 export default function ProgramsStudentsTab({
   programs, students, addProgram, updateProgram, deleteProgram,
   addStudent, updateStudent, updateStudentEnrollments, deleteStudent,
+  refetch,
 }: Props) {
   const { products } = useProducts();
   const { toast } = useToast();
@@ -59,6 +61,19 @@ export default function ProgramsStudentsTab({
   const getCleanProductNames = (names: string[]) =>
     Array.from(new Set(names.map(name => name.trim()).filter(Boolean)));
 
+  const normalizeText = (value: string) => value.toLowerCase().replace(/\s+/g, " ").trim();
+
+  const getProgramProductNames = (program: ClassProgram) => {
+    const saved = getCleanProductNames(program.source_product_names || []);
+    if (saved.length > 0) return saved;
+
+    const programName = normalizeText(program.name || "");
+    return productNameOptions.filter((productName) => {
+      const normalizedProduct = normalizeText(productName);
+      return normalizedProduct && programName.startsWith(normalizedProduct);
+    });
+  };
+
   const syncProgramEnrollments = async (programId: string, productNames?: string[]) => {
     const cleanProductNames = getCleanProductNames(productNames ?? []);
 
@@ -77,6 +92,7 @@ export default function ProgramsStudentsTab({
           ? `${addedCount} new student(s) enrolled.`
           : "All matching students are already enrolled.",
       });
+      await refetch();
     } catch (err: any) {
       toast({ title: "Sync failed", description: err.message, variant: "destructive" });
     }
