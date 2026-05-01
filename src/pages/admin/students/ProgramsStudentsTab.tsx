@@ -299,12 +299,12 @@ export default function ProgramsStudentsTab({
                       <Button size="icon" variant="ghost" onClick={() => {
                         setEditingProg(p);
                         setCustomProgName(p.name);
-                        setSelectedProducts([]);
+                        setSelectedProducts(getProgramProductNames(p));
                         setProgName(p.name);
                         setProgMeetings(p.num_meetings);
                         setProgStart(p.start_date); setProgEnd(p.end_date);
                       }}><Edit2 className="h-4 w-4" /></Button>
-                      <Button size="icon" variant="ghost" title="Sync students from selected products in form above" onClick={() => syncProgramFromProducts(p.id, selectedProducts)}>
+                      <Button size="icon" variant="ghost" title="Sync students from this program's linked products" onClick={() => syncProgramFromProducts(p.id, getProgramProductNames(p))}>
                         <RefreshCw className="h-4 w-4" />
                       </Button>
                       <Button size="icon" variant="ghost" onClick={() => deleteProgram(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
