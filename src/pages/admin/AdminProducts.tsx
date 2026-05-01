@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Download } from 'lucide-react';
+import { Plus, Download, ArrowUpAZ, ArrowDownAZ } from 'lucide-react';
 import { ProductCategory } from '@/contexts/CartContext';
 import { ProductList } from '@/components/admin/ProductList';
 import { ProductDialog } from '@/components/admin/ProductDialog';
@@ -15,6 +15,7 @@ const AdminProducts = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductFormData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | 'none'>('asc');
 
   // Make sure we fetch with correct types
   const { fetchProducts, handleDelete, handleProductSaved } = useProductActions(fetchAllProducts, editingProduct);
@@ -92,6 +93,22 @@ const AdminProducts = () => {
     setEditingProduct(null);
   };
 
+  const isUnavailable = (p: StrictProductFormData) =>
+    !!p.is_sold_out || (typeof p.stock === 'number' && p.stock <= 0);
+
+  const sortedProducts = (() => {
+    if (sortOrder === 'none') return products;
+    const arr = [...products];
+    arr.sort((a, b) => {
+      const ua = isUnavailable(a) ? 1 : 0;
+      const ub = isUnavailable(b) ? 1 : 0;
+      if (ua !== ub) return ua - ub;
+      const cmp = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+      return sortOrder === 'asc' ? cmp : -cmp;
+    });
+    return arr;
+  })();
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -110,6 +127,18 @@ const AdminProducts = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Product Management</h1>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+            title="Sort alphabetically (sold out / out of stock at bottom)"
+          >
+            {sortOrder === 'desc' ? (
+              <ArrowDownAZ className="mr-2 h-4 w-4" />
+            ) : (
+              <ArrowUpAZ className="mr-2 h-4 w-4" />
+            )}
+            Sort {sortOrder === 'desc' ? 'Z–A' : 'A–Z'}
+          </Button>
           <Button variant="outline" onClick={exportProductsCSV}>
             <Download className="mr-2 h-4 w-4" />
             Export CSV
@@ -122,7 +151,7 @@ const AdminProducts = () => {
       </div>
 
       <ProductList
-        products={products}
+        products={sortedProducts}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onDuplicate={handleDuplicate}
