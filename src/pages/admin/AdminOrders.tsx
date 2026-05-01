@@ -10,6 +10,7 @@ import { exportOrdersToCSV } from "@/components/admin/orders/orderExportUtils";
 import { OrderListSection } from "@/components/admin/orders/OrderListSection";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from '@/contexts/AuthContext';
 import { getAdminRole } from './helpers/getAdminRole';
 
@@ -23,6 +24,17 @@ const AdminOrders = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
+  const [paymentFilter, setPaymentFilter] = useState<string>('all');
+
+  const getPaymentStatus = (order: any): 'paid_full' | 'paid_partial' | 'unpaid' => {
+    const total = Number(order?.total_amount) || 0;
+    const paid = Number(order?.amount_paid) || 0;
+    if (total > 0 && paid >= total) return 'paid_full';
+    if (paid > 0 && paid < total) return 'paid_partial';
+    return 'unpaid';
+  };
+  const paymentStatusLabel = (s: string) =>
+    s === 'paid_full' ? 'Paid Full' : s === 'paid_partial' ? 'Paid Partially' : 'Unpaid';
 
   const handleViewDetails = (order: any) => {
     if (!order || typeof order !== 'object') return;
@@ -53,12 +65,19 @@ const AdminOrders = () => {
   };
   const filteredOrders = useOrderFilters(orders, dateRange);
 
+  const paymentFilteredOrders = useMemo(() => {
+    if (paymentFilter === 'all') return filteredOrders;
+    return filteredOrders.filter((o: any) => getPaymentStatus(o) === paymentFilter);
+  }, [filteredOrders, paymentFilter]);
+
   // Search functionality
   const searchedOrders = useMemo(() => {
-    if (!searchQuery.trim()) return filteredOrders;
+    if (!searchQuery.trim()) return paymentFilteredOrders;
     
     const query = searchQuery.toLowerCase();
-    return filteredOrders.filter(order => {
+    return paymentFilteredOrders.filter(order => {
+      const payStatus = getPaymentStatus(order);
+      const payLabel = paymentStatusLabel(payStatus);
       const fields: (string | number | null | undefined)[] = [
         order.id,
         order.customer_name,
@@ -75,6 +94,8 @@ const AdminOrders = () => {
         order.guardian_status,
         order.total_amount,
         order.amount_paid,
+        payStatus,
+        payLabel,
         new Date(order.created_at).toLocaleDateString(),
       ];
       if (fields.some(v => v != null && String(v).toLowerCase().includes(query))) return true;
@@ -86,7 +107,7 @@ const AdminOrders = () => {
 
       return false;
     });
-  }, [filteredOrders, searchQuery]);
+  }, [paymentFilteredOrders, searchQuery]);
 
   const onExport = () => exportOrdersToCSV(searchedOrders, dateRange);
 
@@ -115,14 +136,27 @@ const AdminOrders = () => {
       />
       
       {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-        <Input
-          placeholder="Search by Order ID, Customer, Email, Phone, Child, Payment, Product, Date..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
+      <div className="flex flex-col md:flex-row gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search by Order ID, Customer, Payment Status (Paid Full / Paid Partially / Unpaid), Product, Date..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+          <SelectTrigger className="w-full md:w-56">
+            <SelectValue placeholder="Payment status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Payments</SelectItem>
+            <SelectItem value="paid_full">Paid Full</SelectItem>
+            <SelectItem value="paid_partial">Paid Partially</SelectItem>
+            <SelectItem value="unpaid">Unpaid</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <OrderListSection
