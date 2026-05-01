@@ -3,14 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Eye, Download } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Search, Eye, Download, ChevronDown, X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -35,8 +31,9 @@ const csvEscape = (v: any) => {
 };
 
 export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
-  const [selectedProductName, setSelectedProductName] = useState<string>("");
+  const [selectedProductNames, setSelectedProductNames] = useState<string[]>([]);
   const [search, setSearch] = useState("");
+  const [pickerSearch, setPickerSearch] = useState("");
 
   // Build distinct product list from order items
   const productOptions = useMemo(() => {
@@ -53,13 +50,26 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
     return Array.from(set.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [orders]);
 
-  // Orders containing the selected product
+  const filteredProductOptions = useMemo(() => {
+    const q = pickerSearch.trim().toLowerCase();
+    if (!q) return productOptions;
+    return productOptions.filter((p) => p.name.toLowerCase().includes(q));
+  }, [productOptions, pickerSearch]);
+
+  const toggleProduct = (name: string) => {
+    setSelectedProductNames((prev) =>
+      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
+    );
+  };
+
+  // Orders containing any of the selected products
   const matchedRows = useMemo(() => {
-    if (!selectedProductName) return [];
+    if (selectedProductNames.length === 0) return [];
+    const selectedSet = new Set(selectedProductNames);
     const rows: any[] = [];
     for (const o of orders || []) {
       const matchedItems = (o.items || []).filter(
-        (it: any) => it.product_name === selectedProductName
+        (it: any) => selectedSet.has(it.product_name)
       );
       if (matchedItems.length === 0) continue;
       rows.push({ order: o, matchedItems });
@@ -92,7 +102,7 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
     return filtered.sort(
       (a, b) => new Date(b.order.created_at).getTime() - new Date(a.order.created_at).getTime()
     );
-  }, [orders, selectedProductName, search]);
+  }, [orders, selectedProductNames, search]);
 
   const totals = useMemo(() => {
     let qty = 0;
@@ -110,6 +120,7 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
     const headers = [
       "Order ID",
       "Order Date",
+      "Product",
       "Customer Name",
       "Email",
       "Phone",
@@ -137,6 +148,7 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
           [
             o.id,
             new Date(o.created_at).toLocaleString(),
+            it.product_name,
             o.customer_name,
             o.customer_email,
             o.customer_phone,
@@ -166,7 +178,10 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `order-list-${selectedProductName.replace(/[^\w]+/g, "_")}.csv`;
+    a.download = `order-list-${selectedProductNames
+      .map((n) => n.replace(/[^\w]+/g, "_"))
+      .join("-")
+      .slice(0, 80) || "products"}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -178,22 +193,78 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-col md:flex-row gap-2">
-          <Select value={selectedProductName} onValueChange={setSelectedProductName}>
-            <SelectTrigger className="w-full md:w-[420px]">
-              <SelectValue placeholder="Select a product to view its customers..." />
-            </SelectTrigger>
-            <SelectContent className="max-h-[400px]">
-              {productOptions.length === 0 ? (
-                <div className="px-2 py-4 text-sm text-muted-foreground">No products found in orders.</div>
-              ) : (
-                productOptions.map((p) => (
-                  <SelectItem key={p.name} value={p.name}>
-                    {p.name} ({p.count})
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full md:w-[420px] justify-between font-normal"
+              >
+                <span className="truncate text-left">
+                  {selectedProductNames.length === 0
+                    ? "Select products to combine..."
+                    : `${selectedProductNames.length} product${selectedProductNames.length > 1 ? "s" : ""} selected`}
+                </span>
+                <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[420px] p-0" align="start">
+              <div className="p-2 border-b space-y-2">
+                <Input
+                  placeholder="Search products..."
+                  value={pickerSearch}
+                  onChange={(e) => setPickerSearch(e.target.value)}
+                  className="h-8"
+                />
+                <div className="flex items-center justify-between text-xs">
+                  <button
+                    type="button"
+                    className="text-primary hover:underline"
+                    onClick={() =>
+                      setSelectedProductNames(filteredProductOptions.map((p) => p.name))
+                    }
+                  >
+                    Select all{pickerSearch ? " (filtered)" : ""}
+                  </button>
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:underline"
+                    onClick={() => setSelectedProductNames([])}
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+              <ScrollArea className="h-[320px]">
+                {filteredProductOptions.length === 0 ? (
+                  <div className="px-3 py-4 text-sm text-muted-foreground">
+                    No products found.
+                  </div>
+                ) : (
+                  <div className="p-1">
+                    {filteredProductOptions.map((p) => {
+                      const checked = selectedProductNames.includes(p.name);
+                      return (
+                        <label
+                          key={p.name}
+                          className="flex items-start gap-2 px-2 py-2 rounded-sm hover:bg-accent cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={() => toggleProduct(p.name)}
+                            className="mt-0.5"
+                          />
+                          <span className="text-sm flex-1">
+                            {p.name}{" "}
+                            <span className="text-muted-foreground">({p.count})</span>
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </ScrollArea>
+            </PopoverContent>
+          </Popover>
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
@@ -201,7 +272,7 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10"
-              disabled={!selectedProductName}
+              disabled={selectedProductNames.length === 0}
             />
           </div>
           <Button variant="outline" onClick={exportCSV} disabled={matchedRows.length === 0}>
@@ -209,21 +280,38 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
           </Button>
         </div>
 
-        {selectedProductName && (
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">Customers: {totals.customers}</Badge>
-            <Badge variant="secondary">Total Qty: {totals.qty}</Badge>
-            <Badge variant="secondary">Revenue: {fmtIDR(totals.revenue)}</Badge>
-          </div>
+        {selectedProductNames.length > 0 && (
+          <>
+            <div className="flex flex-wrap gap-1.5">
+              {selectedProductNames.map((name) => (
+                <Badge key={name} variant="outline" className="gap-1 pr-1">
+                  <span className="max-w-[260px] truncate">{name}</span>
+                  <button
+                    type="button"
+                    onClick={() => toggleProduct(name)}
+                    className="rounded-sm hover:bg-muted p-0.5"
+                    aria-label={`Remove ${name}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary">Orders: {totals.customers}</Badge>
+              <Badge variant="secondary">Total Qty: {totals.qty}</Badge>
+              <Badge variant="secondary">Revenue: {fmtIDR(totals.revenue)}</Badge>
+            </div>
+          </>
         )}
 
-        {!selectedProductName ? (
+        {selectedProductNames.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            Choose a product from the dropdown to see all customers who ordered it.
+            Tick one or more products to see all customers who ordered them.
           </div>
         ) : matchedRows.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            No orders found for this product.
+            No orders found for the selected products.
           </div>
         ) : (
           <div className="border rounded-md overflow-x-auto">
@@ -231,6 +319,7 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Order Date</TableHead>
+                  <TableHead>Product</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>Child Info</TableHead>
@@ -250,6 +339,13 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
                       <div className="text-muted-foreground">
                         {new Date(o.created_at).toLocaleTimeString()}
                       </div>
+                    </TableCell>
+                    <TableCell className="text-xs max-w-[200px]">
+                      {Array.from(new Set(matchedItems.map((it: any) => it.product_name))).map(
+                        (n: any) => (
+                          <div key={n} className="line-clamp-2">{n}</div>
+                        )
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">{o.customer_name}</div>
