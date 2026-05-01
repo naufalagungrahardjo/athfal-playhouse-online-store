@@ -75,13 +75,25 @@ export default function ProgramsStudentsTab({
           const orderIds = (ordersData || []).map(o => o.id);
           let matchedOrderIds = new Set<string>();
           if (orderIds.length > 0) {
-            const { data: itemsData } = await supabase
-              .from("order_items")
-              .select("order_id, product_name")
-              .in("order_id", orderIds);
-            const selectedSet = new Set(selectedProducts);
-            (itemsData || []).forEach(it => {
-              if (it.product_name && selectedSet.has(it.product_name)) {
+            // Batch in chunks of 200 to avoid URL length limits
+            const chunks: string[][] = [];
+            for (let i = 0; i < orderIds.length; i += 200) chunks.push(orderIds.slice(i, i + 200));
+            const itemsData: { order_id: string; product_name: string }[] = [];
+            for (const ch of chunks) {
+              const { data } = await supabase
+                .from("order_items")
+                .select("order_id, product_name")
+                .in("order_id", ch);
+              if (data) itemsData.push(...(data as any));
+            }
+            // Normalize: lowercase + collapse whitespace; match by prefix so variant suffixes
+            // like " - Cicilan 3x" or " - Pembayaran Lunas" are included.
+            const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+            const selectedNorm = selectedProducts.map(norm);
+            itemsData.forEach(it => {
+              if (!it.product_name) return;
+              const itName = norm(it.product_name);
+              if (selectedNorm.some(sel => itName === sel || itName.startsWith(sel))) {
                 matchedOrderIds.add(it.order_id);
               }
             });
