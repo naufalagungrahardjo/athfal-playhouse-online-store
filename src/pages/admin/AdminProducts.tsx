@@ -93,8 +93,10 @@ const AdminProducts = () => {
     setEditingProduct(null);
   };
 
-  const isUnavailable = (p: StrictProductFormData) =>
-    !!p.is_sold_out || (typeof p.stock === 'number' && p.stock <= 0);
+  const isUnavailable = (p: StrictProductFormData) => {
+    const anyP = p as any;
+    return !!anyP.is_sold_out || (typeof p.stock === 'number' && p.stock <= 0);
+  };
 
   const sortedProducts = (() => {
     if (sortOrder === 'none') return products;
