@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, Edit2, Download, ChevronDown, X } from "lucide-react";
+import { Plus, Trash2, Edit2, Download, ChevronDown, X, RefreshCw } from "lucide-react";
 import { ClassProgram, Student } from "@/hooks/useStudents";
 import { useProducts } from "@/hooks/useProducts";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,13 +75,25 @@ export default function ProgramsStudentsTab({
           const orderIds = (ordersData || []).map(o => o.id);
           let matchedOrderIds = new Set<string>();
           if (orderIds.length > 0) {
-            const { data: itemsData } = await supabase
-              .from("order_items")
-              .select("order_id, product_name")
-              .in("order_id", orderIds);
-            const selectedSet = new Set(selectedProducts);
-            (itemsData || []).forEach(it => {
-              if (it.product_name && selectedSet.has(it.product_name)) {
+            // Batch in chunks of 200 to avoid URL length limits
+            const chunks: string[][] = [];
+            for (let i = 0; i < orderIds.length; i += 200) chunks.push(orderIds.slice(i, i + 200));
+            const itemsData: { order_id: string; product_name: string }[] = [];
+            for (const ch of chunks) {
+              const { data } = await supabase
+                .from("order_items")
+                .select("order_id, product_name")
+                .in("order_id", ch);
+              if (data) itemsData.push(...(data as any));
+            }
+            // Normalize: lowercase + collapse whitespace; match by prefix so variant suffixes
+            // like " - Cicilan 3x" or " - Pembayaran Lunas" are included.
+            const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+            const selectedNorm = selectedProducts.map(norm);
+            itemsData.forEach(it => {
+              if (!it.product_name) return;
+              const itName = norm(it.product_name);
+              if (selectedNorm.some(sel => itName === sel || itName.startsWith(sel))) {
                 matchedOrderIds.add(it.order_id);
               }
             });
@@ -129,6 +141,74 @@ export default function ProgramsStudentsTab({
     }
     setProgName(""); setSelectedProducts([]); setCustomProgName("");
     setProgMeetings(1); setProgStart(""); setProgEnd("");
+  };
+
+  // Retroactively sync students for an existing program based on currently selected products.
+  // Useful when a program was created before auto-enroll worked, or to refresh enrollments.
+  const syncProgramFromProducts = async (programId: string, productNames: string[]) => {
+    if (productNames.length === 0) {
+      toast({ title: "Select products first", description: "Pick products in the form above, then click Sync.", variant: "destructive" });
+      return;
+    }
+    try {
+      const { data: ordersData } = await supabase
+        .from("orders")
+        .select("id, child_name, status")
+        .not("child_name", "is", null)
+        .neq("status", "cancelled");
+      const orderIds = (ordersData || []).map(o => o.id);
+      const matchedOrderIds = new Set<string>();
+      if (orderIds.length > 0) {
+        const chunks: string[][] = [];
+        for (let i = 0; i < orderIds.length; i += 200) chunks.push(orderIds.slice(i, i + 200));
+        const itemsData: { order_id: string; product_name: string }[] = [];
+        for (const ch of chunks) {
+          const { data } = await supabase.from("order_items").select("order_id, product_name").in("order_id", ch);
+          if (data) itemsData.push(...(data as any));
+        }
+        const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+        const selectedNorm = productNames.map(norm);
+        itemsData.forEach(it => {
+          if (!it.product_name) return;
+          const itName = norm(it.product_name);
+          if (selectedNorm.some(sel => itName === sel || itName.startsWith(sel))) {
+            matchedOrderIds.add(it.order_id);
+          }
+        });
+      }
+      const childNames = new Set<string>();
+      (ordersData || []).forEach(o => {
+        if (matchedOrderIds.has(o.id) && o.child_name?.trim()) childNames.add(o.child_name.trim());
+      });
+      if (childNames.size === 0) {
+        toast({ title: "No matching children", description: "No orders with child names matched the selected products." });
+        return;
+      }
+      const { data: existingStudents } = await supabase
+        .from("students" as any).select("id, name").in("name", Array.from(childNames));
+      const existingMap = new Map<string, string>();
+      ((existingStudents as any) || []).forEach((s: any) => existingMap.set(s.name, s.id));
+      const toInsert = Array.from(childNames).filter(n => !existingMap.has(n)).map(name => ({ name }));
+      if (toInsert.length > 0) {
+        const { data: inserted } = await supabase.from("students" as any).insert(toInsert as any).select();
+        ((inserted as any) || []).forEach((s: any) => existingMap.set(s.name, s.id));
+      }
+      // Find existing enrollments to avoid duplicates
+      const studentIds = Array.from(childNames).map(n => existingMap.get(n)).filter(Boolean) as string[];
+      const { data: existingEnroll } = await supabase
+        .from("student_enrollments" as any)
+        .select("student_id")
+        .eq("program_id", programId)
+        .in("student_id", studentIds);
+      const enrolledSet = new Set(((existingEnroll as any) || []).map((e: any) => e.student_id));
+      const enrollRows = studentIds.filter(sid => !enrolledSet.has(sid)).map(sid => ({ student_id: sid, program_id: programId }));
+      if (enrollRows.length > 0) {
+        await supabase.from("student_enrollments" as any).insert(enrollRows as any);
+      }
+      toast({ title: "Sync complete", description: `${enrollRows.length} new student(s) enrolled (${childNames.size} matched).` });
+    } catch (err: any) {
+      toast({ title: "Sync failed", description: err.message, variant: "destructive" });
+    }
   };
 
   const handleAddStudent = async () => {
@@ -296,6 +376,9 @@ export default function ProgramsStudentsTab({
                         setProgMeetings(p.num_meetings);
                         setProgStart(p.start_date); setProgEnd(p.end_date);
                       }}><Edit2 className="h-4 w-4" /></Button>
+                      <Button size="icon" variant="ghost" title="Sync students from selected products in form above" onClick={() => syncProgramFromProducts(p.id, selectedProducts)}>
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
                       <Button size="icon" variant="ghost" onClick={() => deleteProgram(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
                   </TableCell>
