@@ -308,6 +308,7 @@ export type Database = {
           id: string
           name: string
           num_meetings: number
+          source_product_names: string[]
           start_date: string
           updated_at: string | null
         }
@@ -317,6 +318,7 @@ export type Database = {
           id?: string
           name: string
           num_meetings?: number
+          source_product_names?: string[]
           start_date: string
           updated_at?: string | null
         }
@@ -326,6 +328,7 @@ export type Database = {
           id?: string
           name?: string
           num_meetings?: number
+          source_product_names?: string[]
           start_date?: string
           updated_at?: string | null
         }
@@ -1350,11 +1353,19 @@ export type Database = {
     }
     Functions: {
       auto_cancel_stale_orders: { Args: never; Returns: number }
+      auto_enroll_order_to_active_programs: {
+        Args: { p_order_id: string }
+        Returns: number
+      }
       create_mdr_expense_for_order: {
         Args: { p_order_id: string }
         Returns: boolean
       }
       deduct_stock_for_order: { Args: { p_order_id: string }; Returns: boolean }
+      ensure_student_from_child_name: {
+        Args: { p_child_name: string }
+        Returns: string
+      }
       get_order_by_token: {
         Args: { p_order_id: string; p_token: string }
         Returns: {
@@ -1402,9 +1413,21 @@ export type Database = {
       is_admin_account: { Args: { email: string }; Returns: boolean }
       is_admin_user: { Args: { user_id: string }; Returns: boolean }
       is_super_admin: { Args: { email: string }; Returns: boolean }
+      normalize_student_program_text: {
+        Args: { p_text: string }
+        Returns: string
+      }
+      program_matches_product_names: {
+        Args: { p_product_name: string; p_source_product_names: string[] }
+        Returns: boolean
+      }
       restore_stock_for_order: {
         Args: { p_order_id: string }
         Returns: boolean
+      }
+      sync_program_enrollments: {
+        Args: { p_program_id: string; p_source_product_names?: string[] }
+        Returns: number
       }
       validate_promo_code: {
         Args: { code_input: string }
