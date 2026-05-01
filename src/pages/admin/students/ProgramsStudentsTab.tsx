@@ -7,7 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Edit2, Download } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Plus, Trash2, Edit2, Download, ChevronDown, X } from "lucide-react";
 import { ClassProgram, Student } from "@/hooks/useStudents";
 import { useProducts } from "@/hooks/useProducts";
 import { format } from "date-fns";
@@ -34,6 +36,10 @@ export default function ProgramsStudentsTab({
   );
   // Program form
   const [progName, setProgName] = useState("");
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [customProgName, setCustomProgName] = useState("");
+  const [productPickerOpen, setProductPickerOpen] = useState(false);
+  const [productSearch, setProductSearch] = useState("");
   const [progMeetings, setProgMeetings] = useState(1);
   const [progStart, setProgStart] = useState("");
   const [progEnd, setProgEnd] = useState("");
@@ -48,14 +54,16 @@ export default function ProgramsStudentsTab({
   const [enrollDialogOpen, setEnrollDialogOpen] = useState(false);
 
   const handleAddProgram = async () => {
-    if (!progName || !progStart || !progEnd) return;
+    const finalName = (customProgName.trim() || selectedProducts.join(" + ") || progName).trim();
+    if (!finalName || !progStart || !progEnd) return;
     if (editingProg) {
-      await updateProgram(editingProg.id, { name: progName, num_meetings: progMeetings, start_date: progStart, end_date: progEnd });
+      await updateProgram(editingProg.id, { name: finalName, num_meetings: progMeetings, start_date: progStart, end_date: progEnd });
       setEditingProg(null);
     } else {
-      await addProgram({ name: progName, num_meetings: progMeetings, start_date: progStart, end_date: progEnd });
+      await addProgram({ name: finalName, num_meetings: progMeetings, start_date: progStart, end_date: progEnd });
     }
-    setProgName(""); setProgMeetings(1); setProgStart(""); setProgEnd("");
+    setProgName(""); setSelectedProducts([]); setCustomProgName("");
+    setProgMeetings(1); setProgStart(""); setProgEnd("");
   };
 
   const handleAddStudent = async () => {
@@ -112,27 +120,75 @@ export default function ProgramsStudentsTab({
           <CardTitle className="text-lg">Class Programs</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
             <div>
-              <Label>Program Name</Label>
-              <Select value={progName} onValueChange={setProgName}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a product" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[240px] overflow-y-auto">
-                  {productNameOptions.length === 0 ? (
-                    <div className="px-2 py-1.5 text-sm text-muted-foreground">No products available</div>
-                  ) : (
-                    productNameOptions.map(name => (
-                      <SelectItem key={name} value={name}>{name}</SelectItem>
-                    ))
-                  )}
-                  {progName && !productNameOptions.includes(progName) && (
-                    <SelectItem value={progName}>{progName} (legacy)</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+              <Label>Combine Products</Label>
+              <Popover open={productPickerOpen} onOpenChange={setProductPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between font-normal">
+                    <span className="truncate">
+                      {selectedProducts.length === 0
+                        ? "Select products to combine"
+                        : `${selectedProducts.length} product(s) selected`}
+                    </span>
+                    <ChevronDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[320px] p-2" align="start">
+                  <Input
+                    placeholder="Search products..."
+                    value={productSearch}
+                    onChange={e => setProductSearch(e.target.value)}
+                    className="mb-2 h-8"
+                  />
+                  <div className="flex justify-between mb-2 text-xs">
+                    <button type="button" className="text-primary hover:underline" onClick={() => setSelectedProducts(productNameOptions)}>Select all</button>
+                    <button type="button" className="text-muted-foreground hover:underline" onClick={() => setSelectedProducts([])}>Clear</button>
+                  </div>
+                  <ScrollArea className="h-[240px]">
+                    <div className="space-y-1 pr-2">
+                      {productNameOptions.filter(n => n.toLowerCase().includes(productSearch.toLowerCase())).map(name => (
+                        <label key={name} className="flex items-start gap-2 text-sm py-1 cursor-pointer hover:bg-muted/50 rounded px-1">
+                          <Checkbox
+                            checked={selectedProducts.includes(name)}
+                            onCheckedChange={checked => {
+                              setSelectedProducts(prev => checked ? [...prev, name] : prev.filter(x => x !== name));
+                            }}
+                          />
+                          <span className="flex-1">{name}</span>
+                        </label>
+                      ))}
+                      {productNameOptions.length === 0 && (
+                        <div className="text-sm text-muted-foreground px-1 py-2">No products available</div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
+              {selectedProducts.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {selectedProducts.map(name => (
+                    <span key={name} className="inline-flex items-center gap-1 bg-muted px-2 py-0.5 rounded text-xs">
+                      {name}
+                      <button type="button" onClick={() => setSelectedProducts(prev => prev.filter(x => x !== name))}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
+            <div>
+              <Label>Program Name (descriptive)</Label>
+              <Input
+                value={customProgName}
+                onChange={e => setCustomProgName(e.target.value)}
+                placeholder={selectedProducts.length > 0 ? selectedProducts.join(" + ") : "e.g. Bumi Vol. E Combined Class"}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Leave blank to auto-name from selected products.</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
             <div>
               <Label>Number of Sessions</Label>
               <Input type="number" min={1} value={progMeetings} onChange={e => setProgMeetings(Number(e.target.value))} />
@@ -168,7 +224,11 @@ export default function ProgramsStudentsTab({
                   <TableCell>
                     <div className="flex gap-1">
                       <Button size="icon" variant="ghost" onClick={() => {
-                        setEditingProg(p); setProgName(p.name); setProgMeetings(p.num_meetings);
+                        setEditingProg(p);
+                        setCustomProgName(p.name);
+                        setSelectedProducts([]);
+                        setProgName(p.name);
+                        setProgMeetings(p.num_meetings);
                         setProgStart(p.start_date); setProgEnd(p.end_date);
                       }}><Edit2 className="h-4 w-4" /></Button>
                       <Button size="icon" variant="ghost" onClick={() => deleteProgram(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
