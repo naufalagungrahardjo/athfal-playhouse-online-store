@@ -13,6 +13,8 @@ import { Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from '@/contexts/AuthContext';
 import { getAdminRole } from './helpers/getAdminRole';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { OrderListByProductTab } from "@/components/admin/orders/OrderListByProductTab";
 
 const AdminOrders = () => {
   const { orders, loading, fetchOrders, deleteOrder } = useOrders();
@@ -124,6 +126,12 @@ const AdminOrders = () => {
 
   return (
     <div className="space-y-6">
+      <Tabs defaultValue="management" className="w-full">
+        <TabsList>
+          <TabsTrigger value="management">Order Management</TabsTrigger>
+          <TabsTrigger value="by-product">Order List</TabsTrigger>
+        </TabsList>
+        <TabsContent value="management" className="space-y-6 mt-4">
       <OrderFilterToolbar
         dateRange={dateRange}
         setDateRange={setDateRange}
@@ -166,6 +174,11 @@ const AdminOrders = () => {
         handleDeleteOrder={handleDeleteOrder}
         canDelete={canDelete}
       />
+        </TabsContent>
+        <TabsContent value="by-product" className="mt-4">
+          <OrderListByProductTab orders={orders} onViewDetails={handleViewDetails} />
+        </TabsContent>
+      </Tabs>
       {selectedOrder && selectedOrder.id && (
         <OrderDetailsDialog
           order={selectedOrder}

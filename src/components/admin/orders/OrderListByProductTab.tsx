@@ -1,0 +1,320 @@
+import { useMemo, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Search, Eye, Download } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+interface Props {
+  orders: any[];
+  onViewDetails: (order: any) => void;
+}
+
+const fmtIDR = (n: number) =>
+  new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n || 0);
+
+const csvEscape = (v: any) => {
+  const s = v == null ? "" : String(v);
+  if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+};
+
+export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
+  const [selectedProductName, setSelectedProductName] = useState<string>("");
+  const [search, setSearch] = useState("");
+
+  // Build distinct product list from order items
+  const productOptions = useMemo(() => {
+    const set = new Map<string, { name: string; count: number }>();
+    for (const o of orders || []) {
+      for (const it of o.items || []) {
+        const name = it.product_name || "";
+        if (!name) continue;
+        const cur = set.get(name) || { name, count: 0 };
+        cur.count += 1;
+        set.set(name, cur);
+      }
+    }
+    return Array.from(set.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [orders]);
+
+  // Orders containing the selected product
+  const matchedRows = useMemo(() => {
+    if (!selectedProductName) return [];
+    const rows: any[] = [];
+    for (const o of orders || []) {
+      const matchedItems = (o.items || []).filter(
+        (it: any) => it.product_name === selectedProductName
+      );
+      if (matchedItems.length === 0) continue;
+      rows.push({ order: o, matchedItems });
+    }
+    // Filter by search across customer and child fields
+    const q = search.trim().toLowerCase();
+    const filtered = !q
+      ? rows
+      : rows.filter(({ order: o, matchedItems }) => {
+          const fields = [
+            o.id,
+            o.customer_name,
+            o.customer_email,
+            o.customer_phone,
+            o.customer_address,
+            o.guardian_status,
+            o.child_name,
+            o.child_age,
+            o.child_gender,
+            o.payment_method,
+            o.status,
+            o.notes,
+            o.promo_code,
+            ...matchedItems.map((it: any) => it.session_name || ""),
+            ...matchedItems.map((it: any) => it.installment_plan_name || ""),
+          ];
+          return fields.some((v) => v != null && String(v).toLowerCase().includes(q));
+        });
+    // Sort newest first
+    return filtered.sort(
+      (a, b) => new Date(b.order.created_at).getTime() - new Date(a.order.created_at).getTime()
+    );
+  }, [orders, selectedProductName, search]);
+
+  const totals = useMemo(() => {
+    let qty = 0;
+    let revenue = 0;
+    for (const r of matchedRows) {
+      for (const it of r.matchedItems) {
+        qty += Number(it.quantity) || 0;
+        revenue += (Number(it.product_price) || 0) * (Number(it.quantity) || 0);
+      }
+    }
+    return { qty, revenue, customers: matchedRows.length };
+  }, [matchedRows]);
+
+  const exportCSV = () => {
+    const headers = [
+      "Order ID",
+      "Order Date",
+      "Customer Name",
+      "Email",
+      "Phone",
+      "Address",
+      "Guardian Status",
+      "Child Name",
+      "Child Gender",
+      "Child Age",
+      "Variant / Session",
+      "Installment Plan",
+      "Quantity",
+      "Unit Price",
+      "Line Total",
+      "Payment Method",
+      "Order Status",
+      "Total Amount",
+      "Amount Paid",
+      "Promo Code",
+      "Notes",
+    ];
+    const lines: string[] = [headers.join(",")];
+    for (const { order: o, matchedItems } of matchedRows) {
+      for (const it of matchedItems) {
+        lines.push(
+          [
+            o.id,
+            new Date(o.created_at).toLocaleString(),
+            o.customer_name,
+            o.customer_email,
+            o.customer_phone,
+            o.customer_address,
+            o.guardian_status,
+            o.child_name,
+            o.child_gender,
+            o.child_age,
+            it.session_name,
+            it.installment_plan_name,
+            it.quantity,
+            it.product_price,
+            (Number(it.product_price) || 0) * (Number(it.quantity) || 0),
+            o.payment_method,
+            o.status,
+            o.total_amount,
+            o.amount_paid,
+            o.promo_code,
+            o.notes,
+          ]
+            .map(csvEscape)
+            .join(",")
+        );
+      }
+    }
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `order-list-${selectedProductName.replace(/[^\w]+/g, "_")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Order List by Product</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-col md:flex-row gap-2">
+          <Select value={selectedProductName} onValueChange={setSelectedProductName}>
+            <SelectTrigger className="w-full md:w-[420px]">
+              <SelectValue placeholder="Select a product to view its customers..." />
+            </SelectTrigger>
+            <SelectContent className="max-h-[400px]">
+              {productOptions.length === 0 ? (
+                <div className="px-2 py-4 text-sm text-muted-foreground">No products found in orders.</div>
+              ) : (
+                productOptions.map((p) => (
+                  <SelectItem key={p.name} value={p.name}>
+                    {p.name} ({p.count})
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search customer, child, phone, email..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10"
+              disabled={!selectedProductName}
+            />
+          </div>
+          <Button variant="outline" onClick={exportCSV} disabled={matchedRows.length === 0}>
+            <Download className="h-4 w-4 mr-2" /> Export CSV
+          </Button>
+        </div>
+
+        {selectedProductName && (
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="secondary">Customers: {totals.customers}</Badge>
+            <Badge variant="secondary">Total Qty: {totals.qty}</Badge>
+            <Badge variant="secondary">Revenue: {fmtIDR(totals.revenue)}</Badge>
+          </div>
+        )}
+
+        {!selectedProductName ? (
+          <div className="text-center py-12 text-muted-foreground">
+            Choose a product from the dropdown to see all customers who ordered it.
+          </div>
+        ) : matchedRows.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            No orders found for this product.
+          </div>
+        ) : (
+          <div className="border rounded-md overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Order Date</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Child Info</TableHead>
+                  <TableHead>Variant / Session</TableHead>
+                  <TableHead>Qty</TableHead>
+                  <TableHead>Payment</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {matchedRows.map(({ order: o, matchedItems }) => (
+                  <TableRow key={o.id}>
+                    <TableCell className="whitespace-nowrap text-xs">
+                      {new Date(o.created_at).toLocaleDateString()}
+                      <div className="text-muted-foreground">
+                        {new Date(o.created_at).toLocaleTimeString()}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-medium">{o.customer_name}</div>
+                      {o.guardian_status && (
+                        <div className="text-xs text-muted-foreground">{o.guardian_status}</div>
+                      )}
+                      {o.customer_address && (
+                        <div className="text-xs text-muted-foreground line-clamp-2 max-w-[220px]">
+                          {o.customer_address}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      <div>{o.customer_email}</div>
+                      <div className="text-muted-foreground">{o.customer_phone}</div>
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      {o.child_name ? (
+                        <>
+                          <div className="font-medium">{o.child_name}</div>
+                          <div className="text-muted-foreground">
+                            {[o.child_gender, o.child_age].filter(Boolean).join(" · ")}
+                          </div>
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      {matchedItems.map((it: any, idx: number) => (
+                        <div key={idx}>
+                          {it.session_name || "—"}
+                          {it.installment_plan_name && (
+                            <span className="text-muted-foreground"> · {it.installment_plan_name}</span>
+                          )}
+                        </div>
+                      ))}
+                    </TableCell>
+                    <TableCell>
+                      {matchedItems.reduce((s: number, it: any) => s + (Number(it.quantity) || 0), 0)}
+                    </TableCell>
+                    <TableCell className="text-xs capitalize">{o.payment_method}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize">{o.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right whitespace-nowrap text-xs">
+                      <div>{fmtIDR(o.total_amount)}</div>
+                      <div className="text-muted-foreground">
+                        Paid: {fmtIDR(o.amount_paid || 0)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Button size="icon" variant="ghost" onClick={() => onViewDetails(o)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default OrderListByProductTab;
