@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useStudents } from "@/hooks/useStudents";
 import ProgramsStudentsTab from "./students/ProgramsStudentsTab";
 import AttendanceTab from "./students/AttendanceTab";
+import AttendanceSummaryTab from "./students/AttendanceSummaryTab";
 import StudentReportTab from "./students/StudentReportTab";
 import CheckInOutLogTab from "./students/CheckInOutLogTab";
 
@@ -26,6 +27,7 @@ const AdminStudents = () => {
         <TabsList>
           <TabsTrigger value="programs">Programs & Students</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
+          <TabsTrigger value="attendance-summary">Attendance Summary</TabsTrigger>
           <TabsTrigger value="report">Student Report</TabsTrigger>
           <TabsTrigger value="checkinout">Check-In/Out Log</TabsTrigger>
         </TabsList>
@@ -41,6 +43,11 @@ const AdminStudents = () => {
           <AttendanceTab
             programs={programs} students={students} enrollments={enrollments}
             attendance={attendance} saveAttendance={saveAttendance}
+          />
+        </TabsContent>
+        <TabsContent value="attendance-summary">
+          <AttendanceSummaryTab
+            programs={programs} students={students} enrollments={enrollments} attendance={attendance}
           />
         </TabsContent>
         <TabsContent value="report">
