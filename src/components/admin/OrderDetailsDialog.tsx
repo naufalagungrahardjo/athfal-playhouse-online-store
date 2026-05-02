@@ -67,6 +67,8 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
   const [savingPayment, setSavingPayment] = useState(false);
   const [childGender, setChildGender] = useState<string>(order?.child_gender || '');
   const [savingGender, setSavingGender] = useState(false);
+  const [payments, setPayments] = useState<Array<{ id: string; payment_number: number; amount: number; status: string; paid_at: string | null; created_at: string; notes: string | null }>>([]);
+  const [loadingPayments, setLoadingPayments] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const isSuperAdmin = getAdminRole(user) === 'super_admin';
@@ -123,6 +125,20 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
         .then(({ data }) => setPaymentMethods(data || []));
     }
   }, [editingPayment]);
+
+  useEffect(() => {
+    if (!order?.id || !isOpen) return;
+    setLoadingPayments(true);
+    supabase
+      .from('order_payments')
+      .select('id, payment_number, amount, status, paid_at, created_at, notes')
+      .eq('order_id', order.id)
+      .order('payment_number', { ascending: true })
+      .then(({ data }) => {
+        setPayments(data || []);
+        setLoadingPayments(false);
+      });
+  }, [order?.id, isOpen, amountPaid]);
 
   const handlePaymentMethodUpdate = async () => {
     if (!order || paymentMethod === order.payment_method) return;
@@ -557,6 +573,34 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
               <p className="text-xs text-gray-500">
                 Analytics revenue reflects only the amount paid. Outstanding balance shows as receivable.
               </p>
+
+              {/* Payment History */}
+              <Separator />
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Payment History</h4>
+                {loadingPayments ? (
+                  <p className="text-xs text-gray-500">Loading...</p>
+                ) : payments.filter(p => p.status === 'paid').length === 0 ? (
+                  <p className="text-xs text-gray-500 italic">No payments recorded yet.</p>
+                ) : (
+                  <ul className="space-y-1">
+                    {payments
+                      .filter(p => p.status === 'paid')
+                      .map((p) => (
+                        <li key={p.id} className="flex justify-between text-sm bg-white border rounded px-3 py-2">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Payment #{p.payment_number}</span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(p.paid_at || p.created_at).toLocaleString()}
+                            </span>
+                            {p.notes && <span className="text-xs text-gray-500 italic">{p.notes}</span>}
+                          </div>
+                          <span className="font-semibold text-green-700">{formatCurrency(p.amount)}</span>
+                        </li>
+                      ))}
+                  </ul>
+                )}
+              </div>
             </div>
           </div>
 
