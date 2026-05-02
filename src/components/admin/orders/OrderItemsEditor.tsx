@@ -36,8 +36,10 @@ interface Choice {
   key: string; // composite key: productPublicId or productPublicId__variantId
   productPublicId: string;
   variantId?: string;
-  displayName: string; // "[Variant] Product" or "Product"
+  productName: string;
+  displayName: string; // "Product — Plan" or "Product"
   price: number;
+  installmentPlanName?: string | null;
 }
 
 interface Props {
@@ -86,16 +88,20 @@ export const OrderItemsEditor = ({
       list.push({
         key: p.product_id,
         productPublicId: p.product_id,
-        displayName: p.name,
+        productName: p.name,
+        displayName: `${p.name} — Pembayaran Lunas`,
         price: p.price,
+        installmentPlanName: 'Pembayaran Lunas',
       });
       productVariants.forEach(v => {
         list.push({
           key: `${p.product_id}__${v.id}`,
           productPublicId: p.product_id,
           variantId: v.id,
-          displayName: `[${v.name}] ${p.name}`,
+          productName: p.name,
+          displayName: `${p.name} — ${v.name}`,
           price: v.price,
+          installmentPlanName: v.name,
         });
       });
     });
@@ -121,8 +127,9 @@ export const OrderItemsEditor = ({
     if (!c) return;
     updateItem(idx, {
       product_id: c.key,
-      product_name: c.displayName,
+      product_name: c.productName,
       product_price: c.price,
+      installment_plan_name: c.installmentPlanName || null,
     });
   };
 
@@ -132,9 +139,10 @@ export const OrderItemsEditor = ({
     setDraft(prev => [...prev, {
       id: `new-${Date.now()}`,
       product_id: c.key,
-      product_name: c.displayName,
+      product_name: c.productName,
       product_price: c.price,
       quantity: newQty,
+      installment_plan_name: c.installmentPlanName || null,
     }]);
     setAdding(false);
     setNewChoiceKey('');
@@ -158,6 +166,8 @@ export const OrderItemsEditor = ({
         product_name: it.product_name,
         product_price: it.product_price,
         quantity: it.quantity,
+        session_name: it.session_name || null,
+        installment_plan_name: it.installment_plan_name || null,
       }));
       const { error: insErr } = await supabase.from('order_items').insert(insertRows);
       if (insErr) throw insErr;

@@ -130,12 +130,16 @@ const ManualOrderTab = () => {
       const orderId = crypto.randomUUID();
       const orderItems = validItems.map(it => {
         const line = computeLine(it);
+        const product = products.find(p => p.id === it.productDbId);
+        const variant = (variantsByProduct[it.productDbId] || []).find(v => v.id === it.variantId);
         return {
           order_id: orderId,
           product_id: line.baseId,
-          product_name: line.name,
+          product_name: product?.name || line.name,
           product_price: line.unitPrice,
           quantity: it.quantity,
+          session_name: null,
+          installment_plan_name: variant?.name || (it.variantId ? null : 'Pembayaran Lunas'),
         };
       });
 
