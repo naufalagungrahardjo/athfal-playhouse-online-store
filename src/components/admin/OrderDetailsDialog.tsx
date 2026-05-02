@@ -163,19 +163,44 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
   const handleAmountPaidSave = async () => {
     if (!order) return;
     const safeValue = Math.max(0, Math.floor(amountPaid || 0));
-    if (safeValue === (order.amount_paid || 0)) return;
+    const currentPaid = order.amount_paid || 0;
+    const delta = safeValue - currentPaid;
+    if (delta === 0) return;
     try {
       setSavingPayment(true);
+
+      // Get next payment_number
+      const { data: maxRow } = await supabase
+        .from('order_payments')
+        .select('payment_number')
+        .eq('order_id', order.id)
+        .order('payment_number', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const nextNumber = (maxRow?.payment_number || 0) + 1;
+
+      const note = delta > 0
+        ? 'Manual payment recorded by admin'
+        : 'Manual adjustment by admin';
+
       const { error } = await supabase
-        .from('orders')
-        .update({ amount_paid: safeValue, updated_at: new Date().toISOString() })
-        .eq('id', order.id);
+        .from('order_payments')
+        .insert({
+          order_id: order.id,
+          payment_number: nextNumber,
+          amount: delta, // can be negative for downward adjustment
+          status: 'paid',
+          paid_at: new Date().toISOString(),
+          notes: note,
+        });
       if (error) throw error;
-      toast({ title: 'Success', description: 'Payment amount updated' });
+
+      // Trigger sync_order_amount_paid will update orders.amount_paid
+      toast({ title: 'Success', description: 'Payment recorded' });
       onOrderUpdated();
-    } catch (error) {
-      console.error('Error updating amount paid:', error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update payment amount' });
+    } catch (error: any) {
+      console.error('Error recording payment:', error);
+      toast({ variant: 'destructive', title: 'Error', description: error?.message || 'Failed to record payment' });
     } finally {
       setSavingPayment(false);
     }
