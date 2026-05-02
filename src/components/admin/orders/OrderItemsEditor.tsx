@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 import { Pencil, Trash2, Plus, X, Check } from 'lucide-react';
+import { extractVariantInfo } from '@/lib/orderItemVariant';
 
 interface OrderItem {
   id: string;
@@ -198,20 +199,22 @@ export const OrderItemsEditor = ({
           </Button>
         </div>
         <div className="space-y-3">
-          {items.length > 0 ? items.map((item, i) => (
+          {items.length > 0 ? items.map((item, i) => {
+            const v = extractVariantInfo(item);
+            return (
             <div key={i} className="flex justify-between items-center p-3 bg-muted rounded-lg">
               <div>
-                <p className="font-medium">{item.product_name}</p>
-                {(item.session_name || item.installment_plan_name) && (
+                <p className="font-medium">{v.baseName}</p>
+                {(v.sessionName || v.planName) && (
                   <div className="mt-1 flex flex-wrap gap-1">
-                    {item.session_name && (
+                    {v.sessionName && (
                       <span className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">
-                        Sesi: {item.session_name}
+                        Sesi: {v.sessionName}
                       </span>
                     )}
-                    {item.installment_plan_name && (
+                    {v.planName && (
                       <span className="text-xs px-2 py-0.5 rounded bg-secondary/40">
-                        Plan: {item.installment_plan_name}
+                        Plan: {v.planName}
                       </span>
                     )}
                   </div>
@@ -224,7 +227,8 @@ export const OrderItemsEditor = ({
                 <p className="text-sm text-muted-foreground">Total: {formatCurrency(item.product_price * item.quantity)}</p>
               </div>
             </div>
-          )) : <p className="text-muted-foreground italic">No items found for this order</p>}
+            );
+          }) : <p className="text-muted-foreground italic">No items found for this order</p>}
         </div>
       </div>
     );
