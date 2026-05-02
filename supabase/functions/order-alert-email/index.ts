@@ -7,6 +7,16 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const escapeHtml = (value: unknown): string => {
+  if (value === null || value === undefined) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -50,6 +60,20 @@ serve(async (req) => {
 
     // Fetch admin accounts with order_alerts enabled
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Verify the order actually exists to prevent spam from arbitrary callers
+    const { data: orderRow, error: orderLookupError } = await supabaseAdmin
+      .from("orders")
+      .select("id")
+      .eq("id", orderId)
+      .maybeSingle();
+    if (orderLookupError || !orderRow) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Order not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { data: alertAdmins, error: adminError } = await supabaseAdmin
       .from("admin_accounts")
       .select("email")
@@ -70,14 +94,14 @@ serve(async (req) => {
 
     // Format items list
     const itemsList = items?.map((item: any) =>
-      `• ${item.product_name} x${item.quantity} - Rp ${Number(item.product_price * item.quantity).toLocaleString("id-ID")}`
+      `• ${escapeHtml(item.product_name)} x${escapeHtml(item.quantity)} - Rp ${Number(item.product_price * item.quantity).toLocaleString("id-ID")}`
     ).join("<br>") || "No items";
 
     const formattedTotal = `Rp ${Number(totalAmount).toLocaleString("id-ID")}`;
     const formattedSubtotal = `Rp ${Number(subtotal || 0).toLocaleString("id-ID")}`;
     const formattedTax = `Rp ${Number(taxAmount || 0).toLocaleString("id-ID")}`;
     const formattedDiscount = discountAmount ? `Rp ${Number(discountAmount).toLocaleString("id-ID")}` : null;
-    const shortId = orderId.slice(0, 8).toUpperCase();
+    const shortId = String(orderId).slice(0, 8).toUpperCase();
 
     // Format child info section
     let childInfoSection = "";
@@ -91,22 +115,22 @@ serve(async (req) => {
           ${childName ? `
           <tr style="background: #fff3f4;">
             <td style="padding: 8px; font-weight: bold; color: #555; width: 35%;">Child Name</td>
-            <td style="padding: 8px;">${childName}</td>
+            <td style="padding: 8px;">${escapeHtml(childName)}</td>
           </tr>` : ""}
           ${childAge ? `
           <tr style="background: #fff3f4;">
             <td style="padding: 8px; font-weight: bold; color: #555;">Child Age</td>
-            <td style="padding: 8px;">${childAge}</td>
+            <td style="padding: 8px;">${escapeHtml(childAge)}</td>
           </tr>` : ""}
           ${childBirthdate ? `
           <tr style="background: #fff3f4;">
             <td style="padding: 8px; font-weight: bold; color: #555;">Child Birthdate</td>
-            <td style="padding: 8px;">${new Date(childBirthdate).toLocaleDateString("id-ID")}</td>
+            <td style="padding: 8px;">${escapeHtml(new Date(childBirthdate).toLocaleDateString("id-ID"))}</td>
           </tr>` : ""}
           ${guardianStatus ? `
           <tr style="background: #fff3f4;">
             <td style="padding: 8px; font-weight: bold; color: #555;">Guardian Status</td>
-            <td style="padding: 8px;">${guardianStatus}</td>
+            <td style="padding: 8px;">${escapeHtml(guardianStatus)}</td>
           </tr>` : ""}
       `;
     }
@@ -122,16 +146,16 @@ serve(async (req) => {
         <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
           <tr style="background: #f9f9f9;">
             <td style="padding: 8px; font-weight: bold; color: #555; width: 35%;">Order ID</td>
-            <td style="padding: 8px;">#${shortId}</td>
+            <td style="padding: 8px;">#${escapeHtml(shortId)}</td>
           </tr>
           <tr>
             <td style="padding: 8px; font-weight: bold; color: #555;">Payment Method</td>
-            <td style="padding: 8px;">${paymentMethod || "N/A"}</td>
+            <td style="padding: 8px;">${escapeHtml(paymentMethod || "N/A")}</td>
           </tr>
           ${promoCode ? `
           <tr style="background: #f9f9f9;">
             <td style="padding: 8px; font-weight: bold; color: #555;">Promo Code Used</td>
-            <td style="padding: 8px;">${promoCode}</td>
+            <td style="padding: 8px;">${escapeHtml(promoCode)}</td>
           </tr>` : ""}
         </table>
 
@@ -139,26 +163,26 @@ serve(async (req) => {
         <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
           <tr style="background: #f0f8ff;">
             <td style="padding: 8px; font-weight: bold; color: #555; width: 35%;">Name</td>
-            <td style="padding: 8px;">${customerName || "N/A"}</td>
+            <td style="padding: 8px;">${escapeHtml(customerName || "N/A")}</td>
           </tr>
           <tr>
             <td style="padding: 8px; font-weight: bold; color: #555;">Email</td>
-            <td style="padding: 8px;">${customerEmail || "N/A"}</td>
+            <td style="padding: 8px;">${escapeHtml(customerEmail || "N/A")}</td>
           </tr>
           <tr style="background: #f0f8ff;">
             <td style="padding: 8px; font-weight: bold; color: #555;">Phone</td>
-            <td style="padding: 8px;">${customerPhone || "N/A"}</td>
+            <td style="padding: 8px;">${escapeHtml(customerPhone || "N/A")}</td>
           </tr>
           ${customerAddress ? `
           <tr>
             <td style="padding: 8px; font-weight: bold; color: #555; vertical-align: top;">Address</td>
-            <td style="padding: 8px; white-space: pre-line;">${customerAddress}</td>
+            <td style="padding: 8px; white-space: pre-line;">${escapeHtml(customerAddress)}</td>
           </tr>` : ""}
           ${childInfoSection}
           ${notes ? `
           <tr style="background: #fffbe6;">
             <td style="padding: 8px; font-weight: bold; color: #555; vertical-align: top;">Notes</td>
-            <td style="padding: 8px; white-space: pre-line;">${notes}</td>
+            <td style="padding: 8px; white-space: pre-line;">${escapeHtml(notes)}</td>
           </tr>` : ""}
         </table>
 
@@ -206,7 +230,7 @@ serve(async (req) => {
       body: JSON.stringify({
         from: "Athfal Playhouse <halo@athfalplayhouse.com>",
         to: recipientEmails,
-        subject: `🛒 New Order #${shortId} - ${customerName || "Guest"} (${formattedTotal})`,
+        subject: `🛒 New Order #${shortId} - ${(customerName || "Guest").toString().slice(0, 100)} (${formattedTotal})`,
         html: htmlBody,
       }),
     });

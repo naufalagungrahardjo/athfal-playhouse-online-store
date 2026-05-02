@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getBaseProductId, resolveOrderItemMetadata } from '@/lib/orderItemMetadata';
+import { logger } from '@/utils/logger';
 
 interface OrderItem {
   id: string;
@@ -49,7 +50,7 @@ export const useOrderDetails = (orderId?: string, lookupToken?: string) => {
 
     try {
       setLoading(true);
-      console.log('Fetching order details for:', orderId, 'with token:', lookupToken ? 'yes' : 'no');
+      logger.log('Fetching order details for:', orderId, 'with token:', lookupToken ? 'yes' : 'no');
       
       let orderData: any = null;
       let itemsData: any[] = [];
@@ -60,7 +61,7 @@ export const useOrderDetails = (orderId?: string, lookupToken?: string) => {
           .rpc('get_order_by_token', { p_order_id: orderId, p_token: lookupToken });
 
         if (rpcError) {
-          console.error('RPC order fetch error:', rpcError);
+          logger.error('RPC order fetch error:', rpcError);
           throw rpcError;
         }
         orderData = rpcOrder?.[0] || null;
@@ -70,7 +71,7 @@ export const useOrderDetails = (orderId?: string, lookupToken?: string) => {
             .rpc('get_order_items_by_token', { p_order_id: orderId, p_token: lookupToken });
 
           if (rpcItemsError) {
-            console.error('RPC order items fetch error:', rpcItemsError);
+            logger.error('RPC order items fetch error:', rpcItemsError);
             throw rpcItemsError;
           }
           itemsData = rpcItems || [];
@@ -84,7 +85,7 @@ export const useOrderDetails = (orderId?: string, lookupToken?: string) => {
           .maybeSingle();
 
         if (orderError) {
-          console.error('Order fetch error:', orderError);
+          logger.error('Order fetch error:', orderError);
           throw orderError;
         }
         orderData = data;
@@ -96,7 +97,7 @@ export const useOrderDetails = (orderId?: string, lookupToken?: string) => {
             .eq('order_id', orderId);
 
           if (itemsError) {
-            console.error('Order items fetch error:', itemsError);
+            logger.error('Order items fetch error:', itemsError);
             throw itemsError;
           }
           itemsData = items || [];
@@ -104,13 +105,13 @@ export const useOrderDetails = (orderId?: string, lookupToken?: string) => {
       }
 
       if (!orderData) {
-        console.log('Order not found');
+        logger.log('Order not found');
         setOrder(null);
         setLoading(false);
         return;
       }
 
-      console.log('Order fetched:', orderData);
+      logger.log('Order fetched:', orderData);
 
       const baseProductIds = [...new Set(itemsData.map((item: any) => getBaseProductId(item.product_id)).filter(Boolean))];
       let productsData: any[] = [];
@@ -168,7 +169,7 @@ export const useOrderDetails = (orderId?: string, lookupToken?: string) => {
         items: itemsWithImages
       });
     } catch (error) {
-      console.error('Error fetching order details:', error);
+      logger.error('Error fetching order details:', error);
       toast({
         variant: "destructive",
         title: "Error",
