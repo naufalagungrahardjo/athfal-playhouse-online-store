@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { logAdminAction } from '@/utils/logAdminAction';
 import { logger } from '@/utils/logger';
 import { useQueryClient } from '@tanstack/react-query';
+import { getBaseProductId, resolveOrderItemMetadata } from '@/lib/orderItemMetadata';
 
 interface OrderItem {
   id: string;
@@ -12,6 +13,8 @@ interface OrderItem {
   product_name: string;
   product_price: number;
   quantity: number;
+  session_name?: string | null;
+  installment_plan_name?: string | null;
 }
 
 interface Order {
@@ -77,9 +80,57 @@ export const useOrders = () => {
         }
       }
 
+      const baseProductIds = [...new Set(allItems.map((item) => getBaseProductId(item.product_id)).filter(Boolean))];
+      let productsData: any[] = [];
+      let variantsData: any[] = [];
+
+      if (baseProductIds.length > 0) {
+        const { data: fetchedProducts, error: productsError } = await supabase
+          .from('products')
+          .select('id, product_id, name, price')
+          .in('product_id', baseProductIds);
+
+        if (productsError) {
+          logger.error('Products metadata fetch error:', productsError);
+        } else {
+          productsData = fetchedProducts || [];
+
+          const productDbIds = productsData.map((product) => product.id);
+          if (productDbIds.length > 0) {
+            const { data: fetchedVariants, error: variantsError } = await supabase
+              .from('product_variants')
+              .select('id, product_id, name, price')
+              .in('product_id', productDbIds);
+
+            if (variantsError) {
+              logger.error('Product variants metadata fetch error:', variantsError);
+            } else {
+              variantsData = fetchedVariants || [];
+            }
+          }
+        }
+      }
+
+      const productByPublicId = new Map(productsData.map((product) => [product.product_id, product]));
+      const variantsByProductDbId = new Map<string, any[]>();
+      for (const variant of variantsData) {
+        const existing = variantsByProductDbId.get(variant.product_id) || [];
+        existing.push(variant);
+        variantsByProductDbId.set(variant.product_id, existing);
+      }
+
+      const enrichedItems = allItems.map((item) => {
+        const product = productByPublicId.get(getBaseProductId(item.product_id));
+        const variants = product ? variantsByProductDbId.get(product.id) || [] : [];
+        return {
+          ...item,
+          ...resolveOrderItemMetadata(item, product, variants),
+        } as OrderItem & { order_id: string };
+      });
+
       // Map items to their orders in memory
       const itemsByOrderId = new Map<string, OrderItem[]>();
-      for (const item of allItems) {
+      for (const item of enrichedItems) {
         const existing = itemsByOrderId.get(item.order_id) || [];
         existing.push(item);
         itemsByOrderId.set(item.order_id, existing);
