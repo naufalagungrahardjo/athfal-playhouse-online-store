@@ -204,41 +204,6 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
         </CardContent>
       </Card>
 
-      {/* Summary Table */}
-      {filteredPrograms.map(prog => {
-        const summary = getAttendanceSummary(prog.id);
-        if (summary.length === 0) return null;
-        return (
-          <Card key={`summary-${prog.id}`}>
-            <CardContent className="pt-4">
-              <h3 className="font-semibold text-base mb-2">{prog.name} — Attendance Summary</h3>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Present</TableHead>
-                    <TableHead>Absent</TableHead>
-                    <TableHead>Sick Leave</TableHead>
-                    <TableHead>Other Leave</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {summary.map((s, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="font-medium">{s.studentName}</TableCell>
-                      <TableCell className="text-green-600 font-medium">{s.present}</TableCell>
-                      <TableCell className="text-red-600 font-medium">{s.absent}</TableCell>
-                      <TableCell className="text-orange-600 font-medium">{s.sick_leave}</TableCell>
-                      <TableCell className="text-yellow-600 font-medium">{s.other_leave}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        );
-      })}
-
       {/* Per-program attendance tables */}
       {filteredPrograms.map(prog => {
         const progEnrollments = enrollments.filter(e => e.program_id === prog.id);
