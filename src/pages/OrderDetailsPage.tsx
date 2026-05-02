@@ -202,6 +202,12 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                       </div>
                       <div className="flex-grow">
                         <h4 className="font-medium text-gray-800">{item.product_name}</h4>
+                         {(item.session_name || item.installment_plan_name) && (
+                           <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-600">
+                             {item.session_name && <span>Sesi: {item.session_name}</span>}
+                             {item.installment_plan_name && <span>Plan: {item.installment_plan_name}</span>}
+                           </div>
+                         )}
                         <div className="flex justify-between items-center mt-1">
                           <p className="text-sm text-gray-600">
                             {language === 'id' ? 'Jumlah' : 'Quantity'}: {item.quantity}
