@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CartItem } from '@/contexts/CartContext';
 import { logger } from '@/utils/logger';
+import { getBaseProductId, getVariantIdFromProductId } from '@/lib/orderItemMetadata';
 
 interface OrderData {
   customerName: string;
@@ -35,10 +36,9 @@ export const useOrderProcessing = () => {
       const errorId = `ORD-${Date.now()}`;
 
       // Validate stock from database - aggregate quantities per base product
-      const getBaseId = (id: string) => id.includes('__') ? id.split('__')[0] : id;
       const qtyByBase: Record<string, number> = {};
       for (const item of orderData.items) {
-        const base = getBaseId(item.product.id);
+        const base = getBaseProductId(item.product.id);
         qtyByBase[base] = (qtyByBase[base] || 0) + item.quantity;
       }
 
@@ -175,13 +175,50 @@ export const useOrderProcessing = () => {
       // Order created successfully
 
       // Create order items - store base product_id so stock trigger can match
-      const orderItems = orderData.items.map(item => ({
-        order_id: orderId,
-        product_id: getBaseId(item.product.id),
-        product_name: item.product.name,
-        product_price: item.product.price,
-        quantity: item.quantity
-      }));
+      const baseProductIds = [...new Set(orderData.items.map((item) => getBaseProductId(item.product.id)).filter(Boolean))];
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('id, product_id, name')
+        .in('product_id', baseProductIds);
+
+      const productByPublicId = new Map((productsData || []).map((product) => [product.product_id, product]));
+      const productDbIds = (productsData || []).map((product) => product.id);
+      let variantsData: any[] = [];
+
+      if (productDbIds.length > 0) {
+        const { data: fetchedVariants } = await supabase
+          .from('product_variants')
+          .select('id, product_id, name, price')
+          .in('product_id', productDbIds);
+        variantsData = fetchedVariants || [];
+      }
+
+      const variantsByProductDbId = new Map<string, any[]>();
+      for (const variant of variantsData) {
+        const existing = variantsByProductDbId.get(variant.product_id) || [];
+        existing.push(variant);
+        variantsByProductDbId.set(variant.product_id, existing);
+      }
+
+      const orderItems = orderData.items.map(item => {
+        const baseId = getBaseProductId(item.product.id);
+        const variantId = getVariantIdFromProductId(item.product.id);
+        const product = productByPublicId.get(baseId);
+        const variants = product ? variantsByProductDbId.get(product.id) || [] : [];
+        const matchedVariant = variantId
+          ? variants.find((variant) => variant.id === variantId)
+          : null;
+
+        return {
+          order_id: orderId,
+          product_id: item.product.id,
+          product_name: product?.name || item.product.name,
+          product_price: item.product.price,
+          quantity: item.quantity,
+          session_name: null,
+          installment_plan_name: matchedVariant?.name || (!variantId ? 'Pembayaran Lunas' : null),
+        };
+      });
 
       // Creating order items
 
