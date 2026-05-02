@@ -2,6 +2,7 @@ export type PaymentStatus = 'unpaid' | 'partial' | 'paid';
 
 export function getPaymentStatus(amountPaid: number | null | undefined, totalAmount: number): PaymentStatus {
   const paid = Math.max(0, amountPaid || 0);
+  if (totalAmount <= 0) return 'paid';
   if (paid <= 0) return 'unpaid';
   if (paid >= totalAmount) return 'paid';
   return 'partial';
