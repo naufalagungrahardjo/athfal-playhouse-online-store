@@ -737,15 +737,26 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Product Sales Proportion</CardTitle></CardHeader>
               <CardContent>
                 {productProportionData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
+                  <ResponsiveContainer width="100%" height={isMobile ? 280 : 400}>
                     <PieChart>
-                      <Pie data={productProportionData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={isMobile ? 30 : 50} outerRadius={isMobile ? 70 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                      <Pie data={productProportionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={isMobile ? 40 : 50} outerRadius={isMobile ? 100 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                         {productProportionData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number, name: string, props: any) => [`${value} units (${props.payload.percentage}%)`, name]} />
-                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 11, paddingTop: 16 }} />
+                      {!isMobile && <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />}
                     </PieChart>
                   </ResponsiveContainer>
+                )}
+                {isMobile && (
+                  <div className="mt-3 space-y-1 max-h-48 overflow-y-auto text-xs">
+                    {productProportionData.map((d, i) => (
+                      <div key={d.name} className="flex items-start gap-2">
+                        <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                        <span className="flex-1 break-words">{d.name}</span>
+                        <span className="text-muted-foreground tabular-nums">{d.percentage}%</span>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -754,15 +765,26 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Payment Method Proportion</CardTitle></CardHeader>
               <CardContent>
                 {paymentProportionData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
+                  <ResponsiveContainer width="100%" height={isMobile ? 280 : 400}>
                     <PieChart>
-                      <Pie data={paymentProportionData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={isMobile ? 30 : 50} outerRadius={isMobile ? 70 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                      <Pie data={paymentProportionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={isMobile ? 40 : 50} outerRadius={isMobile ? 100 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                         {paymentProportionData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number, name: string, props: any) => [`${value} orders (${props.payload.percentage}%)`, name]} />
-                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 11, paddingTop: 16 }} />
+                      {!isMobile && <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />}
                     </PieChart>
                   </ResponsiveContainer>
+                )}
+                {isMobile && (
+                  <div className="mt-3 space-y-1 max-h-48 overflow-y-auto text-xs">
+                    {paymentProportionData.map((d, i) => (
+                      <div key={d.name} className="flex items-start gap-2">
+                        <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                        <span className="flex-1 break-words">{d.name}</span>
+                        <span className="text-muted-foreground tabular-nums">{d.percentage}%</span>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -772,11 +794,18 @@ const AdminAnalytics = () => {
             <CardHeader><CardTitle>Product Sales Ranking (Quantity & Value)</CardTitle></CardHeader>
             <CardContent>
               {productSalesBarData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                <ResponsiveContainer width="100%" height={Math.max(300, productSalesBarData.length * (isMobile ? 50 : 40))}>
-                  <BarChart data={productSalesBarData} layout="vertical" margin={{ left: isMobile ? 10 : 120 }}>
+                <ResponsiveContainer width="100%" height={Math.max(300, productSalesBarData.length * (isMobile ? 56 : 40))}>
+                  <BarChart data={productSalesBarData} layout="vertical" margin={{ left: isMobile ? 0 : 120, right: isMobile ? 8 : 16 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis type="number" tick={{ fontSize: isMobile ? 9 : 12 }} tickFormatter={isMobile ? (v) => `${(v / 1000).toFixed(0)}k` : undefined} />
-                    <YAxis type="category" dataKey="name" width={isMobile ? 80 : 110} tick={{ fontSize: isMobile ? 9 : 11 }} />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      width={isMobile ? 110 : 110}
+                      tick={{ fontSize: isMobile ? 9 : 11 }}
+                      tickFormatter={isMobile ? (v: string) => (v.length > 22 ? v.slice(0, 20) + '…' : v) : undefined}
+                      interval={0}
+                    />
                     <Tooltip formatter={(value: number, name: string) => name === 'value' ? formatCurrency(value) : value} />
                     <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
                     <Bar dataKey="quantity" fill="#8884d8" name="Quantity" />
