@@ -13,6 +13,8 @@ interface OrderItem {
   product_name: string;
   product_price: number;
   quantity: number;
+  installment_plan_name?: string | null;
+  session_name?: string | null;
 }
 
 interface ProductOption {
@@ -200,6 +202,20 @@ export const OrderItemsEditor = ({
             <div key={i} className="flex justify-between items-center p-3 bg-muted rounded-lg">
               <div>
                 <p className="font-medium">{item.product_name}</p>
+                {(item.session_name || item.installment_plan_name) && (
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {item.session_name && (
+                      <span className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">
+                        Sesi: {item.session_name}
+                      </span>
+                    )}
+                    {item.installment_plan_name && (
+                      <span className="text-xs px-2 py-0.5 rounded bg-secondary/40">
+                        Plan: {item.installment_plan_name}
+                      </span>
+                    )}
+                  </div>
+                )}
                 <p className="text-sm text-muted-foreground">Product ID: {item.product_id}</p>
                 <p className="text-sm text-muted-foreground">Price: {formatCurrency(item.product_price)}</p>
               </div>

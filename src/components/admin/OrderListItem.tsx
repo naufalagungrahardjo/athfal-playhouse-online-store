@@ -11,6 +11,8 @@ interface OrderItem {
   product_name: string;
   product_price: number;
   quantity: number;
+  installment_plan_name?: string | null;
+  session_name?: string | null;
 }
 
 interface Order {
@@ -73,7 +75,10 @@ export function OrderListItem({
             <ul className="space-y-1 text-sm text-gray-600">
               {order.items.map((item) => (
                 <li key={item.id} className="break-words">
-                  • {item.product_name} <span className="font-medium">x{item.quantity}</span> - {formatCurrency(item.product_price * item.quantity)}
+                  • {item.product_name}
+                  {item.session_name && <span className="text-primary"> — Sesi: {item.session_name}</span>}
+                  {item.installment_plan_name && <span className="text-muted-foreground"> — Plan: {item.installment_plan_name}</span>}
+                  {' '}<span className="font-medium">x{item.quantity}</span> - {formatCurrency(item.product_price * item.quantity)}
                 </li>
               ))}
             </ul>
