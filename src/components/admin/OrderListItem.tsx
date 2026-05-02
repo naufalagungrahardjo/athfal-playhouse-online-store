@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Eye, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { getPaymentStatus, getPaymentStatusColor, getPaymentStatusLabel, getPayable } from '@/lib/paymentStatus';
-import { extractVariantInfo } from '@/lib/orderItemVariant';
 
 interface OrderItem {
   id: string;
@@ -74,17 +73,14 @@ export function OrderListItem({
           <div className="p-3 bg-gray-50 rounded-lg">
             <p className="font-medium text-sm text-gray-700 mb-2">Products Ordered:</p>
             <ul className="space-y-1 text-sm text-gray-600">
-              {order.items.map((item) => {
-                const v = extractVariantInfo(item);
-                return (
-                  <li key={item.id} className="break-words">
-                    • {v.baseName}
-                    {v.sessionName && <span className="text-primary"> — Sesi: {v.sessionName}</span>}
-                    {v.planName && <span className="text-muted-foreground"> — Plan: {v.planName}</span>}
-                    {' '}<span className="font-medium">x{item.quantity}</span> - {formatCurrency(item.product_price * item.quantity)}
-                  </li>
-                );
-              })}
+              {order.items.map((item) => (
+                <li key={item.id} className="break-words">
+                  • {item.product_name}
+                  {item.session_name && <span className="text-primary"> — Sesi: {item.session_name}</span>}
+                  {item.installment_plan_name && <span className="text-muted-foreground"> — Plan: {item.installment_plan_name}</span>}
+                  {' '}<span className="font-medium">x{item.quantity}</span> - {formatCurrency(item.product_price * item.quantity)}
+                </li>
+              ))}
             </ul>
           </div>
         )}
