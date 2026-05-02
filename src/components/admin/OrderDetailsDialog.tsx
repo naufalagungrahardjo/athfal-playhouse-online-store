@@ -22,6 +22,8 @@ interface OrderItem {
   product_name: string;
   product_price: number;
   quantity: number;
+  installment_plan_name?: string | null;
+  session_name?: string | null;
 }
 
 interface Order {
