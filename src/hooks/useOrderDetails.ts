@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getBaseProductId, resolveOrderItemMetadata } from '@/lib/orderItemMetadata';
 
 interface OrderItem {
   id: string;
@@ -13,6 +14,8 @@ interface OrderItem {
   first_payment?: number;
   installment?: number;
   installment_months?: number;
+  session_name?: string | null;
+  installment_plan_name?: string | null;
 }
 
 interface OrderDetails {
@@ -109,28 +112,56 @@ export const useOrderDetails = (orderId?: string, lookupToken?: string) => {
 
       console.log('Order fetched:', orderData);
 
-      // Fetch product images separately for each product
-      const itemsWithImages = await Promise.all(
-        itemsData.map(async (item: any) => {
-          const { data: productData } = await supabase
-            .from('products')
-            .select('image, first_payment, installment, installment_months')
-            .eq('product_id', item.product_id)
-            .maybeSingle();
+      const baseProductIds = [...new Set(itemsData.map((item: any) => getBaseProductId(item.product_id)).filter(Boolean))];
+      let productsData: any[] = [];
+      let variantsData: any[] = [];
 
-          return {
-            id: item.id,
-            product_id: item.product_id,
-            product_name: item.product_name,
-            product_price: item.product_price,
-            quantity: item.quantity,
-            product_image: productData?.image || '',
-            first_payment: productData?.first_payment || 0,
-            installment: productData?.installment || 0,
-            installment_months: productData?.installment_months || 0,
-          };
-        })
-      );
+      if (baseProductIds.length > 0) {
+        const { data: fetchedProducts } = await supabase
+          .from('products')
+          .select('id, product_id, name, image, first_payment, installment, installment_months, price')
+          .in('product_id', baseProductIds);
+
+        productsData = fetchedProducts || [];
+
+        const productDbIds = productsData.map((product) => product.id);
+        if (productDbIds.length > 0) {
+          const { data: fetchedVariants } = await supabase
+            .from('product_variants')
+            .select('id, product_id, name, price')
+            .in('product_id', productDbIds);
+
+          variantsData = fetchedVariants || [];
+        }
+      }
+
+      const productByPublicId = new Map(productsData.map((product) => [product.product_id, product]));
+      const variantsByProductDbId = new Map<string, any[]>();
+      for (const variant of variantsData) {
+        const existing = variantsByProductDbId.get(variant.product_id) || [];
+        existing.push(variant);
+        variantsByProductDbId.set(variant.product_id, existing);
+      }
+
+      const itemsWithImages = itemsData.map((item: any) => {
+        const productData = productByPublicId.get(getBaseProductId(item.product_id));
+        const variants = productData ? variantsByProductDbId.get(productData.id) || [] : [];
+        const resolved = resolveOrderItemMetadata(item, productData, variants);
+
+        return {
+          id: item.id,
+          product_id: item.product_id,
+          product_name: resolved.product_name,
+          product_price: item.product_price,
+          quantity: item.quantity,
+          product_image: productData?.image || '',
+          first_payment: productData?.first_payment || 0,
+          installment: productData?.installment || 0,
+          installment_months: productData?.installment_months || 0,
+          session_name: resolved.session_name,
+          installment_plan_name: resolved.installment_plan_name,
+        };
+      });
 
       setOrder({
         ...orderData,
