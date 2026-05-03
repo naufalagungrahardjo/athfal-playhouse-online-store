@@ -64,6 +64,46 @@ const detectImageFormat = (dataUrl: string): "PNG" | "JPEG" => {
   return "PNG";
 };
 
+// Normalize any image (webp/avif/png/jpg) into a JPEG data URL that jsPDF can embed.
+// Also constrains size for PDF performance.
+const normalizeImageToJpeg = async (
+  url: string,
+  maxSize = 600
+): Promise<{ dataUrl: string; width: number; height: number } | null> => {
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    try {
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const i = new Image();
+        i.crossOrigin = "anonymous";
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = objectUrl;
+      });
+      const ratio = Math.min(1, maxSize / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * ratio));
+      const h = Math.max(1, Math.round(img.height * ratio));
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      return { dataUrl, width: w, height: h };
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  } catch {
+    return null;
+  }
+};
+
 const formatDate = (d: string) => {
   try {
     return new Date(d).toLocaleDateString("id-ID", {
@@ -293,17 +333,16 @@ export const generateBillingNoticePdf = async ({
       const imgBoxH = 70;
       let imgDrawn = false;
       if (pm.image) {
-        const imgData = await fetchAsDataUrl(pm.image);
-        if (imgData) {
+        const normalized = await normalizeImageToJpeg(pm.image);
+        if (normalized) {
           try {
-            doc.addImage(
-              imgData,
-              detectImageFormat(imgData),
-              pageWidth - margin - 14 - imgBoxW,
-              y + 10,
-              imgBoxW,
-              imgBoxH
-            );
+            // Fit inside the box preserving aspect ratio
+            const ratio = Math.min(imgBoxW / normalized.width, imgBoxH / normalized.height);
+            const drawW = normalized.width * ratio;
+            const drawH = normalized.height * ratio;
+            const drawX = pageWidth - margin - 14 - imgBoxW + (imgBoxW - drawW) / 2;
+            const drawY = y + 10 + (imgBoxH - drawH) / 2;
+            doc.addImage(normalized.dataUrl, "JPEG", drawX, drawY, drawW, drawH);
             imgDrawn = true;
           } catch { /* noop */ }
         }
