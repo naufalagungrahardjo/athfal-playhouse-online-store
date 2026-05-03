@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import type { Database } from "@/integrations/supabase/types";
 
 export interface BillingNotice {
   id: string;
@@ -21,6 +22,8 @@ export interface BillingNoticeAssignment {
   email_reminder_enabled?: boolean;
   email_reminder_sent_at?: string | null;
 }
+
+type BillingNoticeAssignmentUpdate = Database["public"]["Tables"]["billing_notice_assignments"]["Update"];
 
 export const useBillingNotices = () => {
   const [notices, setNotices] = useState<BillingNotice[]>([]);
@@ -120,11 +123,25 @@ export const useBillingNotices = () => {
   };
 
   const setEmailReminder = async (assignmentId: string, enabled: boolean) => {
+    const optimisticPatch: BillingNoticeAssignmentUpdate = {
+      email_reminder_enabled: enabled,
+      ...(enabled ? {} : { email_reminder_sent_at: null }),
+    };
+
+    setAssignments((current) =>
+      current.map((assignment) =>
+        assignment.id === assignmentId
+          ? { ...assignment, ...optimisticPatch }
+          : assignment
+      )
+    );
+
     const { error } = await supabase
       .from("billing_notice_assignments")
-      .update({ email_reminder_enabled: enabled, ...(enabled ? {} : { email_reminder_sent_at: null }) })
+      .update(optimisticPatch)
       .eq("id", assignmentId);
     if (error) {
+      await fetchAll();
       toast({ title: "Failed to update reminder", description: error.message, variant: "destructive" });
       return false;
     }
