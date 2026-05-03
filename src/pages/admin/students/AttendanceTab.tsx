@@ -36,9 +36,10 @@ type Props = {
   enrollments: StudentEnrollment[];
   attendance: StudentAttendance[];
   saveAttendance: (record: Omit<StudentAttendance, "id">) => Promise<void>;
+  refetch: () => Promise<void>;
 };
 
-export default function AttendanceTab({ programs, students, enrollments, attendance, saveAttendance }: Props) {
+export default function AttendanceTab({ programs, students, enrollments, attendance, saveAttendance, refetch }: Props) {
   const { user } = useAuth();
   const [filterStart, setFilterStart] = useState("");
   const [filterEnd, setFilterEnd] = useState("");
@@ -133,6 +134,7 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
       }
       await saveAttendance(buildRecord(enr.id, meetingNum));
     }
+    await refetch();
     setEdits(prev => {
       const n = { ...prev };
       for (const enr of progEnrollments) {
