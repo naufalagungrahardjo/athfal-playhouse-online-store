@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Download, Save } from "lucide-react";
 import { ClassProgram, Student, StudentEnrollment, StudentAttendance } from "@/hooks/useStudents";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const DESCRIPTIVE_FIELDS = [
   { key: "motorik_halus", label: "Motorik Halus" },
@@ -22,6 +23,7 @@ const DESCRIPTIVE_FIELDS = [
 ] as const;
 
 const ATTENDANCE_STATUSES = [
+  { value: "none", label: "Not Recorded" },
   { value: "present", label: "Present" },
   { value: "absent", label: "Absent" },
   { value: "sick_leave", label: "Sick Leave" },
@@ -34,9 +36,10 @@ type Props = {
   enrollments: StudentEnrollment[];
   attendance: StudentAttendance[];
   saveAttendance: (record: Omit<StudentAttendance, "id">) => Promise<void>;
+  refetch: () => Promise<void>;
 };
 
-export default function AttendanceTab({ programs, students, enrollments, attendance, saveAttendance }: Props) {
+export default function AttendanceTab({ programs, students, enrollments, attendance, saveAttendance, refetch }: Props) {
   const { user } = useAuth();
   const [filterStart, setFilterStart] = useState("");
   const [filterEnd, setFilterEnd] = useState("");
@@ -74,7 +77,7 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
       const records = attendance
         .filter(a => a.enrollment_id === enrollmentId && a.meeting_number === meetingNum)
         .sort((a, b) => (b.id > a.id ? 1 : -1)); // latest first
-      return records.length > 0 ? records[0].attendance_status : "present";
+      return records.length > 0 ? records[0].attendance_status : "none";
     }
     
     // For descriptive fields, get current teacher's record
@@ -114,8 +117,24 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
     const progEnrollments = enrollments.filter(e => e.program_id === programId);
     const meetingNum = selectedMeeting[programId] || 1;
     for (const enr of progEnrollments) {
+      const status = getFieldValue(enr.id, meetingNum, "attendance_status");
+      const hasDescriptive = DESCRIPTIVE_FIELDS.some(d => {
+        const v = getFieldValue(enr.id, meetingNum, d.key);
+        return v && String(v).trim() !== "";
+      });
+      if (status === "none" && !hasDescriptive) {
+        // Treat as "not recorded" — delete existing record(s) for this teacher so it stays unsaved
+        await supabase
+          .from("student_attendance" as any)
+          .delete()
+          .eq("enrollment_id", enr.id)
+          .eq("meeting_number", meetingNum)
+          .eq("teacher_email", teacherEmail);
+        continue;
+      }
       await saveAttendance(buildRecord(enr.id, meetingNum));
     }
+    await refetch();
     setEdits(prev => {
       const n = { ...prev };
       for (const enr of progEnrollments) {
