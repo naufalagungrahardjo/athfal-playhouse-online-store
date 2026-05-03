@@ -42,7 +42,7 @@ const AdminStudents = () => {
         <TabsContent value="attendance">
           <AttendanceTab
             programs={programs} students={students} enrollments={enrollments}
-            attendance={attendance} saveAttendance={saveAttendance}
+            attendance={attendance} saveAttendance={saveAttendance} refetch={refetch}
           />
         </TabsContent>
         <TabsContent value="attendance-summary">
