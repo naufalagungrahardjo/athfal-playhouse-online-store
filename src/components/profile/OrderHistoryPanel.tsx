@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrders } from "@/hooks/useOrders";
 import { useMemo } from "react";
+import { CustomerBillingNotices } from "./CustomerBillingNotices";
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -151,6 +152,13 @@ const OrderHistoryPanel = () => {
                 <span>{formatCurrency(order.total_amount)}</span>
               </div>
             </div>
+            <CustomerBillingNotices order={{
+              id: order.id,
+              customer_name: order.customer_name,
+              customer_email: order.customer_email,
+              customer_phone: order.customer_phone,
+              customer_address: order.customer_address,
+            }} />
           </div>
         </div>
       ))}

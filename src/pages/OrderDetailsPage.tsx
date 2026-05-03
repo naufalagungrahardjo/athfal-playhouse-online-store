@@ -10,6 +10,7 @@ import { useOrderDetails } from '@/hooks/useOrderDetails';
 import { useWebsiteCopy } from '@/hooks/useWebsiteCopy';
 import { PaymentTimeoutPage } from '@/components/PaymentTimeoutPage';
 import { ArrowLeft, Copy, Check, Clock } from 'lucide-react';
+import { CustomerBillingNotices } from '@/components/profile/CustomerBillingNotices';
 
 // Format currency
 const formatCurrency = (amount: number) => {
@@ -256,6 +257,14 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                 </div>
               </CardContent>
             </Card>
+
+            <CustomerBillingNotices order={{
+              id: order.id,
+              customer_name: order.customer_name,
+              customer_email: order.customer_email,
+              customer_phone: order.customer_phone,
+              customer_address: order.customer_address,
+            }} />
 
             {/* Payment Instructions */}
             <Card className="bg-white rounded-3xl shadow-md overflow-hidden">

@@ -131,6 +131,68 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_notice_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          notice_id: string
+          order_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notice_id: string
+          order_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notice_id?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_notice_assignments_notice_id_fkey"
+            columns: ["notice_id"]
+            isOneToOne: false
+            referencedRelation: "billing_notices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_notices: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       blogs: {
         Row: {
           author: string

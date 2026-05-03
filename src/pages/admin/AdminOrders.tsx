@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getAdminRole } from './helpers/getAdminRole';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OrderListByProductTab } from "@/components/admin/orders/OrderListByProductTab";
+import { BillingNoticesTab } from "@/components/admin/billing/BillingNoticesTab";
 
 const AdminOrders = () => {
   const { orders, loading, fetchOrders, deleteOrder } = useOrders();
@@ -130,6 +131,7 @@ const AdminOrders = () => {
         <TabsList>
           <TabsTrigger value="management">Order Management</TabsTrigger>
           <TabsTrigger value="by-product">Order List</TabsTrigger>
+          <TabsTrigger value="billing">Billing Notice</TabsTrigger>
         </TabsList>
         <TabsContent value="management" className="space-y-6 mt-4">
       <OrderFilterToolbar
@@ -177,6 +179,9 @@ const AdminOrders = () => {
         </TabsContent>
         <TabsContent value="by-product" className="mt-4">
           <OrderListByProductTab orders={orders} onViewDetails={handleViewDetails} />
+        </TabsContent>
+        <TabsContent value="billing" className="mt-4">
+          <BillingNoticesTab orders={orders} />
         </TabsContent>
       </Tabs>
       {selectedOrder && selectedOrder.id && (
