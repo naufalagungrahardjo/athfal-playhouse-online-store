@@ -19,6 +19,7 @@ export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => 
   const { notices, assignments, loading, assignToOrders, unassignByOrderAndNotice, setEmailReminder } = useBillingNotices();
   const [selected, setSelected] = useState<string>("");
   const [saving, setSaving] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const assigned = useMemo(
     () => assignments.filter((a) => a.order_id === order.id),
@@ -88,10 +89,15 @@ export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => 
                   <Button
                     size="sm"
                     variant={a.email_reminder_enabled ? "default" : "outline"}
-                    onClick={() => setEmailReminder(a.id, !a.email_reminder_enabled)}
+                    disabled={togglingId === a.id}
+                    onClick={async () => {
+                      setTogglingId(a.id);
+                      await setEmailReminder(a.id, !a.email_reminder_enabled);
+                      setTogglingId(null);
+                    }}
                     title={a.email_reminder_enabled
-                      ? `Reminder will be sent to ${order.customer_email} at 6 AM WIB on the due date${a.email_reminder_sent_at ? ` (sent ${new Date(a.email_reminder_sent_at).toLocaleString()})` : ""}`
-                      : `Send email reminder to ${order.customer_email} at 6 AM WIB on due date`}
+                      ? `Reminder will be sent to ${order.customer_email} at the billing due date and time${a.email_reminder_sent_at ? ` (sent ${new Date(a.email_reminder_sent_at).toLocaleString()})` : ""}`
+                      : `Send email reminder to ${order.customer_email} at the billing due date and time`}
                   >
                     {a.email_reminder_sent_at ? <MailCheck className="h-4 w-4 mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
                     {a.email_reminder_enabled ? (a.email_reminder_sent_at ? "Sent" : "Reminder On") : "Email on Due"}
