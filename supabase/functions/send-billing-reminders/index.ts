@@ -9,15 +9,6 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 
-function todayInJakarta(): string {
-  const now = new Date();
-  const fmt = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Jakarta",
-    year: "numeric", month: "2-digit", day: "2-digit",
-  });
-  return fmt.format(now); // YYYY-MM-DD
-}
-
 const formatIDR = (n: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
 
@@ -26,13 +17,14 @@ Deno.serve(async (req) => {
 
   try {
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
-    const today = todayInJakarta();
+    const nowIso = new Date().toISOString();
 
-    // Find notices due today
+    // Find notices whose scheduled send time (due_at) has been reached.
+    // Falls back to due_date at 06:00 Asia/Jakarta if due_at is null.
     const { data: notices, error: ne } = await supabase
       .from("billing_notices")
-      .select("id,title,amount,due_date,description")
-      .eq("due_date", today);
+      .select("id,title,amount,due_date,due_at,description")
+      .or(`due_at.lte.${nowIso},and(due_at.is.null,due_date.lte.${nowIso.slice(0,10)})`);
     if (ne) throw ne;
     if (!notices || notices.length === 0) {
       return new Response(JSON.stringify({ ok: true, sent: 0, reason: "no notices due today" }), {
@@ -70,7 +62,12 @@ Deno.serve(async (req) => {
       const notice: any = noticeMap.get(a.notice_id);
       if (!order?.customer_email || !notice) continue;
 
-      const due = new Date(notice.due_date).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+      const dueSource = notice.due_at ? new Date(notice.due_at) : new Date(notice.due_date);
+      const due = dueSource.toLocaleString("id-ID", {
+        day: "numeric", month: "long", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+        timeZone: "Asia/Jakarta",
+      }) + " WIB";
       const html = `
         <div style="font-family:Arial,sans-serif;color:#333;max-width:560px;margin:0 auto;padding:24px">
           <h2 style="color:#d38a82;margin:0 0 12px">Pengingat Tagihan — ${notice.title}</h2>
