@@ -15,6 +15,7 @@ import { getPaymentStatus, getPayable, getPaymentStatusColor, getPaymentStatusLa
 import { useAuth } from '@/contexts/AuthContext';
 import { getAdminRole } from '@/pages/admin/helpers/getAdminRole';
 import { Textarea } from '@/components/ui/textarea';
+import { OrderBillingNoticesSection } from './billing/OrderBillingNoticesSection';
 
 interface OrderItem {
   id: string;
@@ -671,6 +672,11 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
               </Button>
             </div>
           </div>
+
+          <Separator />
+
+          {/* Billing Notices */}
+          <OrderBillingNoticesSection order={order} />
 
           {/* Order Meta */}
           <div className="text-xs text-gray-500 border-t pt-4">
