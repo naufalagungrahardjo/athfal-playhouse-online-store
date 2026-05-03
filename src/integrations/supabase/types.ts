@@ -172,6 +172,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          due_at: string | null
           due_date: string
           id: string
           title: string
@@ -182,6 +183,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          due_at?: string | null
           due_date: string
           id?: string
           title: string
@@ -192,6 +194,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          due_at?: string | null
           due_date?: string
           id?: string
           title?: string
