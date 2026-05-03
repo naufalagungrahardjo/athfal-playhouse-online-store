@@ -156,5 +156,27 @@ export const generateBillingNoticePdf = ({
 
   const safeName = (order.customer_name || "customer").replace(/[^a-z0-9-_ ]/gi, "").trim().replace(/\s+/g, "_");
   const safeTitle = (notice.title || "billing-notice").replace(/[^a-z0-9-_ ]/gi, "").trim().replace(/\s+/g, "_");
-  doc.save(`${safeTitle}_${safeName}.pdf`);
+  const filename = `${safeTitle}_${safeName}.pdf`;
+
+  try {
+    const blob = doc.output("blob");
+    const url = URL.createObjectURL(blob);
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.rel = "noopener";
+    // Many mobile browsers / in-app webviews ignore the download attribute.
+    // Opening in a new tab lets the user save/share the PDF reliably.
+    if (isMobile) a.target = "_blank";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  } catch {
+    doc.save(filename);
+  }
 };
