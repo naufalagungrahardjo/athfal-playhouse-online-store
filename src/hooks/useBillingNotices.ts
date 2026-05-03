@@ -17,6 +17,8 @@ export interface BillingNoticeAssignment {
   notice_id: string;
   order_id: string;
   created_at: string;
+  email_reminder_enabled?: boolean;
+  email_reminder_sent_at?: string | null;
 }
 
 export const useBillingNotices = () => {
@@ -116,6 +118,20 @@ export const useBillingNotices = () => {
     return true;
   };
 
+  const setEmailReminder = async (assignmentId: string, enabled: boolean) => {
+    const { error } = await supabase
+      .from("billing_notice_assignments")
+      .update({ email_reminder_enabled: enabled, ...(enabled ? {} : { email_reminder_sent_at: null }) })
+      .eq("id", assignmentId);
+    if (error) {
+      toast({ title: "Failed to update reminder", description: error.message, variant: "destructive" });
+      return false;
+    }
+    toast({ title: enabled ? "Email reminder scheduled" : "Email reminder cancelled" });
+    await fetchAll();
+    return true;
+  };
+
   return {
     notices,
     assignments,
@@ -127,5 +143,6 @@ export const useBillingNotices = () => {
     assignToOrders,
     unassign,
     unassignByOrderAndNotice,
+    setEmailReminder,
   };
 };

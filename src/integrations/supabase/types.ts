@@ -134,18 +134,24 @@ export type Database = {
       billing_notice_assignments: {
         Row: {
           created_at: string
+          email_reminder_enabled: boolean
+          email_reminder_sent_at: string | null
           id: string
           notice_id: string
           order_id: string
         }
         Insert: {
           created_at?: string
+          email_reminder_enabled?: boolean
+          email_reminder_sent_at?: string | null
           id?: string
           notice_id: string
           order_id: string
         }
         Update: {
           created_at?: string
+          email_reminder_enabled?: boolean
+          email_reminder_sent_at?: string | null
           id?: string
           notice_id?: string
           order_id?: string
