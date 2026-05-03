@@ -15,13 +15,14 @@ interface Props {
   open: boolean;
   onClose: () => void;
   initial?: BillingNotice | null;
-  onSave: (input: { title: string; amount: number; due_date: string; description: string | null }) => Promise<unknown>;
+  onSave: (input: { title: string; amount: number; due_date: string; due_at: string | null; description: string | null }) => Promise<unknown>;
 }
 
 export const BillingNoticeFormDialog = ({ open, onClose, initial, onSave }: Props) => {
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState<number>(0);
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [dueTime, setDueTime] = useState<string>("06:00");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -30,6 +31,15 @@ export const BillingNoticeFormDialog = ({ open, onClose, initial, onSave }: Prop
       setTitle(initial?.title || "");
       setAmount(initial?.amount || 0);
       setDueDate(initial?.due_date ? new Date(initial.due_date) : undefined);
+      const dueAt = (initial as any)?.due_at as string | null | undefined;
+      if (dueAt) {
+        const d = new Date(dueAt);
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mm = String(d.getMinutes()).padStart(2, "0");
+        setDueTime(`${hh}:${mm}`);
+      } else {
+        setDueTime("06:00");
+      }
       setDescription(initial?.description || "");
     }
   }, [open, initial]);
@@ -37,10 +47,14 @@ export const BillingNoticeFormDialog = ({ open, onClose, initial, onSave }: Prop
   const handleSubmit = async () => {
     if (!title.trim() || !dueDate || amount <= 0) return;
     setSaving(true);
+    const [h, m] = dueTime.split(":").map((s) => parseInt(s, 10));
+    const combined = new Date(dueDate);
+    combined.setHours(isNaN(h) ? 6 : h, isNaN(m) ? 0 : m, 0, 0);
     await onSave({
       title: title.trim(),
       amount: Math.round(amount),
       due_date: format(dueDate, "yyyy-MM-dd"),
+      due_at: combined.toISOString(),
       description: description.trim() || null,
     });
     setSaving(false);
@@ -75,6 +89,10 @@ export const BillingNoticeFormDialog = ({ open, onClose, initial, onSave }: Prop
                 <Calendar mode="single" selected={dueDate} onSelect={setDueDate} initialFocus className={cn("p-3 pointer-events-auto")} />
               </PopoverContent>
             </Popover>
+          </div>
+          <div>
+            <Label>Due Time (your local time, email sent at this date & time)</Label>
+            <Input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} />
           </div>
           <div>
             <Label>Description</Label>
