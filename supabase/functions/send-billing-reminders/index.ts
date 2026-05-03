@@ -37,7 +37,6 @@ Deno.serve(async (req) => {
       .from("billing_notice_assignments")
       .select("id,notice_id,order_id,email_reminder_enabled,email_reminder_sent_at")
       .in("notice_id", noticeIds)
-      .eq("email_reminder_enabled", true)
       .is("email_reminder_sent_at", null);
     if (ae) throw ae;
     if (!assigns || assigns.length === 0) {
