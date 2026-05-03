@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Download, Plus, X } from "lucide-react";
+import { Download, Plus, X, Mail, MailCheck } from "lucide-react";
 import { useBillingNotices } from "@/hooks/useBillingNotices";
 import { formatCurrency } from "@/lib/utils";
 import { generateBillingNoticePdf } from "@/lib/billingNoticePdf";
@@ -16,7 +16,7 @@ interface OrderShape {
 }
 
 export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => {
-  const { notices, assignments, loading, assignToOrders, unassignByOrderAndNotice } = useBillingNotices();
+  const { notices, assignments, loading, assignToOrders, unassignByOrderAndNotice, setEmailReminder } = useBillingNotices();
   const [selected, setSelected] = useState<string>("");
   const [saving, setSaving] = useState(false);
 
@@ -84,6 +84,17 @@ export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => 
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={() => generateBillingNoticePdf({ notice: n, order })}>
                     <Download className="h-4 w-4 mr-1" /> PDF
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={a.email_reminder_enabled ? "default" : "outline"}
+                    onClick={() => setEmailReminder(a.id, !a.email_reminder_enabled)}
+                    title={a.email_reminder_enabled
+                      ? `Reminder will be sent to ${order.customer_email} at 6 AM WIB on the due date${a.email_reminder_sent_at ? ` (sent ${new Date(a.email_reminder_sent_at).toLocaleString()})` : ""}`
+                      : `Send email reminder to ${order.customer_email} at 6 AM WIB on due date`}
+                  >
+                    {a.email_reminder_sent_at ? <MailCheck className="h-4 w-4 mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
+                    {a.email_reminder_enabled ? (a.email_reminder_sent_at ? "Sent" : "Reminder On") : "Email on Due"}
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => unassignByOrderAndNotice(n.id, order.id)}>
                     <X className="h-4 w-4" />
