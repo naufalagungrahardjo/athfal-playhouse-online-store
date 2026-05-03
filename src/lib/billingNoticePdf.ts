@@ -158,25 +158,43 @@ export const generateBillingNoticePdf = ({
   const safeTitle = (notice.title || "billing-notice").replace(/[^a-z0-9-_ ]/gi, "").trim().replace(/\s+/g, "_");
   const filename = `${safeTitle}_${safeName}.pdf`;
 
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+  const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+  // In-app webviews (Lovable app, Instagram, FB, LINE, etc.) often block
+  // blob downloads and popups. Detect and use data-URL navigation instead.
+  const isInAppWebview = /(Instagram|FBAN|FBAV|Line|Lovable|wv\)|; wv)/i.test(ua);
+
   try {
+    if (isInAppWebview) {
+      // Most reliable inside webviews: navigate the current view to a data URL.
+      const dataUri = doc.output("datauristring");
+      window.location.href = dataUri;
+      return;
+    }
+
     const blob = doc.output("blob");
     const url = URL.createObjectURL(blob);
-    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+
+    if (isMobile) {
+      // Try opening in a new tab first — mobile browsers can then save/share.
+      const win = window.open(url, "_blank");
+      if (!win) {
+        // Popup blocked — fall back to navigating the current tab.
+        window.location.href = url;
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      return;
+    }
 
     const a = document.createElement("a");
     a.href = url;
     a.download = filename;
     a.rel = "noopener";
-    // Many mobile browsers / in-app webviews ignore the download attribute.
-    // Opening in a new tab lets the user save/share the PDF reliably.
-    if (isMobile) a.target = "_blank";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
   } catch {
-    doc.save(filename);
+    try { doc.save(filename); } catch { /* noop */ }
   }
 };
