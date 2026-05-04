@@ -1,6 +1,5 @@
 
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { User } from "lucide-react";

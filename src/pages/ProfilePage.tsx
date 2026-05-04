@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -14,10 +13,7 @@ import { User, ShoppingBag, CreditCard } from 'lucide-react';
 import DeleteAccountButton from "@/components/profile/DeleteAccountButton";
 import ProfileDetailsForm from "@/components/profile/ProfileDetailsForm";
 import PasswordChangeForm from "@/components/profile/PasswordChangeForm";
-import OrderHistoryPanel from "@/components/profile/OrderHistoryPanel";
 import ProfileSidebar from "@/components/profile/ProfileSidebar";
-import ChildAttendancePanel from "@/components/profile/ChildAttendancePanel";
-import { useChildAttendance } from "@/hooks/useChildAttendance";
 
 // Mock order history data
 const mockOrderHistory = [
@@ -65,16 +61,6 @@ const ProfilePage = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const { rows: attendanceRows } = useChildAttendance();
-  const [activeTab, setActiveTab] = useState<string>('profile');
-  const [tabAutoSet, setTabAutoSet] = useState(false);
-
-  useEffect(() => {
-    if (!tabAutoSet && attendanceRows.length > 0) {
-      setActiveTab('attendance');
-      setTabAutoSet(true);
-    }
-  }, [attendanceRows, tabAutoSet]);
   const [userProfile, setUserProfile] = useState<{
     phone: string;
     address: string;
@@ -122,16 +108,14 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen">
       <div className="athfal-container py-12">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="flex flex-col md:flex-row items-start gap-8">
+        <div className="flex flex-col md:flex-row items-start gap-8">
           {/* Sidebar */}
           <div className="w-full md:w-1/4">
             <ProfileSidebar />
           </div>
           {/* Main content */}
           <div className="w-full md:w-3/4">
-              <TabsContent value="profile">
-                <Card>
+              <Card>
                   <CardHeader>
                     <CardTitle>
                       {language === 'id' ? 'Detail Profil' : 'Profile Details'}
@@ -168,35 +152,8 @@ const ProfilePage = () => {
                     <DeleteAccountButton />
                   </CardContent>
                 </Card>
-              </TabsContent>
-              <TabsContent value="orders">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle>
-                      {language === 'id' ? 'Riwayat Pesanan' : 'Order History'}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <OrderHistoryPanel />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              <TabsContent value="attendance">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle>
-                      {language === 'id' ? 'Kehadiran Anak' : 'Child Attendance'}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ChildAttendancePanel />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            
           </div>
         </div>
-        </Tabs>
       </div>
     </div>
   );
