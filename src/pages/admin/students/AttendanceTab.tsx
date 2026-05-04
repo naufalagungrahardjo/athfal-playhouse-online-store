@@ -190,12 +190,21 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
         .in("enrollment_id", progEnrollmentIds)
         .or(`session_date.eq.${dateStr},date.eq.${dateStr}`);
 
-      // Delete check-in/out records for this date
+      // Delete check-in/out records for this date (by session_date)
       await supabase
         .from("student_checkinout" as any)
         .delete()
         .in("enrollment_id", progEnrollmentIds)
-        .or(`session_date.eq.${dateStr},event_time.gte.${dateStr}T00:00:00,event_time.lt.${dateStr}T23:59:59.999`);
+        .eq("session_date", dateStr);
+
+      // Also delete legacy check-in/out records that don't have session_date populated
+      await supabase
+        .from("student_checkinout" as any)
+        .delete()
+        .in("enrollment_id", progEnrollmentIds)
+        .is("session_date", null)
+        .gte("event_time", `${dateStr}T00:00:00`)
+        .lt("event_time", `${dateStr}T23:59:59.999`);
     }
 
     // Remove the session date from the dropdown
