@@ -204,6 +204,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             admission_date: formData.admission_date || null,
             active_from: formData.active_from || null,
             active_until: formData.active_until || null,
+            is_hidden: true,
           }]);
         
         if (error) {
