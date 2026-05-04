@@ -134,12 +134,14 @@ export default function StudentReportTab({ programs, students, enrollments, atte
     return studentEnrollments.map(enr => {
       const prog = programs.find(p => p.id === enr.program_id);
       const records = studentAttendance.filter(a => a.enrollment_id === enr.id);
-      const meetingMap = new Map<number, StudentAttendance>();
+      // Dedup by calendar date (session_date if set, else date) — one attendance per day per enrollment.
+      const dateMap = new Map<string, StudentAttendance>();
       for (const r of records) {
-        const existing = meetingMap.get(r.meeting_number);
-        if (!existing || r.id > existing.id) meetingMap.set(r.meeting_number, r);
+        const key = (r.session_date || r.date || String(r.meeting_number));
+        const existing = dateMap.get(key);
+        if (!existing || r.id > existing.id) dateMap.set(key, r);
       }
-      const unique = Array.from(meetingMap.values());
+      const unique = Array.from(dateMap.values());
       return {
         program: prog,
         enrollment: enr,
