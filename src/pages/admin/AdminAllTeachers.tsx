@@ -281,6 +281,100 @@ export default function AdminAllTeachers() {
     }
   };
 
+  // ---- Student Check-In/Out management (super_admin only) ----
+  const filteredCheckRecords = useMemo(() => {
+    return checkRecords.filter((r) => {
+      if (ciClass !== "all" && r.program_id !== ciClass) return false;
+      if (ciStudent !== "all" && r.student_id !== ciStudent) return false;
+      if (ciTeacher !== "all" && r.teacher_email !== ciTeacher) return false;
+      const d = (r.session_date || r.event_time.slice(0, 10));
+      if (ciFrom && d < ciFrom) return false;
+      if (ciTo && d > ciTo) return false;
+      return true;
+    });
+  }, [checkRecords, ciClass, ciStudent, ciTeacher, ciFrom, ciTo]);
+
+  // Convert a Supabase storage public/signed URL into the object path inside the bucket
+  const extractStoragePath = (url: string): string | null => {
+    try {
+      const marker = "/teacher-evidence/";
+      const idx = url.indexOf(marker);
+      if (idx === -1) return null;
+      let path = url.slice(idx + marker.length);
+      const q = path.indexOf("?");
+      if (q !== -1) path = path.slice(0, q);
+      // Some signed URLs have format /object/sign/teacher-evidence/<path>
+      return decodeURIComponent(path);
+    } catch {
+      return null;
+    }
+  };
+
+  const collectStoragePaths = (records: CheckRecord[]) => {
+    const paths: string[] = [];
+    for (const r of records) {
+      if (!r.photo_url) continue;
+      const p = extractStoragePath(r.photo_url);
+      if (p) paths.push(p);
+    }
+    return paths;
+  };
+
+  const handleDeleteCheckPhotos = async () => {
+    if (filteredCheckRecords.length === 0) {
+      toast({ title: "Nothing to delete", description: "No records match the current filters." });
+      return;
+    }
+    setCiBusy(true);
+    try {
+      const paths = collectStoragePaths(filteredCheckRecords);
+      let removed = 0;
+      // Remove in batches of 100
+      for (let i = 0; i < paths.length; i += 100) {
+        const batch = paths.slice(i, i + 100);
+        const { error } = await supabase.storage.from("teacher-evidence").remove(batch);
+        if (!error) removed += batch.length;
+      }
+      // Clear photo_url for the affected rows
+      const ids = filteredCheckRecords.filter((r) => r.photo_url).map((r) => r.id);
+      if (ids.length > 0) {
+        await supabase.from("student_checkinout" as any).update({ photo_url: null } as any).in("id", ids);
+      }
+      toast({ title: "Photos deleted", description: `${removed} photo(s) removed from storage.` });
+      fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to delete photos." });
+    } finally {
+      setCiBusy(false);
+    }
+  };
+
+  const handleDeleteCheckRecords = async () => {
+    if (filteredCheckRecords.length === 0) {
+      toast({ title: "Nothing to delete", description: "No records match the current filters." });
+      return;
+    }
+    setCiBusy(true);
+    try {
+      // First, remove their photos from storage
+      const paths = collectStoragePaths(filteredCheckRecords);
+      for (let i = 0; i < paths.length; i += 100) {
+        const batch = paths.slice(i, i + 100);
+        await supabase.storage.from("teacher-evidence").remove(batch);
+      }
+      // Then delete DB rows
+      const ids = filteredCheckRecords.map((r) => r.id);
+      const { error } = await supabase.from("student_checkinout" as any).delete().in("id", ids);
+      if (error) throw error;
+      toast({ title: "Records deleted", description: `${ids.length} check-in/out record(s) removed.` });
+      fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to delete records." });
+    } finally {
+      setCiBusy(false);
+    }
+  };
+
   const handleSaveDriveFolder = async (teacherEmail: string) => {
     const folder = driveEdits[teacherEmail] ?? "";
     const existing = teacherSettings.find(s => s.teacher_email === teacherEmail);
