@@ -87,9 +87,10 @@ export const ProductCard = ({ product, onEdit, onDelete, onDuplicate, onToggleUp
   };
 
   const effectiveHidden = isHidden || isScheduleInactive;
+  const effectiveSoldOut = isSoldOut || (typeof product.stock === 'number' && product.stock <= 0);
 
   return (
-    <Card className={effectiveHidden ? 'opacity-60' : ''}>
+    <Card className={`${effectiveHidden ? 'opacity-60' : ''} ${effectiveSoldOut ? 'grayscale bg-muted' : ''}`}>
       <CardContent className="p-6">
         <div className="flex justify-between items-start">
           <div className="flex space-x-4 flex-1 min-w-0">
