@@ -771,6 +771,158 @@ export default function AdminAllTeachers() {
         <TabsContent value="materials">
           <ClassMaterialsTab />
         </TabsContent>
+
+        {/* STUDENT CHECK-IN/OUT TAB — super_admin only */}
+        {isSuperAdmin && (
+        <TabsContent value="student_checkinout" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Student Check-In / Check-Out Records</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Filter records by class, student, teacher, and date range. You can delete only the
+                photos (keeps the log row) or delete the entire records (removes log + photos).
+              </p>
+
+              <div className="flex flex-wrap gap-3 items-end">
+                <div>
+                  <Label>Class</Label>
+                  <Select value={ciClass} onValueChange={setCiClass}>
+                    <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                    <SelectContent className="max-h-[260px]">
+                      <SelectItem value="all">All Classes</SelectItem>
+                      {programList.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Student</Label>
+                  <Select value={ciStudent} onValueChange={setCiStudent}>
+                    <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                    <SelectContent className="max-h-[260px]">
+                      <SelectItem value="all">All Students</SelectItem>
+                      {studentList.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Teacher</Label>
+                  <Select value={ciTeacher} onValueChange={setCiTeacher}>
+                    <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                    <SelectContent className="max-h-[260px]">
+                      <SelectItem value="all">All Teachers</SelectItem>
+                      {teachers.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>From</Label><Input type="date" value={ciFrom} onChange={(e) => setCiFrom(e.target.value)} /></div>
+                <div><Label>To</Label><Input type="date" value={ciTo} onChange={(e) => setCiTo(e.target.value)} /></div>
+                {(ciClass !== "all" || ciStudent !== "all" || ciTeacher !== "all" || ciFrom || ciTo) && (
+                  <Button variant="ghost" onClick={() => { setCiClass("all"); setCiStudent("all"); setCiTeacher("all"); setCiFrom(""); setCiTo(""); }}>Clear filters</Button>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 rounded border border-destructive/40 bg-destructive/5 p-3">
+                <div className="text-sm">
+                  <span className="font-semibold">{filteredCheckRecords.length}</span> record(s) match the current filters.
+                </div>
+                <div className="ml-auto flex flex-wrap gap-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" className="gap-2" disabled={ciBusy || filteredCheckRecords.length === 0}>
+                        <ImageOff className="w-4 h-4" /> Delete Photos Only
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete photos for {filteredCheckRecords.length} record(s)?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This removes the photo files from storage and clears their links, but keeps the check-in/out log entries. This cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteCheckPhotos}>Delete Photos</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" className="gap-2" disabled={ciBusy || filteredCheckRecords.length === 0}>
+                        <Trash2 className="w-4 h-4" /> Delete Records
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete {filteredCheckRecords.length} record(s)?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This permanently deletes the selected check-in/out log entries and their photos from storage. This cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteCheckRecords} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          Yes, Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+
+              <div className="overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Class</TableHead>
+                      <TableHead>Event</TableHead>
+                      <TableHead>Photo</TableHead>
+                      <TableHead>Teacher</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCheckRecords.slice(0, 500).map((r) => {
+                      const sName = studentList.find((s) => s.id === r.student_id)?.name || "—";
+                      const pName = programList.find((p) => p.id === r.program_id)?.name || "—";
+                      const d = r.session_date || r.event_time.slice(0, 10);
+                      return (
+                        <TableRow key={r.id}>
+                          <TableCell>{d}</TableCell>
+                          <TableCell>{format(new Date(r.event_time), "HH:mm")}</TableCell>
+                          <TableCell>{sName}</TableCell>
+                          <TableCell className="max-w-[200px] truncate">{pName}</TableCell>
+                          <TableCell>
+                            <span className={`text-xs font-semibold ${r.event_type === "check_in" ? "text-green-600" : "text-orange-600"}`}>
+                              {r.event_type === "check_in" ? "IN" : "OUT"}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {r.photo_url
+                              ? <a href={r.photo_url} target="_blank" rel="noopener noreferrer" className="text-primary underline text-xs">View</a>
+                              : "—"}
+                          </TableCell>
+                          <TableCell className="text-xs">{r.teacher_email}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {filteredCheckRecords.length === 0 && (
+                      <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No records found</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+                {filteredCheckRecords.length > 500 && (
+                  <p className="text-xs text-muted-foreground mt-2">Showing first 500 of {filteredCheckRecords.length}. Delete actions still apply to all matched records.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        )}
       </Tabs>
     </div>
   );
