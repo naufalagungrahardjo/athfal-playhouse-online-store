@@ -800,6 +800,58 @@ export default function AdminAllTeachers() {
                 photos (keeps the log row) or delete the entire records (removes log + photos).
               </p>
 
+              {/* Storage usage indicator */}
+              <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <HardDrive className="w-4 h-4" />
+                    Supabase Storage Usage
+                  </div>
+                  <Button size="sm" variant="ghost" onClick={fetchStorageUsage}>Refresh</Button>
+                </div>
+                {(() => {
+                  const totalBytes = storageUsage.reduce((s, b) => s + Number(b.total_bytes || 0), 0);
+                  const totalFiles = storageUsage.reduce((s, b) => s + Number(b.file_count || 0), 0);
+                  const pct = Math.min(100, (totalBytes / FREE_TIER_BYTES) * 100);
+                  const fmt = (n: number) => {
+                    if (n >= 1024 * 1024 * 1024) return (n / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+                    if (n >= 1024 * 1024) return (n / (1024 * 1024)).toFixed(1) + " MB";
+                    if (n >= 1024) return (n / 1024).toFixed(1) + " KB";
+                    return n + " B";
+                  };
+                  const evidence = storageUsage.find((b) => b.bucket_id === "teacher-evidence");
+                  const images = storageUsage.find((b) => b.bucket_id === "images");
+                  return (
+                    <>
+                      <Progress value={pct} className="h-2" />
+                      <div className="text-xs text-muted-foreground">
+                        {fmt(totalBytes)} of 1 GB used ({pct.toFixed(1)}%) · {totalFiles} files
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+                        <div className="rounded border p-2">
+                          <div className="font-medium">teacher-evidence (check-in/out photos)</div>
+                          <div className="text-muted-foreground">
+                            {fmt(Number(evidence?.total_bytes || 0))} · {Number(evidence?.file_count || 0)} files
+                          </div>
+                        </div>
+                        <div className="rounded border p-2">
+                          <div className="font-medium">images (website assets)</div>
+                          <div className="text-muted-foreground">
+                            {fmt(Number(images?.total_bytes || 0))} · {Number(images?.file_count || 0)} files
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground pt-1">
+                        Photos are auto-compressed to ~480x360 JPEG (~30–60 KB each). At ~50 KB per
+                        photo, the 1 GB free tier holds roughly 20,000 photos. Use the delete tools
+                        below to free space, or set a Google Drive folder per teacher to offload
+                        photos off Supabase.
+                      </p>
+                    </>
+                  );
+                })()}
+              </div>
+
               <div className="flex flex-wrap gap-3 items-end">
                 <div>
                   <Label>Class</Label>
