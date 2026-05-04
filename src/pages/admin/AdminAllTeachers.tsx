@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { getAdminRole } from "./helpers/getAdminRole";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { Check, X, Save, Trash2, Download } from "lucide-react";
+import { Check, X, Save, Trash2, Download, ImageOff } from "lucide-react";
 import ClassMaterialsTab from "./team/ClassMaterialsTab";
 import {
   AlertDialog,
