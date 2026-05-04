@@ -166,6 +166,10 @@ export default function AdminAllTeachers() {
 
   useEffect(() => { fetchData(); }, []);
 
+  useEffect(() => {
+    if (isSuperAdmin) fetchStorageUsage();
+  }, [isSuperAdmin]);
+
   const filteredAttendances = useMemo(() => {
     return attendances.filter(a => {
       if (teacherFilter !== "all" && a.teacher_email !== teacherFilter) return false;
