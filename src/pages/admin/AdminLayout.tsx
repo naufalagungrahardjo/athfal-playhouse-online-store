@@ -61,7 +61,7 @@ const AdminLayout = () => {
   const navigation = getAdminNavigation(adminRole, allowedMenus);
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-100">
       <AdminSidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -70,7 +70,7 @@ const AdminLayout = () => {
         navigation={navigation}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 px-3 pt-12 pb-6 md:p-6 overflow-y-auto overflow-x-hidden">
           <Outlet />
         </main>
       </div>

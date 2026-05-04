@@ -113,11 +113,11 @@ const AdminSidebar: React.FC<Props> = ({ sidebarOpen, setSidebarOpen, navigation
       {/* Mobile Sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open admin menu">
+          <Button variant="ghost" size="icon" className="md:hidden fixed top-2 left-2 z-40 bg-background/80 backdrop-blur-sm shadow-sm" aria-label="Open admin menu">
             <Menu />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-64 p-0">
+        <SheetContent side="left" className="w-[85vw] max-w-xs p-0">
           <div className="flex flex-col h-full">
             <div className="px-6 py-4">
               <Link to="/admin" className="flex items-center text-lg font-semibold">
