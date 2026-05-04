@@ -126,9 +126,9 @@ const AdminProducts = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <h1 className="text-3xl font-bold">Product Management</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
