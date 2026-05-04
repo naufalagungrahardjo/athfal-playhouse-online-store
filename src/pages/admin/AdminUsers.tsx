@@ -103,19 +103,21 @@ const AdminUsers = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
           <Users className="h-8 w-8 text-athfal-pink" />
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">User Management</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">User Management</h2>
             <p className="text-gray-600">Manage registered users and view user analytics</p>
           </div>
         </div>
         {/* Download Users CSV Button */}
-        <Button onClick={exportUsersToCSV} variant="outline">
-          <Download className="mr-2 h-4 w-4" />
-          Download Users as CSV
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={exportUsersToCSV} variant="outline" className="w-full sm:w-auto">
+            <Download className="mr-2 h-4 w-4" />
+            Download Users as CSV
+          </Button>
+        </div>
       </div>
 
       <Card>

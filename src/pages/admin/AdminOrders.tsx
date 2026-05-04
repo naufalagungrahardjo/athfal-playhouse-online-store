@@ -128,7 +128,7 @@ const AdminOrders = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="management" className="w-full">
-        <TabsList>
+        <TabsList className="flex w-full overflow-x-auto justify-start">
           <TabsTrigger value="management">Order Management</TabsTrigger>
           <TabsTrigger value="by-product">Order List</TabsTrigger>
           <TabsTrigger value="billing">Billing Notice</TabsTrigger>

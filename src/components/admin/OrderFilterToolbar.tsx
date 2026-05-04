@@ -21,19 +21,19 @@ export function OrderFilterToolbar({
 }: OrderFilterToolbarProps) {
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold">Order Management</h1>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 w-full md:w-auto">
+        <h1 className="text-2xl sm:text-3xl font-bold">Order Management</h1>
+        <div className="flex flex-wrap items-center gap-2">
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className={(!dateRange?.from || !dateRange?.to) ? "text-muted-foreground" : ""}
+                className={`max-w-full ${(!dateRange?.from || !dateRange?.to) ? "text-muted-foreground" : ""}`}
               >
                 <CalendarDays className="mr-2 h-4 w-4" />
-                {dateRange?.from && dateRange?.to
+                <span className="truncate">{dateRange?.from && dateRange?.to
                   ? `${format(dateRange.from, 'MMM dd, yyyy')} - ${format(dateRange.to, 'MMM dd, yyyy')}`
-                  : "Select Date Range"}
+                  : "Select Date Range"}</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
@@ -57,11 +57,11 @@ export function OrderFilterToolbar({
           )}
         </div>
       </div>
-      <div className="flex gap-2">
-        <Button onClick={onRefresh} variant="outline">
+      <div className="flex flex-wrap gap-2 w-full md:w-auto">
+        <Button onClick={onRefresh} variant="outline" className="flex-1 md:flex-none">
           Refresh Orders
         </Button>
-        <Button onClick={onExport} variant="default">
+        <Button onClick={onExport} variant="default" className="flex-1 md:flex-none">
           Export Orders as CSV
         </Button>
       </div>

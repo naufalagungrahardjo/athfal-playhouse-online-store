@@ -24,7 +24,7 @@ const AdminStudents = () => {
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Students Management</h1>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+        <TabsList className="flex w-full overflow-x-auto justify-start">
           <TabsTrigger value="programs">Programs & Students</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="attendance-summary">Attendance Summary</TabsTrigger>
