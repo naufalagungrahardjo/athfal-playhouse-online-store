@@ -221,7 +221,7 @@ export default function AdminTeacher() {
       <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
 
       <Tabs defaultValue="attendance">
-        <TabsList>
+        <TabsList className="flex w-full overflow-x-auto justify-start">
           <TabsTrigger value="attendance">Daily Attendance</TabsTrigger>
           <TabsTrigger value="recap">Attendance Recap</TabsTrigger>
           <TabsTrigger value="leave">Leave Request</TabsTrigger>
