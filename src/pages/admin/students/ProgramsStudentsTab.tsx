@@ -15,6 +15,8 @@ import { useProducts } from "@/hooks/useProducts";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { useAuth } from "@/contexts/AuthContext";
+import { getAdminRole } from "../helpers/getAdminRole";
 
 type Props = {
   programs: ClassProgram[];
@@ -36,6 +38,8 @@ export default function ProgramsStudentsTab({
 }: Props) {
   const { products } = useProducts();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isSuperAdmin = getAdminRole(user) === "super_admin";
   const productNameOptions = Array.from(new Set(products.map(p => p.name).filter(Boolean))).sort((a, b) =>
     a.localeCompare(b, undefined, { sensitivity: "base" })
   );
@@ -187,6 +191,7 @@ export default function ProgramsStudentsTab({
         <Button variant="outline" onClick={exportCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
       </div>
       {/* Programs Section */}
+      {isSuperAdmin && (
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Class Programs</CardTitle>
@@ -311,6 +316,7 @@ export default function ProgramsStudentsTab({
           </Table>
         </CardContent>
       </Card>
+      )}
 
       {/* Students Section */}
       <Card>
