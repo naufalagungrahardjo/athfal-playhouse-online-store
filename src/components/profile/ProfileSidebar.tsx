@@ -24,14 +24,14 @@ const ProfileSidebar = () => {
       </CardHeader>
       <CardContent>
         <TabsList className="grid grid-cols-3 w-full">
+          <TabsTrigger value="attendance">
+            {language === 'id' ? 'Kehadiran' : 'Attendance'}
+          </TabsTrigger>
           <TabsTrigger value="profile">
             {language === 'id' ? 'Profil' : 'Profile'}
           </TabsTrigger>
           <TabsTrigger value="orders">
             {language === 'id' ? 'Pesanan' : 'Orders'}
-          </TabsTrigger>
-          <TabsTrigger value="attendance">
-            {language === 'id' ? 'Kehadiran' : 'Attendance'}
           </TabsTrigger>
         </TabsList>
       </CardContent>
