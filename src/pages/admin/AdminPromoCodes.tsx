@@ -211,12 +211,12 @@ const AdminPromoCodes = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
           <h1 className="text-2xl font-bold">Promo Code Management</h1>
           <p className="text-gray-600">Create and manage discount codes with date ranges</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={exportPromoCSV}>
             <Download size={16} className="mr-1" />
             Export CSV
