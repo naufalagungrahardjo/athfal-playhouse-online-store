@@ -31,7 +31,7 @@ const TalkToSchoolPage = () => {
   const { threads, reads } = useParentMessageThreads("mine");
   const [openId, setOpenId] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
-  const [teachers, setTeachers] = useState<string[]>([]);
+  const [teachers, setTeachers] = useState<{ email: string; name: string }[]>([]);
 
   const [type, setType] = useState<MessageType>("Request");
   const [topic, setTopic] = useState<MessageTopic>("Admin");
@@ -44,7 +44,7 @@ const TalkToSchoolPage = () => {
 
   useEffect(() => {
     supabase.rpc("list_teacher_recipients" as any).then(({ data }) => {
-      setTeachers(((data as any[]) || []).map(r => r.email));
+      setTeachers(((data as any[]) || []).map(r => ({ email: r.email, name: r.name || r.email })));
     });
   }, []);
 
@@ -149,7 +149,7 @@ const TalkToSchoolPage = () => {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin_only">{language === "id" ? "Admin saja" : "Admin only"}</SelectItem>
-                  {teachers.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                  {teachers.map(t => <SelectItem key={t.email} value={t.email}>{t.name}</SelectItem>)}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground mt-1">
