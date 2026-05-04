@@ -1437,6 +1437,24 @@ export type Database = {
         Args: { p_child_name: string }
         Returns: string
       }
+      get_my_child_attendance: {
+        Args: never
+        Returns: {
+          attendance_date: string
+          attendance_status: string
+          event_time: string
+          event_type: string
+          meeting_number: number
+          photo_url: string
+          program_id: string
+          program_name: string
+          record_id: string
+          record_kind: string
+          student_id: string
+          student_name: string
+          teacher_email: string
+        }[]
+      }
       get_order_by_token: {
         Args: { p_order_id: string; p_token: string }
         Returns: {
