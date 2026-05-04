@@ -16,6 +16,7 @@ import ProfileDetailsForm from "@/components/profile/ProfileDetailsForm";
 import PasswordChangeForm from "@/components/profile/PasswordChangeForm";
 import OrderHistoryPanel from "@/components/profile/OrderHistoryPanel";
 import ProfileSidebar from "@/components/profile/ProfileSidebar";
+import ChildAttendancePanel from "@/components/profile/ChildAttendancePanel";
 
 // Mock order history data
 const mockOrderHistory = [
@@ -153,6 +154,18 @@ const ProfilePage = () => {
                   </CardHeader>
                   <CardContent>
                     <OrderHistoryPanel />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              <TabsContent value="attendance">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle>
+                      {language === 'id' ? 'Kehadiran Anak' : 'Child Attendance'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ChildAttendancePanel />
                   </CardContent>
                 </Card>
               </TabsContent>
