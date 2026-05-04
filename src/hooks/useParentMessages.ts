@@ -11,6 +11,7 @@ export type ParentMessageThread = {
   parent_email: string;
   parent_name: string | null;
   recipient_teacher_email: string | null;
+  recipient_teacher_name: string | null;
   message_type: MessageType;
   topic: MessageTopic;
   subject: string;
