@@ -598,7 +598,8 @@ export default function AdminAllTeachers() {
             </CardContent>
           </Card>
 
-          {/* Delete All Evidence Card */}
+          {/* Delete All Evidence Card — super_admin only */}
+          {isSuperAdmin && (
           <Card className="border-destructive/50">
             <CardHeader>
               <CardTitle className="text-destructive">Storage Management</CardTitle>
@@ -634,6 +635,7 @@ export default function AdminAllTeachers() {
               </AlertDialog>
             </CardContent>
           </Card>
+          )}
         </TabsContent>
 
         {/* LEAVES TAB */}
