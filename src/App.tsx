@@ -52,6 +52,7 @@ const AuthPage = lazyRetry(() => import("./pages/AuthPage"));
 const ProfilePage = lazyRetry(() => import("./pages/ProfilePage"));
 const StudentAttendancePage = lazyRetry(() => import("./pages/StudentAttendancePage"));
 const MyOrdersPage = lazyRetry(() => import("./pages/MyOrdersPage"));
+const TalkToSchoolPage = lazyRetry(() => import("./pages/TalkToSchoolPage"));
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
 
 // Admin components
@@ -79,6 +80,7 @@ const AdminExpense = lazyRetry(() => import("./pages/admin/AdminExpense"));
 const AdminOtherIncome = lazyRetry(() => import("./pages/admin/AdminOtherIncome"));
 const AdminCheckoutTerms = lazyRetry(() => import("./pages/admin/AdminCheckoutTerms"));
 const AdminCheckInOut = lazyRetry(() => import("./pages/admin/AdminCheckInOut"));
+const AdminInbox = lazyRetry(() => import("./pages/admin/AdminInbox"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -125,6 +127,7 @@ const App = () => (
                           <Route path="/profile" element={<ProfilePage />} />
                           <Route path="/student" element={<StudentAttendancePage />} />
                           <Route path="/my-orders" element={<MyOrdersPage />} />
+                          <Route path="/talk-to-school" element={<TalkToSchoolPage />} />
                           
                           {/* Admin Routes */}
                           <Route path="/admin" element={<AdminLayout />}>
@@ -151,6 +154,7 @@ const App = () => (
                             <Route path="other-income" element={<AdminOtherIncome />} />
                             <Route path="checkout-terms" element={<AdminCheckoutTerms />} />
                             <Route path="check-in-out" element={<AdminCheckInOut />} />
+                            <Route path="inbox" element={<AdminInbox />} />
                           </Route>
                           
                           <Route path="*" element={<NotFound />} />
