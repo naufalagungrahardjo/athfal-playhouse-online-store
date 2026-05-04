@@ -197,7 +197,7 @@ const ChildAttendancePanel = () => {
                 <div className="px-4 py-3 border-t flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">
                     {language === "id" ? "Status Kehadiran" : "Attendance Status"}
-                    {g.attendance.meeting_number != null && (
+                    {g.attendance.meeting_number != null && g.attendance.meeting_number > 0 && (
                       <> · {language === "id" ? "Pertemuan" : "Session"} {g.attendance.meeting_number}</>
                     )}
                   </span>
