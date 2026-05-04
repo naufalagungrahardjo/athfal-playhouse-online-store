@@ -63,6 +63,7 @@ const ProfilePage = () => {
   const { user } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [userProfile, setUserProfile] = useState<{
     phone: string;
     address: string;
@@ -142,6 +143,18 @@ const ProfilePage = () => {
                   </CardHeader>
                   <CardContent>
                     <PasswordChangeForm />
+                  </CardContent>
+                </Card>
+                <Card className="mt-6">
+                  <CardContent className="pt-6 space-y-3">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-center text-red-500 border-red-500 hover:bg-red-50"
+                      onClick={() => { logout(); navigate('/'); }}
+                    >
+                      {language === 'id' ? 'Keluar' : 'Sign Out'}
+                    </Button>
+                    <DeleteAccountButton />
                   </CardContent>
                 </Card>
               </TabsContent>

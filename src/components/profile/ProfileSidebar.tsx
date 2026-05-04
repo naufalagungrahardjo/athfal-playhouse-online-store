@@ -1,23 +1,13 @@
 
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
-import DeleteAccountButton from "@/components/profile/DeleteAccountButton";
-import { useNavigate } from "react-router-dom";
 
 const ProfileSidebar = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { language } = useLanguage();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
 
   return (
     <Card>
@@ -44,15 +34,6 @@ const ProfileSidebar = () => {
             {language === 'id' ? 'Kehadiran' : 'Attendance'}
           </TabsTrigger>
         </TabsList>
-        <Separator className="my-4" />
-        <Button 
-          variant="outline" 
-          className="w-full justify-start text-red-500 border-red-500 hover:bg-red-50 mt-4"
-          onClick={handleLogout}
-        >
-          {language === 'id' ? 'Keluar' : 'Sign Out'}
-        </Button>
-        <DeleteAccountButton />
       </CardContent>
     </Card>
   );
