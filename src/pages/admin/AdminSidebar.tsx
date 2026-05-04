@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { NavigationGroup } from "./helpers/getAdminNavigation";
 import React, { useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useParentMessageThreads } from "@/hooks/useParentMessages";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Props = {
   sidebarOpen: boolean;
@@ -18,6 +20,12 @@ type Props = {
 
 const SidebarNav: React.FC<{ groups: NavigationGroup[]; onItemClick?: () => void; collapsed?: boolean }> = ({ groups, onItemClick, collapsed = false }) => {
   const location = useLocation();
+  const { user } = useAuth();
+  const { threads, reads } = useParentMessageThreads("all");
+  const inboxUnread = user ? threads.filter(t => {
+    const lr = reads[t.id];
+    return !lr || new Date(t.last_activity_at) > new Date(lr);
+  }).length : 0;
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     // Auto-open group containing current route
     const init: Record<string, boolean> = {};
@@ -66,20 +74,28 @@ const SidebarNav: React.FC<{ groups: NavigationGroup[]; onItemClick?: () => void
                     <TooltipProvider delayDuration={100}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex items-center justify-center w-full">
+                          <div className="flex items-center justify-center w-full relative">
                             <item.icon className="h-4 w-4" />
+                            {item.href === '/admin/inbox' && inboxUnread > 0 && (
+                              <span className="absolute -top-1 -right-1 bg-athfal-pink text-white text-[9px] rounded-full min-w-[14px] h-3.5 px-1 flex items-center justify-center">{inboxUnread}</span>
+                            )}
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="right">
-                          <p>{item.name}</p>
+                          <p>{item.name}{item.href === '/admin/inbox' && inboxUnread > 0 ? ` (${inboxUnread})` : ''}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   ) : (
-                    <>
+                    <span className="flex items-center justify-between w-full">
+                      <span className="flex items-center">
                       <item.icon className="mr-2 h-4 w-4" />
                       {item.name}
-                    </>
+                      </span>
+                      {item.href === '/admin/inbox' && inboxUnread > 0 && (
+                        <span className="bg-athfal-pink text-white text-[10px] rounded-full min-w-[18px] h-4 px-1.5 flex items-center justify-center">{inboxUnread}</span>
+                      )}
+                    </span>
                   );
 
                   return (
