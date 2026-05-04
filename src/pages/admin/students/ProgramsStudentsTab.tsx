@@ -45,7 +45,6 @@ export default function ProgramsStudentsTab({
   const [customProgName, setCustomProgName] = useState("");
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [productSearch, setProductSearch] = useState("");
-  const [progMeetings, setProgMeetings] = useState(1);
   const [progStart, setProgStart] = useState("");
   const [progEnd, setProgEnd] = useState("");
   const [editingProg, setEditingProg] = useState<ClassProgram | null>(null);
@@ -106,7 +105,7 @@ export default function ProgramsStudentsTab({
     if (editingProg) {
       await updateProgram(editingProg.id, {
         name: finalName,
-        num_meetings: progMeetings,
+        num_meetings: editingProg.num_meetings ?? 1,
         start_date: progStart,
         end_date: progEnd,
         source_product_names: cleanSelectedProducts,
@@ -116,7 +115,7 @@ export default function ProgramsStudentsTab({
     } else {
       const newProgramId = await addProgram({
         name: finalName,
-        num_meetings: progMeetings,
+        num_meetings: 1,
         start_date: progStart,
         end_date: progEnd,
         source_product_names: cleanSelectedProducts,
@@ -126,7 +125,7 @@ export default function ProgramsStudentsTab({
       }
     }
     setProgName(""); setSelectedProducts([]); setCustomProgName("");
-    setProgMeetings(1); setProgStart(""); setProgEnd("");
+    setProgStart(""); setProgEnd("");
   };
 
   const syncProgramFromProducts = async (programId: string, productNames: string[]) => {
@@ -168,8 +167,8 @@ export default function ProgramsStudentsTab({
       s.name,
       s.enrolled_programs.map(pid => programs.find(p => p.id === pid)?.name || pid).join("; "),
     ]);
-    const progHeaders = ["Program Name", "Sessions", "Start Date", "End Date"];
-    const progRows = programs.map(p => [p.name, String(p.num_meetings), p.start_date, p.end_date]);
+    const progHeaders = ["Program Name", "Start Date", "End Date"];
+    const progRows = programs.map(p => [p.name, p.start_date, p.end_date]);
     const csv = [
       "=== Programs ===", progHeaders.join(","),
       ...progRows.map(r => r.map(f => `"${(f || "").replace(/"/g, '""')}"`).join(",")),
@@ -261,11 +260,7 @@ export default function ProgramsStudentsTab({
               <p className="text-xs text-muted-foreground mt-1">Leave blank to auto-name from selected products.</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-            <div>
-              <Label>Number of Sessions</Label>
-              <Input type="number" min={1} value={progMeetings} onChange={e => setProgMeetings(Number(e.target.value))} />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
             <div>
               <Label>Start Date</Label>
               <Input type="date" value={progStart} onChange={e => setProgStart(e.target.value)} />
@@ -283,7 +278,6 @@ export default function ProgramsStudentsTab({
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Sessions</TableHead>
                 <TableHead>Period</TableHead>
                 <TableHead className="w-24">Actions</TableHead>
               </TableRow>
@@ -292,7 +286,6 @@ export default function ProgramsStudentsTab({
               {programs.map(p => (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{p.name}</TableCell>
-                  <TableCell>{p.num_meetings}</TableCell>
                   <TableCell>{format(new Date(p.start_date), "dd MMM yyyy")} — {format(new Date(p.end_date), "dd MMM yyyy")}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
@@ -301,7 +294,6 @@ export default function ProgramsStudentsTab({
                         setCustomProgName(p.name);
                         setSelectedProducts(getProgramProductNames(p));
                         setProgName(p.name);
-                        setProgMeetings(p.num_meetings);
                         setProgStart(p.start_date); setProgEnd(p.end_date);
                       }}><Edit2 className="h-4 w-4" /></Button>
                       <Button size="icon" variant="ghost" title="Sync students from this program's linked products" onClick={() => syncProgramFromProducts(p.id, getProgramProductNames(p))}>
@@ -313,7 +305,7 @@ export default function ProgramsStudentsTab({
                 </TableRow>
               ))}
               {programs.length === 0 && (
-                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No programs yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">No programs yet</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
