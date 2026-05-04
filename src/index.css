@@ -144,3 +144,12 @@
 .whatsapp-float {
   @apply fixed bottom-6 right-6 z-50 rounded-full shadow-lg bg-green-500 p-4 text-white cursor-pointer hover:scale-105 transition-all;
 }
+
+/* Hide scrollbar but keep scroll functionality (for mobile tab strips) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
