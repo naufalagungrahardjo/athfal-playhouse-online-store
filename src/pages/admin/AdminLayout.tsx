@@ -70,7 +70,7 @@ const AdminLayout = () => {
         navigation={navigation}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <main className="flex-1 px-3 py-3 md:p-6 overflow-y-auto overflow-x-hidden">
+        <main className="flex-1 px-3 pt-12 pb-6 md:p-6 overflow-y-auto overflow-x-hidden">
           <Outlet />
         </main>
       </div>
