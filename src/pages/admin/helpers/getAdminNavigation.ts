@@ -1,6 +1,6 @@
 
 import {
-  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList, BookOpen, Wallet, FileCheck, Camera
+  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList, BookOpen, Wallet, FileCheck, Camera, Inbox
 } from 'lucide-react';
 
 export type NavigationItem = {
@@ -46,6 +46,7 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
         { name: 'All Teachers', href: '/admin/all-teachers', icon: GraduationCap },
         { name: 'Students', href: '/admin/students', icon: BookOpen },
         { name: 'Check-In/Out', href: '/admin/check-in-out', icon: Camera },
+        { name: 'Inbox', href: '/admin/inbox', icon: Inbox },
       ],
     },
     {
@@ -96,11 +97,11 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
   // Default role-based access (no custom override)
   const allAllowed: Record<string, string[]> = {
     super_admin: [], // handled above
-    orders_manager: ["/admin", "/admin/products", "/admin/orders", "/admin/analytics", "/admin/promo-codes", "/admin/expense", "/admin/other-income"],
-    order_staff: ["/admin/orders"],
-    content_manager: ["/admin/blogs", "/admin/banners", "/admin/website-copy", "/admin/categories", "/admin/faq", "/admin/testimonials"],
-    content_staff: ["/admin/blogs"],
-    teacher: ["/admin/teacher", "/admin/students", "/admin/check-in-out"],
+    orders_manager: ["/admin", "/admin/products", "/admin/orders", "/admin/analytics", "/admin/promo-codes", "/admin/expense", "/admin/other-income", "/admin/inbox"],
+    order_staff: ["/admin/orders", "/admin/inbox"],
+    content_manager: ["/admin/blogs", "/admin/banners", "/admin/website-copy", "/admin/categories", "/admin/faq", "/admin/testimonials", "/admin/inbox"],
+    content_staff: ["/admin/blogs", "/admin/inbox"],
+    teacher: ["/admin/teacher", "/admin/students", "/admin/check-in-out", "/admin/inbox"],
   };
 
   const allowed = allAllowed[role ?? ""] ?? [];
@@ -112,6 +113,7 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
         { name: 'Teacher', href: '/admin/teacher', icon: ClipboardList },
         { name: 'Students', href: '/admin/students', icon: BookOpen },
         { name: 'Check-In/Out', href: '/admin/check-in-out', icon: Camera },
+        { name: 'Inbox', href: '/admin/inbox', icon: Inbox },
       ],
     }];
   }
@@ -145,6 +147,7 @@ export function getAllMenuItems(): { href: string; name: string }[] {
     { href: '/admin/students', name: 'Students' },
     { href: '/admin/teacher', name: 'Teacher (Personal)' },
     { href: '/admin/check-in-out', name: 'Check-In/Out' },
+    { href: '/admin/inbox', name: 'Inbox' },
     { href: '/admin/blogs', name: 'Blogs' },
     { href: '/admin/banners', name: 'Banners' },
     { href: '/admin/faq', name: 'FAQ' },

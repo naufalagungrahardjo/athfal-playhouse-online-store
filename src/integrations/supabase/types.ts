@@ -777,6 +777,118 @@ export type Database = {
           },
         ]
       }
+      parent_message_reads: {
+        Row: {
+          id: string
+          last_read_at: string
+          thread_id: string
+          user_email: string
+        }
+        Insert: {
+          id?: string
+          last_read_at?: string
+          thread_id: string
+          user_email: string
+        }
+        Update: {
+          id?: string
+          last_read_at?: string
+          thread_id?: string
+          user_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_message_reads_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "parent_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parent_message_replies: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sender_email: string
+          sender_name: string | null
+          sender_role: string
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          sender_email: string
+          sender_name?: string | null
+          sender_role: string
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sender_email?: string
+          sender_name?: string | null
+          sender_role?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_message_replies_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "parent_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parent_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          last_activity_at: string
+          message_type: string
+          parent_email: string
+          parent_name: string | null
+          parent_user_id: string | null
+          recipient_teacher_email: string | null
+          subject: string
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          last_activity_at?: string
+          message_type: string
+          parent_email: string
+          parent_name?: string | null
+          parent_user_id?: string | null
+          recipient_teacher_email?: string | null
+          subject: string
+          topic: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          last_activity_at?: string
+          message_type?: string
+          parent_email?: string
+          parent_name?: string | null
+          parent_user_id?: string | null
+          recipient_teacher_email?: string | null
+          subject?: string
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_methods: {
         Row: {
           account_name: string
@@ -1550,6 +1662,12 @@ export type Database = {
       is_admin_account: { Args: { email: string }; Returns: boolean }
       is_admin_user: { Args: { user_id: string }; Returns: boolean }
       is_super_admin: { Args: { email: string }; Returns: boolean }
+      list_teacher_recipients: {
+        Args: never
+        Returns: {
+          email: string
+        }[]
+      }
       normalize_student_program_text: {
         Args: { p_text: string }
         Returns: string
