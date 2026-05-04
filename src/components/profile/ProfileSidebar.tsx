@@ -33,12 +33,15 @@ const ProfileSidebar = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <TabsList className="grid grid-cols-2 w-full">
+        <TabsList className="grid grid-cols-3 w-full">
           <TabsTrigger value="profile">
             {language === 'id' ? 'Profil' : 'Profile'}
           </TabsTrigger>
           <TabsTrigger value="orders">
             {language === 'id' ? 'Pesanan' : 'Orders'}
+          </TabsTrigger>
+          <TabsTrigger value="attendance">
+            {language === 'id' ? 'Kehadiran' : 'Attendance'}
           </TabsTrigger>
         </TabsList>
         <Separator className="my-4" />
