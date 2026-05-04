@@ -81,6 +81,8 @@ const getYearOptions = () => {
 
 export default function AdminAllTeachers() {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isSuperAdmin = getAdminRole(user) === "super_admin";
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [teacherSettings, setTeacherSettings] = useState<TeacherSetting[]>([]);
@@ -102,18 +104,49 @@ export default function AdminAllTeachers() {
   const [driveEdits, setDriveEdits] = useState<Record<string, string>>({});
   const [deleting, setDeleting] = useState(false);
 
+  // Student check-in/out management (super_admin only)
+  type CheckRecord = {
+    id: string;
+    student_id: string;
+    program_id: string;
+    teacher_email: string;
+    event_type: "check_in" | "check_out";
+    event_time: string;
+    photo_url: string | null;
+    session_date: string | null;
+  };
+  const [checkRecords, setCheckRecords] = useState<CheckRecord[]>([]);
+  const [studentList, setStudentList] = useState<{ id: string; name: string }[]>([]);
+  const [programList, setProgramList] = useState<{ id: string; name: string }[]>([]);
+  const [ciClass, setCiClass] = useState("all");
+  const [ciStudent, setCiStudent] = useState("all");
+  const [ciTeacher, setCiTeacher] = useState("all");
+  const [ciFrom, setCiFrom] = useState("");
+  const [ciTo, setCiTo] = useState("");
+  const [ciBusy, setCiBusy] = useState(false);
+
   const fetchData = async () => {
     setLoading(true);
-    const [attRes, leaveRes, settingsRes, teacherAccRes] = await Promise.all([
+    const [attRes, leaveRes, settingsRes, teacherAccRes, ciRes, stuRes, progRes] = await Promise.all([
       supabase.from("teacher_attendance").select("*").order("date", { ascending: false }),
       supabase.from("teacher_leaves").select("*").order("created_at", { ascending: false }),
       supabase.from("teacher_settings").select("*"),
       supabase.from("admin_accounts").select("email").eq("role", "teacher"),
+      supabase
+        .from("student_checkinout" as any)
+        .select("id,student_id,program_id,teacher_email,event_type,event_time,photo_url,session_date")
+        .order("event_time", { ascending: false })
+        .limit(2000),
+      supabase.from("students" as any).select("id,name").order("name"),
+      supabase.from("class_programs" as any).select("id,name").order("name"),
     ]);
 
     if (attRes.data) setAttendances(attRes.data as Attendance[]);
     if (leaveRes.data) setLeaves(leaveRes.data as LeaveRequest[]);
     if (settingsRes.data) setTeacherSettings(settingsRes.data as TeacherSetting[]);
+    if (ciRes.data) setCheckRecords(ciRes.data as any);
+    if (stuRes.data) setStudentList(stuRes.data as any);
+    if (progRes.data) setProgramList(progRes.data as any);
 
     const teacherEmails = (teacherAccRes.data || []).map((t: any) => t.email);
     setTeachers(teacherEmails);
