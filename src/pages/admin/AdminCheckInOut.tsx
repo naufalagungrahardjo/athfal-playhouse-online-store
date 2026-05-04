@@ -99,16 +99,41 @@ export default function AdminCheckInOut() {
     if (teacherEmail) fetchAll();
   }, [teacherEmail]);
 
-  const programEnrollments = useMemo(
-    () => enrollments.filter((e) => e.program_id === programId),
-    [enrollments, programId]
-  );
-  const programStudents = useMemo(() => {
-    const ids = new Set(programEnrollments.map((e) => e.student_id));
+  // Only show students who are enrolled in at least one program
+  const enrolledStudents = useMemo(() => {
+    const ids = new Set(enrollments.map((e) => e.student_id));
     return students.filter((s) => ids.has(s.id));
-  }, [programEnrollments, students]);
+  }, [enrollments, students]);
+
+  // Programs the selected student is enrolled in
+  const studentPrograms = useMemo(() => {
+    if (!studentId) return [] as Program[];
+    const programIds = new Set(
+      enrollments.filter((e) => e.student_id === studentId).map((e) => e.program_id)
+    );
+    return programs.filter((p) => programIds.has(p.id));
+  }, [enrollments, programs, studentId]);
+
+  // Auto-select the program when the student is enrolled in exactly one
+  useEffect(() => {
+    if (!studentId) {
+      setProgramId("");
+      return;
+    }
+    if (studentPrograms.length === 1) {
+      if (programId !== studentPrograms[0].id) {
+        setProgramId(studentPrograms[0].id);
+        setMeetingNumber("1");
+      }
+    } else if (!studentPrograms.find((p) => p.id === programId)) {
+      setProgramId("");
+    }
+  }, [studentId, studentPrograms]);
+
   const selectedProgram = programs.find((p) => p.id === programId);
-  const selectedEnrollment = programEnrollments.find((e) => e.student_id === studentId);
+  const selectedEnrollment = enrollments.find(
+    (e) => e.student_id === studentId && e.program_id === programId
+  );
 
   const handleOpenCamera = () => {
     if (!programId || !studentId || !selectedEnrollment) {
@@ -208,16 +233,41 @@ export default function AdminCheckInOut() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <Label>Class</Label>
-            <Select value={programId} onValueChange={(v) => { setProgramId(v); setStudentId(""); setMeetingNumber("1"); }}>
-              <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
+            <Label>Student</Label>
+            <Select value={studentId} onValueChange={setStudentId}>
+              <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
               <SelectContent className="max-h-[240px] overflow-y-auto">
-                {programs.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                {enrolledStudents.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+
+          {studentId && studentPrograms.length > 1 && (
+            <div>
+              <Label>Class</Label>
+              <Select value={programId} onValueChange={(v) => { setProgramId(v); setMeetingNumber("1"); }}>
+                <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
+                <SelectContent className="max-h-[240px] overflow-y-auto">
+                  {studentPrograms.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {studentId && studentPrograms.length === 1 && selectedProgram && (
+            <div>
+              <Label>Class</Label>
+              <p className="text-sm px-3 py-2 rounded border bg-muted">{selectedProgram.name}</p>
+            </div>
+          )}
+
+          {studentId && studentPrograms.length === 0 && (
+            <p className="text-sm text-destructive">This student is not enrolled in any class.</p>
+          )}
 
           {selectedProgram && (
             <div>
@@ -232,18 +282,6 @@ export default function AdminCheckInOut() {
               </Select>
             </div>
           )}
-
-          <div>
-            <Label>Student</Label>
-            <Select value={studentId} onValueChange={setStudentId} disabled={!programId}>
-              <SelectTrigger><SelectValue placeholder={programId ? "Select student" : "Select class first"} /></SelectTrigger>
-              <SelectContent className="max-h-[240px] overflow-y-auto">
-                {programStudents.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
 
           <div>
             <Label>Status</Label>
