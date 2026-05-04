@@ -14,6 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Check, X, Save, Trash2, Download, ImageOff } from "lucide-react";
 import ClassMaterialsTab from "./team/ClassMaterialsTab";
+import { Progress } from "@/components/ui/progress";
+import { HardDrive } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -124,6 +126,15 @@ export default function AdminAllTeachers() {
   const [ciFrom, setCiFrom] = useState("");
   const [ciTo, setCiTo] = useState("");
   const [ciBusy, setCiBusy] = useState(false);
+
+  // Storage usage (Supabase free tier: 1 GB)
+  const FREE_TIER_BYTES = 1024 * 1024 * 1024;
+  const [storageUsage, setStorageUsage] = useState<{ bucket_id: string; file_count: number; total_bytes: number }[]>([]);
+
+  const fetchStorageUsage = async () => {
+    const { data, error } = await supabase.rpc("get_storage_usage" as any);
+    if (!error && data) setStorageUsage(data as any);
+  };
 
   const fetchData = async () => {
     setLoading(true);
