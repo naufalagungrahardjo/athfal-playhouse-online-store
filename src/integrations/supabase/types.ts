@@ -855,6 +855,7 @@ export type Database = {
           parent_name: string | null
           parent_user_id: string | null
           recipient_teacher_email: string | null
+          recipient_teacher_name: string | null
           subject: string
           topic: string
           updated_at: string
@@ -869,6 +870,7 @@ export type Database = {
           parent_name?: string | null
           parent_user_id?: string | null
           recipient_teacher_email?: string | null
+          recipient_teacher_name?: string | null
           subject: string
           topic: string
           updated_at?: string
@@ -883,6 +885,7 @@ export type Database = {
           parent_name?: string | null
           parent_user_id?: string | null
           recipient_teacher_email?: string | null
+          recipient_teacher_name?: string | null
           subject?: string
           topic?: string
           updated_at?: string

@@ -50,8 +50,8 @@ const ThreadView = ({ thread, viewerRole, staffRole }: Props) => {
         <div className="flex flex-wrap gap-2 mb-2">
           <Badge variant="outline">{thread.message_type}</Badge>
           <Badge variant="secondary">{thread.topic}</Badge>
-          {thread.recipient_teacher_email && (
-            <Badge variant="outline">To: {thread.recipient_teacher_email}</Badge>
+          {(thread.recipient_teacher_name || thread.recipient_teacher_email) && (
+            <Badge variant="outline">To: {thread.recipient_teacher_name || "Teacher"}</Badge>
           )}
         </div>
         <h3 className="font-semibold text-lg">{thread.subject}</h3>

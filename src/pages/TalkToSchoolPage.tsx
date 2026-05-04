@@ -54,11 +54,13 @@ const TalkToSchoolPage = () => {
     const parsed = newSchema.safeParse({ subject, body });
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
     setSending(true);
+    const teacherObj = teachers.find(t => t.email === recipient);
     const { error } = await supabase.from("parent_messages" as any).insert({
       parent_user_id: user.id,
       parent_email: user.email,
       parent_name: user.name,
       recipient_teacher_email: recipient === "admin_only" ? null : recipient,
+      recipient_teacher_name: recipient === "admin_only" ? null : (teacherObj?.name || null),
       message_type: type,
       topic,
       subject: parsed.data.subject,
