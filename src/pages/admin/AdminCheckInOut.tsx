@@ -22,6 +22,7 @@ type CheckRecord = {
   event_time: string;
   photo_url: string | null;
   teacher_email: string;
+  session_date?: string | null;
 };
 
 // Compress an image File to max 640x480 JPEG @ ~0.7 quality
@@ -66,7 +67,6 @@ export default function AdminCheckInOut() {
   const [driveFolder, setDriveFolder] = useState<string | null>(null);
 
   const [programId, setProgramId] = useState<string>("");
-  const [meetingNumber, setMeetingNumber] = useState<string>("1");
   const [studentId, setStudentId] = useState<string>("");
   const [eventType, setEventType] = useState<"check_in" | "check_out">("check_in");
   const [submitting, setSubmitting] = useState(false);
@@ -123,7 +123,6 @@ export default function AdminCheckInOut() {
     if (studentPrograms.length === 1) {
       if (programId !== studentPrograms[0].id) {
         setProgramId(studentPrograms[0].id);
-        setMeetingNumber("1");
       }
     } else if (!studentPrograms.find((p) => p.id === programId)) {
       setProgramId("");
@@ -186,11 +185,14 @@ export default function AdminCheckInOut() {
         photo_storage = "supabase";
       }
 
+      const today = new Date();
+      const sessionDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
       const { error: insErr } = await supabase.from("student_checkinout" as any).insert({
         enrollment_id: selectedEnrollment.id,
         program_id: programId,
         student_id: studentId,
-        meeting_number: Number(meetingNumber),
+        meeting_number: 0,
+        session_date: sessionDateStr,
         event_type: eventType,
         photo_url,
         photo_storage,
@@ -247,7 +249,7 @@ export default function AdminCheckInOut() {
           {studentId && studentPrograms.length > 1 && (
             <div>
               <Label>Class</Label>
-              <Select value={programId} onValueChange={(v) => { setProgramId(v); setMeetingNumber("1"); }}>
+              <Select value={programId} onValueChange={(v) => setProgramId(v)}>
                 <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
                 <SelectContent className="max-h-[240px] overflow-y-auto">
                   {studentPrograms.map((p) => (
@@ -270,16 +272,12 @@ export default function AdminCheckInOut() {
           )}
 
           {selectedProgram && (
-            <div>
-              <Label>Session</Label>
-              <Select value={meetingNumber} onValueChange={setMeetingNumber}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent className="max-h-[240px] overflow-y-auto">
-                  {Array.from({ length: selectedProgram.num_meetings }, (_, i) => (
-                    <SelectItem key={i + 1} value={String(i + 1)}>Session {i + 1}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="rounded border bg-muted px-3 py-2">
+              <p className="text-xs text-muted-foreground">Session date</p>
+              <p className="text-sm font-medium">{format(new Date(), "EEE, dd MMM yyyy")}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Session number is assigned automatically based on today's date.
+              </p>
             </div>
           )}
 
@@ -350,7 +348,8 @@ export default function AdminCheckInOut() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{studentName(r.student_id)}</p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {programName(r.program_id)} · Session {r.meeting_number}
+                      {programName(r.program_id)} · Session {r.meeting_number || "—"}
+                      {r.session_date ? ` · ${format(new Date(r.session_date), "dd MMM")}` : ""}
                     </p>
                   </div>
                   <div className="text-right">

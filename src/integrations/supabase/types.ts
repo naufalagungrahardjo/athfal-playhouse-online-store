@@ -1020,6 +1020,27 @@ export type Database = {
         }
         Relationships: []
       }
+      program_session_dates: {
+        Row: {
+          created_at: string
+          id: string
+          program_id: string
+          session_date: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          program_id: string
+          session_date: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          program_id?: string
+          session_date?: string
+        }
+        Relationships: []
+      }
       promo_codes: {
         Row: {
           applicable_category_slugs: string[] | null
@@ -1084,6 +1105,7 @@ export type Database = {
           meeting_number: number
           motorik_halus: string | null
           motorik_kasar: string | null
+          session_date: string | null
           sosial_emosional: string | null
           tahfidz: string | null
           tahsin: string | null
@@ -1102,6 +1124,7 @@ export type Database = {
           meeting_number: number
           motorik_halus?: string | null
           motorik_kasar?: string | null
+          session_date?: string | null
           sosial_emosional?: string | null
           tahfidz?: string | null
           tahsin?: string | null
@@ -1120,6 +1143,7 @@ export type Database = {
           meeting_number?: number
           motorik_halus?: string | null
           motorik_kasar?: string | null
+          session_date?: string | null
           sosial_emosional?: string | null
           tahfidz?: string | null
           tahsin?: string | null
@@ -1147,6 +1171,7 @@ export type Database = {
           photo_storage: string | null
           photo_url: string | null
           program_id: string
+          session_date: string | null
           student_id: string
           teacher_email: string
           updated_at: string
@@ -1161,6 +1186,7 @@ export type Database = {
           photo_storage?: string | null
           photo_url?: string | null
           program_id: string
+          session_date?: string | null
           student_id: string
           teacher_email: string
           updated_at?: string
@@ -1175,6 +1201,7 @@ export type Database = {
           photo_storage?: string | null
           photo_url?: string | null
           program_id?: string
+          session_date?: string | null
           student_id?: string
           teacher_email?: string
           updated_at?: string
@@ -1423,6 +1450,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_program_session_date: {
+        Args: { p_program_id: string; p_session_date: string }
+        Returns: string
+      }
       auto_cancel_stale_orders: { Args: never; Returns: number }
       auto_enroll_order_to_active_programs: {
         Args: { p_order_id: string }
@@ -1433,6 +1464,10 @@ export type Database = {
         Returns: boolean
       }
       deduct_stock_for_order: { Args: { p_order_id: string }; Returns: boolean }
+      ensure_program_session_date: {
+        Args: { p_program_id: string; p_session_date: string }
+        Returns: string
+      }
       ensure_student_from_child_name: {
         Args: { p_child_name: string }
         Returns: string
@@ -1450,6 +1485,7 @@ export type Database = {
           program_name: string
           record_id: string
           record_kind: string
+          session_date: string
           student_id: string
           student_name: string
           teacher_email: string
@@ -1491,6 +1527,10 @@ export type Database = {
         }[]
       }
       get_order_lookup_token: { Args: { p_order_id: string }; Returns: string }
+      get_session_number: {
+        Args: { p_program_id: string; p_session_date: string }
+        Returns: number
+      }
       increment_promo_usage: {
         Args: { expected_count: number; promo_id: string }
         Returns: boolean

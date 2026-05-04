@@ -6,10 +6,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Download, Save } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Download, Save, Plus, Trash2, CalendarIcon } from "lucide-react";
 import { ClassProgram, Student, StudentEnrollment, StudentAttendance } from "@/hooks/useStudents";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProgramSessionDates } from "@/hooks/useProgramSessionDates";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { format, parseISO } from "date-fns";
 
 const DESCRIPTIVE_FIELDS = [
   { key: "motorik_halus", label: "Motorik Halus" },
@@ -35,22 +39,29 @@ type Props = {
   students: Student[];
   enrollments: StudentEnrollment[];
   attendance: StudentAttendance[];
-  saveAttendance: (record: Omit<StudentAttendance, "id">) => Promise<void>;
+  saveAttendance: (record: Omit<StudentAttendance, "id"> & { session_date?: string }) => Promise<void>;
   refetch: () => Promise<void>;
 };
 
 export default function AttendanceTab({ programs, students, enrollments, attendance, saveAttendance, refetch }: Props) {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const { datesForProgram, addDate, deleteDate, refetch: refetchDates } = useProgramSessionDates();
   const [filterStart, setFilterStart] = useState("");
   const [filterEnd, setFilterEnd] = useState("");
   const [classFilter, setClassFilter] = useState("all");
   const teacherEmail = user?.email || "";
 
+  // Selected session_date per program
+  const [selectedDate, setSelectedDate] = useState<Record<string, string>>({});
+  // New date input per program (for "+ Add date")
+  const [newDateInput, setNewDateInput] = useState<Record<string, string>>({});
+  // Edits keyed by `enrollmentId-sessionDate`
+  const [edits, setEdits] = useState<Record<string, Partial<StudentAttendance>>>({});
+
   const filteredPrograms = useMemo(() => {
     let filtered = programs;
-    if (classFilter !== "all") {
-      filtered = filtered.filter(p => p.id === classFilter);
-    }
+    if (classFilter !== "all") filtered = filtered.filter(p => p.id === classFilter);
     if (filterStart || filterEnd) {
       filtered = filtered.filter(p => {
         if (filterStart && p.end_date < filterStart) return false;
@@ -61,125 +72,135 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
     return filtered;
   }, [programs, filterStart, filterEnd, classFilter]);
 
-  // Local edits state keyed by `enrollmentId-meetingNumber`
-  const [edits, setEdits] = useState<Record<string, Partial<StudentAttendance>>>({});
-  const [selectedMeeting, setSelectedMeeting] = useState<Record<string, number>>({});
+  const getKey = (enrollmentId: string, dateStr: string) => `${enrollmentId}|${dateStr}`;
 
-  const getKey = (enrollmentId: string, meetingNum: number) => `${enrollmentId}-${meetingNum}`;
+  // Lookup attendance row for (enrollment, date) — by session_date OR fallback to date
+  const findAttendance = (enrollmentId: string, dateStr: string, scopeToTeacher: boolean) => {
+    return attendance.find(
+      a => a.enrollment_id === enrollmentId
+        && ((a as any).session_date === dateStr || a.date === dateStr)
+        && (!scopeToTeacher || a.teacher_email === teacherEmail)
+    );
+  };
 
-  // Get field value: for descriptive fields, use current teacher's record; for attendance_status, use latest record
-  const getFieldValue = (enrollmentId: string, meetingNum: number, field: string) => {
-    const key = getKey(enrollmentId, meetingNum);
+  const getFieldValue = (enrollmentId: string, dateStr: string, field: string) => {
+    const key = getKey(enrollmentId, dateStr);
     if (edits[key] && field in edits[key]) return (edits[key] as any)[field];
-    
+
     if (field === "attendance_status") {
-      // For attendance status, get the latest record (any teacher)
       const records = attendance
-        .filter(a => a.enrollment_id === enrollmentId && a.meeting_number === meetingNum)
-        .sort((a, b) => (b.id > a.id ? 1 : -1)); // latest first
+        .filter(a => a.enrollment_id === enrollmentId && (((a as any).session_date === dateStr) || a.date === dateStr))
+        .sort((a, b) => (b.id > a.id ? 1 : -1));
       return records.length > 0 ? records[0].attendance_status : "none";
     }
-    
-    // For descriptive fields, get current teacher's record
-    const existing = attendance.find(
-      a => a.enrollment_id === enrollmentId && a.meeting_number === meetingNum && a.teacher_email === teacherEmail
-    );
+    const existing = findAttendance(enrollmentId, dateStr, true);
     return existing ? (existing as any)[field] : "";
   };
 
-  const setField = (enrollmentId: string, meetingNum: number, field: string, value: string) => {
-    const key = getKey(enrollmentId, meetingNum);
+  const setField = (enrollmentId: string, dateStr: string, field: string, value: string) => {
+    const key = getKey(enrollmentId, dateStr);
     setEdits(prev => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
   };
 
-  const buildRecord = (enrollmentId: string, meetingNum: number, overrides?: Record<string, string>) => {
+  const buildRecord = (enrollmentId: string, dateStr: string) => {
     const fields: any = {};
     for (const f of DESCRIPTIVE_FIELDS.map(d => d.key)) {
-      fields[f] = overrides?.[f] ?? getFieldValue(enrollmentId, meetingNum, f);
+      fields[f] = getFieldValue(enrollmentId, dateStr, f);
     }
     return {
       enrollment_id: enrollmentId,
-      meeting_number: meetingNum,
-      date: new Date().toISOString().split("T")[0],
+      meeting_number: 0, // legacy column, no longer the primary key
+      date: dateStr,
+      session_date: dateStr,
       teacher_email: teacherEmail,
-      attendance_status: overrides?.attendance_status ?? getFieldValue(enrollmentId, meetingNum, "attendance_status"),
+      attendance_status: getFieldValue(enrollmentId, dateStr, "attendance_status"),
       ...fields,
     };
   };
 
-  // Just update local state for attendance status (saved with Save All)
-  const handleStatusChange = (enrollmentId: string, meetingNum: number, value: string) => {
-    setField(enrollmentId, meetingNum, "attendance_status", value);
+  const handleStatusChange = (enrollmentId: string, dateStr: string, value: string) => {
+    setField(enrollmentId, dateStr, "attendance_status", value);
   };
 
-  // Bulk save all students for a program at the selected meeting
   const handleBulkSave = async (programId: string) => {
+    const dateStr = selectedDate[programId];
+    if (!dateStr) {
+      toast({ title: "Pick a session date first", variant: "destructive" });
+      return;
+    }
     const progEnrollments = enrollments.filter(e => e.program_id === programId);
-    const meetingNum = selectedMeeting[programId] || 1;
     for (const enr of progEnrollments) {
-      const status = getFieldValue(enr.id, meetingNum, "attendance_status");
+      const status = getFieldValue(enr.id, dateStr, "attendance_status");
       const hasDescriptive = DESCRIPTIVE_FIELDS.some(d => {
-        const v = getFieldValue(enr.id, meetingNum, d.key);
+        const v = getFieldValue(enr.id, dateStr, d.key);
         return v && String(v).trim() !== "";
       });
       if (status === "none" && !hasDescriptive) {
-        // Treat as "not recorded" — delete existing record(s) for this teacher so it stays unsaved
         await supabase
           .from("student_attendance" as any)
           .delete()
           .eq("enrollment_id", enr.id)
-          .eq("meeting_number", meetingNum)
+          .eq("session_date", dateStr)
           .eq("teacher_email", teacherEmail);
         continue;
       }
-      await saveAttendance(buildRecord(enr.id, meetingNum));
+      // Saving by upsert via the saveAttendance hook (which finds by enrollment+meeting_number+teacher).
+      // Since we're moving to date-based keys, manually upsert here:
+      const existing = findAttendance(enr.id, dateStr, true);
+      const record = buildRecord(enr.id, dateStr) as any;
+      if (existing) {
+        await supabase
+          .from("student_attendance" as any)
+          .update({ ...record, updated_at: new Date().toISOString() })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("student_attendance" as any).insert(record);
+      }
     }
+    toast({ title: "Attendance saved" });
     await refetch();
     setEdits(prev => {
       const n = { ...prev };
-      for (const enr of progEnrollments) {
-        delete n[getKey(enr.id, meetingNum)];
-      }
+      for (const enr of progEnrollments) delete n[getKey(enr.id, dateStr)];
       return n;
     });
   };
 
-  // Attendance summary per program
-  const getAttendanceSummary = (programId: string) => {
-    const progEnrollments = enrollments.filter(e => e.program_id === programId);
-    return progEnrollments.map(enr => {
-      const student = students.find(s => s.id === enr.student_id);
-      // Get unique meetings (deduplicate by meeting_number, take latest)
-      const records = attendance.filter(a => a.enrollment_id === enr.id);
-      const meetingMap = new Map<number, StudentAttendance>();
-      for (const r of records) {
-        const existing = meetingMap.get(r.meeting_number);
-        if (!existing || r.id > existing.id) meetingMap.set(r.meeting_number, r);
-      }
-      const uniqueRecords = Array.from(meetingMap.values());
-      return {
-        studentName: student?.name || "—",
-        present: uniqueRecords.filter(r => r.attendance_status === "present").length,
-        absent: uniqueRecords.filter(r => r.attendance_status === "absent").length,
-        sick_leave: uniqueRecords.filter(r => r.attendance_status === "sick_leave").length,
-        other_leave: uniqueRecords.filter(r => r.attendance_status === "other_leave").length,
-      };
-    });
+  const handleAddDate = async (programId: string) => {
+    const dateStr = newDateInput[programId];
+    if (!dateStr) return;
+    const ok = await addDate(programId, dateStr);
+    if (ok) {
+      setNewDateInput(prev => ({ ...prev, [programId]: "" }));
+      setSelectedDate(prev => ({ ...prev, [programId]: dateStr }));
+    }
+  };
+
+  const handleDeleteDate = async (sessionDateId: string, programId: string, dateStr: string) => {
+    if (!confirm(`Remove session ${dateStr}? Attendance records on that date will remain but the date will no longer appear in the dropdown.`)) return;
+    await deleteDate(sessionDateId);
+    if (selectedDate[programId] === dateStr) {
+      setSelectedDate(prev => ({ ...prev, [programId]: "" }));
+    }
   };
 
   const exportCSV = () => {
-    const headers = ["Program", "Student", "Session #", "Date", "Attendance", ...DESCRIPTIVE_FIELDS.map(d => d.label), "Teacher"];
+    const headers = ["Program", "Session #", "Date", "Student", "Attendance", ...DESCRIPTIVE_FIELDS.map(d => d.label), "Teacher"];
     const rows: string[][] = [];
     for (const prog of filteredPrograms) {
+      const dates = datesForProgram(prog.id);
       const progEnrollments = enrollments.filter(e => e.program_id === prog.id);
-      for (const enr of progEnrollments) {
-        const student = students.find(s => s.id === enr.student_id);
-        const records = attendance.filter(a => a.enrollment_id === enr.id);
-        for (const rec of records) {
-          rows.push([
-            prog.name, student?.name || "", String(rec.meeting_number), rec.date, rec.attendance_status,
-            ...DESCRIPTIVE_FIELDS.map(d => (rec as any)[d.key] || ""), rec.teacher_email,
-          ]);
+      for (let i = 0; i < dates.length; i++) {
+        const d = dates[i];
+        for (const enr of progEnrollments) {
+          const student = students.find(s => s.id === enr.student_id);
+          const recs = attendance.filter(a => a.enrollment_id === enr.id && (((a as any).session_date === d.session_date) || a.date === d.session_date));
+          for (const rec of recs) {
+            rows.push([
+              prog.name, String(i + 1), d.session_date, student?.name || "", rec.attendance_status,
+              ...DESCRIPTIVE_FIELDS.map(f => (rec as any)[f.key] || ""), rec.teacher_email,
+            ]);
+          }
         }
       }
     }
@@ -192,21 +213,16 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
 
   return (
     <div className="space-y-4">
-      {/* Period Filter */}
       <Card>
         <CardContent className="pt-4">
           <div className="flex flex-wrap items-end gap-4">
             <div className="min-w-[200px]">
               <Label>Class</Label>
               <Select value={classFilter} onValueChange={setClassFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Classes</SelectItem>
-                  {programs.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                  ))}
+                  {programs.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -223,90 +239,140 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
         </CardContent>
       </Card>
 
-      {/* Per-program attendance tables */}
       {filteredPrograms.map(prog => {
         const progEnrollments = enrollments.filter(e => e.program_id === prog.id);
-        const meetingNum = selectedMeeting[prog.id] || 1;
+        const dates = datesForProgram(prog.id);
+        const currentDate = selectedDate[prog.id] || (dates[dates.length - 1]?.session_date ?? "");
+        const currentDateRow = dates.find(d => d.session_date === currentDate);
+        const sessionNumber = currentDate ? dates.findIndex(d => d.session_date === currentDate) + 1 : 0;
 
         return (
           <Card key={prog.id}>
             <CardContent className="pt-4 space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <h3 className="font-semibold text-base">{prog.name}</h3>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Label className="text-sm">Session:</Label>
-                  <Select value={String(meetingNum)} onValueChange={v => setSelectedMeeting(prev => ({ ...prev, [prog.id]: Number(v) }))}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
+                  <Select value={currentDate} onValueChange={v => setSelectedDate(prev => ({ ...prev, [prog.id]: v }))}>
+                    <SelectTrigger className="w-[260px]">
+                      <SelectValue placeholder={dates.length === 0 ? "No sessions yet" : "Pick a session date"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {Array.from({ length: prog.num_meetings }, (_, i) => (
-                        <SelectItem key={i + 1} value={String(i + 1)}>Session {i + 1}</SelectItem>
+                      {dates.map((d, i) => (
+                        <SelectItem key={d.id} value={d.session_date}>
+                          Session {i + 1} — {format(parseISO(d.session_date), "EEE, dd MMM yyyy")}
+                        </SelectItem>
                       ))}
+                      {dates.length === 0 && (
+                        <div className="px-2 py-1 text-xs text-muted-foreground">No sessions yet — add one below</div>
+                      )}
                     </SelectContent>
                   </Select>
-                  <Button size="sm" onClick={() => handleBulkSave(prog.id)}>
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" /> Add date</Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-3" align="end">
+                      <Label className="text-xs">New session date</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          type="date"
+                          value={newDateInput[prog.id] || ""}
+                          onChange={e => setNewDateInput(prev => ({ ...prev, [prog.id]: e.target.value }))}
+                          className="h-9"
+                        />
+                        <Button size="sm" onClick={() => handleAddDate(prog.id)} disabled={!newDateInput[prog.id]}>Add</Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+
+                  {currentDateRow && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      title="Remove this session date"
+                      onClick={() => handleDeleteDate(currentDateRow.id, prog.id, currentDate)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
+
+                  <Button size="sm" onClick={() => handleBulkSave(prog.id)} disabled={!currentDate}>
                     <Save className="h-4 w-4 mr-1" /> Save All
                   </Button>
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="min-w-[140px]">Student</TableHead>
-                      <TableHead className="min-w-[130px]">Attendance</TableHead>
-                      {DESCRIPTIVE_FIELDS.map(d => (
-                        <TableHead key={d.key} className="min-w-[140px]">{d.label}</TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {progEnrollments.map(enr => {
-                      const student = students.find(s => s.id === enr.student_id);
-                      return (
-                        <TableRow key={enr.id}>
-                          <TableCell className="font-medium">{student?.name || "—"}</TableCell>
-                          <TableCell>
-                            <Select
-                              value={getFieldValue(enr.id, meetingNum, "attendance_status")}
-                              onValueChange={v => handleStatusChange(enr.id, meetingNum, v)}
-                            >
-                              <SelectTrigger className="w-32">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {ATTENDANCE_STATUSES.map(s => (
-                                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          {DESCRIPTIVE_FIELDS.map(d => (
-                            <TableCell key={d.key}>
-                              <Textarea
-                                className="min-w-[120px] text-xs"
-                                rows={2}
-                                value={getFieldValue(enr.id, meetingNum, d.key)}
-                                onChange={e => setField(enr.id, meetingNum, d.key, e.target.value)}
-                                placeholder={d.label}
-                              />
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      );
-                    })}
-                    {progEnrollments.length === 0 && (
+              {currentDate && (
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  <CalendarIcon className="h-3 w-3" />
+                  Editing Session {sessionNumber} — {format(parseISO(currentDate), "EEEE, dd MMMM yyyy")}
+                </div>
+              )}
+
+              {!currentDate && (
+                <p className="text-sm text-muted-foreground py-3">
+                  No session dates yet. Sessions are auto-created when teachers check students in, or you can add a date manually above.
+                </p>
+              )}
+
+              {currentDate && (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
                       <TableRow>
-                        <TableCell colSpan={2 + DESCRIPTIVE_FIELDS.length} className="text-center text-muted-foreground">
-                          No students enrolled in this program
-                        </TableCell>
+                        <TableHead className="min-w-[140px]">Student</TableHead>
+                        <TableHead className="min-w-[130px]">Attendance</TableHead>
+                        {DESCRIPTIVE_FIELDS.map(d => (
+                          <TableHead key={d.key} className="min-w-[140px]">{d.label}</TableHead>
+                        ))}
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {progEnrollments.map(enr => {
+                        const student = students.find(s => s.id === enr.student_id);
+                        return (
+                          <TableRow key={enr.id}>
+                            <TableCell className="font-medium">{student?.name || "—"}</TableCell>
+                            <TableCell>
+                              <Select
+                                value={getFieldValue(enr.id, currentDate, "attendance_status")}
+                                onValueChange={v => handleStatusChange(enr.id, currentDate, v)}
+                              >
+                                <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  {ATTENDANCE_STATUSES.map(s => (
+                                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            {DESCRIPTIVE_FIELDS.map(d => (
+                              <TableCell key={d.key}>
+                                <Textarea
+                                  className="min-w-[120px] text-xs"
+                                  rows={2}
+                                  value={getFieldValue(enr.id, currentDate, d.key)}
+                                  onChange={e => setField(enr.id, currentDate, d.key, e.target.value)}
+                                  placeholder={d.label}
+                                />
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        );
+                      })}
+                      {progEnrollments.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={2 + DESCRIPTIVE_FIELDS.length} className="text-center text-muted-foreground">
+                            No students enrolled in this program
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </CardContent>
           </Card>
         );
