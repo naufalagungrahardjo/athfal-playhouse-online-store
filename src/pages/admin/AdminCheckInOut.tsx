@@ -39,8 +39,8 @@ async function compressImage(file: File): Promise<Blob> {
     i.onerror = reject;
     i.src = dataUrl;
   });
-  const MAX_W = 640;
-  const MAX_H = 480;
+  const MAX_W = 480;
+  const MAX_H = 360;
   let { width, height } = img;
   const ratio = Math.min(MAX_W / width, MAX_H / height, 1);
   width = Math.round(width * ratio);
@@ -51,7 +51,7 @@ async function compressImage(file: File): Promise<Blob> {
   const ctx = canvas.getContext("2d")!;
   ctx.drawImage(img, 0, 0, width, height);
   return await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("compress failed"))), "image/jpeg", 0.72);
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("compress failed"))), "image/jpeg", 0.6);
   });
 }
 
