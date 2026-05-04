@@ -17,6 +17,7 @@ import PasswordChangeForm from "@/components/profile/PasswordChangeForm";
 import OrderHistoryPanel from "@/components/profile/OrderHistoryPanel";
 import ProfileSidebar from "@/components/profile/ProfileSidebar";
 import ChildAttendancePanel from "@/components/profile/ChildAttendancePanel";
+import { useChildAttendance } from "@/hooks/useChildAttendance";
 
 // Mock order history data
 const mockOrderHistory = [
@@ -64,6 +65,16 @@ const ProfilePage = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { rows: attendanceRows } = useChildAttendance();
+  const [activeTab, setActiveTab] = useState<string>('profile');
+  const [tabAutoSet, setTabAutoSet] = useState(false);
+
+  useEffect(() => {
+    if (!tabAutoSet && attendanceRows.length > 0) {
+      setActiveTab('attendance');
+      setTabAutoSet(true);
+    }
+  }, [attendanceRows, tabAutoSet]);
   const [userProfile, setUserProfile] = useState<{
     phone: string;
     address: string;
@@ -111,7 +122,7 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen">
       <div className="athfal-container py-12">
-        <Tabs defaultValue="profile" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex flex-col md:flex-row items-start gap-8">
           {/* Sidebar */}
           <div className="w-full md:w-1/4">
