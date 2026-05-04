@@ -4,7 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarCheck, ImageIcon } from "lucide-react";
+import { CalendarCheck, ImageIcon, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 
 type GroupKey = string;
@@ -139,10 +139,27 @@ const ChildAttendancePanel = () => {
       )}
 
       <div className="space-y-6">
-        {groups.map((g) => {
+        {groups.map((g, idx) => {
           const duration = formatDuration(g.checkIn?.event_time || undefined, g.checkOut?.event_time || undefined);
+          const isLatest = idx === 0;
+          const firstName = g.studentName.split(" ")[0];
           return (
             <div key={g.key} className="rounded-lg border bg-card overflow-hidden">
+              {isLatest && g.checkOut && (
+                <div className="px-4 py-3 bg-gradient-to-r from-athfal-pink/15 via-athfal-yellow/15 to-athfal-green/15 border-b flex items-start gap-2">
+                  <Sparkles className="h-5 w-5 text-athfal-pink shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <span className="font-semibold">
+                      {language === "id" ? `Sampai jumpa, ${firstName}! 👋` : `Bye bye, ${firstName}! 👋`}
+                    </span>{" "}
+                    <span className="text-muted-foreground">
+                      {language === "id"
+                        ? "Terima kasih sudah belajar dan bermain hari ini. Sampai bertemu lagi di kelas berikutnya! 💕"
+                        : "Thanks for learning and playing today. See you again in the next class! 💕"}
+                    </span>
+                  </div>
+                </div>
+              )}
               {/* Header */}
               <div className="flex items-start justify-between px-4 py-3 border-b bg-accent/40">
                 <div>
