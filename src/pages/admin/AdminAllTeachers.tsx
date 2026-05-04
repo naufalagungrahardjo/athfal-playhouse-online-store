@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { getAdminRole } from "./helpers/getAdminRole";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { Check, X, Save, Trash2, Download } from "lucide-react";
+import { Check, X, Save, Trash2, Download, ImageOff } from "lucide-react";
 import ClassMaterialsTab from "./team/ClassMaterialsTab";
 import {
   AlertDialog,
@@ -79,6 +81,8 @@ const getYearOptions = () => {
 
 export default function AdminAllTeachers() {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isSuperAdmin = getAdminRole(user) === "super_admin";
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [teacherSettings, setTeacherSettings] = useState<TeacherSetting[]>([]);
@@ -100,18 +104,49 @@ export default function AdminAllTeachers() {
   const [driveEdits, setDriveEdits] = useState<Record<string, string>>({});
   const [deleting, setDeleting] = useState(false);
 
+  // Student check-in/out management (super_admin only)
+  type CheckRecord = {
+    id: string;
+    student_id: string;
+    program_id: string;
+    teacher_email: string;
+    event_type: "check_in" | "check_out";
+    event_time: string;
+    photo_url: string | null;
+    session_date: string | null;
+  };
+  const [checkRecords, setCheckRecords] = useState<CheckRecord[]>([]);
+  const [studentList, setStudentList] = useState<{ id: string; name: string }[]>([]);
+  const [programList, setProgramList] = useState<{ id: string; name: string }[]>([]);
+  const [ciClass, setCiClass] = useState("all");
+  const [ciStudent, setCiStudent] = useState("all");
+  const [ciTeacher, setCiTeacher] = useState("all");
+  const [ciFrom, setCiFrom] = useState("");
+  const [ciTo, setCiTo] = useState("");
+  const [ciBusy, setCiBusy] = useState(false);
+
   const fetchData = async () => {
     setLoading(true);
-    const [attRes, leaveRes, settingsRes, teacherAccRes] = await Promise.all([
+    const [attRes, leaveRes, settingsRes, teacherAccRes, ciRes, stuRes, progRes] = await Promise.all([
       supabase.from("teacher_attendance").select("*").order("date", { ascending: false }),
       supabase.from("teacher_leaves").select("*").order("created_at", { ascending: false }),
       supabase.from("teacher_settings").select("*"),
       supabase.from("admin_accounts").select("email").eq("role", "teacher"),
+      supabase
+        .from("student_checkinout" as any)
+        .select("id,student_id,program_id,teacher_email,event_type,event_time,photo_url,session_date")
+        .order("event_time", { ascending: false })
+        .limit(2000),
+      supabase.from("students" as any).select("id,name").order("name"),
+      supabase.from("class_programs" as any).select("id,name").order("name"),
     ]);
 
     if (attRes.data) setAttendances(attRes.data as Attendance[]);
     if (leaveRes.data) setLeaves(leaveRes.data as LeaveRequest[]);
     if (settingsRes.data) setTeacherSettings(settingsRes.data as TeacherSetting[]);
+    if (ciRes.data) setCheckRecords(ciRes.data as any);
+    if (stuRes.data) setStudentList(stuRes.data as any);
+    if (progRes.data) setProgramList(progRes.data as any);
 
     const teacherEmails = (teacherAccRes.data || []).map((t: any) => t.email);
     setTeachers(teacherEmails);
@@ -246,6 +281,100 @@ export default function AdminAllTeachers() {
     }
   };
 
+  // ---- Student Check-In/Out management (super_admin only) ----
+  const filteredCheckRecords = useMemo(() => {
+    return checkRecords.filter((r) => {
+      if (ciClass !== "all" && r.program_id !== ciClass) return false;
+      if (ciStudent !== "all" && r.student_id !== ciStudent) return false;
+      if (ciTeacher !== "all" && r.teacher_email !== ciTeacher) return false;
+      const d = (r.session_date || r.event_time.slice(0, 10));
+      if (ciFrom && d < ciFrom) return false;
+      if (ciTo && d > ciTo) return false;
+      return true;
+    });
+  }, [checkRecords, ciClass, ciStudent, ciTeacher, ciFrom, ciTo]);
+
+  // Convert a Supabase storage public/signed URL into the object path inside the bucket
+  const extractStoragePath = (url: string): string | null => {
+    try {
+      const marker = "/teacher-evidence/";
+      const idx = url.indexOf(marker);
+      if (idx === -1) return null;
+      let path = url.slice(idx + marker.length);
+      const q = path.indexOf("?");
+      if (q !== -1) path = path.slice(0, q);
+      // Some signed URLs have format /object/sign/teacher-evidence/<path>
+      return decodeURIComponent(path);
+    } catch {
+      return null;
+    }
+  };
+
+  const collectStoragePaths = (records: CheckRecord[]) => {
+    const paths: string[] = [];
+    for (const r of records) {
+      if (!r.photo_url) continue;
+      const p = extractStoragePath(r.photo_url);
+      if (p) paths.push(p);
+    }
+    return paths;
+  };
+
+  const handleDeleteCheckPhotos = async () => {
+    if (filteredCheckRecords.length === 0) {
+      toast({ title: "Nothing to delete", description: "No records match the current filters." });
+      return;
+    }
+    setCiBusy(true);
+    try {
+      const paths = collectStoragePaths(filteredCheckRecords);
+      let removed = 0;
+      // Remove in batches of 100
+      for (let i = 0; i < paths.length; i += 100) {
+        const batch = paths.slice(i, i + 100);
+        const { error } = await supabase.storage.from("teacher-evidence").remove(batch);
+        if (!error) removed += batch.length;
+      }
+      // Clear photo_url for the affected rows
+      const ids = filteredCheckRecords.filter((r) => r.photo_url).map((r) => r.id);
+      if (ids.length > 0) {
+        await supabase.from("student_checkinout" as any).update({ photo_url: null } as any).in("id", ids);
+      }
+      toast({ title: "Photos deleted", description: `${removed} photo(s) removed from storage.` });
+      fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to delete photos." });
+    } finally {
+      setCiBusy(false);
+    }
+  };
+
+  const handleDeleteCheckRecords = async () => {
+    if (filteredCheckRecords.length === 0) {
+      toast({ title: "Nothing to delete", description: "No records match the current filters." });
+      return;
+    }
+    setCiBusy(true);
+    try {
+      // First, remove their photos from storage
+      const paths = collectStoragePaths(filteredCheckRecords);
+      for (let i = 0; i < paths.length; i += 100) {
+        const batch = paths.slice(i, i + 100);
+        await supabase.storage.from("teacher-evidence").remove(batch);
+      }
+      // Then delete DB rows
+      const ids = filteredCheckRecords.map((r) => r.id);
+      const { error } = await supabase.from("student_checkinout" as any).delete().in("id", ids);
+      if (error) throw error;
+      toast({ title: "Records deleted", description: `${ids.length} check-in/out record(s) removed.` });
+      fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to delete records." });
+    } finally {
+      setCiBusy(false);
+    }
+  };
+
   const handleSaveDriveFolder = async (teacherEmail: string) => {
     const folder = driveEdits[teacherEmail] ?? "";
     const existing = teacherSettings.find(s => s.teacher_email === teacherEmail);
@@ -301,6 +430,9 @@ export default function AdminAllTeachers() {
           <TabsTrigger value="settings">Teacher Drive Folders</TabsTrigger>
           <TabsTrigger value="leaves">Leave Requests</TabsTrigger>
           <TabsTrigger value="materials">Class Materials</TabsTrigger>
+          {isSuperAdmin && (
+            <TabsTrigger value="student_checkinout">Student Check-In/Out</TabsTrigger>
+          )}
         </TabsList>
 
         {/* ATTENDANCE TAB */}
@@ -466,7 +598,8 @@ export default function AdminAllTeachers() {
             </CardContent>
           </Card>
 
-          {/* Delete All Evidence Card */}
+          {/* Delete All Evidence Card — super_admin only */}
+          {isSuperAdmin && (
           <Card className="border-destructive/50">
             <CardHeader>
               <CardTitle className="text-destructive">Storage Management</CardTitle>
@@ -502,6 +635,7 @@ export default function AdminAllTeachers() {
               </AlertDialog>
             </CardContent>
           </Card>
+          )}
         </TabsContent>
 
         {/* LEAVES TAB */}
@@ -637,6 +771,158 @@ export default function AdminAllTeachers() {
         <TabsContent value="materials">
           <ClassMaterialsTab />
         </TabsContent>
+
+        {/* STUDENT CHECK-IN/OUT TAB — super_admin only */}
+        {isSuperAdmin && (
+        <TabsContent value="student_checkinout" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Student Check-In / Check-Out Records</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Filter records by class, student, teacher, and date range. You can delete only the
+                photos (keeps the log row) or delete the entire records (removes log + photos).
+              </p>
+
+              <div className="flex flex-wrap gap-3 items-end">
+                <div>
+                  <Label>Class</Label>
+                  <Select value={ciClass} onValueChange={setCiClass}>
+                    <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                    <SelectContent className="max-h-[260px]">
+                      <SelectItem value="all">All Classes</SelectItem>
+                      {programList.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Student</Label>
+                  <Select value={ciStudent} onValueChange={setCiStudent}>
+                    <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                    <SelectContent className="max-h-[260px]">
+                      <SelectItem value="all">All Students</SelectItem>
+                      {studentList.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Teacher</Label>
+                  <Select value={ciTeacher} onValueChange={setCiTeacher}>
+                    <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                    <SelectContent className="max-h-[260px]">
+                      <SelectItem value="all">All Teachers</SelectItem>
+                      {teachers.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>From</Label><Input type="date" value={ciFrom} onChange={(e) => setCiFrom(e.target.value)} /></div>
+                <div><Label>To</Label><Input type="date" value={ciTo} onChange={(e) => setCiTo(e.target.value)} /></div>
+                {(ciClass !== "all" || ciStudent !== "all" || ciTeacher !== "all" || ciFrom || ciTo) && (
+                  <Button variant="ghost" onClick={() => { setCiClass("all"); setCiStudent("all"); setCiTeacher("all"); setCiFrom(""); setCiTo(""); }}>Clear filters</Button>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 rounded border border-destructive/40 bg-destructive/5 p-3">
+                <div className="text-sm">
+                  <span className="font-semibold">{filteredCheckRecords.length}</span> record(s) match the current filters.
+                </div>
+                <div className="ml-auto flex flex-wrap gap-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" className="gap-2" disabled={ciBusy || filteredCheckRecords.length === 0}>
+                        <ImageOff className="w-4 h-4" /> Delete Photos Only
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete photos for {filteredCheckRecords.length} record(s)?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This removes the photo files from storage and clears their links, but keeps the check-in/out log entries. This cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteCheckPhotos}>Delete Photos</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" className="gap-2" disabled={ciBusy || filteredCheckRecords.length === 0}>
+                        <Trash2 className="w-4 h-4" /> Delete Records
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete {filteredCheckRecords.length} record(s)?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This permanently deletes the selected check-in/out log entries and their photos from storage. This cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteCheckRecords} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          Yes, Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+
+              <div className="overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Class</TableHead>
+                      <TableHead>Event</TableHead>
+                      <TableHead>Photo</TableHead>
+                      <TableHead>Teacher</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCheckRecords.slice(0, 500).map((r) => {
+                      const sName = studentList.find((s) => s.id === r.student_id)?.name || "—";
+                      const pName = programList.find((p) => p.id === r.program_id)?.name || "—";
+                      const d = r.session_date || r.event_time.slice(0, 10);
+                      return (
+                        <TableRow key={r.id}>
+                          <TableCell>{d}</TableCell>
+                          <TableCell>{format(new Date(r.event_time), "HH:mm")}</TableCell>
+                          <TableCell>{sName}</TableCell>
+                          <TableCell className="max-w-[200px] truncate">{pName}</TableCell>
+                          <TableCell>
+                            <span className={`text-xs font-semibold ${r.event_type === "check_in" ? "text-green-600" : "text-orange-600"}`}>
+                              {r.event_type === "check_in" ? "IN" : "OUT"}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {r.photo_url
+                              ? <a href={r.photo_url} target="_blank" rel="noopener noreferrer" className="text-primary underline text-xs">View</a>
+                              : "—"}
+                          </TableCell>
+                          <TableCell className="text-xs">{r.teacher_email}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {filteredCheckRecords.length === 0 && (
+                      <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No records found</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+                {filteredCheckRecords.length > 500 && (
+                  <p className="text-xs text-muted-foreground mt-2">Showing first 500 of {filteredCheckRecords.length}. Delete actions still apply to all matched records.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        )}
       </Tabs>
     </div>
   );
