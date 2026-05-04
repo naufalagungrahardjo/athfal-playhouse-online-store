@@ -430,6 +430,9 @@ export default function AdminAllTeachers() {
           <TabsTrigger value="settings">Teacher Drive Folders</TabsTrigger>
           <TabsTrigger value="leaves">Leave Requests</TabsTrigger>
           <TabsTrigger value="materials">Class Materials</TabsTrigger>
+          {isSuperAdmin && (
+            <TabsTrigger value="student_checkinout">Student Check-In/Out</TabsTrigger>
+          )}
         </TabsList>
 
         {/* ATTENDANCE TAB */}
