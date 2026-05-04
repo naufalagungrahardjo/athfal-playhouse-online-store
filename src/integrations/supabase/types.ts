@@ -1666,6 +1666,7 @@ export type Database = {
         Args: never
         Returns: {
           email: string
+          name: string
         }[]
       }
       normalize_student_program_text: {
