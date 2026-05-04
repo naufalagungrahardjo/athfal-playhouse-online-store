@@ -37,8 +37,8 @@ const AdminInbox = () => {
                           <Badge variant="outline">{t.message_type}</Badge>
                           <Badge variant="secondary">{t.topic}</Badge>
                           <span className="font-medium">{t.subject}</span>
-                          {t.recipient_teacher_email && (
-                            <Badge variant="outline" className="text-xs">→ {t.recipient_teacher_email}</Badge>
+                          {(t.recipient_teacher_name || t.recipient_teacher_email) && (
+                            <Badge variant="outline" className="text-xs">→ {t.recipient_teacher_name || t.recipient_teacher_email}</Badge>
                           )}
                         </div>
                         {unread && <Badge className="bg-athfal-pink text-white">New</Badge>}
