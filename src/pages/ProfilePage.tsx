@@ -17,7 +17,6 @@ import PasswordChangeForm from "@/components/profile/PasswordChangeForm";
 import OrderHistoryPanel from "@/components/profile/OrderHistoryPanel";
 import ProfileSidebar from "@/components/profile/ProfileSidebar";
 import ChildAttendancePanel from "@/components/profile/ChildAttendancePanel";
-import { useNavigate as _useNav } from 'react-router-dom';
 
 // Mock order history data
 const mockOrderHistory = [
