@@ -1531,6 +1531,14 @@ export type Database = {
         Args: { p_program_id: string; p_session_date: string }
         Returns: number
       }
+      get_storage_usage: {
+        Args: never
+        Returns: {
+          bucket_id: string
+          file_count: number
+          total_bytes: number
+        }[]
+      }
       increment_promo_usage: {
         Args: { expected_count: number; promo_id: string }
         Returns: boolean
