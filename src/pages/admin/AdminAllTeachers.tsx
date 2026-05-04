@@ -440,7 +440,7 @@ export default function AdminAllTeachers() {
       <h1 className="text-2xl font-bold">All Teachers Management</h1>
 
       <Tabs defaultValue="attendance">
-        <TabsList>
+        <TabsList className="flex w-full overflow-x-auto justify-start">
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="settings">Teacher Drive Folders</TabsTrigger>
           <TabsTrigger value="leaves">Leave Requests</TabsTrigger>
