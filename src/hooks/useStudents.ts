@@ -28,6 +28,7 @@ export type StudentAttendance = {
   enrollment_id: string;
   meeting_number: number;
   date: string;
+  session_date?: string | null;
   attendance_status: string;
   motorik_halus: string;
   motorik_kasar: string;
