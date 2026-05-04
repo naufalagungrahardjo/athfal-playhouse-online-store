@@ -50,6 +50,8 @@ const FAQPage = lazyRetry(() => import("./pages/FAQPage"));
 const GalleryPage = lazyRetry(() => import("./pages/GalleryPage"));
 const AuthPage = lazyRetry(() => import("./pages/AuthPage"));
 const ProfilePage = lazyRetry(() => import("./pages/ProfilePage"));
+const StudentAttendancePage = lazyRetry(() => import("./pages/StudentAttendancePage"));
+const MyOrdersPage = lazyRetry(() => import("./pages/MyOrdersPage"));
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
 
 // Admin components
@@ -121,6 +123,8 @@ const App = () => (
                           <Route path="/auth" element={<AuthPage />} />
                           <Route path="/auth/:mode" element={<AuthPage />} />
                           <Route path="/profile" element={<ProfilePage />} />
+                          <Route path="/student" element={<StudentAttendancePage />} />
+                          <Route path="/my-orders" element={<MyOrdersPage />} />
                           
                           {/* Admin Routes */}
                           <Route path="/admin" element={<AdminLayout />}>

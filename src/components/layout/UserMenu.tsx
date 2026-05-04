@@ -8,7 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { logger } from "@/utils/logger";
 
 const UserMenu = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
@@ -41,6 +41,12 @@ const UserMenu = () => {
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={handleProfileClick}>
           {t('profile')}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate('/student')}>
+          {language === 'id' ? 'Siswa' : 'Student'}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate('/my-orders')}>
+          {language === 'id' ? 'Pesanan' : 'Orders'}
         </DropdownMenuItem>
         {isAdmin() && (
           <DropdownMenuItem>
