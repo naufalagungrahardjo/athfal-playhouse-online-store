@@ -177,11 +177,34 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
   };
 
   const handleDeleteDate = async (sessionDateId: string, programId: string, dateStr: string) => {
-    if (!confirm(`Remove session ${dateStr}? Attendance records on that date will remain but the date will no longer appear in the dropdown.`)) return;
+    if (!confirm(`Remove session ${dateStr}? This will permanently delete attendance AND check-in/out records (including photos) for all students on this date.`)) return;
+
+    // Find enrollments for this program to scope the deletion
+    const progEnrollmentIds = enrollments.filter(e => e.program_id === programId).map(e => e.id);
+
+    // Delete attendance records for this date (by session_date or legacy date)
+    if (progEnrollmentIds.length > 0) {
+      await supabase
+        .from("student_attendance" as any)
+        .delete()
+        .in("enrollment_id", progEnrollmentIds)
+        .or(`session_date.eq.${dateStr},date.eq.${dateStr}`);
+
+      // Delete check-in/out records for this date
+      await supabase
+        .from("student_checkinout" as any)
+        .delete()
+        .in("enrollment_id", progEnrollmentIds)
+        .or(`session_date.eq.${dateStr},event_time.gte.${dateStr}T00:00:00,event_time.lt.${dateStr}T23:59:59.999`);
+    }
+
+    // Remove the session date from the dropdown
     await deleteDate(sessionDateId);
     if (selectedDate[programId] === dateStr) {
       setSelectedDate(prev => ({ ...prev, [programId]: "" }));
     }
+    await refetch();
+    toast({ title: "Session deleted", description: `Removed session ${dateStr} and all related records.` });
   };
 
   const exportCSV = () => {
