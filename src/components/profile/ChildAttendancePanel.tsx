@@ -4,7 +4,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarCheck, ImageIcon, Sparkles } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { CalendarCheck, ImageIcon, Sparkles, X } from "lucide-react";
 import { format } from "date-fns";
 
 type GroupKey = string;
@@ -49,6 +50,7 @@ const ChildAttendancePanel = () => {
   const { language } = useLanguage();
   const { rows, loading } = useChildAttendance();
   const [studentFilter, setStudentFilter] = useState<string>("all");
+  const [lightbox, setLightbox] = useState<{ url: string; alt: string } | null>(null);
 
   const students = useMemo(() => {
     const map = new Map<string, string>();
@@ -209,11 +211,13 @@ const ChildAttendancePanel = () => {
                   label={language === "id" ? "MASUK" : "IN"}
                   labelClass="text-blue-600 dark:text-blue-400"
                   record={g.checkIn}
+                  onZoom={(url, alt) => setLightbox({ url, alt })}
                 />
                 <PhotoSlot
                   label={language === "id" ? "PULANG" : "OUT"}
                   labelClass="text-red-500 dark:text-red-400"
                   record={g.checkOut}
+                  onZoom={(url, alt) => setLightbox({ url, alt })}
                 />
               </div>
 
@@ -235,6 +239,27 @@ const ChildAttendancePanel = () => {
           );
         })}
       </div>
+
+      <Dialog open={!!lightbox} onOpenChange={(open) => !open && setLightbox(null)}>
+        <DialogContent className="max-w-4xl p-0 bg-background/95 border-none">
+          {lightbox && (
+            <div className="relative">
+              <button
+                onClick={() => setLightbox(null)}
+                className="absolute top-2 right-2 z-10 p-2 rounded-full bg-background/80 hover:bg-background text-foreground"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <img
+                src={lightbox.url}
+                alt={lightbox.alt}
+                className="w-full h-auto max-h-[85vh] object-contain rounded-md"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -243,21 +268,30 @@ function PhotoSlot({
   label,
   labelClass,
   record,
+  onZoom,
 }: {
   label: string;
   labelClass: string;
   record?: ChildAttendanceRow;
+  onZoom?: (url: string, alt: string) => void;
 }) {
   return (
     <div className="rounded-md overflow-hidden bg-muted/40">
       <div className="aspect-square bg-muted flex items-center justify-center">
         {record?.photo_url ? (
-          <img
-            src={record.photo_url}
-            alt={label}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
+          <button
+            type="button"
+            onClick={() => onZoom?.(record.photo_url!, label)}
+            className="w-full h-full block focus:outline-none focus:ring-2 focus:ring-primary"
+            aria-label={`Zoom ${label} photo`}
+          >
+            <img
+              src={record.photo_url}
+              alt={label}
+              className="w-full h-full object-cover cursor-zoom-in"
+              loading="lazy"
+            />
+          </button>
         ) : (
           <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
         )}
