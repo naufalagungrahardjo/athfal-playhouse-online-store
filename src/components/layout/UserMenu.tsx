@@ -55,11 +55,8 @@ const UserMenu = () => {
           {t('profile')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate('/student')}>
-          {language === 'id' ? 'Siswa' : 'Student'}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/talk-to-school')}>
           <span className="flex items-center justify-between w-full gap-2">
-            <span>{language === 'id' ? 'Bicara dengan Sekolah' : 'Talk To School'}</span>
+            <span>{language === 'id' ? 'Siswa' : 'Student'}</span>
             {unread > 0 && <Badge className="bg-athfal-pink text-white h-5 px-1.5">{unread}</Badge>}
           </span>
         </DropdownMenuItem>
