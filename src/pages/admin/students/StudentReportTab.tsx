@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Download, Loader2, Sparkles } from "lucide-react";
 import { ClassProgram, Student, StudentEnrollment, StudentAttendance } from "@/hooks/useStudents";
 import { useProgramSessionDates } from "@/hooks/useProgramSessionDates";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
