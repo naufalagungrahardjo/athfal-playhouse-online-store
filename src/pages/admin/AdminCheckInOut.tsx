@@ -4,9 +4,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, LogIn, LogOut, Loader2 } from "lucide-react";
+import { Camera, LogIn, LogOut, Loader2, Clock } from "lucide-react";
 import { format } from "date-fns";
 
 type Program = { id: string; name: string; num_meetings: number };
@@ -72,6 +73,75 @@ export default function AdminCheckInOut() {
   const [submitting, setSubmitting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Teacher self attendance
+  const today = format(new Date(), "yyyy-MM-dd");
+  const [teacherAttendance, setTeacherAttendance] = useState<any | null>(null);
+  const [teacherRemarks, setTeacherRemarks] = useState("");
+  const [teacherSaving, setTeacherSaving] = useState(false);
+
+  const fetchTeacherAttendance = async () => {
+    if (!teacherEmail) return;
+    const { data } = await supabase
+      .from("teacher_attendance")
+      .select("*")
+      .eq("teacher_email", teacherEmail)
+      .eq("date", today)
+      .maybeSingle();
+    if (data) {
+      setTeacherAttendance(data);
+      setTeacherRemarks((data as any).remarks || "");
+    }
+  };
+
+  useEffect(() => {
+    if (teacherEmail) fetchTeacherAttendance();
+  }, [teacherEmail]);
+
+  const handleTeacherCheckIn = async () => {
+    if (teacherAttendance?.arrival_time) {
+      toast({ title: "Already checked in", description: "Arrival already recorded today." });
+      return;
+    }
+    setTeacherSaving(true);
+    const now = new Date().toISOString();
+    const { error } = await supabase.from("teacher_attendance").insert({
+      teacher_email: teacherEmail,
+      date: today,
+      arrival_time: now,
+      remarks: teacherRemarks || null,
+    });
+    setTeacherSaving(false);
+    if (error) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } else {
+      toast({ title: "Checked in", description: `Arrived at ${format(new Date(), "HH:mm")}` });
+      fetchTeacherAttendance();
+    }
+  };
+
+  const handleTeacherCheckOut = async () => {
+    if (!teacherAttendance) {
+      toast({ variant: "destructive", title: "Check in first", description: "Please record arrival first." });
+      return;
+    }
+    setTeacherSaving(true);
+    const { error } = await supabase
+      .from("teacher_attendance")
+      .update({
+        leave_time: format(new Date(), "HH:mm"),
+        remarks: teacherRemarks || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", teacherAttendance.id);
+    setTeacherSaving(false);
+    if (error) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } else {
+      toast({ title: "Checked out", description: "Departure recorded." });
+      fetchTeacherAttendance();
+    }
+  };
 
   const fetchAll = async () => {
     const todayStart = new Date();
@@ -228,6 +298,51 @@ export default function AdminCheckInOut() {
       <p className="text-sm text-muted-foreground">
         Take a photo of the student to record their arrival or departure. Check-in automatically marks attendance as present.
       </p>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Clock className="w-4 h-4" /> My Attendance — {today}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap gap-2 text-sm">
+            <span className="px-3 py-1.5 rounded-md bg-muted">
+              Arrival: <strong>{teacherAttendance?.arrival_time ? format(new Date(teacherAttendance.arrival_time), "HH:mm") : "—"}</strong>
+            </span>
+            <span className="px-3 py-1.5 rounded-md bg-muted">
+              Leave: <strong>{teacherAttendance?.leave_time || "—"}</strong>
+            </span>
+          </div>
+          <div>
+            <Label>Remarks</Label>
+            <Textarea
+              value={teacherRemarks}
+              onChange={(e) => setTeacherRemarks(e.target.value)}
+              placeholder="Write any notes for today..."
+              rows={2}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              onClick={handleTeacherCheckIn}
+              disabled={teacherSaving || !!teacherAttendance?.arrival_time}
+              variant="default"
+              className="gap-2"
+            >
+              <LogIn className="w-4 h-4" /> Check In
+            </Button>
+            <Button
+              onClick={handleTeacherCheckOut}
+              disabled={teacherSaving || !teacherAttendance?.arrival_time || !!teacherAttendance?.leave_time}
+              variant="outline"
+              className="gap-2"
+            >
+              <LogOut className="w-4 h-4" /> Check Out
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
