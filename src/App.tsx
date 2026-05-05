@@ -52,7 +52,6 @@ const AuthPage = lazyRetry(() => import("./pages/AuthPage"));
 const ProfilePage = lazyRetry(() => import("./pages/ProfilePage"));
 const StudentAttendancePage = lazyRetry(() => import("./pages/StudentAttendancePage"));
 const MyOrdersPage = lazyRetry(() => import("./pages/MyOrdersPage"));
-const TalkToSchoolPage = lazyRetry(() => import("./pages/TalkToSchoolPage"));
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
 
 // Admin components
