@@ -123,7 +123,8 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
   };
 
   const handleBulkSave = async (programId: string) => {
-    const dateStr = selectedDate[programId];
+    const progDates = datesForProgram(programId);
+    const dateStr = selectedDate[programId] || progDates[progDates.length - 1]?.session_date || "";
     if (!dateStr) {
       toast({ title: "Pick a session date first", variant: "destructive" });
       return;
