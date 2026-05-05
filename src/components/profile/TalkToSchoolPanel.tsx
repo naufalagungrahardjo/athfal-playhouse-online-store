@@ -35,7 +35,7 @@ const TalkToSchoolPanel = () => {
   const [recipient, setRecipient] = useState<string>("admin_only");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
-  const [sending, setSending] = useState(false);
+  const [sending, setSendingState] = useState(false);
 
   useEffect(() => {
     supabase.rpc("list_teacher_recipients" as any).then(({ data }) => {
@@ -48,7 +48,7 @@ const TalkToSchoolPanel = () => {
   const submit = async () => {
     const parsed = newSchema.safeParse({ subject, body });
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
-    setSending(true);
+    setSendingState(true);
     const teacherObj = teachers.find(t => t.email === recipient);
     const { error } = await supabase.from("parent_messages" as any).insert({
       parent_user_id: user.id,
@@ -61,14 +61,12 @@ const TalkToSchoolPanel = () => {
       subject: parsed.data.subject,
       body: parsed.data.body,
     } as any);
-    setSending(false);
+    setSendingState(false);
     if (error) { toast.error(error.message); return; }
     toast.success(language === "id" ? "Pesan terkirim" : "Message sent");
     setComposing(false);
     setSubject(""); setBody(""); setRecipient("admin_only");
   };
-
-  function setSending(v: boolean) { /* placeholder to satisfy ts before rebind */ }
 
   const openThread = threads.find(t => t.id === openId);
 
