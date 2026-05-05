@@ -150,12 +150,27 @@ const ChildAttendancePanel = () => {
                   <Sparkles className="h-5 w-5 text-athfal-pink shrink-0 mt-0.5" />
                   <div className="text-sm">
                     <span className="font-semibold">
-                      {language === "id" ? `Sampai jumpa, ${firstName}! 👋` : `Bye bye, ${firstName}! 👋`}
+                      {language === "id" ? `Sampai jumpa lagi, ${firstName}! 👋` : `See you again, ${firstName}! 👋`}
                     </span>{" "}
                     <span className="text-muted-foreground">
                       {language === "id"
                         ? "Terima kasih sudah belajar dan bermain hari ini. Sampai bertemu lagi di kelas berikutnya! 💕"
                         : "Thanks for learning and playing today. See you again in the next class! 💕"}
+                    </span>
+                  </div>
+                </div>
+              )}
+              {isLatest && g.checkIn && !g.checkOut && (
+                <div className="px-4 py-3 bg-gradient-to-r from-athfal-green/15 via-athfal-yellow/15 to-athfal-pink/15 border-b flex items-start gap-2">
+                  <Sparkles className="h-5 w-5 text-athfal-green shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <span className="font-semibold">
+                      {language === "id" ? `Selamat datang, ${firstName}! 🎉` : `Welcome, ${firstName}! 🎉`}
+                    </span>{" "}
+                    <span className="text-muted-foreground">
+                      {language === "id"
+                        ? "Selamat bermain dan belajar hari ini! ✨"
+                        : "Have fun learning and playing today! ✨"}
                     </span>
                   </div>
                 </div>
