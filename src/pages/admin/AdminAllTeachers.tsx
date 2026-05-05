@@ -513,6 +513,33 @@ export default function AdminAllTeachers() {
                   <Button variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); setFilterMonth("all"); setFilterYear("all"); }}>Clear filters</Button>
                 )}
                 <Button variant="outline" onClick={exportAttendanceCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
+                {isSuperAdmin && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" className="gap-1" disabled={deletingAttendance}>
+                        <Trash2 className="w-4 h-4" />
+                        {deletingAttendance ? "Deleting..." : "Delete Attendance History"}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete attendance history?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete <strong>{filteredAttendances.length}</strong> attendance record(s) for{" "}
+                          <strong>{teacherFilter === "all" ? "ALL teachers" : teacherFilter}</strong>
+                          {(dateFrom || dateTo || filterMonth !== "all" || filterYear !== "all") ? " matching the current date filters" : ""}.
+                          This cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteAttendanceHistory} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          Yes, Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </div>
 
               {/* Attendance Summary Table */}
