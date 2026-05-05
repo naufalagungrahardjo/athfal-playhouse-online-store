@@ -105,6 +105,7 @@ export default function AdminAllTeachers() {
 
   const [driveEdits, setDriveEdits] = useState<Record<string, string>>({});
   const [deleting, setDeleting] = useState(false);
+  const [deletingAttendance, setDeletingAttendance] = useState(false);
 
   // Student check-in/out management (super_admin only)
   type CheckRecord = {
