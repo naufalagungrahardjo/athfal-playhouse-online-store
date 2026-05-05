@@ -26,7 +26,8 @@ type CheckRecord = {
   session_date?: string | null;
 };
 
-// Compress an image File to max 640x480 JPEG @ ~0.7 quality
+// Compress check-in/out photo aggressively while keeping faces recognizable.
+// Target: ~800x600, JPEG q=0.75 → typically 60–150 KB per photo.
 async function compressImage(file: File): Promise<Blob> {
   const dataUrl = await new Promise<string>((resolve, reject) => {
     const r = new FileReader();
@@ -40,8 +41,8 @@ async function compressImage(file: File): Promise<Blob> {
     i.onerror = reject;
     i.src = dataUrl;
   });
-  const MAX_W = 480;
-  const MAX_H = 360;
+  const MAX_W = 800;
+  const MAX_H = 600;
   let { width, height } = img;
   const ratio = Math.min(MAX_W / width, MAX_H / height, 1);
   width = Math.round(width * ratio);
@@ -52,7 +53,7 @@ async function compressImage(file: File): Promise<Blob> {
   const ctx = canvas.getContext("2d")!;
   ctx.drawImage(img, 0, 0, width, height);
   return await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("compress failed"))), "image/jpeg", 0.6);
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("compress failed"))), "image/jpeg", 0.75);
   });
 }
 
