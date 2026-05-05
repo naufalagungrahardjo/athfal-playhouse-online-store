@@ -29,7 +29,9 @@ const AuthPage = () => {
   // When user is logged in, determine redirection by role
   useEffect(() => {
     if (user) {
-      if (
+      if (user.role === 'teacher') {
+        navigate('/admin/check-in-out', { replace: true });
+      } else if (
         user.role === 'admin' ||
         user.role === 'super_admin' ||
         user.role === 'orders_manager' ||

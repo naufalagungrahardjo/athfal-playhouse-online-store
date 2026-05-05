@@ -44,9 +44,9 @@ const AdminDashboard = () => {
     return <Navigate to="/admin/blogs" replace />;
   }
 
-  // Teacher should go directly to teacher dashboard
+  // Teacher should go directly to the Check-In/Check-Out page
   if (adminRole === 'teacher') {
-    return <Navigate to="/admin/teacher" replace />;
+    return <Navigate to="/admin/check-in-out" replace />;
   }
 
   const handleCloseDialog = () => {
