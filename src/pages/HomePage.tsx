@@ -1,4 +1,7 @@
 import { Suspense, lazy } from 'react';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { HomeBanner } from '@/components/HomeBanner';
 import { CategoriesSection } from '@/components/home/CategoriesSection';
 import { FeaturedProductsSection } from '@/components/home/FeaturedProductsSection';
@@ -13,6 +16,15 @@ const CollaboratorsSlider = lazy(() => import('@/components/home/CollaboratorsSl
 const BlogSlider = lazy(() => import('@/components/home/BlogSlider'));
 
 const HomePage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user?.role === 'teacher') {
+      navigate('/admin/check-in-out', { replace: true });
+    }
+  }, [user, navigate]);
+
   return (
     <div className="flex flex-col min-h-screen">
       <SEOHead url="/" />
