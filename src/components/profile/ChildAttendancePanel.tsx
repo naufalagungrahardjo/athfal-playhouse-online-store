@@ -88,6 +88,16 @@ const ChildAttendancePanel = () => {
     return Array.from(map.values()).sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [rows, studentFilter]);
 
+  // Latest group per student (so each child gets their own greeting banner)
+  const latestKeyByStudent = useMemo(() => {
+    const seen = new Map<string, GroupKey>();
+    for (const g of groups) {
+      const sid = g.attendance?.student_id || g.checkIn?.student_id || g.checkOut?.student_id || g.studentName;
+      if (!seen.has(sid)) seen.set(sid, g.key);
+    }
+    return new Set(seen.values());
+  }, [groups]);
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -139,9 +149,9 @@ const ChildAttendancePanel = () => {
       )}
 
       <div className="space-y-6">
-        {groups.map((g, idx) => {
+        {groups.map((g) => {
           const duration = formatDuration(g.checkIn?.event_time || undefined, g.checkOut?.event_time || undefined);
-          const isLatest = idx === 0;
+          const isLatest = latestKeyByStudent.has(g.key);
           const firstName = g.studentName.split(" ")[0];
           return (
             <div key={g.key} className="rounded-lg border bg-card overflow-hidden">
