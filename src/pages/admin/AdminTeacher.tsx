@@ -220,70 +220,12 @@ export default function AdminTeacher() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
 
-      <Tabs defaultValue="attendance">
+      <Tabs defaultValue="recap">
         <TabsList className="flex w-full overflow-x-auto justify-start">
-          <TabsTrigger value="attendance">Daily Attendance</TabsTrigger>
           <TabsTrigger value="recap">Attendance Recap</TabsTrigger>
           <TabsTrigger value="leave">Leave Request</TabsTrigger>
           <TabsTrigger value="materials">Class Materials</TabsTrigger>
         </TabsList>
-
-        {/* DAILY ATTENDANCE TAB */}
-        <TabsContent value="attendance" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Clock className="w-5 h-5" /> Today&apos;s Attendance — {today}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Button onClick={handleClockIn} disabled={!!todayAttendance?.arrival_time} className="gap-2">
-                  <Clock className="w-4 h-4" />
-                  {todayAttendance?.arrival_time ? `Arrived at ${format(new Date(todayAttendance.arrival_time), "HH:mm")}` : "Record Arrival"}
-                </Button>
-              </div>
-
-              {todayAttendance?.arrival_time && (
-                <>
-                  <div>
-                    <Label>Time of Leave (24h format)</Label>
-                    <Input type="time" value={leaveTime} onChange={e => setLeaveTime(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label>Session Attendance</Label>
-                    <div className="flex flex-col gap-2 mt-1">
-                      {SESSION_OPTIONS.map(s => (
-                        <label key={s.id} className="flex items-center gap-2 text-sm">
-                          <Checkbox
-                            checked={sessions.includes(s.id)}
-                            onCheckedChange={(checked) => {
-                              setSessions(prev => checked ? [...prev, s.id] : prev.filter(x => x !== s.id));
-                            }}
-                          />
-                          {s.label}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Upload Evidence (Picture)</Label>
-                    {driveFolder && (
-                      <p className="text-xs text-muted-foreground mb-1">
-                        Google Drive folder: <a href={driveFolder} target="_blank" rel="noopener noreferrer" className="underline text-primary">{driveFolder}</a>
-                      </p>
-                    )}
-                    <Input type="file" accept="image/*" onChange={handleUploadEvidence} disabled={uploading} />
-                    {evidenceUrl && <img src={evidenceUrl} alt="Evidence" className="mt-2 w-32 h-32 object-cover rounded border" />}
-                  </div>
-                  <div>
-                    <Label>Remarks</Label>
-                    <Textarea value={remarks} onChange={e => setRemarks(e.target.value)} placeholder="Write any notes..." />
-                  </div>
-                  <Button onClick={handleSaveAttendance} className="gap-2"><Send className="w-4 h-4" /> Save Attendance</Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* RECAP TAB */}
         <TabsContent value="recap" className="space-y-4">
