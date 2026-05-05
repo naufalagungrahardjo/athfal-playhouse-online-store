@@ -105,6 +105,7 @@ export default function AdminAllTeachers() {
 
   const [driveEdits, setDriveEdits] = useState<Record<string, string>>({});
   const [deleting, setDeleting] = useState(false);
+  const [deletingAttendance, setDeletingAttendance] = useState(false);
 
   // Student check-in/out management (super_admin only)
   type CheckRecord = {
@@ -419,6 +420,26 @@ export default function AdminAllTeachers() {
     downloadCSV(headers, rows, "teacher_attendance.csv");
   };
 
+  const handleDeleteAttendanceHistory = async () => {
+    if (filteredAttendances.length === 0) {
+      toast({ title: "Nothing to delete", description: "No attendance records match the current filters." });
+      return;
+    }
+    setDeletingAttendance(true);
+    try {
+      const ids = filteredAttendances.map(a => a.id);
+      const { error } = await supabase.from("teacher_attendance").delete().in("id", ids);
+      if (error) throw error;
+      const scope = teacherFilter === "all" ? "all teachers" : teacherFilter;
+      toast({ title: "Deleted", description: `${ids.length} attendance record(s) for ${scope} removed.` });
+      fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to delete attendance records." });
+    } finally {
+      setDeletingAttendance(false);
+    }
+  };
+
   const exportLeavesCSV = () => {
     const headers = ["Teacher", "Start", "End", "Remarks", "Status"];
     const rows = leaves.map(l => [l.teacher_email, l.start_date, l.end_date, l.remarks || "", l.status]);
@@ -492,6 +513,33 @@ export default function AdminAllTeachers() {
                   <Button variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); setFilterMonth("all"); setFilterYear("all"); }}>Clear filters</Button>
                 )}
                 <Button variant="outline" onClick={exportAttendanceCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
+                {isSuperAdmin && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" className="gap-1" disabled={deletingAttendance}>
+                        <Trash2 className="w-4 h-4" />
+                        {deletingAttendance ? "Deleting..." : "Delete Attendance History"}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete attendance history?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete <strong>{filteredAttendances.length}</strong> attendance record(s) for{" "}
+                          <strong>{teacherFilter === "all" ? "ALL teachers" : teacherFilter}</strong>
+                          {(dateFrom || dateTo || filterMonth !== "all" || filterYear !== "all") ? " matching the current date filters" : ""}.
+                          This cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteAttendanceHistory} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          Yes, Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </div>
 
               {/* Attendance Summary Table */}
