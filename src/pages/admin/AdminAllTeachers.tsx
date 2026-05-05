@@ -420,6 +420,26 @@ export default function AdminAllTeachers() {
     downloadCSV(headers, rows, "teacher_attendance.csv");
   };
 
+  const handleDeleteAttendanceHistory = async () => {
+    if (filteredAttendances.length === 0) {
+      toast({ title: "Nothing to delete", description: "No attendance records match the current filters." });
+      return;
+    }
+    setDeletingAttendance(true);
+    try {
+      const ids = filteredAttendances.map(a => a.id);
+      const { error } = await supabase.from("teacher_attendance").delete().in("id", ids);
+      if (error) throw error;
+      const scope = teacherFilter === "all" ? "all teachers" : teacherFilter;
+      toast({ title: "Deleted", description: `${ids.length} attendance record(s) for ${scope} removed.` });
+      fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to delete attendance records." });
+    } finally {
+      setDeletingAttendance(false);
+    }
+  };
+
   const exportLeavesCSV = () => {
     const headers = ["Teacher", "Start", "End", "Remarks", "Status"];
     const rows = leaves.map(l => [l.teacher_email, l.start_date, l.end_date, l.remarks || "", l.status]);
