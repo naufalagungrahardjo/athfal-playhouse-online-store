@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, Loader2, Sparkles } from "lucide-react";
 import { ClassProgram, Student, StudentEnrollment, StudentAttendance } from "@/hooks/useStudents";
+import { useProgramSessionDates } from "@/hooks/useProgramSessionDates";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +44,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
   const [aiSummary, setAiSummary] = useState("");
   const [summaryLoading, setSummaryLoading] = useState(false);
   const { toast } = useToast();
+  const { datesForProgram } = useProgramSessionDates();
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
 
@@ -69,34 +71,43 @@ export default function StudentReportTab({ programs, students, enrollments, atte
     return attendance.filter(a => enrollIds.has(a.enrollment_id));
   }, [attendance, studentEnrollments]);
 
-  const maxMeetingNumber = useMemo(() => {
-    const enrolledProgIds = new Set(studentEnrollments.map(e => e.program_id));
-    const enrolledProgs = programs.filter(p => enrolledProgIds.has(p.id));
-    return Math.max(1, ...enrolledProgs.map(p => p.num_meetings));
-  }, [studentEnrollments, programs]);
+  // Session dates aggregated from program_session_dates across the student's enrolled programs.
+  // Each entry: { sessionNumber, dateStr, programIds: Set }
+  const sessionList = useMemo(() => {
+    const dateSet = new Set<string>();
+    for (const enr of studentEnrollments) {
+      for (const d of datesForProgram(enr.program_id)) {
+        dateSet.add(d.session_date);
+      }
+    }
+    const sorted = Array.from(dateSet).sort();
+    return sorted.map((dateStr, i) => ({ sessionNumber: i + 1, dateStr }));
+  }, [studentEnrollments, datesForProgram]);
 
-  // All meeting numbers from 1 to max
-  const allMeetingNumbers = useMemo(() => {
-    return Array.from({ length: maxMeetingNumber }, (_, i) => i + 1);
-  }, [maxMeetingNumber]);
+  const maxMeetingNumber = sessionList.length || 1;
 
-  const displayMeetings = useMemo(() => {
-    if (meetingFilter === "all") return allMeetingNumbers;
-    return [Number(meetingFilter)];
-  }, [meetingFilter, allMeetingNumbers]);
+  const displaySessions = useMemo(() => {
+    if (meetingFilter === "all") return sessionList;
+    return sessionList.filter(s => String(s.sessionNumber) === meetingFilter);
+  }, [meetingFilter, sessionList]);
+
+  // Get attendance records for a given date (matches session_date or legacy date)
+  const recordsForDate = useCallback((dateStr: string) => {
+    return studentAttendance.filter(a => ((a as any).session_date === dateStr) || a.date === dateStr);
+  }, [studentAttendance]);
 
   // Build compilation text for each field
   const getCompilation = useCallback((fieldKey: string) => {
     const parts: string[] = [];
-    for (const m of allMeetingNumbers) {
-      const recs = studentAttendance.filter(a => a.meeting_number === m);
+    for (const s of sessionList) {
+      const recs = recordsForDate(s.dateStr);
       for (const r of recs) {
         const val = (r as any)[fieldKey];
-        if (val) parts.push(`Session ${m}: ${val} [${r.teacher_email}]`);
+        if (val) parts.push(`Session ${s.sessionNumber}: ${val} [${r.teacher_email}]`);
       }
     }
     return parts.join("\n");
-  }, [allMeetingNumbers, studentAttendance]);
+  }, [sessionList, recordsForDate]);
 
   // Build full compilation for AI summary
   const getFullCompilation = useCallback(() => {
@@ -155,17 +166,17 @@ export default function StudentReportTab({ programs, students, enrollments, atte
 
   const exportCSV = () => {
     if (!selectedStudent) return;
-    const headers = ["Field", ...displayMeetings.map(m => `Session ${m}`), "Compilation"];
+    const headers = ["Field", ...displaySessions.map(s => `Session ${s.sessionNumber}`), "Compilation"];
     const rows: string[][] = [];
 
-    rows.push(["Attendance", ...displayMeetings.map(m => {
-      const recs = studentAttendance.filter(a => a.meeting_number === m).sort((a, b) => (b.id > a.id ? 1 : -1));
+    rows.push(["Attendance", ...displaySessions.map(s => {
+      const recs = recordsForDate(s.dateStr).sort((a, b) => (b.id > a.id ? 1 : -1));
       return recs.length > 0 ? (STATUS_LABELS[recs[0].attendance_status] || recs[0].attendance_status) : "";
     }), ""]);
 
     for (const field of DESCRIPTIVE_FIELDS) {
-      rows.push([field.label, ...displayMeetings.map(m => {
-        const recs = studentAttendance.filter(a => a.meeting_number === m);
+      rows.push([field.label, ...displaySessions.map(s => {
+        const recs = recordsForDate(s.dateStr);
         return recs.map(r => `${(r as any)[field.key] || ""}${r.teacher_email ? ` [${r.teacher_email}]` : ""}`).filter(Boolean).join("; ");
       }), getCompilation(field.key).replace(/\n/g, "; ")]);
     }
@@ -219,8 +230,10 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Sessions</SelectItem>
-                      {Array.from({ length: maxMeetingNumber }, (_, i) => (
-                        <SelectItem key={i + 1} value={String(i + 1)}>Session {i + 1}</SelectItem>
+                      {sessionList.map(s => (
+                        <SelectItem key={s.sessionNumber} value={String(s.sessionNumber)}>
+                          Session {s.sessionNumber} — {format(parseISO(s.dateStr), "dd MMM yyyy")}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -285,8 +298,11 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                   <TableHeader>
                     <TableRow>
                       <TableHead className="min-w-[140px] sticky left-0 bg-background z-10">Field</TableHead>
-                      {displayMeetings.map(m => (
-                        <TableHead key={m} className="min-w-[200px]">Session {m}</TableHead>
+                      {displaySessions.map(s => (
+                        <TableHead key={s.sessionNumber} className="min-w-[200px]">
+                          Session {s.sessionNumber}
+                          <div className="text-[10px] font-normal text-muted-foreground">{format(parseISO(s.dateStr), "dd MMM yyyy")}</div>
+                        </TableHead>
                       ))}
                       <TableHead className="min-w-[280px] bg-blue-50">Compilation</TableHead>
                       {aiSummary && <TableHead className="min-w-[300px] bg-purple-50">AI Summary</TableHead>}
@@ -296,13 +312,11 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                     {/* Attendance row */}
                     <TableRow>
                       <TableCell className="font-medium sticky left-0 bg-background z-10">Attendance</TableCell>
-                      {displayMeetings.map(m => {
-                        const recs = studentAttendance
-                          .filter(a => a.meeting_number === m)
-                          .sort((a, b) => (b.id > a.id ? 1 : -1));
+                      {displaySessions.map(s => {
+                        const recs = recordsForDate(s.dateStr).sort((a, b) => (b.id > a.id ? 1 : -1));
                         const status = recs.length > 0 ? recs[0].attendance_status : null;
                         return (
-                          <TableCell key={m}>
+                          <TableCell key={s.sessionNumber}>
                             {status && (
                               <span className={`text-xs px-1.5 py-0.5 rounded ${
                                 status === "present" ? "bg-green-100 text-green-700" :
@@ -325,10 +339,10 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                     {DESCRIPTIVE_FIELDS.map(field => (
                       <TableRow key={field.key}>
                         <TableCell className="font-medium sticky left-0 bg-background z-10">{field.label}</TableCell>
-                        {displayMeetings.map(m => {
-                          const recs = studentAttendance.filter(a => a.meeting_number === m);
+                        {displaySessions.map(s => {
+                          const recs = recordsForDate(s.dateStr);
                           return (
-                            <TableCell key={m}>
+                            <TableCell key={s.sessionNumber}>
                               {recs.map(r => {
                                 const val = (r as any)[field.key];
                                 if (!val) return null;
