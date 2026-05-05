@@ -1,0 +1,79 @@
+/**
+ * Compress an image File before upload to reduce egress and storage usage.
+ * Resizes to fit within maxWidth/maxHeight (preserving aspect ratio) and
+ * re-encodes as JPEG (or WebP) at the given quality. Skips compression for
+ * SVG/GIF (animations) and tiny files.
+ */
+export interface CompressOptions {
+  maxWidth?: number;
+  maxHeight?: number;
+  quality?: number;
+  mimeType?: "image/jpeg" | "image/webp";
+  /** Skip files already smaller than this (bytes). Default 80KB. */
+  skipBelowBytes?: number;
+}
+
+export async function compressImageFile(
+  file: File,
+  opts: CompressOptions = {}
+): Promise<File> {
+  const {
+    maxWidth = 1600,
+    maxHeight = 1600,
+    quality = 0.8,
+    mimeType = "image/jpeg",
+    skipBelowBytes = 80 * 1024,
+  } = opts;
+
+  if (!file.type.startsWith("image/")) return file;
+  // Don't touch SVG or animated GIFs
+  if (file.type === "image/svg+xml" || file.type === "image/gif") return file;
+  if (file.size <= skipBelowBytes) return file;
+
+  try {
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result as string);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = dataUrl;
+    });
+
+    let { width, height } = img;
+    const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
+    if (ratio >= 1 && file.size <= 400 * 1024) {
+      // Already within bounds and reasonably sized; skip re-encode
+      return file;
+    }
+    width = Math.round(width * ratio);
+    height = Math.round(height * ratio);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, mimeType, quality)
+    );
+    if (!blob) return file;
+    // If compression made it bigger somehow, keep original
+    if (blob.size >= file.size) return file;
+
+    const ext = mimeType === "image/webp" ? "webp" : "jpg";
+    const baseName = file.name.replace(/\.[^.]+$/, "");
+    return new File([blob], `${baseName}.${ext}`, {
+      type: mimeType,
+      lastModified: Date.now(),
+    });
+  } catch {
+    return file;
+  }
+}
