@@ -41,8 +41,8 @@ const AuthPage = () => {
       ) {
         navigate('/admin', { replace: true });
       } else {
-        // Default user: go to orders tab on profile page
-        navigate('/profile?tab=orders', { replace: true });
+        // Default user: go to student attendance page
+        navigate('/student', { replace: true });
       }
     }
   }, [user, navigate]);
