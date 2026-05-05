@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,6 +47,33 @@ export default function StudentReportTab({ programs, students, enrollments, atte
   const { datesForProgram } = useProgramSessionDates();
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
+
+  // Map teacher email -> display name (from public.users table)
+  const [teacherNames, setTeacherNames] = useState<Record<string, string>>({});
+
+  const teacherEmails = useMemo(() => {
+    const set = new Set<string>();
+    attendance.forEach(a => { if (a.teacher_email) set.add(a.teacher_email); });
+    return Array.from(set);
+  }, [attendance]);
+
+  useEffect(() => {
+    if (teacherEmails.length === 0) return;
+    (async () => {
+      const { data } = await supabase
+        .from("users")
+        .select("email,name")
+        .in("email", teacherEmails);
+      const map: Record<string, string> = {};
+      (data || []).forEach((u: any) => { if (u.email) map[u.email] = u.name || u.email; });
+      setTeacherNames(map);
+    })();
+  }, [teacherEmails]);
+
+  const displayTeacher = useCallback((email?: string | null) => {
+    if (!email) return "";
+    return teacherNames[email] || email;
+  }, [teacherNames]);
 
   // Filter students by class
   const filteredStudents = useMemo(() => {
@@ -103,11 +130,11 @@ export default function StudentReportTab({ programs, students, enrollments, atte
       const recs = recordsForDate(s.dateStr);
       for (const r of recs) {
         const val = (r as any)[fieldKey];
-        if (val) parts.push(`Session ${s.sessionNumber}: ${val} [${r.teacher_email}]`);
+        if (val) parts.push(`Session ${s.sessionNumber}: ${val} [${displayTeacher(r.teacher_email)}]`);
       }
     }
     return parts.join("\n");
-  }, [sessionList, recordsForDate]);
+  }, [sessionList, recordsForDate, displayTeacher]);
 
   // Build full compilation for AI summary
   const getFullCompilation = useCallback(() => {
@@ -177,7 +204,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
     for (const field of DESCRIPTIVE_FIELDS) {
       rows.push([field.label, ...displaySessions.map(s => {
         const recs = recordsForDate(s.dateStr);
-        return recs.map(r => `${(r as any)[field.key] || ""}${r.teacher_email ? ` [${r.teacher_email}]` : ""}`).filter(Boolean).join("; ");
+        return recs.map(r => `${(r as any)[field.key] || ""}${r.teacher_email ? ` [${displayTeacher(r.teacher_email)}]` : ""}`).filter(Boolean).join("; ");
       }), getCompilation(field.key).replace(/\n/g, "; ")]);
     }
 
@@ -349,7 +376,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                                 return (
                                   <div key={r.id} className="text-xs mb-1 p-1 rounded bg-muted/50">
                                     <span>{val}</span>
-                                    <span className="text-muted-foreground ml-1 italic text-[10px]">— {r.teacher_email}</span>
+                                    <span className="text-muted-foreground ml-1 italic text-[10px]">— {displayTeacher(r.teacher_email)}</span>
                                   </div>
                                 );
                               })}
