@@ -320,7 +320,7 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
                     </PopoverContent>
                   </Popover>
 
-                  {currentDateRow && (
+                  {currentDateRow && user?.role === "super_admin" && (
                     <Button
                       size="sm"
                       variant="ghost"
