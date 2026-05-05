@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { compressImageFile } from '@/utils/compressImage';
 
 interface FileUploadInputProps {
   onUpload: (url: string) => void;
@@ -16,7 +17,14 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
     try {
       setUploading(true);
       console.log('Starting upload for file:', file.name);
-      
+
+      // Compress before upload to reduce storage + egress.
+      const original = file;
+      file = await compressImageFile(file, { maxWidth: 1600, maxHeight: 1600, quality: 0.8 });
+      if (file !== original) {
+        console.log(`Compressed ${original.size} -> ${file.size} bytes`);
+      }
+
       // Create a unique filename
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
