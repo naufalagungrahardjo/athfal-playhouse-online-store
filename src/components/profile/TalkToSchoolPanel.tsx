@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,10 +22,9 @@ const newSchema = z.object({
   body: z.string().trim().min(1, "Pesan wajib diisi").max(2000),
 });
 
-const TalkToSchoolPage = () => {
+const TalkToSchoolPanel = () => {
   const { user } = useAuth();
   const { language } = useLanguage();
-  const navigate = useNavigate();
   const { threads, reads } = useParentMessageThreads("mine");
   const [openId, setOpenId] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
@@ -38,9 +35,7 @@ const TalkToSchoolPage = () => {
   const [recipient, setRecipient] = useState<string>("admin_only");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
-  const [sending, setSending] = useState(false);
-
-  useEffect(() => { if (!user) navigate("/auth/login"); }, [user, navigate]);
+  const [sending, setSendingState] = useState(false);
 
   useEffect(() => {
     supabase.rpc("list_teacher_recipients" as any).then(({ data }) => {
@@ -53,7 +48,7 @@ const TalkToSchoolPage = () => {
   const submit = async () => {
     const parsed = newSchema.safeParse({ subject, body });
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
-    setSending(true);
+    setSendingState(true);
     const teacherObj = teachers.find(t => t.email === recipient);
     const { error } = await supabase.from("parent_messages" as any).insert({
       parent_user_id: user.id,
@@ -66,7 +61,7 @@ const TalkToSchoolPage = () => {
       subject: parsed.data.subject,
       body: parsed.data.body,
     } as any);
-    setSending(false);
+    setSendingState(false);
     if (error) { toast.error(error.message); return; }
     toast.success(language === "id" ? "Pesan terkirim" : "Message sent");
     setComposing(false);
@@ -76,52 +71,46 @@ const TalkToSchoolPage = () => {
   const openThread = threads.find(t => t.id === openId);
 
   return (
-    <div className="min-h-screen">
-      <div className="athfal-container py-12">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
-            <CardTitle>{language === "id" ? "Bicara dengan Sekolah" : "Talk To School"}</CardTitle>
-            <Button onClick={() => setComposing(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              {language === "id" ? "Pesan Baru" : "New Message"}
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {threads.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                {language === "id" ? "Belum ada pesan" : "No messages yet"}
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {threads.map(t => {
-                  const lastRead = reads[t.id];
-                  const unread = !lastRead || new Date(t.last_activity_at) > new Date(lastRead);
-                  return (
-                    <li key={t.id}>
-                      <button
-                        onClick={() => setOpenId(t.id)}
-                        className="w-full text-left border rounded-lg p-3 hover:bg-accent transition"
-                      >
-                        <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Badge variant="outline">{t.message_type}</Badge>
-                            <Badge variant="secondary">{t.topic}</Badge>
-                            <span className="font-medium">{t.subject}</span>
-                          </div>
-                          {unread && <Badge className="bg-athfal-pink text-white">New</Badge>}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(t.last_activity_at).toLocaleString()}
-                        </p>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+    <div>
+      <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+        <h2 className="text-lg font-semibold">{language === "id" ? "Pesan Anda" : "Your Messages"}</h2>
+        <Button onClick={() => setComposing(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          {language === "id" ? "Pesan Baru" : "New Message"}
+        </Button>
       </div>
+      {threads.length === 0 ? (
+        <p className="text-center text-muted-foreground py-8">
+          {language === "id" ? "Belum ada pesan" : "No messages yet"}
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {threads.map(t => {
+            const lastRead = reads[t.id];
+            const unread = !lastRead || new Date(t.last_activity_at) > new Date(lastRead);
+            return (
+              <li key={t.id}>
+                <button
+                  onClick={() => setOpenId(t.id)}
+                  className="w-full text-left border rounded-lg p-3 hover:bg-accent transition"
+                >
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="outline">{t.message_type}</Badge>
+                      <Badge variant="secondary">{t.topic}</Badge>
+                      <span className="font-medium">{t.subject}</span>
+                    </div>
+                    {unread && <Badge className="bg-athfal-pink text-white">New</Badge>}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {new Date(t.last_activity_at).toLocaleString()}
+                  </p>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       <Dialog open={composing} onOpenChange={setComposing}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
@@ -184,4 +173,4 @@ const TalkToSchoolPage = () => {
   );
 };
 
-export default TalkToSchoolPage;
+export default TalkToSchoolPanel;
