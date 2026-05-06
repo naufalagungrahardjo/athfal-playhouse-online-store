@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,7 @@ import { ProductCategory } from '@/contexts/CartContext';
 import { useCategories } from '@/hooks/useCategories';
 import { ProductMediaUpload, ProductMedia } from '@/components/admin/ProductMediaUpload';
 import { RichTextEditor } from '@/components/admin/RichTextEditor';
-import { ProductVariantManager } from '@/components/admin/ProductVariantManager';
+import { ProductVariantManager, ProductVariantManagerHandle } from '@/components/admin/ProductVariantManager';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface ProductFormData {
@@ -64,6 +64,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
   const { toast } = useToast();
   const { categories } = useCategories();
   const queryClient = useQueryClient();
+  const variantManagerRef = useRef<ProductVariantManagerHandle>(null);
 
   const [formData, setFormData] = useState<ProductFormData>({
     product_id: '',
@@ -181,12 +182,18 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
 
         if (error) throw error;
 
+        try {
+          await variantManagerRef.current?.saveVariants(editingProduct.id);
+        } catch (variantErr: any) {
+          toast({ variant: 'destructive', title: 'Variant save failed', description: variantErr?.message || 'Could not save variants' });
+        }
+
         toast({
           title: "Success",
           description: "Product updated successfully"
         });
       } else {
-        const { error } = await supabase
+        const { data: inserted, error } = await supabase
           .from('products')
           .insert([{
             product_id: formData.product_id,
@@ -205,11 +212,21 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             active_from: formData.active_from || null,
             active_until: formData.active_until || null,
             is_hidden: true,
-          }]);
+          }])
+          .select('id')
+          .single();
         
         if (error) {
           console.error('[ProductForm] Error inserting new product:', error);
           throw error;
+        }
+
+        if (inserted?.id) {
+          try {
+            await variantManagerRef.current?.saveVariants(inserted.id);
+          } catch (variantErr: any) {
+            toast({ variant: 'destructive', title: 'Variant save failed', description: variantErr?.message || 'Could not save variants' });
+          }
         }
 
         toast({
@@ -406,8 +423,8 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             </div>
           </div>
 
-          {/* Variant Manager - only for existing products */}
-          <ProductVariantManager productDbId={editingProduct?.id} />
+          {/* Variant Manager - saved together with the product */}
+          <ProductVariantManager ref={variantManagerRef} productDbId={editingProduct?.id} />
 
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>
