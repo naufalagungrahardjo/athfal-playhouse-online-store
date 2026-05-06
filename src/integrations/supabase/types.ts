@@ -176,6 +176,13 @@ export type Database = {
             referencedRelation: "billing_notices"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "billing_notice_assignments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
         ]
       }
       billing_notices: {
