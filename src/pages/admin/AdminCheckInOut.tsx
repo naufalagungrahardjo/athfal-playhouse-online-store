@@ -74,6 +74,7 @@ export default function AdminCheckInOut() {
   const [submitting, setSubmitting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const teacherFileInputRef = useRef<HTMLInputElement>(null);
 
   // Teacher self attendance
   const today = format(new Date(), "yyyy-MM-dd");
@@ -104,20 +105,56 @@ export default function AdminCheckInOut() {
       toast({ title: "Already checked in", description: "Arrival already recorded today." });
       return;
     }
+    teacherFileInputRef.current?.click();
+  };
+
+  const handleTeacherFileChosen = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
     setTeacherSaving(true);
-    const now = new Date().toISOString();
-    const { error } = await supabase.from("teacher_attendance").insert({
-      teacher_email: teacherEmail,
-      date: today,
-      arrival_time: now,
-      remarks: teacherRemarks || null,
-    });
-    setTeacherSaving(false);
-    if (error) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
-    } else {
+    try {
+      const compressed = await compressImage(file);
+      let evidence_url: string | null = null;
+      if (driveFolder) {
+        const fd = new FormData();
+        fd.append("file", new File([compressed], `teacher_checkin_${Date.now()}.jpg`, { type: "image/jpeg" }));
+        const session = await supabase.auth.getSession();
+        const token = session.data.session?.access_token;
+        const res = await fetch(
+          `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/upload-to-drive`,
+          { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd }
+        );
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Drive upload failed");
+        evidence_url = data.webViewLink;
+      } else {
+        const filePath = `${teacherEmail}/teacher-attendance/${Date.now()}.jpg`;
+        const { error: upErr } = await supabase.storage
+          .from("teacher-evidence")
+          .upload(filePath, compressed, { contentType: "image/jpeg" });
+        if (upErr) throw upErr;
+        const { data: signed, error: sErr } = await supabase.storage
+          .from("teacher-evidence")
+          .createSignedUrl(filePath, 60 * 60 * 24 * 365);
+        if (sErr) throw sErr;
+        evidence_url = signed.signedUrl;
+      }
+      const now = new Date().toISOString();
+      const { error } = await supabase.from("teacher_attendance").insert({
+        teacher_email: teacherEmail,
+        date: today,
+        arrival_time: now,
+        remarks: teacherRemarks || null,
+        evidence_url,
+      });
+      if (error) throw error;
       toast({ title: "Checked in", description: `Arrived at ${format(new Date(), "HH:mm")}` });
       fetchTeacherAttendance();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Failed", description: err.message || "Unknown error" });
+    } finally {
+      setTeacherSaving(false);
     }
   };
 
@@ -305,6 +342,9 @@ export default function AdminCheckInOut() {
           <CardTitle className="text-base flex items-center gap-2">
             <Clock className="w-4 h-4" /> My Attendance — {today}
           </CardTitle>
+          {user?.name && (
+            <p className="text-sm text-muted-foreground pl-6">{user.name}</p>
+          )}
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex flex-wrap gap-2 text-sm">
@@ -331,7 +371,12 @@ export default function AdminCheckInOut() {
               variant="default"
               className="gap-2"
             >
-              <LogIn className="w-4 h-4" /> Check In
+              {teacherSaving && !teacherAttendance?.arrival_time ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Camera className="w-4 h-4" />
+              )}
+              Check In
             </Button>
             <Button
               onClick={handleTeacherCheckOut}
@@ -342,12 +387,20 @@ export default function AdminCheckInOut() {
               <LogOut className="w-4 h-4" /> Check Out
             </Button>
           </div>
+          <input
+            ref={teacherFileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleTeacherFileChosen}
+          />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">New Record</CardTitle>
+          <CardTitle className="text-base">Student Record</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
