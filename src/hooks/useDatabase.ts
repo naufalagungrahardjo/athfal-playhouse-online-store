@@ -237,6 +237,17 @@ export const useDatabase = () => {
     };
 
     loadData();
+
+    const channel = supabase
+      .channel('payment_methods_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payment_methods' }, () => {
+        fetchPaymentMethods();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {

@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Download, Plus, X, Mail, MailCheck } from "lucide-react";
 import { useBillingNotices } from "@/hooks/useBillingNotices";
-import { useSettings } from "@/hooks/useSettings";
+import { useDatabase } from "@/hooks/useDatabase";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
@@ -25,7 +25,7 @@ interface OrderShape {
 
 export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => {
   const { notices, assignments, loading, assignToOrders, unassignByOrderAndNotice, setEmailReminder } = useBillingNotices();
-  const { payments: paymentMethods } = useSettings();
+  const { paymentMethods } = useDatabase();
   const [selected, setSelected] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
@@ -209,12 +209,9 @@ export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => 
                           <SelectValue placeholder="Select payment method" />
                         </SelectTrigger>
                         <SelectContent>
-                          {paymentMethods.filter((p: any) => p.active).map((p: any) => {
-                            const label = p.bank || p.bank_name;
-                            return (
-                              <SelectItem key={p.id || label} value={label}>{label}</SelectItem>
-                            );
-                          })}
+                          {paymentMethods.filter((p: any) => p.active).map((p: any) => (
+                            <SelectItem key={p.id} value={p.bank_name}>{p.bank_name}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
