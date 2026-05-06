@@ -322,7 +322,7 @@ const ManualOrderTab = () => {
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                   <Command>
-                    <CommandInput placeholder="Search customer..." />
+                    <CommandInput placeholder="Search by name, email, phone, address, or child name..." />
                     <CommandList>
                       <CommandEmpty>No customer found.</CommandEmpty>
                       <CommandGroup>
@@ -331,13 +331,18 @@ const ManualOrderTab = () => {
                           return (
                             <CommandItem
                               key={key}
-                              value={`${c.customer_name} ${c.customer_email} ${c.customer_phone}`}
+                              value={[c.customer_name, c.customer_email, c.customer_phone, c.customer_address, c.child_name].filter(Boolean).join(' ')}
                               onSelect={() => handlePickCustomer(key)}
                             >
                               <Check className={cn('mr-2 h-4 w-4', selectedCustomerKey === key ? 'opacity-100' : 'opacity-0')} />
                               <div className="flex flex-col">
                                 <span className="font-medium">{c.customer_name}</span>
                                 <span className="text-xs text-muted-foreground">{c.customer_email} • {c.customer_phone}</span>
+                                {(c.customer_address || c.child_name) && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {c.child_name ? `Child: ${c.child_name}` : ''}{c.child_name && c.customer_address ? ' • ' : ''}{c.customer_address || ''}
+                                  </span>
+                                )}
                               </div>
                             </CommandItem>
                           );
