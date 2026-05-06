@@ -136,25 +136,37 @@ export type Database = {
           created_at: string
           email_reminder_enabled: boolean
           email_reminder_sent_at: string | null
+          generated_order_id: string | null
           id: string
           notice_id: string
           order_id: string
+          paid_at: string | null
+          payment_method: string | null
+          payment_status: string
         }
         Insert: {
           created_at?: string
           email_reminder_enabled?: boolean
           email_reminder_sent_at?: string | null
+          generated_order_id?: string | null
           id?: string
           notice_id: string
           order_id: string
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_status?: string
         }
         Update: {
           created_at?: string
           email_reminder_enabled?: boolean
           email_reminder_sent_at?: string | null
+          generated_order_id?: string | null
           id?: string
           notice_id?: string
           order_id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_status?: string
         }
         Relationships: [
           {

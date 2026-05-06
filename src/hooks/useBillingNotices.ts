@@ -21,6 +21,10 @@ export interface BillingNoticeAssignment {
   created_at: string;
   email_reminder_enabled?: boolean;
   email_reminder_sent_at?: string | null;
+  payment_method?: string | null;
+  payment_status?: string | null;
+  paid_at?: string | null;
+  generated_order_id?: string | null;
 }
 
 type BillingNoticeAssignmentUpdate = Database["public"]["Tables"]["billing_notice_assignments"]["Update"];
