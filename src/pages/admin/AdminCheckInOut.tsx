@@ -450,28 +450,6 @@ export default function AdminCheckInOut() {
             </div>
           )}
 
-          <div>
-            <Label>Status</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                type="button"
-                variant={eventType === "check_in" ? "default" : "outline"}
-                onClick={() => setEventType("check_in")}
-                className="gap-2"
-              >
-                <LogIn className="w-4 h-4" /> Check In
-              </Button>
-              <Button
-                type="button"
-                variant={eventType === "check_out" ? "default" : "outline"}
-                onClick={() => setEventType("check_out")}
-                className="gap-2"
-              >
-                <LogOut className="w-4 h-4" /> Check Out
-              </Button>
-            </div>
-          </div>
-
           <input
             ref={fileInputRef}
             type="file"
@@ -481,14 +459,35 @@ export default function AdminCheckInOut() {
             onChange={handleFileChosen}
           />
 
-          <Button
-            onClick={handleOpenCamera}
-            disabled={submitting || !programId || !studentId}
-            className="w-full h-14 text-base gap-2"
-          >
-            {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />}
-            {submitting ? "Uploading..." : "Open Camera & Submit"}
-          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              type="button"
+              onClick={() => { setEventType("check_in"); setTimeout(() => handleOpenCamera(), 0); }}
+              disabled={submitting || !programId || !studentId}
+              className="h-14 text-base gap-2"
+            >
+              {submitting && eventType === "check_in" ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Camera className="w-5 h-5" />
+              )}
+              Check In
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => { setEventType("check_out"); setTimeout(() => handleOpenCamera(), 0); }}
+              disabled={submitting || !programId || !studentId}
+              className="h-14 text-base gap-2"
+            >
+              {submitting && eventType === "check_out" ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Camera className="w-5 h-5" />
+              )}
+              Check Out
+            </Button>
+          </div>
 
           <p className="text-xs text-muted-foreground">
             Storage: {driveFolder ? "Google Drive" : "Supabase (no Drive folder configured)"}
