@@ -81,7 +81,7 @@ export const useDashboard = (dateRange?: DateRange) => {
       };
       const revenueBeforeTax = revenueOrders.reduce((sum, o) => sum + (o.subtotal || 0) * paidRatio(o), 0);
       const revenueAfterTax = revenueOrders.reduce((sum, o) => sum + ((o.subtotal || 0) + (o.tax_amount || 0)) * paidRatio(o), 0);
-      const totalDiscount = revenueOrders.reduce((sum, o) => sum + (o.discount_amount || 0) * paidRatio(o), 0);
+      const totalDiscount = revenueOrders.reduce((sum, o) => sum + (o.discount_amount || 0), 0);
       const revenueAfterDiscount = revenueBeforeTax - totalDiscount;
       const totalAmountPaid = revenueOrders.reduce((sum, o) => sum + (o.amount_paid || 0), 0);
       const outstandingReceivables = revenueOrders.reduce(
