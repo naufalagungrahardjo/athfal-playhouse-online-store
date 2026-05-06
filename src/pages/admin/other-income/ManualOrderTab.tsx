@@ -7,7 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Check, ChevronsUpDown } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
 
@@ -20,6 +23,16 @@ type Product = {
 };
 type Variant = { id: string; product_id: string; name: string; price: number };
 type PaymentMethod = { id: string; bank_name: string; active: boolean };
+type ExistingCustomer = {
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  customer_address: string | null;
+  guardian_status: string | null;
+  child_name: string | null;
+  child_birthdate: string | null;
+  child_gender: string | null;
+};
 
 type LineItem = {
   productDbId: string;
@@ -31,6 +44,10 @@ const ManualOrderTab = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [variantsByProduct, setVariantsByProduct] = useState<Record<string, Variant[]>>({});
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [existingCustomers, setExistingCustomers] = useState<ExistingCustomer[]>([]);
+  const [customerMode, setCustomerMode] = useState<'new' | 'existing'>('new');
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [selectedCustomerKey, setSelectedCustomerKey] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -61,10 +78,15 @@ const ManualOrderTab = () => {
 
   useEffect(() => {
     (async () => {
-      const [prodRes, varRes, pmRes] = await Promise.all([
+      const [prodRes, varRes, pmRes, custRes] = await Promise.all([
         supabase.from('products').select('id, product_id, name, price, tax').order('name'),
         supabase.from('product_variants').select('*').order('order_num'),
         supabase.from('payment_methods').select('id, bank_name, active').eq('active', true).order('bank_name'),
+        supabase
+          .from('orders')
+          .select('customer_name, customer_email, customer_phone, customer_address, guardian_status, child_name, child_birthdate, child_gender, created_at')
+          .order('created_at', { ascending: false })
+          .limit(1000),
       ]);
       setProducts((prodRes.data as any) || []);
       const map: Record<string, Variant[]> = {};
@@ -74,9 +96,43 @@ const ManualOrderTab = () => {
       });
       setVariantsByProduct(map);
       setPaymentMethods((pmRes.data as any) || []);
+      // De-duplicate by name+email (most recent wins because of order)
+      const seen = new Set<string>();
+      const unique: ExistingCustomer[] = [];
+      ((custRes.data as any[]) || []).forEach((row: any) => {
+        const key = `${(row.customer_name || '').trim().toLowerCase()}|${(row.customer_email || '').trim().toLowerCase()}`;
+        if (!key || key === '|' || seen.has(key)) return;
+        seen.add(key);
+        unique.push(row);
+      });
+      setExistingCustomers(unique);
       setLoading(false);
     })();
   }, []);
+
+  const handlePickCustomer = (key: string) => {
+    const c = existingCustomers.find(
+      (x) => `${x.customer_name}|${x.customer_email}` === key
+    );
+    if (!c) return;
+    setSelectedCustomerKey(key);
+    setCustomerName(c.customer_name || '');
+    setCustomerEmail(c.customer_email || '');
+    setCustomerPhone(c.customer_phone || '');
+    setCustomerAddress(c.customer_address || '');
+    setGuardianStatus(c.guardian_status || '');
+    setChildName(c.child_name || '');
+    setChildBirthdate(c.child_birthdate || '');
+    setChildGender(c.child_gender || '');
+    setPickerOpen(false);
+  };
+
+  const handleModeChange = (mode: 'new' | 'existing') => {
+    setCustomerMode(mode);
+    setSelectedCustomerKey('');
+    setCustomerName(''); setCustomerEmail(''); setCustomerPhone(''); setCustomerAddress('');
+    setGuardianStatus(''); setChildName(''); setChildBirthdate(''); setChildGender('');
+  };
 
   const updateItem = (idx: number, patch: Partial<LineItem>) => {
     setItems(prev => prev.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
@@ -222,6 +278,8 @@ const ManualOrderTab = () => {
       setCustomerName(''); setCustomerEmail(''); setCustomerPhone(''); setCustomerAddress('');
       setGuardianStatus(''); setChildName(''); setChildBirthdate(''); setChildGender('');
       setPaymentMethod(''); setNotes('');
+      setSelectedCustomerKey('');
+      setCustomerMode('new');
       setItems([{ productDbId: '', variantId: null, quantity: 1 }]);
     } catch (e: any) {
       toast.error(e.message || 'Unexpected error');
@@ -236,7 +294,63 @@ const ManualOrderTab = () => {
     <div className="space-y-6 mt-4">
       <Card>
         <CardHeader><CardTitle>Customer Information</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Customer Type</Label>
+            <RadioGroup value={customerMode} onValueChange={(v) => handleModeChange(v as 'new' | 'existing')} className="flex gap-6">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="new" id="cust-mode-new" />
+                <Label htmlFor="cust-mode-new" className="font-normal cursor-pointer">New Customer</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="existing" id="cust-mode-existing" />
+                <Label htmlFor="cust-mode-existing" className="font-normal cursor-pointer">Existing Customer</Label>
+              </div>
+            </RadioGroup>
+          </div>
+          {customerMode === 'existing' && (
+            <div>
+              <Label>Select Existing Customer</Label>
+              <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+                    {selectedCustomerKey
+                      ? existingCustomers.find((c) => `${c.customer_name}|${c.customer_email}` === selectedCustomerKey)?.customer_name
+                      : 'Search by name or email...'}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search customer..." />
+                    <CommandList>
+                      <CommandEmpty>No customer found.</CommandEmpty>
+                      <CommandGroup>
+                        {existingCustomers.map((c) => {
+                          const key = `${c.customer_name}|${c.customer_email}`;
+                          return (
+                            <CommandItem
+                              key={key}
+                              value={`${c.customer_name} ${c.customer_email} ${c.customer_phone}`}
+                              onSelect={() => handlePickCustomer(key)}
+                            >
+                              <Check className={cn('mr-2 h-4 w-4', selectedCustomerKey === key ? 'opacity-100' : 'opacity-0')} />
+                              <div className="flex flex-col">
+                                <span className="font-medium">{c.customer_name}</span>
+                                <span className="text-xs text-muted-foreground">{c.customer_email} • {c.customer_phone}</span>
+                              </div>
+                            </CommandItem>
+                          );
+                        })}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <p className="text-xs text-muted-foreground mt-1">All fields below are auto-filled and remain editable.</p>
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div><Label>Customer Name *</Label><Input value={customerName} onChange={e => setCustomerName(e.target.value)} /></div>
           <div><Label>Email *</Label><Input type="email" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} /></div>
           <div><Label>Phone *</Label><Input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} /></div>
@@ -274,6 +388,7 @@ const ManualOrderTab = () => {
           <div>
             <Label>Usia Anak</Label>
             <Input value={childAge} readOnly className="bg-muted cursor-not-allowed" placeholder="Otomatis dari tanggal lahir" />
+          </div>
           </div>
         </CardContent>
       </Card>
