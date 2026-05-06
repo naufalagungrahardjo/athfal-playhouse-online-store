@@ -19,7 +19,7 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
     {
       label: 'Business',
       items: [
-        { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+        { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
         { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
         { name: 'Products', href: '/admin/products', icon: Package },
         { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
@@ -97,7 +97,7 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
   // Default role-based access (no custom override)
   const allAllowed: Record<string, string[]> = {
     super_admin: [], // handled above
-    orders_manager: ["/admin", "/admin/products", "/admin/orders", "/admin/analytics", "/admin/promo-codes", "/admin/expense", "/admin/other-income", "/admin/inbox"],
+    orders_manager: ["/admin/dashboard", "/admin/products", "/admin/orders", "/admin/analytics", "/admin/promo-codes", "/admin/expense", "/admin/other-income", "/admin/inbox"],
     order_staff: ["/admin/orders", "/admin/inbox"],
     content_manager: ["/admin/blogs", "/admin/banners", "/admin/website-copy", "/admin/categories", "/admin/faq", "/admin/testimonials", "/admin/inbox"],
     content_staff: ["/admin/blogs", "/admin/inbox"],
@@ -129,7 +129,7 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
 /** Returns all possible menu items (for the edit dialog) */
 export function getAllMenuItems(): { href: string; name: string }[] {
   return [
-    { href: '/admin', name: 'Dashboard' },
+    { href: '/admin/dashboard', name: 'Dashboard' },
     { href: '/admin/analytics', name: 'Analytics' },
     { href: '/admin/products', name: 'Products' },
     { href: '/admin/orders', name: 'Orders' },
