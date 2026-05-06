@@ -93,18 +93,23 @@ const AdminProducts = () => {
     setEditingProduct(null);
   };
 
-  const isUnavailable = (p: StrictProductFormData) => {
+  const isSoldOut = (p: StrictProductFormData) => {
     const anyP = p as any;
     return !!anyP.is_sold_out || (typeof p.stock === 'number' && p.stock <= 0);
+  };
+  const getRank = (p: StrictProductFormData) => {
+    if (isSoldOut(p)) return 2;
+    if ((p as any).is_hidden) return 1;
+    return 0;
   };
 
   const sortedProducts = (() => {
     if (sortOrder === 'none') return products;
     const arr = [...products];
     arr.sort((a, b) => {
-      const ua = isUnavailable(a) ? 1 : 0;
-      const ub = isUnavailable(b) ? 1 : 0;
-      if (ua !== ub) return ua - ub;
+      const ra = getRank(a);
+      const rb = getRank(b);
+      if (ra !== rb) return ra - rb;
       const cmp = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
       return sortOrder === 'asc' ? cmp : -cmp;
     });
