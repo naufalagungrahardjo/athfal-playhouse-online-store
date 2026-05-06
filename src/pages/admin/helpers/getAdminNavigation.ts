@@ -19,7 +19,7 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
     {
       label: 'Business',
       items: [
-        { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+        { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
         { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
         { name: 'Products', href: '/admin/products', icon: Package },
         { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
