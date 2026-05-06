@@ -209,9 +209,12 @@ export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => 
                           <SelectValue placeholder="Select payment method" />
                         </SelectTrigger>
                         <SelectContent>
-                          {paymentMethods.filter((p: any) => p.active).map((p: any) => (
-                            <SelectItem key={p.id || p.bank_name} value={p.bank_name}>{p.bank_name}</SelectItem>
-                          ))}
+                          {paymentMethods.filter((p: any) => p.active).map((p: any) => {
+                            const label = p.bank || p.bank_name;
+                            return (
+                              <SelectItem key={p.id || label} value={label}>{label}</SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
