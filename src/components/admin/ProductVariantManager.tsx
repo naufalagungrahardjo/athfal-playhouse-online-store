@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,9 +18,13 @@ interface ProductVariantManagerProps {
   productDbId: string | undefined;
 }
 
-export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProps) => {
+export interface ProductVariantManagerHandle {
+  saveVariants: (productDbIdOverride?: string) => Promise<void>;
+  hasPendingChanges: () => boolean;
+}
+
+export const ProductVariantManager = forwardRef<ProductVariantManagerHandle, ProductVariantManagerProps>(({ productDbId }, ref) => {
   const [variants, setVariants] = useState<Variant[]>([]);
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -58,45 +62,29 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
     setVariants(variants.map((v, i) => i === index ? { ...v, [field]: value } : v));
   };
 
-  const saveVariants = async () => {
-    if (!productDbId) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Save the product first before adding variants.' });
-      return;
+  const saveVariants = async (productDbIdOverride?: string) => {
+    const targetId = productDbIdOverride || productDbId;
+    if (!targetId) return;
+    await supabase.from('product_variants').delete().eq('product_id', targetId);
+    if (variants.length > 0) {
+      const toInsert = variants.map((v, i) => ({
+        product_id: targetId,
+        name: v.name,
+        price: v.price,
+        order_num: i + 1,
+      }));
+      const { error } = await supabase.from('product_variants').insert(toInsert);
+      if (error) throw error;
     }
-    setLoading(true);
-    try {
-      await supabase.from('product_variants').delete().eq('product_id', productDbId);
-      
-      if (variants.length > 0) {
-        const toInsert = variants.map((v, i) => ({
-          product_id: productDbId,
-          name: v.name,
-          price: v.price,
-          order_num: i + 1,
-        }));
-        const { error } = await supabase.from('product_variants').insert(toInsert);
-        if (error) throw error;
-      }
-      
-      toast({ title: 'Success', description: 'Variants saved successfully' });
-      await fetchVariants();
-      // Invalidate all variant caches so storefront reflects changes
-      queryClient.invalidateQueries({ queryKey: ['product_variants'] });
-      queryClient.invalidateQueries({ queryKey: ['all_product_variants'] });
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Error', description: error?.message || 'Failed to save variants' });
-    } finally {
-      setLoading(false);
-    }
+    await fetchVariants();
+    queryClient.invalidateQueries({ queryKey: ['product_variants'] });
+    queryClient.invalidateQueries({ queryKey: ['all_product_variants'] });
   };
 
-  if (!productDbId) {
-    return (
-      <div className="border rounded-lg p-4 bg-muted/50">
-        <p className="text-sm text-muted-foreground">Save the product first to manage price variants.</p>
-      </div>
-    );
-  }
+  useImperativeHandle(ref, () => ({
+    saveVariants,
+    hasPendingChanges: () => variants.length > 0,
+  }), [variants, productDbId]);
 
   return (
     <div className="border rounded-lg p-4 space-y-4">
@@ -106,9 +94,9 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
           <Plus className="h-4 w-4 mr-1" /> Add Variant
         </Button>
       </div>
-      
+
       {variants.length === 0 && (
-        <p className="text-sm text-muted-foreground">No variants yet. Add variants like "Early Bird Price", "Installment Price", etc.</p>
+        <p className="text-sm text-muted-foreground">No variants yet. Add variants like "Early Bird Price", "Installment Price", etc. They will be saved when you click {productDbId ? 'Update' : 'Create'}.</p>
       )}
 
       {variants.map((variant, index) => (
@@ -133,12 +121,8 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
           </Button>
         </div>
       ))}
-
-      {variants.length > 0 && (
-        <Button type="button" onClick={saveVariants} disabled={loading} size="sm">
-          {loading ? 'Saving...' : 'Save Variants'}
-        </Button>
-      )}
     </div>
   );
-};
+});
+
+ProductVariantManager.displayName = 'ProductVariantManager';
