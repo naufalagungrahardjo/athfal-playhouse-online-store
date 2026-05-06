@@ -25,7 +25,7 @@ interface OrderShape {
 
 export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => {
   const { notices, assignments, loading, assignToOrders, unassignByOrderAndNotice, setEmailReminder } = useBillingNotices();
-  const { paymentMethods } = useSettings();
+  const { payments: paymentMethods } = useSettings();
   const [selected, setSelected] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
@@ -209,8 +209,8 @@ export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => 
                           <SelectValue placeholder="Select payment method" />
                         </SelectTrigger>
                         <SelectContent>
-                          {paymentMethods.filter((p) => p.active).map((p) => (
-                            <SelectItem key={p.id} value={p.bank_name}>{p.bank_name}</SelectItem>
+                          {paymentMethods.filter((p: any) => p.active).map((p: any) => (
+                            <SelectItem key={p.id || p.bank_name} value={p.bank_name}>{p.bank_name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
