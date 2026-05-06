@@ -46,7 +46,7 @@ type Props = {
 export default function AttendanceTab({ programs, students, enrollments, attendance, saveAttendance, refetch }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { datesForProgram, addDate, deleteDate, refetch: refetchDates } = useProgramSessionDates();
+  const { datesForProgram, addDate, deleteDate, getSessionNumber, refetch: refetchDates } = useProgramSessionDates();
   const [filterStart, setFilterStart] = useState("");
   const [filterEnd, setFilterEnd] = useState("");
   const [classFilter, setClassFilter] = useState("all");
@@ -102,14 +102,14 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
     setEdits(prev => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
   };
 
-  const buildRecord = (enrollmentId: string, dateStr: string) => {
+  const buildRecord = (enrollmentId: string, dateStr: string, meetingNumber: number) => {
     const fields: any = {};
     for (const f of DESCRIPTIVE_FIELDS.map(d => d.key)) {
       fields[f] = getFieldValue(enrollmentId, dateStr, f);
     }
     return {
       enrollment_id: enrollmentId,
-      meeting_number: 0, // legacy column, no longer the primary key
+      meeting_number: meetingNumber,
       date: dateStr,
       session_date: dateStr,
       teacher_email: teacherEmail,
@@ -130,6 +130,7 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
       return;
     }
     const progEnrollments = enrollments.filter(e => e.program_id === programId);
+    let hadError = false;
     for (const enr of progEnrollments) {
       const status = getFieldValue(enr.id, dateStr, "attendance_status");
       const hasDescriptive = DESCRIPTIVE_FIELDS.some(d => {
@@ -145,20 +146,30 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
           .eq("teacher_email", teacherEmail);
         continue;
       }
-      // Saving by upsert via the saveAttendance hook (which finds by enrollment+meeting_number+teacher).
-      // Since we're moving to date-based keys, manually upsert here:
+      // Manual upsert keyed by (enrollment, session_date, teacher).
+      // CRITICAL: preserve existing meeting_number to avoid violating the
+      // unique (enrollment_id, meeting_number, teacher_email) constraint.
       const existing = findAttendance(enr.id, dateStr, true);
-      const record = buildRecord(enr.id, dateStr) as any;
+      const meetingNumber = existing?.meeting_number ?? getSessionNumber(programId, dateStr) ?? 0;
+      const record = buildRecord(enr.id, dateStr, meetingNumber) as any;
       if (existing) {
-        await supabase
+        const { error } = await supabase
           .from("student_attendance" as any)
           .update({ ...record, updated_at: new Date().toISOString() })
           .eq("id", existing.id);
+        if (error) {
+          hadError = true;
+          toast({ title: "Save failed", description: error.message, variant: "destructive" });
+        }
       } else {
-        await supabase.from("student_attendance" as any).insert(record);
+        const { error } = await supabase.from("student_attendance" as any).insert(record);
+        if (error) {
+          hadError = true;
+          toast({ title: "Save failed", description: error.message, variant: "destructive" });
+        }
       }
     }
-    toast({ title: "Attendance saved" });
+    if (!hadError) toast({ title: "Attendance saved" });
     await refetch();
     setEdits(prev => {
       const n = { ...prev };
