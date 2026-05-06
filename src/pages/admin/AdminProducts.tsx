@@ -99,7 +99,7 @@ const AdminProducts = () => {
   };
   const getRank = (p: StrictProductFormData) => {
     if (isSoldOut(p)) return 2;
-    if (p.is_hidden) return 1;
+    if ((p as any).is_hidden) return 1;
     return 0;
   };
 
