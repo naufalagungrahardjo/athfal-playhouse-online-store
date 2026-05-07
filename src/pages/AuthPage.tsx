@@ -39,7 +39,7 @@ const AuthPage = () => {
         user.role === 'content_manager' ||
         user.role === 'content_staff'
       ) {
-        navigate('/admin', { replace: true });
+        navigate('/admin/check-in-out', { replace: true });
       } else {
         // Default user: go to student attendance page
         navigate('/student', { replace: true });
