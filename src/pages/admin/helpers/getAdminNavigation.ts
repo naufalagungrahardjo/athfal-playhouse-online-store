@@ -104,7 +104,7 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
     super_admin: [], // handled above
     orders_manager: ["/admin/dashboard", "/admin/products", "/admin/orders", "/admin/analytics", "/admin/promo-codes", "/admin/expense", "/admin/other-income", "/admin/inbox"],
     order_staff: ["/admin/orders"],
-    content_manager: ["/admin/blogs", "/admin/banners", "/admin/website-copy", "/admin/categories", "/admin/faq", "/admin/testimonials", "/admin/inbox"],
+    content_manager: ["/admin/blogs", "/admin/banners", "/admin/faq", "/admin/testimonials", "/admin/inbox"],
     content_staff: ["/admin/blogs"],
     teacher: ["/admin/teacher", "/admin/students", "/admin/check-in-out", "/admin/inbox"],
   };
