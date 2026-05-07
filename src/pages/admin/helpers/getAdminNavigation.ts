@@ -65,19 +65,24 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
 
   // If allowedMenus is explicitly set (by super admin), use that as final access
   if (allowedMenus && allowedMenus.length > 0) {
+    // Enforce hard role restrictions even if super admin granted extra menus
+    let effectiveAllowed = allowedMenus;
+    if (role === "order_staff" || role === "content_staff") {
+      effectiveAllowed = allowedMenus.filter(m => m !== "/admin/inbox");
+    }
     // For teacher role, add teacher-specific item if allowed
     const teacherItems: NavigationItem[] = [];
-    if (role === "teacher" && allowedMenus.includes("/admin/teacher")) {
+    if (role === "teacher" && effectiveAllowed.includes("/admin/teacher")) {
       teacherItems.push({ name: 'Teacher', href: '/admin/teacher', icon: ClipboardList });
     }
-    if (role === "teacher" && allowedMenus.includes("/admin/check-in-out")) {
+    if (role === "teacher" && effectiveAllowed.includes("/admin/check-in-out")) {
       teacherItems.push({ name: 'Check-In/Out', href: '/admin/check-in-out', icon: Camera });
     }
 
     const filtered = allGroups
       .map(group => ({
         ...group,
-        items: group.items.filter(item => allowedMenus.includes(item.href)),
+        items: group.items.filter(item => effectiveAllowed.includes(item.href)),
       }))
       .filter(group => group.items.length > 0);
 
