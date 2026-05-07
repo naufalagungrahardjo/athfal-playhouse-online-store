@@ -61,6 +61,7 @@ export default function AdminCheckInOut() {
   const { user } = useAuth();
   const { toast } = useToast();
   const teacherEmail = user?.email || "";
+  const restrictedRole = user?.role === "order_staff" || user?.role === "content_staff";
 
   const [programs, setPrograms] = useState<Program[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -398,7 +399,7 @@ export default function AdminCheckInOut() {
         </CardContent>
       </Card>
 
-      <Card>
+      {!restrictedRole && (<Card>
         <CardHeader>
           <CardTitle className="text-base">Student Record</CardTitle>
         </CardHeader>
@@ -493,9 +494,9 @@ export default function AdminCheckInOut() {
             Storage: {driveFolder ? "Google Drive" : "Supabase (no Drive folder configured)"}
           </p>
         </CardContent>
-      </Card>
+      </Card>)}
 
-      <Card>
+      {!restrictedRole && (<Card>
         <CardHeader>
           <CardTitle className="text-base">Today&apos;s Records</CardTitle>
         </CardHeader>
@@ -531,7 +532,7 @@ export default function AdminCheckInOut() {
             </ul>
           )}
         </CardContent>
-      </Card>
+      </Card>)}
     </div>
   );
 }
