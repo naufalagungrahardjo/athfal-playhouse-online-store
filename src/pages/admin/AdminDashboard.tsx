@@ -23,7 +23,6 @@ import {
   PackageCheck,
   Truck,
   BadgePercent,
-  Receipt,
   Wallet,
   Coins,
   CalendarIcon
