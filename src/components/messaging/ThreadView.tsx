@@ -15,7 +15,7 @@ type Props = { thread: ParentMessageThread; viewerRole: "parent" | "staff"; staf
 
 const ThreadView = ({ thread, viewerRole, staffRole }: Props) => {
   const { user } = useAuth();
-  const { replies } = useThreadReplies(thread.id);
+  const { replies, refetch } = useThreadReplies(thread.id);
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
@@ -42,6 +42,7 @@ const ThreadView = ({ thread, viewerRole, staffRole }: Props) => {
     setSending(false);
     if (error) { toast.error(error.message); return; }
     setBody("");
+    refetch();
   };
 
   return (
