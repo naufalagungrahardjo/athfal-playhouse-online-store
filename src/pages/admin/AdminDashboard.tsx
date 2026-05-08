@@ -133,12 +133,6 @@ const AdminDashboard = () => {
               onClick={() => setSelectedView('orders')}
             />
             <ClickableStatsCard
-              title="Revenue (After Discount)"
-              value={formatCurrency(stats.revenueAfterDiscount)}
-              icon={Receipt}
-              onClick={() => setSelectedView('orders')}
-            />
-            <ClickableStatsCard
               title="Discount Given"
               value={formatCurrency(stats.totalDiscount)}
               icon={BadgePercent}
