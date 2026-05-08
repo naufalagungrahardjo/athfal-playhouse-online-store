@@ -638,7 +638,33 @@ const AdminAnalytics = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Analytics</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-3xl font-bold">Analytics</h1>
+        <div className="flex items-end gap-2">
+          <div>
+            <label className="text-sm font-medium block mb-1">Date Range</label>
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("w-[260px] justify-start text-left font-normal", !dateRange && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange?.from ? (
+                      dateRange.to ? `${format(dateRange.from, 'PP')} - ${format(dateRange.to, 'PP')}` : format(dateRange.from, 'PP')
+                    ) : 'All Lifetime'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} className="p-3 pointer-events-auto" />
+                  <div className="p-3 border-t">
+                    <Button variant="ghost" className="w-full text-sm" onClick={() => setDateRange(undefined)}>Show All Lifetime Data</Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              {dateRange && <Button variant="ghost" size="sm" onClick={() => setDateRange(undefined)}>Clear</Button>}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <Tabs defaultValue="sales">
         <TabsList className="flex-wrap h-auto">
@@ -653,28 +679,6 @@ const AdminAnalytics = () => {
         <TabsContent value="sales" className="space-y-6">
           {/* Filters */}
           <div className="flex flex-wrap gap-4 items-end">
-            <div>
-              <label className="text-sm font-medium block mb-1">Date Range</label>
-              <div className="flex items-center gap-2">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-[260px] justify-start text-left font-normal", !dateRange && "text-muted-foreground")}>
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dateRange?.from ? (
-                        dateRange.to ? `${format(dateRange.from, 'PP')} - ${format(dateRange.to, 'PP')}` : format(dateRange.from, 'PP')
-                      ) : 'All Lifetime'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} className="p-3 pointer-events-auto" />
-                    <div className="p-3 border-t">
-                      <Button variant="ghost" className="w-full text-sm" onClick={() => setDateRange(undefined)}>Show All Lifetime Data</Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-                {dateRange && <Button variant="ghost" size="sm" onClick={() => setDateRange(undefined)}>Clear</Button>}
-              </div>
-            </div>
             <div>
               <label className="text-sm font-medium block mb-1">Time Granularity</label>
               <Select value={timeGranularity} onValueChange={(v) => setTimeGranularity(v as TimeGranularity)}>
