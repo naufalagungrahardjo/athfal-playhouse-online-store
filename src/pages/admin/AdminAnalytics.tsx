@@ -283,9 +283,14 @@ const AdminAnalytics = () => {
     return expenses.filter(e => {
       if (expCatFilter !== 'all' && e.category_id !== expCatFilter) return false;
       if (expFundFilter !== 'all' && e.fund_source_id !== expFundFilter) return false;
+      if (dateRange?.from) {
+        const d = new Date(e.date);
+        if (d < dateRange.from) return false;
+        if (dateRange.to && d > new Date(dateRange.to.getTime() + 86400000)) return false;
+      }
       return true;
     });
-  }, [expenses, expCatFilter, expFundFilter]);
+  }, [expenses, expCatFilter, expFundFilter, dateRange]);
 
   // Expense trend (area chart)
   const expenseTrendData = useMemo(() => {
@@ -344,9 +349,14 @@ const AdminAnalytics = () => {
   const filteredIncomes = useMemo(() => {
     return otherIncomes.filter(i => {
       if (incFundFilter !== 'all' && i.fund_source_id !== incFundFilter) return false;
+      if (dateRange?.from) {
+        const d = new Date(i.date);
+        if (d < dateRange.from) return false;
+        if (dateRange.to && d > new Date(dateRange.to.getTime() + 86400000)) return false;
+      }
       return true;
     });
-  }, [otherIncomes, incFundFilter]);
+  }, [otherIncomes, incFundFilter, dateRange]);
 
   const incomeTrendData = useMemo(() => {
     const map: Record<string, number> = {};
@@ -377,9 +387,14 @@ const AdminAnalytics = () => {
       // Exclude transfers from capital analytics - they are internal fund movements
       if ((c.type || 'inflow') === 'transfer') return false;
       if (capFundFilter !== 'all' && c.fund_source_id !== capFundFilter) return false;
+      if (dateRange?.from) {
+        const d = new Date(c.date);
+        if (d < dateRange.from) return false;
+        if (dateRange.to && d > new Date(dateRange.to.getTime() + 86400000)) return false;
+      }
       return true;
     });
-  }, [capitalInflows, capFundFilter]);
+  }, [capitalInflows, capFundFilter, dateRange]);
 
   const capitalTrendData = useMemo(() => {
     const map: Record<string, number> = {};
