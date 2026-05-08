@@ -459,20 +459,30 @@ const AdminAnalytics = () => {
   const totalCapital = useMemo(() => filteredCapitals.reduce((s, c) => s + c.amount, 0), [filteredCapitals]);
 
   // === Net Income analytics ===
-  // Use all non-cancelled orders for net income (no category/status filter)
+  // Apply global dateRange to all data feeds.
+  const inRange = (dateStr: string) => {
+    if (!dateRange?.from) return true;
+    const d = new Date(dateStr);
+    if (d < dateRange.from) return false;
+    if (dateRange.to && d > new Date(dateRange.to.getTime() + 86400000)) return false;
+    return true;
+  };
+
   const totalSalesRevenue = useMemo(() => {
     return orders
       .filter(o => o.status !== 'cancelled' && o.status !== 'refund')
+      .filter(o => inRange(o.created_at))
       .reduce((s, o) => s + getOrderRevenue(o, netRevenueType), 0);
-  }, [orders, netRevenueType]);
+  }, [orders, netRevenueType, dateRange]);
 
-  const totalOtherIncome = useMemo(() => otherIncomes.reduce((s, i) => s + i.amount, 0), [otherIncomes]);
-  const totalAllExpenses = useMemo(() => expenses.reduce((s, e) => s + getExpenseNet(e), 0), [expenses]);
+  const totalOtherIncome = useMemo(() => otherIncomes.filter(i => inRange(i.date)).reduce((s, i) => s + i.amount, 0), [otherIncomes, dateRange]);
+  const totalAllExpenses = useMemo(() => expenses.filter(e => inRange(e.date)).reduce((s, e) => s + getExpenseNet(e), 0), [expenses, dateRange]);
   const totalAllCapital = useMemo(
     () => capitalInflows
       .filter(c => (c.type || 'inflow') !== 'transfer')
+      .filter(c => inRange(c.date))
       .reduce((s, c) => s + c.amount, 0),
-    [capitalInflows]
+    [capitalInflows, dateRange]
   );
   const effectiveOtherIncome = includeCapital ? totalOtherIncome + totalAllCapital : totalOtherIncome;
   const netIncome = totalSalesRevenue + effectiveOtherIncome - totalAllExpenses;
@@ -483,13 +493,13 @@ const AdminAnalytics = () => {
   const revenueVsExpenseData = useMemo(() => {
     const map: Record<string, { revenue: number; expense: number; net: number }> = {};
     // Sales revenue
-    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').forEach(o => {
+    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).forEach(o => {
       const key = formatDateKey(o.created_at, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
       map[key].revenue += getOrderRevenue(o, netRevenueType);
     });
     // Other income
-    otherIncomes.forEach(i => {
+    otherIncomes.filter(i => inRange(i.date)).forEach(i => {
       const key = formatDateKey(i.date, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
       map[key].revenue += i.amount;
@@ -498,6 +508,7 @@ const AdminAnalytics = () => {
     if (includeCapital) {
       capitalInflows
         .filter(c => (c.type || 'inflow') !== 'transfer')
+        .filter(c => inRange(c.date))
         .forEach(c => {
         const key = formatDateKey(c.date, netGranularity);
         if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
@@ -505,7 +516,7 @@ const AdminAnalytics = () => {
         });
     }
     // Expenses
-    expenses.forEach(e => {
+    expenses.filter(e => inRange(e.date)).forEach(e => {
       const key = formatDateKey(e.date, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
       map[key].expense += getExpenseNet(e);
@@ -513,7 +524,7 @@ const AdminAnalytics = () => {
     // Calculate net
     Object.values(map).forEach(v => { v.net = v.revenue - v.expense; });
     return Object.entries(map).sort().map(([date, vals]) => ({ date, ...vals }));
-  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, netGranularity, netRevenueType]);
+  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, netGranularity, netRevenueType, dateRange]);
 
   // Cumulative net income over time
   const cumulativeNetData = useMemo(() => {
@@ -549,21 +560,21 @@ const AdminAnalytics = () => {
     });
 
     // Sales revenue by payment_method
-    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').forEach(o => {
+    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).forEach(o => {
       const method = o.payment_method || 'Unknown';
       ensure(method);
       balanceMap[method].salesIn += getOrderRevenue(o, netRevenueType);
     });
 
     // Other income by fund_source_id
-    otherIncomes.forEach(i => {
+    otherIncomes.filter(i => inRange(i.date)).forEach(i => {
       const name = i.fund_source_id ? (expFundMap[i.fund_source_id] || 'Unknown') : 'Unknown';
       ensure(name);
       balanceMap[name].otherIn += i.amount;
     });
 
     // Capital inflows and internal fund transfers
-    capitalInflows.forEach(c => {
+    capitalInflows.filter(c => inRange(c.date)).forEach(c => {
       const entryType = c.type || 'inflow';
       if (entryType === 'transfer') {
         const fromName = c.from_fund_source_id ? (expFundMap[c.from_fund_source_id] || 'Unknown') : 'Unknown';
@@ -581,7 +592,7 @@ const AdminAnalytics = () => {
     });
 
     // Expenses by fund_source_id
-    expenses.forEach(e => {
+    expenses.filter(e => inRange(e.date)).forEach(e => {
       const name = e.fund_source_id ? (expFundMap[e.fund_source_id] || 'Unknown') : 'Unknown';
       ensure(name);
       balanceMap[name].expenseOut += getExpenseNet(e);
@@ -600,7 +611,7 @@ const AdminAnalytics = () => {
         net: v.salesIn + v.otherIn + v.capitalIn + v.transferIn - v.transferOut - v.expenseOut,
       }))
       .sort((a, b) => b.net - a.net);
-  }, [orders, otherIncomes, expenses, capitalInflows, expFundMap, netRevenueType]);
+  }, [orders, otherIncomes, expenses, capitalInflows, expFundMap, netRevenueType, dateRange]);
 
   // Fund balance pie (net positive only)
   const fundBalancePieData = useMemo(() => {
