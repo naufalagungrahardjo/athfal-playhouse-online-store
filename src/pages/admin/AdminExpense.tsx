@@ -358,7 +358,7 @@ const AdminExpense = () => {
                   <TableBody>
                     {filteredExpenses.map(exp => (
                       <TableRow key={exp.id}>
-                        <TableCell className="whitespace-nowrap">{format(new Date(exp.date), 'dd MMM yyyy')}</TableCell>
+                        <TableCell className="whitespace-nowrap">{format(new Date(exp.date), 'EEE, d MMM yyyy')}</TableCell>
                         <TableCell className="max-w-[250px]">
                           <div className="overflow-x-auto whitespace-nowrap scrollbar-thin">
                             {exp.description}
