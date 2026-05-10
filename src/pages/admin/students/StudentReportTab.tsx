@@ -259,7 +259,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                       <SelectItem value="all">All Sessions</SelectItem>
                       {sessionList.map(s => (
                         <SelectItem key={s.sessionNumber} value={String(s.sessionNumber)}>
-                          Session {s.sessionNumber} — {format(parseISO(s.dateStr), "dd MMM yyyy")}
+                          Session {s.sessionNumber} — {format(parseISO(s.dateStr), "EEE, d MMM yyyy")}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -294,7 +294,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                     <TableRow key={ps.enrollment.id}>
                       <TableCell className="font-medium">{ps.program?.name || "—"}</TableCell>
                       <TableCell>
-                        {ps.program ? `${format(new Date(ps.program.start_date), "dd MMM yyyy")} — ${format(new Date(ps.program.end_date), "dd MMM yyyy")}` : "—"}
+                        {ps.program ? `${format(new Date(ps.program.start_date), "EEE, d MMM yyyy")} — ${format(new Date(ps.program.end_date), "EEE, d MMM yyyy")}` : "—"}
                       </TableCell>
                       <TableCell className="text-green-600 font-medium">{ps.present}</TableCell>
                       <TableCell className="text-red-600 font-medium">{ps.absent}</TableCell>
@@ -328,7 +328,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                       {displaySessions.map(s => (
                         <TableHead key={s.sessionNumber} className="min-w-[200px]">
                           Session {s.sessionNumber}
-                          <div className="text-[10px] font-normal text-muted-foreground">{format(parseISO(s.dateStr), "dd MMM yyyy")}</div>
+                          <div className="text-[10px] font-normal text-muted-foreground">{format(parseISO(s.dateStr), "EEE, d MMM yyyy")}</div>
                         </TableHead>
                       ))}
                       <TableHead className="min-w-[280px] bg-blue-50">Compilation</TableHead>
