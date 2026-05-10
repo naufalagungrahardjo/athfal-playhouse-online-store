@@ -79,6 +79,7 @@ export default function AdminCheckInOut() {
 
   // Teacher self attendance
   const today = format(new Date(), "yyyy-MM-dd");
+  const todayDisplay = format(new Date(), "EEEE, d MMMM yyyy");
   const [teacherAttendance, setTeacherAttendance] = useState<any | null>(null);
   const [teacherRemarks, setTeacherRemarks] = useState("");
   const [teacherSaving, setTeacherSaving] = useState(false);
@@ -341,7 +342,7 @@ export default function AdminCheckInOut() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Clock className="w-4 h-4" /> My Attendance — {today}
+            <Clock className="w-4 h-4" /> My Attendance — {todayDisplay}
           </CardTitle>
           {user?.name && (
             <p className="text-sm text-muted-foreground pl-6">{user.name}</p>
@@ -444,7 +445,7 @@ export default function AdminCheckInOut() {
           {selectedProgram && (
             <div className="rounded border bg-muted px-3 py-2">
               <p className="text-xs text-muted-foreground">Session date</p>
-              <p className="text-sm font-medium">{format(new Date(), "EEE, dd MMM yyyy")}</p>
+              <p className="text-sm font-medium">{format(new Date(), "EEEE, d MMMM yyyy")}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Session number is assigned automatically based on today's date.
               </p>
@@ -518,7 +519,7 @@ export default function AdminCheckInOut() {
                     <p className="text-sm font-medium truncate">{studentName(r.student_id)}</p>
                     <p className="text-xs text-muted-foreground truncate">
                       {programName(r.program_id)} · Session {r.meeting_number || "—"}
-                      {r.session_date ? ` · ${format(new Date(r.session_date), "dd MMM")}` : ""}
+                      {r.session_date ? ` · ${format(new Date(r.session_date), "EEE, d MMM yyyy")}` : ""}
                     </p>
                   </div>
                   <div className="text-right">
