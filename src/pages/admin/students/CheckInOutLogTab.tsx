@@ -140,7 +140,7 @@ export default function CheckInOutLogTab({ programs, students }: Props) {
               <TableBody>
                 {filtered.map((r) => (
                   <TableRow key={r.id}>
-                    <TableCell>{format(new Date(r.event_time), "yyyy-MM-dd")}</TableCell>
+                    <TableCell className="whitespace-nowrap">{format(new Date(r.event_time), "EEE, d MMM yyyy")}</TableCell>
                     <TableCell>{format(new Date(r.event_time), "HH:mm")}</TableCell>
                     <TableCell>{studentName(r.student_id)}</TableCell>
                     <TableCell>{programName(r.program_id)}</TableCell>
