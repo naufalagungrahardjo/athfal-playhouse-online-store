@@ -270,26 +270,7 @@ export const useOrderProcessing = () => {
       // Send order alert emails (fire-and-forget, don't block checkout)
       try {
         supabase.functions.invoke('order-alert-email', {
-          body: {
-            orderId: orderId,
-            customerName: orderData.customerName,
-            customerEmail: orderData.customerEmail,
-            customerPhone: orderData.customerPhone,
-            customerAddress: orderData.customerAddress,
-            childName: orderData.childName,
-            childAge: orderData.childAge,
-            childBirthdate: orderData.childBirthdate,
-            childGender: orderData.childGender,
-            guardianStatus: orderData.guardianStatus,
-            notes: orderData.notes,
-            paymentMethod: orderData.paymentMethod,
-            totalAmount: orderData.totalAmount,
-            subtotal: orderData.subtotal,
-            taxAmount: orderData.taxAmount,
-            discountAmount: orderData.discountAmount,
-            promoCode: orderData.promoCode,
-            items: orderItems,
-          },
+          body: { orderId },
         });
       } catch (alertError) {
         logger.error('Order alert email failed (non-blocking):', alertError);
