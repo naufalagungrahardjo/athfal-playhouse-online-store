@@ -34,37 +34,24 @@ serve(async (req) => {
       throw new Error("Supabase credentials not configured");
     }
 
-    const {
-      orderId,
-      customerName,
-      customerEmail,
-      customerPhone,
-      customerAddress,
-      childName,
-      childAge,
-      childBirthdate,
-      guardianStatus,
-      notes,
-      paymentMethod,
-      totalAmount,
-      subtotal,
-      taxAmount,
-      discountAmount,
-      promoCode,
-      items,
-    } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const orderId = body?.orderId;
 
-    if (!orderId) {
-      throw new Error("orderId is required");
+    if (!orderId || typeof orderId !== "string") {
+      return new Response(
+        JSON.stringify({ success: false, error: "orderId is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // Fetch admin accounts with order_alerts enabled
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Verify the order actually exists to prevent spam from arbitrary callers
+    // SECURITY: Fetch ALL email content from the database — never trust the request body.
+    // This prevents attackers from spoofing email content (customer name, items, totals, etc.)
+    // by calling this endpoint with a valid orderId and arbitrary payload.
     const { data: orderRow, error: orderLookupError } = await supabaseAdmin
       .from("orders")
-      .select("id")
+      .select("id, customer_name, customer_email, customer_phone, customer_address, child_name, child_age, child_birthdate, guardian_status, notes, payment_method, total_amount, subtotal, tax_amount, discount_amount, promo_code, created_at")
       .eq("id", orderId)
       .maybeSingle();
     if (orderLookupError || !orderRow) {
@@ -73,6 +60,40 @@ serve(async (req) => {
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // SECURITY: Only allow alerting on freshly-created orders (within 15 minutes of creation).
+    // This limits the ability to repeatedly spam admins by replaying old orderIds.
+    if (orderRow.created_at) {
+      const ageMs = Date.now() - new Date(orderRow.created_at).getTime();
+      if (ageMs > 15 * 60 * 1000) {
+        return new Response(
+          JSON.stringify({ success: false, error: "Order too old for alert" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    const { data: dbItems } = await supabaseAdmin
+      .from("order_items")
+      .select("product_name, product_price, quantity")
+      .eq("order_id", orderId);
+
+    const customerName = orderRow.customer_name;
+    const customerEmail = orderRow.customer_email;
+    const customerPhone = orderRow.customer_phone;
+    const customerAddress = orderRow.customer_address;
+    const childName = orderRow.child_name;
+    const childAge = orderRow.child_age;
+    const childBirthdate = orderRow.child_birthdate;
+    const guardianStatus = orderRow.guardian_status;
+    const notes = orderRow.notes;
+    const paymentMethod = orderRow.payment_method;
+    const totalAmount = orderRow.total_amount;
+    const subtotal = orderRow.subtotal;
+    const taxAmount = orderRow.tax_amount;
+    const discountAmount = orderRow.discount_amount;
+    const promoCode = orderRow.promo_code;
+    const items = dbItems || [];
 
     const { data: alertAdmins, error: adminError } = await supabaseAdmin
       .from("admin_accounts")
