@@ -452,11 +452,26 @@ export default function AdminCheckInOut() {
                 </div>
               )}
             </div>
-            {studentId && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Selected: {enrolledStudents.find((s) => s.id === studentId)?.name}
-              </p>
-            )}
+            <Select
+              value={studentId}
+              onValueChange={(v) => {
+                setStudentId(v);
+                const s = enrolledStudents.find((x) => x.id === v);
+                if (s) setStudentSearch(s.name);
+                setStudentSearchOpen(false);
+              }}
+            >
+              <SelectTrigger className="mt-2">
+                <SelectValue placeholder="Or select from dropdown">
+                  {studentId ? enrolledStudents.find((s) => s.id === studentId)?.name : undefined}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="max-h-[240px] overflow-y-auto">
+                {enrolledStudents.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {studentId && studentPrograms.length > 1 && (
