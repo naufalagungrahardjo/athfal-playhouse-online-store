@@ -72,6 +72,7 @@ export default function AdminCheckInOut() {
 
   const [programId, setProgramId] = useState<string>("");
   const [studentId, setStudentId] = useState<string>("");
+  const [studentSearch, setStudentSearch] = useState<string>("");
   const [eventType, setEventType] = useState<"check_in" | "check_out">("check_in");
   const [submitting, setSubmitting] = useState(false);
 
