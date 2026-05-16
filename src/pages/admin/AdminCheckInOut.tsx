@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, LogIn, LogOut, Loader2, Clock } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Camera, LogIn, LogOut, Loader2, Clock, Search } from "lucide-react";
 import { format } from "date-fns";
 
 type Program = { id: string; name: string; num_meetings: number };
@@ -71,6 +72,7 @@ export default function AdminCheckInOut() {
 
   const [programId, setProgramId] = useState<string>("");
   const [studentId, setStudentId] = useState<string>("");
+  const [studentSearch, setStudentSearch] = useState<string>("");
   const [eventType, setEventType] = useState<"check_in" | "check_out">("check_in");
   const [submitting, setSubmitting] = useState(false);
 
@@ -407,12 +409,30 @@ export default function AdminCheckInOut() {
         <CardContent className="space-y-3">
           <div>
             <Label>Student</Label>
+            <div className="relative mb-2">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <Input
+                value={studentSearch}
+                onChange={(e) => setStudentSearch(e.target.value)}
+                placeholder="Search student by name..."
+                className="pl-9"
+              />
+            </div>
             <Select value={studentId} onValueChange={setStudentId}>
-              <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="Select student">
+                  {studentId ? (enrolledStudents.find((s) => s.id === studentId)?.name ?? "Select student") : undefined}
+                </SelectValue>
+              </SelectTrigger>
               <SelectContent className="max-h-[240px] overflow-y-auto">
-                {enrolledStudents.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                ))}
+                {enrolledStudents
+                  .filter((s) => s.name.toLowerCase().includes(studentSearch.trim().toLowerCase()))
+                  .map((s) => (
+                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  ))}
+                {enrolledStudents.filter((s) => s.name.toLowerCase().includes(studentSearch.trim().toLowerCase())).length === 0 && (
+                  <div className="px-2 py-2 text-sm text-muted-foreground">No students found</div>
+                )}
               </SelectContent>
             </Select>
           </div>
