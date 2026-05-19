@@ -636,9 +636,11 @@ export default function AdminAllTeachers() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {Object.entries(attendanceSummary).map(([email, s]) => (
+                        {Object.entries(attendanceSummary)
+                          .sort((a, b) => displayName(a[0]).localeCompare(displayName(b[0]), undefined, { sensitivity: "base" }))
+                          .map(([email, s]) => (
                           <TableRow key={email}>
-                            <TableCell className="font-medium">{email}</TableCell>
+                            <TableCell className="font-medium">{displayName(email)}</TableCell>
                             <TableCell className="text-center">{s.totalDays}</TableCell>
                             <TableCell className="text-center text-green-600 font-medium">{s.totalOnTime}</TableCell>
                             <TableCell className="text-center text-red-600 font-medium">{s.totalLate}</TableCell>
@@ -668,9 +670,14 @@ export default function AdminAllTeachers() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredAttendances.map(a => (
+                    {[...filteredAttendances]
+                      .sort((x, y) => {
+                        const cmp = displayName(x.teacher_email).localeCompare(displayName(y.teacher_email), undefined, { sensitivity: "base" });
+                        return cmp !== 0 ? cmp : (y.date || "").localeCompare(x.date || "");
+                      })
+                      .map(a => (
                       <TableRow key={a.id}>
-                        <TableCell className="font-medium">{a.teacher_email}</TableCell>
+                        <TableCell className="font-medium">{displayName(a.teacher_email)}</TableCell>
                         <TableCell>{a.date}</TableCell>
                         <TableCell>{a.arrival_time ? format(new Date(a.arrival_time), "HH:mm") : "-"}</TableCell>
                         <TableCell>{a.leave_time || "-"}</TableCell>
