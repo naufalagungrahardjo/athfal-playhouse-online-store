@@ -208,24 +208,26 @@ export default function AdminAllTeachers() {
 
   // Summary: per-teacher attendance stats from filtered data
   const attendanceSummary = useMemo(() => {
-    const summary: Record<string, { totalDays: number; totalSessions: number; session1: number; session2: number; session3: number }> = {};
+    const [thH, thM] = (lateThreshold || "08:30").split(":").map(Number);
+    const summary: Record<string, { totalDays: number; totalOnTime: number; totalLate: number }> = {};
     for (const email of teachers) {
-      summary[email] = { totalDays: 0, totalSessions: 0, session1: 0, session2: 0, session3: 0 };
+      summary[email] = { totalDays: 0, totalOnTime: 0, totalLate: 0 };
     }
     for (const a of filteredAttendances) {
       if (!summary[a.teacher_email]) {
-        summary[a.teacher_email] = { totalDays: 0, totalSessions: 0, session1: 0, session2: 0, session3: 0 };
+        summary[a.teacher_email] = { totalDays: 0, totalOnTime: 0, totalLate: 0 };
       }
       const s = summary[a.teacher_email];
       s.totalDays += 1;
-      const sessions = a.sessions || [];
-      s.totalSessions += sessions.length;
-      if (sessions.includes("session1")) s.session1 += 1;
-      if (sessions.includes("session2")) s.session2 += 1;
-      if (sessions.includes("session3")) s.session3 += 1;
+      if (a.arrival_time) {
+        const d = new Date(a.arrival_time);
+        const isLate = d.getHours() > thH || (d.getHours() === thH && d.getMinutes() > thM);
+        if (isLate) s.totalLate += 1;
+        else s.totalOnTime += 1;
+      }
     }
     return summary;
-  }, [filteredAttendances, teachers]);
+  }, [filteredAttendances, teachers, lateThreshold]);
 
   // Filtered leaves
   const filteredLeaves = useMemo(() => {
