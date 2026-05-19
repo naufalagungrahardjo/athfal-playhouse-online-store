@@ -400,6 +400,7 @@ export type Database = {
           num_meetings: number
           source_product_names: string[]
           start_date: string
+          students_hidden: boolean
           updated_at: string | null
         }
         Insert: {
@@ -410,6 +411,7 @@ export type Database = {
           num_meetings?: number
           source_product_names?: string[]
           start_date: string
+          students_hidden?: boolean
           updated_at?: string | null
         }
         Update: {
@@ -420,6 +422,7 @@ export type Database = {
           num_meetings?: number
           source_product_names?: string[]
           start_date?: string
+          students_hidden?: boolean
           updated_at?: string | null
         }
         Relationships: []

@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Camera, LogIn, LogOut, Loader2, Clock, Search } from "lucide-react";
 import { format } from "date-fns";
 
-type Program = { id: string; name: string; num_meetings: number };
+type Program = { id: string; name: string; num_meetings: number; students_hidden?: boolean };
 type Student = { id: string; name: string };
 type Enrollment = { id: string; student_id: string; program_id: string };
 type CheckRecord = {
@@ -191,7 +191,7 @@ export default function AdminCheckInOut() {
     todayStart.setHours(0, 0, 0, 0);
 
     const [pRes, sRes, eRes, rRes, settingsRes] = await Promise.all([
-      supabase.from("class_programs" as any).select("id,name,num_meetings").order("start_date", { ascending: false }),
+      supabase.from("class_programs" as any).select("id,name,num_meetings,students_hidden").order("start_date", { ascending: false }),
       supabase.from("students" as any).select("id,name").order("name"),
       supabase.from("student_enrollments" as any).select("id,student_id,program_id"),
       supabase
@@ -212,20 +212,26 @@ export default function AdminCheckInOut() {
     if (teacherEmail) fetchAll();
   }, [teacherEmail]);
 
-  // Only show students who are enrolled in at least one program
+  // Enrollments excluding programs whose students are hidden
+  const visibleEnrollments = useMemo(() => {
+    const hiddenProgramIds = new Set(programs.filter((p) => p.students_hidden).map((p) => p.id));
+    return enrollments.filter((e) => !hiddenProgramIds.has(e.program_id));
+  }, [enrollments, programs]);
+
+  // Only show students who are enrolled in at least one visible program
   const enrolledStudents = useMemo(() => {
-    const ids = new Set(enrollments.map((e) => e.student_id));
+    const ids = new Set(visibleEnrollments.map((e) => e.student_id));
     return students.filter((s) => ids.has(s.id));
-  }, [enrollments, students]);
+  }, [visibleEnrollments, students]);
 
   // Programs the selected student is enrolled in
   const studentPrograms = useMemo(() => {
     if (!studentId) return [] as Program[];
     const programIds = new Set(
-      enrollments.filter((e) => e.student_id === studentId).map((e) => e.program_id)
+      visibleEnrollments.filter((e) => e.student_id === studentId).map((e) => e.program_id)
     );
-    return programs.filter((p) => programIds.has(p.id));
-  }, [enrollments, programs, studentId]);
+    return programs.filter((p) => programIds.has(p.id) && !p.students_hidden);
+  }, [visibleEnrollments, programs, studentId]);
 
   // Auto-select the program when the student is enrolled in exactly one
   useEffect(() => {
