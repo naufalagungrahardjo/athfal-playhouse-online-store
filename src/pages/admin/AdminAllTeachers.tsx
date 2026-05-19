@@ -89,6 +89,7 @@ export default function AdminAllTeachers() {
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [teacherSettings, setTeacherSettings] = useState<TeacherSetting[]>([]);
   const [teachers, setTeachers] = useState<string[]>([]);
+  const [teacherNameMap, setTeacherNameMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   // Filters
@@ -167,6 +168,19 @@ export default function AdminAllTeachers() {
 
     const teacherEmails = (teacherAccRes.data || []).map((t: any) => t.email);
     setTeachers(teacherEmails);
+
+    // Load display names from users table by email
+    if (teacherEmails.length > 0) {
+      const { data: userRows } = await supabase
+        .from("users")
+        .select("email,name")
+        .in("email", teacherEmails);
+      const map: Record<string, string> = {};
+      (userRows || []).forEach((u: any) => {
+        if (u.name && String(u.name).trim()) map[u.email] = String(u.name).trim();
+      });
+      setTeacherNameMap(map);
+    }
 
     // Load late threshold
     const { data: thresholdRow } = await supabase
