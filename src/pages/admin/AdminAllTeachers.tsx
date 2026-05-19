@@ -512,6 +512,27 @@ export default function AdminAllTeachers() {
         {/* ATTENDANCE TAB */}
         <TabsContent value="attendance" className="space-y-4">
           <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Late / On-time Threshold</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Teachers checking in at or before this time are marked <span className="text-green-600 font-medium">On time</span>; after this time they are marked <span className="text-red-600 font-medium">Late</span> on their attendance calendar.
+              </p>
+              <div className="flex flex-wrap items-end gap-3">
+                <div>
+                  <Label>Latest on-time check-in (HH:mm)</Label>
+                  <Input type="time" value={thresholdInput} onChange={e => setThresholdInput(e.target.value)} className="w-[150px]" />
+                </div>
+                <Button onClick={handleSaveThreshold} disabled={savingThreshold || thresholdInput === lateThreshold} className="gap-1">
+                  <Save className="w-4 h-4" /> {savingThreshold ? "Saving..." : "Save Threshold"}
+                </Button>
+                <span className="text-xs text-muted-foreground">Current: <strong>{lateThreshold}</strong></span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardHeader><CardTitle>All Teacher Attendance</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-wrap gap-3 items-end">
