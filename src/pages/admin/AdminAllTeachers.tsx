@@ -107,6 +107,11 @@ export default function AdminAllTeachers() {
   const [deleting, setDeleting] = useState(false);
   const [deletingAttendance, setDeletingAttendance] = useState(false);
 
+  // Late threshold (HH:mm) - stored in website_copy id='attendance_settings'
+  const [lateThreshold, setLateThreshold] = useState<string>("08:30");
+  const [thresholdInput, setThresholdInput] = useState<string>("08:30");
+  const [savingThreshold, setSavingThreshold] = useState(false);
+
   // Student check-in/out management (super_admin only)
   type CheckRecord = {
     id: string;
@@ -162,6 +167,19 @@ export default function AdminAllTeachers() {
 
     const teacherEmails = (teacherAccRes.data || []).map((t: any) => t.email);
     setTeachers(teacherEmails);
+
+    // Load late threshold
+    const { data: thresholdRow } = await supabase
+      .from("website_copy")
+      .select("content")
+      .eq("id", "attendance_settings")
+      .maybeSingle();
+    const tVal = (thresholdRow as any)?.content?.late_threshold;
+    if (tVal && typeof tVal === "string") {
+      setLateThreshold(tVal);
+      setThresholdInput(tVal);
+    }
+
     setLoading(false);
   };
 
