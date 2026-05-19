@@ -458,6 +458,26 @@ export default function AdminAllTeachers() {
     }
   };
 
+  const handleSaveThreshold = async () => {
+    if (!/^\d{2}:\d{2}$/.test(thresholdInput)) {
+      toast({ variant: "destructive", title: "Invalid time", description: "Use HH:mm format (e.g. 08:30)." });
+      return;
+    }
+    setSavingThreshold(true);
+    try {
+      const { error } = await supabase
+        .from("website_copy")
+        .upsert({ id: "attendance_settings", content: { late_threshold: thresholdInput } as any }, { onConflict: "id" });
+      if (error) throw error;
+      setLateThreshold(thresholdInput);
+      toast({ title: "Saved", description: `Late threshold set to ${thresholdInput}.` });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to save threshold." });
+    } finally {
+      setSavingThreshold(false);
+    }
+  };
+
   const exportLeavesCSV = () => {
     const headers = ["Teacher", "Start", "End", "Remarks", "Status"];
     const rows = leaves.map(l => [l.teacher_email, l.start_date, l.end_date, l.remarks || "", l.status]);
