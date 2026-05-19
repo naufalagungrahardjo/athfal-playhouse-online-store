@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, Edit2, Download, ChevronDown, X, RefreshCw } from "lucide-react";
 import { ClassProgram, Student } from "@/hooks/useStudents";
 import { useProducts } from "@/hooks/useProducts";
@@ -285,6 +286,7 @@ export default function ProgramsStudentsTab({
                 <TableHead>Name</TableHead>
                 <TableHead>Period</TableHead>
                 <TableHead className="w-24">Actions</TableHead>
+                <TableHead className="w-32">Hide Students</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -307,10 +309,19 @@ export default function ProgramsStudentsTab({
                       <Button size="icon" variant="ghost" onClick={() => deleteProgram(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
                   </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={!!p.students_hidden}
+                        onCheckedChange={(checked) => updateProgram(p.id, { students_hidden: checked })}
+                      />
+                      <span className="text-xs text-muted-foreground">{p.students_hidden ? "Hidden" : "Visible"}</span>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
               {programs.length === 0 && (
-                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">No programs yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No programs yet</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
