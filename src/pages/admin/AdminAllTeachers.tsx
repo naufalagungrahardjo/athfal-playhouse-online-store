@@ -208,24 +208,26 @@ export default function AdminAllTeachers() {
 
   // Summary: per-teacher attendance stats from filtered data
   const attendanceSummary = useMemo(() => {
-    const summary: Record<string, { totalDays: number; totalSessions: number; session1: number; session2: number; session3: number }> = {};
+    const [thH, thM] = (lateThreshold || "08:30").split(":").map(Number);
+    const summary: Record<string, { totalDays: number; totalOnTime: number; totalLate: number }> = {};
     for (const email of teachers) {
-      summary[email] = { totalDays: 0, totalSessions: 0, session1: 0, session2: 0, session3: 0 };
+      summary[email] = { totalDays: 0, totalOnTime: 0, totalLate: 0 };
     }
     for (const a of filteredAttendances) {
       if (!summary[a.teacher_email]) {
-        summary[a.teacher_email] = { totalDays: 0, totalSessions: 0, session1: 0, session2: 0, session3: 0 };
+        summary[a.teacher_email] = { totalDays: 0, totalOnTime: 0, totalLate: 0 };
       }
       const s = summary[a.teacher_email];
       s.totalDays += 1;
-      const sessions = a.sessions || [];
-      s.totalSessions += sessions.length;
-      if (sessions.includes("session1")) s.session1 += 1;
-      if (sessions.includes("session2")) s.session2 += 1;
-      if (sessions.includes("session3")) s.session3 += 1;
+      if (a.arrival_time) {
+        const d = new Date(a.arrival_time);
+        const isLate = d.getHours() > thH || (d.getHours() === thH && d.getMinutes() > thM);
+        if (isLate) s.totalLate += 1;
+        else s.totalOnTime += 1;
+      }
     }
     return summary;
-  }, [filteredAttendances, teachers]);
+  }, [filteredAttendances, teachers, lateThreshold]);
 
   // Filtered leaves
   const filteredLeaves = useMemo(() => {
@@ -613,10 +615,8 @@ export default function AdminAllTeachers() {
                         <TableRow>
                           <TableHead>Teacher</TableHead>
                           <TableHead className="text-center">Total Days</TableHead>
-                          <TableHead className="text-center">Total Sessions</TableHead>
-                          <TableHead className="text-center">Session 1</TableHead>
-                          <TableHead className="text-center">Session 2</TableHead>
-                          <TableHead className="text-center">Session 3</TableHead>
+                          <TableHead className="text-center">Total On Time</TableHead>
+                          <TableHead className="text-center">Total Late</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -624,14 +624,12 @@ export default function AdminAllTeachers() {
                           <TableRow key={email}>
                             <TableCell className="font-medium">{email}</TableCell>
                             <TableCell className="text-center">{s.totalDays}</TableCell>
-                            <TableCell className="text-center">{s.totalSessions}</TableCell>
-                            <TableCell className="text-center">{s.session1}</TableCell>
-                            <TableCell className="text-center">{s.session2}</TableCell>
-                            <TableCell className="text-center">{s.session3}</TableCell>
+                            <TableCell className="text-center text-green-600 font-medium">{s.totalOnTime}</TableCell>
+                            <TableCell className="text-center text-red-600 font-medium">{s.totalLate}</TableCell>
                           </TableRow>
                         ))}
                         {Object.keys(attendanceSummary).length === 0 && (
-                          <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No data</TableCell></TableRow>
+                          <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No data</TableCell></TableRow>
                         )}
                       </TableBody>
                     </Table>
