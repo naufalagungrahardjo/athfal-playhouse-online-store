@@ -560,7 +560,9 @@ export default function AdminAllTeachers() {
                     <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Teachers</SelectItem>
-                      {teachers.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                      {[...teachers]
+                        .sort((a, b) => displayName(a).localeCompare(displayName(b), undefined, { sensitivity: "base" }))
+                        .map(t => <SelectItem key={t} value={t}>{displayName(t)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
