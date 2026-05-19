@@ -1,0 +1,1 @@
+ALTER TABLE public.class_programs ADD COLUMN IF NOT EXISTS students_hidden boolean NOT NULL DEFAULT false;
