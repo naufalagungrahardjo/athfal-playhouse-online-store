@@ -9,6 +9,7 @@ export type ClassProgram = {
   start_date: string;
   end_date: string;
   source_product_names?: string[];
+  students_hidden?: boolean;
 };
 
 export type Student = {
