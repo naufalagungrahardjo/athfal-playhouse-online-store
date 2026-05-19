@@ -107,6 +107,11 @@ export default function AdminAllTeachers() {
   const [deleting, setDeleting] = useState(false);
   const [deletingAttendance, setDeletingAttendance] = useState(false);
 
+  // Late threshold (HH:mm) - stored in website_copy id='attendance_settings'
+  const [lateThreshold, setLateThreshold] = useState<string>("08:30");
+  const [thresholdInput, setThresholdInput] = useState<string>("08:30");
+  const [savingThreshold, setSavingThreshold] = useState(false);
+
   // Student check-in/out management (super_admin only)
   type CheckRecord = {
     id: string;
@@ -162,6 +167,19 @@ export default function AdminAllTeachers() {
 
     const teacherEmails = (teacherAccRes.data || []).map((t: any) => t.email);
     setTeachers(teacherEmails);
+
+    // Load late threshold
+    const { data: thresholdRow } = await supabase
+      .from("website_copy")
+      .select("content")
+      .eq("id", "attendance_settings")
+      .maybeSingle();
+    const tVal = (thresholdRow as any)?.content?.late_threshold;
+    if (tVal && typeof tVal === "string") {
+      setLateThreshold(tVal);
+      setThresholdInput(tVal);
+    }
+
     setLoading(false);
   };
 
@@ -440,6 +458,26 @@ export default function AdminAllTeachers() {
     }
   };
 
+  const handleSaveThreshold = async () => {
+    if (!/^\d{2}:\d{2}$/.test(thresholdInput)) {
+      toast({ variant: "destructive", title: "Invalid time", description: "Use HH:mm format (e.g. 08:30)." });
+      return;
+    }
+    setSavingThreshold(true);
+    try {
+      const { error } = await supabase
+        .from("website_copy")
+        .upsert({ id: "attendance_settings", content: { late_threshold: thresholdInput } as any }, { onConflict: "id" });
+      if (error) throw error;
+      setLateThreshold(thresholdInput);
+      toast({ title: "Saved", description: `Late threshold set to ${thresholdInput}.` });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to save threshold." });
+    } finally {
+      setSavingThreshold(false);
+    }
+  };
+
   const exportLeavesCSV = () => {
     const headers = ["Teacher", "Start", "End", "Remarks", "Status"];
     const rows = leaves.map(l => [l.teacher_email, l.start_date, l.end_date, l.remarks || "", l.status]);
@@ -473,6 +511,27 @@ export default function AdminAllTeachers() {
 
         {/* ATTENDANCE TAB */}
         <TabsContent value="attendance" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Late / On-time Threshold</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Teachers checking in at or before this time are marked <span className="text-green-600 font-medium">On time</span>; after this time they are marked <span className="text-red-600 font-medium">Late</span> on their attendance calendar.
+              </p>
+              <div className="flex flex-wrap items-end gap-3">
+                <div>
+                  <Label>Latest on-time check-in (HH:mm)</Label>
+                  <Input type="time" value={thresholdInput} onChange={e => setThresholdInput(e.target.value)} className="w-[150px]" />
+                </div>
+                <Button onClick={handleSaveThreshold} disabled={savingThreshold || thresholdInput === lateThreshold} className="gap-1">
+                  <Save className="w-4 h-4" /> {savingThreshold ? "Saving..." : "Save Threshold"}
+                </Button>
+                <span className="text-xs text-muted-foreground">Current: <strong>{lateThreshold}</strong></span>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader><CardTitle>All Teacher Attendance</CardTitle></CardHeader>
             <CardContent className="space-y-4">
