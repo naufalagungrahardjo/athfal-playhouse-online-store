@@ -89,6 +89,7 @@ export default function AdminAllTeachers() {
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [teacherSettings, setTeacherSettings] = useState<TeacherSetting[]>([]);
   const [teachers, setTeachers] = useState<string[]>([]);
+  const [teacherNameMap, setTeacherNameMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   // Filters
@@ -167,6 +168,19 @@ export default function AdminAllTeachers() {
 
     const teacherEmails = (teacherAccRes.data || []).map((t: any) => t.email);
     setTeachers(teacherEmails);
+
+    // Load display names from users table by email
+    if (teacherEmails.length > 0) {
+      const { data: userRows } = await supabase
+        .from("users")
+        .select("email,name")
+        .in("email", teacherEmails);
+      const map: Record<string, string> = {};
+      (userRows || []).forEach((u: any) => {
+        if (u.name && String(u.name).trim()) map[u.email] = String(u.name).trim();
+      });
+      setTeacherNameMap(map);
+    }
 
     // Load late threshold
     const { data: thresholdRow } = await supabase
@@ -496,6 +510,8 @@ export default function AdminAllTeachers() {
 
   if (loading) return <div className="p-8 text-center">Loading...</div>;
 
+  const displayName = (email: string) => teacherNameMap[email] || email;
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">All Teachers Management</h1>
@@ -544,7 +560,9 @@ export default function AdminAllTeachers() {
                     <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Teachers</SelectItem>
-                      {teachers.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                      {[...teachers]
+                        .sort((a, b) => displayName(a).localeCompare(displayName(b), undefined, { sensitivity: "base" }))
+                        .map(t => <SelectItem key={t} value={t}>{displayName(t)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -620,9 +638,11 @@ export default function AdminAllTeachers() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {Object.entries(attendanceSummary).map(([email, s]) => (
+                        {Object.entries(attendanceSummary)
+                          .sort((a, b) => displayName(a[0]).localeCompare(displayName(b[0]), undefined, { sensitivity: "base" }))
+                          .map(([email, s]) => (
                           <TableRow key={email}>
-                            <TableCell className="font-medium">{email}</TableCell>
+                            <TableCell className="font-medium">{displayName(email)}</TableCell>
                             <TableCell className="text-center">{s.totalDays}</TableCell>
                             <TableCell className="text-center text-green-600 font-medium">{s.totalOnTime}</TableCell>
                             <TableCell className="text-center text-red-600 font-medium">{s.totalLate}</TableCell>
@@ -652,9 +672,14 @@ export default function AdminAllTeachers() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredAttendances.map(a => (
+                    {[...filteredAttendances]
+                      .sort((x, y) => {
+                        const cmp = displayName(x.teacher_email).localeCompare(displayName(y.teacher_email), undefined, { sensitivity: "base" });
+                        return cmp !== 0 ? cmp : (y.date || "").localeCompare(x.date || "");
+                      })
+                      .map(a => (
                       <TableRow key={a.id}>
-                        <TableCell className="font-medium">{a.teacher_email}</TableCell>
+                        <TableCell className="font-medium">{displayName(a.teacher_email)}</TableCell>
                         <TableCell>{a.date}</TableCell>
                         <TableCell>{a.arrival_time ? format(new Date(a.arrival_time), "HH:mm") : "-"}</TableCell>
                         <TableCell>{a.leave_time || "-"}</TableCell>
