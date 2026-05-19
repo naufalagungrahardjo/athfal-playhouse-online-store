@@ -615,10 +615,8 @@ export default function AdminAllTeachers() {
                         <TableRow>
                           <TableHead>Teacher</TableHead>
                           <TableHead className="text-center">Total Days</TableHead>
-                          <TableHead className="text-center">Total Sessions</TableHead>
-                          <TableHead className="text-center">Session 1</TableHead>
-                          <TableHead className="text-center">Session 2</TableHead>
-                          <TableHead className="text-center">Session 3</TableHead>
+                          <TableHead className="text-center">Total On Time</TableHead>
+                          <TableHead className="text-center">Total Late</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -626,14 +624,12 @@ export default function AdminAllTeachers() {
                           <TableRow key={email}>
                             <TableCell className="font-medium">{email}</TableCell>
                             <TableCell className="text-center">{s.totalDays}</TableCell>
-                            <TableCell className="text-center">{s.totalSessions}</TableCell>
-                            <TableCell className="text-center">{s.session1}</TableCell>
-                            <TableCell className="text-center">{s.session2}</TableCell>
-                            <TableCell className="text-center">{s.session3}</TableCell>
+                            <TableCell className="text-center text-green-600 font-medium">{s.totalOnTime}</TableCell>
+                            <TableCell className="text-center text-red-600 font-medium">{s.totalLate}</TableCell>
                           </TableRow>
                         ))}
                         {Object.keys(attendanceSummary).length === 0 && (
-                          <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No data</TableCell></TableRow>
+                          <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No data</TableCell></TableRow>
                         )}
                       </TableBody>
                     </Table>
