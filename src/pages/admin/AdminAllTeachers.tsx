@@ -510,6 +510,8 @@ export default function AdminAllTeachers() {
 
   if (loading) return <div className="p-8 text-center">Loading...</div>;
 
+  const displayName = (email: string) => teacherNameMap[email] || email;
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">All Teachers Management</h1>
