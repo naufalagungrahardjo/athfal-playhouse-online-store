@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Send, CalendarDays, FileText, BookOpen } from "lucide-react";
 import ClassMaterialsTab from "./team/ClassMaterialsTab";
 import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
 
 const SESSION_OPTIONS = [
   { id: "session1", label: "Session 1: 8:30 - 11:30" },
@@ -69,14 +70,17 @@ export default function AdminTeacher() {
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [filterFrom, setFilterFrom] = useState("");
   const [filterTo, setFilterTo] = useState("");
+  const [lateThreshold, setLateThreshold] = useState<string>("08:30");
+  const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
 
   const today = format(new Date(), "yyyy-MM-dd");
 
   const fetchData = async () => {
-    const [attRes, leaveRes, settingsRes] = await Promise.all([
+    const [attRes, leaveRes, settingsRes, thresholdRes] = await Promise.all([
       supabase.from("teacher_attendance").select("*").eq("teacher_email", email).order("date", { ascending: false }),
       supabase.from("teacher_leaves").select("*").eq("teacher_email", email).order("created_at", { ascending: false }),
       supabase.from("teacher_settings").select("*").eq("teacher_email", email).maybeSingle(),
+      supabase.from("website_copy").select("content").eq("id", "attendance_settings").maybeSingle(),
     ]);
     if (attRes.data) {
       setAttendances(attRes.data as Attendance[]);
@@ -96,6 +100,8 @@ export default function AdminTeacher() {
       console.log("[TeacherDashboard] Drive folder ID:", folder);
       setDriveFolder(folder);
     }
+    const tVal = (thresholdRes.data as any)?.content?.late_threshold;
+    if (tVal && typeof tVal === "string") setLateThreshold(tVal);
   };
 
   useEffect(() => { if (email) fetchData(); }, [email]);
@@ -216,6 +222,21 @@ export default function AdminTeacher() {
   const totalDays = filteredAttendances.length;
   const totalLeaves = leaves.filter(l => l.status === "approved" && (dateFilter === "all" || ((!filterFrom || l.start_date >= filterFrom) && (!filterTo || l.end_date <= filterTo)))).length;
 
+  // Compute on-time vs late dates from attendances based on lateThreshold
+  const { onTimeDates, lateDates } = useMemo(() => {
+    const onTime: Date[] = [];
+    const late: Date[] = [];
+    const [thH, thM] = lateThreshold.split(":").map(Number);
+    for (const a of attendances) {
+      if (!a.arrival_time) continue;
+      const d = new Date(a.arrival_time);
+      const isLate = d.getHours() > thH || (d.getHours() === thH && d.getMinutes() > thM);
+      const dayDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      if (isLate) late.push(dayDate); else onTime.push(dayDate);
+    }
+    return { onTimeDates: onTime, lateDates: late };
+  }, [attendances, lateThreshold]);
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
@@ -234,6 +255,28 @@ export default function AdminTeacher() {
               <CardTitle className="flex items-center gap-2"><CalendarDays className="w-5 h-5" /> Attendance Recap</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Attendance Calendar with on-time / late indicators */}
+              <div className="rounded-md border p-3 bg-card">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <p className="text-sm font-medium">Attendance Calendar</p>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500" /> On time</span>
+                    <span className="flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500" /> Late (after {lateThreshold})</span>
+                  </div>
+                </div>
+                <Calendar
+                  mode="single"
+                  month={calendarMonth}
+                  onMonthChange={setCalendarMonth}
+                  modifiers={{ onTime: onTimeDates, late: lateDates }}
+                  modifiersClassNames={{
+                    onTime: "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:rounded-full after:bg-green-500",
+                    late: "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:rounded-full after:bg-red-500",
+                  }}
+                  className="rounded-md"
+                />
+              </div>
+
               <div className="flex flex-wrap gap-3 items-end">
                 <div>
                   <Label>Filter</Label>
