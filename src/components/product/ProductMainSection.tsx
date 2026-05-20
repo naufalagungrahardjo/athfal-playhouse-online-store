@@ -128,7 +128,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
                 <label className="font-medium text-gray-700 block mb-3">
                   {language === 'id' ? 'Pilih Opsi' : 'Choose Option'}:
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   <button
                     onClick={() => setSelectedVariant(null)}
                     className={`flex flex-col items-center justify-center text-center px-3 py-2.5 min-h-[64px] rounded-lg border-2 text-sm font-medium transition-colors ${
