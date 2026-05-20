@@ -128,30 +128,30 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
                 <label className="font-medium text-gray-700 block mb-3">
                   {language === 'id' ? 'Pilih Opsi' : 'Choose Option'}:
                 </label>
-                <div className="flex flex-wrap gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   <button
                     onClick={() => setSelectedVariant(null)}
-                    className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                    className={`flex flex-col items-center justify-center text-center px-3 py-2.5 min-h-[64px] rounded-lg border-2 text-sm font-medium transition-colors ${
                       selectedVariant === null
                         ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
                         : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
                     }`}
                   >
-                    <span className="block">{language === 'id' ? 'Pembayaran Lunas' : 'Full Payment'}</span>
-                    <span className="block text-xs mt-0.5">{formatCurrency(product.price)}</span>
+                    <span className="block leading-tight break-words">{language === 'id' ? 'Pembayaran Lunas' : 'Full Payment'}</span>
+                    <span className="block text-xs mt-1 opacity-80">{formatCurrency(product.price)}</span>
                   </button>
                   {variants.map(variant => (
                     <button
                       key={variant.id}
                       onClick={() => setSelectedVariant(variant)}
-                      className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                      className={`flex flex-col items-center justify-center text-center px-3 py-2.5 min-h-[64px] rounded-lg border-2 text-sm font-medium transition-colors ${
                         selectedVariant?.id === variant.id
                           ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
                           : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
                       }`}
                     >
-                      <span className="block">{variant.name}</span>
-                      <span className="block text-xs mt-0.5">{formatCurrency(variant.price)}</span>
+                      <span className="block leading-tight break-words">{variant.name}</span>
+                      <span className="block text-xs mt-1 opacity-80">{formatCurrency(variant.price)}</span>
                     </button>
                   ))}
                 </div>
