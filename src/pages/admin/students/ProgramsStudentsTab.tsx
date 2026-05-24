@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminRole } from "../helpers/getAdminRole";
+import { hasClassSuperAccess } from "../helpers/classAccess";
 
 type Props = {
   programs: ClassProgram[];
@@ -40,7 +41,7 @@ export default function ProgramsStudentsTab({
   const { products } = useProducts();
   const { toast } = useToast();
   const { user } = useAuth();
-  const isSuperAdmin = getAdminRole(user) === "super_admin";
+  const isSuperAdmin = hasClassSuperAccess(user);
   const productNameOptions = Array.from(new Set(products.map(p => p.name).filter(Boolean))).sort((a, b) =>
     a.localeCompare(b, undefined, { sensitivity: "base" })
   );
