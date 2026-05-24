@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminRole } from "./helpers/getAdminRole";
+import { hasClassSuperAccess } from "./helpers/classAccess";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,7 +85,7 @@ const getYearOptions = () => {
 export default function AdminAllTeachers() {
   const { toast } = useToast();
   const { user } = useAuth();
-  const isSuperAdmin = getAdminRole(user) === "super_admin";
+  const isSuperAdmin = hasClassSuperAccess(user);
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [teacherSettings, setTeacherSettings] = useState<TeacherSetting[]>([]);
@@ -107,6 +108,7 @@ export default function AdminAllTeachers() {
   const [driveEdits, setDriveEdits] = useState<Record<string, string>>({});
   const [deleting, setDeleting] = useState(false);
   const [deletingAttendance, setDeletingAttendance] = useState(false);
+  const [deletingRowId, setDeletingRowId] = useState<string | null>(null);
 
   // Late threshold (HH:mm) - stored in website_copy id='attendance_settings'
   const [lateThreshold, setLateThreshold] = useState<string>("08:30");
@@ -474,6 +476,20 @@ export default function AdminAllTeachers() {
     }
   };
 
+  const handleDeleteOneAttendance = async (id: string) => {
+    setDeletingRowId(id);
+    try {
+      const { error } = await supabase.from("teacher_attendance").delete().eq("id", id);
+      if (error) throw error;
+      toast({ title: "Deleted", description: "Attendance record removed." });
+      fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to delete record." });
+    } finally {
+      setDeletingRowId(null);
+    }
+  };
+
   const handleSaveThreshold = async () => {
     if (!/^\d{2}:\d{2}$/.test(thresholdInput)) {
       toast({ variant: "destructive", title: "Invalid time", description: "Use HH:mm format (e.g. 08:30)." });
@@ -651,6 +667,24 @@ export default function AdminAllTeachers() {
                         {Object.keys(attendanceSummary).length === 0 && (
                           <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No data</TableCell></TableRow>
                         )}
+                        {Object.keys(attendanceSummary).length > 0 && (() => {
+                          const totals = Object.values(attendanceSummary).reduce(
+                            (acc, s) => ({
+                              totalDays: acc.totalDays + s.totalDays,
+                              totalOnTime: acc.totalOnTime + s.totalOnTime,
+                              totalLate: acc.totalLate + s.totalLate,
+                            }),
+                            { totalDays: 0, totalOnTime: 0, totalLate: 0 }
+                          );
+                          return (
+                            <TableRow className="border-t-2 bg-muted/60 font-bold">
+                              <TableCell className="font-bold">Total (All Teachers)</TableCell>
+                              <TableCell className="text-center font-bold">{totals.totalDays}</TableCell>
+                              <TableCell className="text-center text-green-700 font-bold">{totals.totalOnTime}</TableCell>
+                              <TableCell className="text-center text-red-700 font-bold">{totals.totalLate}</TableCell>
+                            </TableRow>
+                          );
+                        })()}
                       </TableBody>
                     </Table>
                   </div>
@@ -669,6 +703,7 @@ export default function AdminAllTeachers() {
                       <TableHead>Sessions</TableHead>
                       <TableHead>Evidence</TableHead>
                       <TableHead>Remarks</TableHead>
+                      {isSuperAdmin && <TableHead className="text-center">Action</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -688,10 +723,45 @@ export default function AdminAllTeachers() {
                           {a.evidence_url ? <a href={a.evidence_url} target="_blank" rel="noopener noreferrer" className="text-primary underline text-xs">View</a> : "-"}
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate">{a.remarks || "-"}</TableCell>
+                        {isSuperAdmin && (
+                          <TableCell className="text-center">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8"
+                                  disabled={deletingRowId === a.id}
+                                  title="Delete this attendance record"
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete this attendance record?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will permanently delete the {a.date} attendance record for{" "}
+                                    <strong>{displayName(a.teacher_email)}</strong>. This cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteOneAttendance(a.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Yes, Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                     {filteredAttendances.length === 0 && (
-                      <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No records found</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={isSuperAdmin ? 8 : 7} className="text-center text-muted-foreground">No records found</TableCell></TableRow>
                     )}
                   </TableBody>
                 </Table>

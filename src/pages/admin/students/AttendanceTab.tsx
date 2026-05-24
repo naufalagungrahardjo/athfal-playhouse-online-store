@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Download, Save, Plus, Trash2, CalendarIcon } from "lucide-react";
 import { ClassProgram, Student, StudentEnrollment, StudentAttendance } from "@/hooks/useStudents";
 import { useAuth } from "@/contexts/AuthContext";
+import { hasClassSuperAccess } from "../helpers/classAccess";
 import { useProgramSessionDates } from "@/hooks/useProgramSessionDates";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -331,7 +332,7 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
                     </PopoverContent>
                   </Popover>
 
-                  {currentDateRow && user?.role === "super_admin" && (
+                  {currentDateRow && hasClassSuperAccess(user) && (
                     <Button
                       size="sm"
                       variant="ghost"

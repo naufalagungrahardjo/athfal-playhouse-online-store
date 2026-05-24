@@ -58,7 +58,7 @@ const AdminLayout = () => {
   }
 
   const adminRole = getAdminRole(user);
-  const navigation = getAdminNavigation(adminRole, allowedMenus);
+  const navigation = getAdminNavigation(adminRole, allowedMenus, user?.email);
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100">

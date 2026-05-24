@@ -14,7 +14,9 @@ export type NavigationGroup = {
   items: NavigationItem[];
 };
 
-export function getAdminNavigation(role: string | null, allowedMenus?: string[] | null): NavigationGroup[] {
+import { isClassSuperEmail } from './classAccess';
+
+export function getAdminNavigation(role: string | null, allowedMenus?: string[] | null, email?: string | null): NavigationGroup[] {
   const allGroups: NavigationGroup[] = [
     {
       label: 'Business',
@@ -62,6 +64,20 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
 
   // Super admin with no custom menu override gets everything
   if (role === "super_admin" && !allowedMenus) return allGroups;
+
+  // Class-super email: teachers granted full Class menu access
+  if (role === "teacher" && isClassSuperEmail(email)) {
+    return [{
+      label: 'Class',
+      items: [
+        { name: 'All Teachers', href: '/admin/all-teachers', icon: GraduationCap },
+        { name: 'Teacher', href: '/admin/teacher', icon: ClipboardList },
+        { name: 'Students', href: '/admin/students', icon: BookOpen },
+        { name: 'Check-In/Out', href: '/admin/check-in-out', icon: Camera },
+        { name: 'Inbox', href: '/admin/inbox', icon: Inbox },
+      ],
+    }];
+  }
 
   // If allowedMenus is explicitly set (by super admin), use that as final access
   if (allowedMenus && allowedMenus.length > 0) {
