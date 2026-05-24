@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminRole } from "./helpers/getAdminRole";
+import { hasClassSuperAccess } from "./helpers/classAccess";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,7 +85,7 @@ const getYearOptions = () => {
 export default function AdminAllTeachers() {
   const { toast } = useToast();
   const { user } = useAuth();
-  const isSuperAdmin = getAdminRole(user) === "super_admin";
+  const isSuperAdmin = hasClassSuperAccess(user);
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [teacherSettings, setTeacherSettings] = useState<TeacherSetting[]>([]);
@@ -107,6 +108,7 @@ export default function AdminAllTeachers() {
   const [driveEdits, setDriveEdits] = useState<Record<string, string>>({});
   const [deleting, setDeleting] = useState(false);
   const [deletingAttendance, setDeletingAttendance] = useState(false);
+  const [deletingRowId, setDeletingRowId] = useState<string | null>(null);
 
   // Late threshold (HH:mm) - stored in website_copy id='attendance_settings'
   const [lateThreshold, setLateThreshold] = useState<string>("08:30");
