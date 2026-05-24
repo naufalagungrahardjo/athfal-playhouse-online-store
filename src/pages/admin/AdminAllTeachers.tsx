@@ -476,6 +476,20 @@ export default function AdminAllTeachers() {
     }
   };
 
+  const handleDeleteOneAttendance = async (id: string) => {
+    setDeletingRowId(id);
+    try {
+      const { error } = await supabase.from("teacher_attendance").delete().eq("id", id);
+      if (error) throw error;
+      toast({ title: "Deleted", description: "Attendance record removed." });
+      fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to delete record." });
+    } finally {
+      setDeletingRowId(null);
+    }
+  };
+
   const handleSaveThreshold = async () => {
     if (!/^\d{2}:\d{2}$/.test(thresholdInput)) {
       toast({ variant: "destructive", title: "Invalid time", description: "Use HH:mm format (e.g. 08:30)." });
