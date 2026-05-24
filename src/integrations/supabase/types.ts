@@ -1676,6 +1676,13 @@ export type Database = {
           total_bytes: number
         }[]
       }
+      get_teacher_display_names: {
+        Args: { emails: string[] }
+        Returns: {
+          email: string
+          name: string
+        }[]
+      }
       increment_promo_usage: {
         Args: { expected_count: number; promo_id: string }
         Returns: boolean
