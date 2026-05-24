@@ -174,9 +174,7 @@ export default function AdminAllTeachers() {
     // Load display names from users table by email
     if (teacherEmails.length > 0) {
       const { data: userRows } = await supabase
-        .from("users")
-        .select("email,name")
-        .in("email", teacherEmails);
+        .rpc("get_teacher_display_names" as any, { emails: teacherEmails });
       const map: Record<string, string> = {};
       (userRows || []).forEach((u: any) => {
         if (u.name && String(u.name).trim()) map[u.email] = String(u.name).trim();
