@@ -115,7 +115,35 @@ export default function AdminTeacher() {
     if (todayAttendance) {
       await supabase.from("teacher_attendance").update({ arrival_time: now, updated_at: now }).eq("id", todayAttendance.id);
     } else {
-      await supabase.from("teacher_attendance").insert({ teacher_email: email, date: today, arrival_time: now });
+      // Re-check server-side to avoid duplicate inserts across devices/tabs
+      const { data: existing } = await supabase
+        .from("teacher_attendance")
+        .select("id, arrival_time")
+        .eq("teacher_email", email)
+        .eq("date", today)
+        .maybeSingle();
+      if (existing?.id) {
+        if (!existing.arrival_time) {
+          await supabase.from("teacher_attendance").update({ arrival_time: now, updated_at: now }).eq("id", existing.id);
+        } else {
+          toast({ title: "Already clocked in", description: "You already recorded your arrival today." });
+          await fetchData();
+          return;
+        }
+      } else {
+        const { error: insErr } = await supabase
+          .from("teacher_attendance")
+          .insert({ teacher_email: email, date: today, arrival_time: now });
+        if (insErr) {
+          if ((insErr as any).code === "23505") {
+            toast({ title: "Already clocked in", description: "You already recorded your arrival today." });
+            await fetchData();
+            return;
+          }
+          toast({ variant: "destructive", title: "Error", description: "Failed to clock in." });
+          return;
+        }
+      }
     }
     toast({ title: "Arrival recorded", description: `Clocked in at ${format(new Date(), "HH:mm")}` });
     fetchData();
