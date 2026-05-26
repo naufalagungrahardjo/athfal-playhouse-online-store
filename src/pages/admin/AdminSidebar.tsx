@@ -129,7 +129,7 @@ const AdminSidebar: React.FC<Props> = ({ sidebarOpen, setSidebarOpen, navigation
       {/* Mobile Sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden fixed bottom-4 left-4 z-[60] bg-background/95 backdrop-blur-sm shadow-lg border rounded-full h-12 w-12" aria-label="Open admin menu">
+          <Button variant="ghost" size="icon" className="md:hidden fixed top-20 left-2 z-40 bg-background/90 backdrop-blur-sm shadow-md border" aria-label="Open admin menu">
             <Menu />
           </Button>
         </SheetTrigger>
