@@ -1064,6 +1064,7 @@ export type Database = {
           name: string
           order_num: number
           price: number
+          price_divisions: Json
           product_id: string
           stock: number
           updated_at: string
@@ -1075,6 +1076,7 @@ export type Database = {
           name: string
           order_num?: number
           price: number
+          price_divisions?: Json
           product_id: string
           stock?: number
           updated_at?: string
@@ -1086,6 +1088,7 @@ export type Database = {
           name?: string
           order_num?: number
           price?: number
+          price_divisions?: Json
           product_id?: string
           stock?: number
           updated_at?: string
@@ -1733,6 +1736,10 @@ export type Database = {
         Returns: boolean
       }
       restore_stock_for_order: {
+        Args: { p_order_id: string }
+        Returns: boolean
+      }
+      setup_order_payments_for_order: {
         Args: { p_order_id: string }
         Returns: boolean
       }
