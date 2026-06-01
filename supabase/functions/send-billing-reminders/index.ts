@@ -330,6 +330,24 @@ Deno.serve(async (req) => {
         orderLink,
       });
 
+      // Build PDF attachment (same content as the admin-downloadable PDF).
+      let attachments: Array<{ filename: string; content: string }> | undefined;
+      try {
+        const pdfBase64 = await generateBillingNoticePdfBase64({
+          notice,
+          order,
+          paymentMethods,
+          logoUrl: LOGO_URL,
+        });
+        const safe = (s: string) =>
+          (s || "billing-notice").replace(/[^a-z0-9-_ ]/gi, "").trim().replace(/\s+/g, "_");
+        attachments = [
+          { filename: `${safe(notice.title)}_${safe(order.customer_name)}.pdf`, content: pdfBase64 },
+        ];
+      } catch (pdfErr) {
+        console.error("PDF generation failed for assignment", assignment.id, String(pdfErr));
+      }
+
       const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -341,6 +359,7 @@ Deno.serve(async (req) => {
           to: [order.customer_email],
           subject: `Pengingat Tagihan: ${notice.title}`,
           html,
+          ...(attachments ? { attachments } : {}),
         }),
       });
 
