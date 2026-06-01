@@ -223,16 +223,21 @@ export default function AdminAllTeachers() {
   // Summary: per-teacher attendance stats from filtered data
   const attendanceSummary = useMemo(() => {
     const [thH, thM] = (lateThreshold || "08:30").split(":").map(Number);
-    const summary: Record<string, { totalDays: number; totalOnTime: number; totalLate: number }> = {};
+    const summary: Record<string, { totalDays: number; totalOnTime: number; totalLate: number; weekdays: number; weekend: number }> = {};
     for (const email of teachers) {
-      summary[email] = { totalDays: 0, totalOnTime: 0, totalLate: 0 };
+      summary[email] = { totalDays: 0, totalOnTime: 0, totalLate: 0, weekdays: 0, weekend: 0 };
     }
     for (const a of filteredAttendances) {
       if (!summary[a.teacher_email]) {
-        summary[a.teacher_email] = { totalDays: 0, totalOnTime: 0, totalLate: 0 };
+        summary[a.teacher_email] = { totalDays: 0, totalOnTime: 0, totalLate: 0, weekdays: 0, weekend: 0 };
       }
       const s = summary[a.teacher_email];
       s.totalDays += 1;
+      if (a.date) {
+        const dow = new Date(`${a.date}T00:00:00`).getDay();
+        if (dow === 0 || dow === 6) s.weekend += 1;
+        else s.weekdays += 1;
+      }
       if (a.arrival_time) {
         const d = new Date(a.arrival_time);
         const isLate = d.getHours() > thH || (d.getHours() === thH && d.getMinutes() > thM);
