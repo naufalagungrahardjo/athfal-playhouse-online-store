@@ -209,12 +209,6 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
     }
   };
 
-  const handleChildGenderSave = async (newGender: string) => {
-    if (!order) return;
-    /* placeholder to keep diff anchored */
-    return handleChildGenderSaveImpl(newGender);
-  };
-
   const handleTogglePaymentDivision = async (paymentId: string, currentStatus: string) => {
     if (!order) return;
     const newStatus = currentStatus === 'paid' ? 'unpaid' : 'paid';
@@ -247,7 +241,7 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
     }
   };
 
-  const handleChildGenderSaveImpl = async (newGender: string) => {
+  const handleChildGenderSave = async (newGender: string) => {
     if (!order) return;
     try {
       setSavingGender(true);
