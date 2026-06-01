@@ -6,12 +6,14 @@ import { Plus, Trash2, GripVertical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { normalizeDivisions } from '@/hooks/useProductVariants';
+import { formatCurrency } from '@/lib/utils';
 
 interface Variant {
   id?: string;
   name: string;
-  price: number;
   order_num: number;
+  divisions: number[];
 }
 
 interface ProductVariantManagerProps {
@@ -38,12 +40,19 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
       .eq('product_id', productDbId)
       .order('order_num', { ascending: true });
     if (!error && data) {
-      setVariants(data.map(v => ({ id: v.id, name: v.name, price: v.price, order_num: v.order_num })));
+      setVariants(
+        data.map((v) => ({
+          id: v.id,
+          name: v.name,
+          order_num: v.order_num,
+          divisions: normalizeDivisions((v as any).price_divisions, v.price),
+        }))
+      );
     }
   };
 
   const addVariant = () => {
-    setVariants([...variants, { name: '', price: 0, order_num: variants.length + 1 }]);
+    setVariants([...variants, { name: '', order_num: variants.length + 1, divisions: [0] }]);
   };
 
   const removeVariant = async (index: number) => {
@@ -54,9 +63,33 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
     setVariants(variants.filter((_, i) => i !== index));
   };
 
-  const updateVariant = (index: number, field: keyof Variant, value: string | number) => {
-    setVariants(variants.map((v, i) => i === index ? { ...v, [field]: value } : v));
+  const updateVariantName = (index: number, value: string) => {
+    setVariants(variants.map((v, i) => (i === index ? { ...v, name: value } : v)));
   };
+
+  const addDivision = (index: number) => {
+    setVariants(variants.map((v, i) => (i === index ? { ...v, divisions: [...v.divisions, 0] } : v)));
+  };
+
+  const removeDivision = (index: number, divIndex: number) => {
+    setVariants(
+      variants.map((v, i) =>
+        i === index
+          ? { ...v, divisions: v.divisions.length > 1 ? v.divisions.filter((_, di) => di !== divIndex) : v.divisions }
+          : v
+      )
+    );
+  };
+
+  const updateDivision = (index: number, divIndex: number, value: number) => {
+    setVariants(
+      variants.map((v, i) =>
+        i === index ? { ...v, divisions: v.divisions.map((d, di) => (di === divIndex ? value : d)) } : v
+      )
+    );
+  };
+
+  const divisionsTotal = (divisions: number[]) => divisions.reduce((sum, d) => sum + (Number(d) || 0), 0);
 
   const saveVariants = async () => {
     if (!productDbId) {
@@ -68,12 +101,17 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
       await supabase.from('product_variants').delete().eq('product_id', productDbId);
       
       if (variants.length > 0) {
-        const toInsert = variants.map((v, i) => ({
-          product_id: productDbId,
-          name: v.name,
-          price: v.price,
-          order_num: i + 1,
-        }));
+        const toInsert = variants.map((v, i) => {
+          const divisions = (v.divisions.length > 0 ? v.divisions : [0]).map((d) => Math.round(Number(d) || 0));
+          return {
+            product_id: productDbId,
+            name: v.name,
+            // price = first division (the customer-facing "pay now" price)
+            price: divisions[0] || 0,
+            price_divisions: divisions,
+            order_num: i + 1,
+          };
+        });
         const { error } = await supabase.from('product_variants').insert(toInsert);
         if (error) throw error;
       }
