@@ -150,25 +150,50 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
       )}
 
       {variants.map((variant, index) => (
-        <div key={index} className="flex items-center gap-3">
-          <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          <Input
-            placeholder="Variant name (e.g. Early Bird)"
-            value={variant.name}
-            onChange={(e) => updateVariant(index, 'name', e.target.value)}
-            className="flex-1"
-          />
-          <Input
-            type="number"
-            placeholder="Price"
-            value={variant.price === 0 ? '' : variant.price}
-            onChange={(e) => updateVariant(index, 'price', e.target.value ? Number(e.target.value) : 0)}
-            className="w-36"
-            min="0"
-          />
-          <Button type="button" variant="ghost" size="icon" onClick={() => removeVariant(index)}>
-            <Trash2 className="h-4 w-4 text-destructive" />
-          </Button>
+        <div key={index} className="border rounded-lg p-3 space-y-3 bg-muted/30">
+          <div className="flex items-center gap-3">
+            <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <Input
+              placeholder="Sub-product name (e.g. Cicilan 2x)"
+              value={variant.name}
+              onChange={(e) => updateVariantName(index, e.target.value)}
+              className="flex-1"
+            />
+            <Button type="button" variant="ghost" size="icon" onClick={() => removeVariant(index)}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+
+          <div className="space-y-2 pl-7">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs text-muted-foreground">Price Divisions (first one is what the customer pays at checkout)</Label>
+              <Button type="button" variant="outline" size="sm" className="h-7 px-2" onClick={() => addDivision(index)}>
+                <Plus className="h-3 w-3 mr-1" /> Add Division
+              </Button>
+            </div>
+            {variant.divisions.map((div, divIndex) => (
+              <div key={divIndex} className="flex items-center gap-2">
+                <span className="text-xs w-16 text-muted-foreground">
+                  {divIndex === 0 ? 'Price 1' : `Price ${divIndex + 1}`}
+                </span>
+                <Input
+                  type="number"
+                  placeholder="Amount"
+                  value={div === 0 ? '' : div}
+                  onChange={(e) => updateDivision(index, divIndex, e.target.value ? Number(e.target.value) : 0)}
+                  className="w-40"
+                  min="0"
+                />
+                {divIndex === 0 && <span className="text-xs text-athfal-green">Shown to customer</span>}
+                {variant.divisions.length > 1 && (
+                  <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeDivision(index, divIndex)}>
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                )}
+              </div>
+            ))}
+            <p className="text-sm font-medium pt-1">Total: {formatCurrency(divisionsTotal(variant.divisions))}</p>
+          </div>
         </div>
       ))}
 
