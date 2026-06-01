@@ -194,6 +194,7 @@ export type Database = {
           due_at: string | null
           due_date: string
           id: string
+          send_at: string | null
           title: string
           updated_at: string
         }
@@ -205,6 +206,7 @@ export type Database = {
           due_at?: string | null
           due_date: string
           id?: string
+          send_at?: string | null
           title: string
           updated_at?: string
         }
@@ -216,6 +218,7 @@ export type Database = {
           due_at?: string | null
           due_date?: string
           id?: string
+          send_at?: string | null
           title?: string
           updated_at?: string
         }

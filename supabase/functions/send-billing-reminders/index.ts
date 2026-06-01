@@ -132,7 +132,7 @@ const buildBillingHtml = ({
   paymentMethods,
   orderLink,
 }: {
-  notice: { title: string; amount: number; due_date: string; due_at: string | null; description: string | null; };
+  notice: { title: string; amount: number; due_date: string; due_at: string | null; send_at?: string | null; description: string | null; };
   order: { id: string; customer_name: string; customer_email: string; customer_phone?: string | null; customer_address?: string | null; lookup_token?: string | null; };
   paymentMethods: Array<{ bank_name: string; account_name: string; account_number: string; image: string | null; payment_steps: unknown }>;
   orderLink: string;
@@ -161,7 +161,7 @@ const buildBillingHtml = ({
               <td style="font-size:22px; font-weight:700;">BILLING NOTICE</td>
               <td style="text-align:right; font-size:13px; line-height:1.6;">
                 <div>Issued: ${escapeHtml(formatDate(new Date().toISOString()))}</div>
-                <div>Due: ${escapeHtml(formatDateTime(notice.due_at || notice.due_date))}</div>
+                <div>Due: ${escapeHtml(formatDate(notice.due_date))}</div>
               </td>
             </tr>
           </table>
@@ -183,7 +183,7 @@ const buildBillingHtml = ({
             <tr>
               <td>
                 <div style="font-size:20px; font-weight:700; color:${BRAND.green}; margin:0 0 8px;">${escapeHtml(notice.title)}</div>
-                <div style="font-size:14px; color:${BRAND.muted};">Due ${escapeHtml(formatDateTime(notice.due_at || notice.due_date))}</div>
+                <div style="font-size:14px; color:${BRAND.muted};">Due ${escapeHtml(formatDate(notice.due_date))}</div>
               </td>
               <td style="text-align:right; vertical-align:top; font-size:30px; font-weight:700; color:${BRAND.pink}; white-space:nowrap;">
                 ${escapeHtml(formatIDR(notice.amount))}
@@ -264,8 +264,12 @@ Deno.serve(async (req) => {
 
     const { data: notices, error: ne } = await supabase
       .from("billing_notices")
-      .select("id,title,amount,due_date,due_at,description")
-      .or(`due_at.lte.${nowIso},and(due_at.is.null,due_date.lte.${nowIso.slice(0,10)})`);
+      .select("id,title,amount,due_date,due_at,send_at,description")
+      .or(
+        `send_at.lte.${nowIso},` +
+        `and(send_at.is.null,due_at.lte.${nowIso}),` +
+        `and(send_at.is.null,due_at.is.null,due_date.lte.${nowIso.slice(0, 10)})`
+      );
     if (ne) throw ne;
     if (!notices?.length) {
       return new Response(JSON.stringify({ ok: true, sent: 0, reason: "no notices due" }), {
