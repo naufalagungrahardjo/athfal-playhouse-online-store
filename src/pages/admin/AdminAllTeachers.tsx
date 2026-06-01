@@ -654,6 +654,8 @@ export default function AdminAllTeachers() {
                           <TableHead className="text-center">Total Days</TableHead>
                           <TableHead className="text-center">Total On Time</TableHead>
                           <TableHead className="text-center">Total Late</TableHead>
+                          <TableHead className="text-center">Weekdays</TableHead>
+                          <TableHead className="text-center">Weekend</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -665,10 +667,12 @@ export default function AdminAllTeachers() {
                             <TableCell className="text-center">{s.totalDays}</TableCell>
                             <TableCell className="text-center text-green-600 font-medium">{s.totalOnTime}</TableCell>
                             <TableCell className="text-center text-red-600 font-medium">{s.totalLate}</TableCell>
+                            <TableCell className="text-center">{s.weekdays}</TableCell>
+                            <TableCell className="text-center">{s.weekend}</TableCell>
                           </TableRow>
                         ))}
                         {Object.keys(attendanceSummary).length === 0 && (
-                          <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No data</TableCell></TableRow>
+                          <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No data</TableCell></TableRow>
                         )}
                         {Object.keys(attendanceSummary).length > 0 && (() => {
                           const totals = Object.values(attendanceSummary).reduce(
@@ -676,8 +680,10 @@ export default function AdminAllTeachers() {
                               totalDays: acc.totalDays + s.totalDays,
                               totalOnTime: acc.totalOnTime + s.totalOnTime,
                               totalLate: acc.totalLate + s.totalLate,
+                              weekdays: acc.weekdays + s.weekdays,
+                              weekend: acc.weekend + s.weekend,
                             }),
-                            { totalDays: 0, totalOnTime: 0, totalLate: 0 }
+                            { totalDays: 0, totalOnTime: 0, totalLate: 0, weekdays: 0, weekend: 0 }
                           );
                           return (
                             <TableRow className="border-t-2 bg-muted/60 font-bold">
@@ -685,6 +691,8 @@ export default function AdminAllTeachers() {
                               <TableCell className="text-center font-bold">{totals.totalDays}</TableCell>
                               <TableCell className="text-center text-green-700 font-bold">{totals.totalOnTime}</TableCell>
                               <TableCell className="text-center text-red-700 font-bold">{totals.totalLate}</TableCell>
+                              <TableCell className="text-center font-bold">{totals.weekdays}</TableCell>
+                              <TableCell className="text-center font-bold">{totals.weekend}</TableCell>
                             </TableRow>
                           );
                         })()}
