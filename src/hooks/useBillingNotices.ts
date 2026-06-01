@@ -9,6 +9,7 @@ export interface BillingNotice {
   amount: number;
   due_date: string;
   due_at: string | null;
+  send_at: string | null;
   description: string | null;
   created_at: string;
   updated_at: string;
