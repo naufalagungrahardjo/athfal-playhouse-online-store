@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getAdminRole } from '@/pages/admin/helpers/getAdminRole';
 import { Textarea } from '@/components/ui/textarea';
 import { OrderBillingNoticesSection } from './billing/OrderBillingNoticesSection';
+import { Switch } from '@/components/ui/switch';
 
 interface OrderItem {
   id: string;
@@ -70,6 +71,7 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
   const [savingGender, setSavingGender] = useState(false);
   const [payments, setPayments] = useState<Array<{ id: string; payment_number: number; amount: number; status: string; paid_at: string | null; created_at: string; notes: string | null }>>([]);
   const [loadingPayments, setLoadingPayments] = useState(false);
+  const [togglingPaymentId, setTogglingPaymentId] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const isSuperAdmin = getAdminRole(user) === 'super_admin';
@@ -208,6 +210,44 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
   };
 
   const handleChildGenderSave = async (newGender: string) => {
+    if (!order) return;
+    /* placeholder to keep diff anchored */
+    return handleChildGenderSaveImpl(newGender);
+  };
+
+  const handleTogglePaymentDivision = async (paymentId: string, currentStatus: string) => {
+    if (!order) return;
+    const newStatus = currentStatus === 'paid' ? 'unpaid' : 'paid';
+    try {
+      setTogglingPaymentId(paymentId);
+      const { error } = await supabase
+        .from('order_payments')
+        .update({
+          status: newStatus,
+          paid_at: newStatus === 'paid' ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', paymentId);
+      if (error) throw error;
+      // Refresh local payments + order (sync_order_amount_paid trigger updates amount_paid)
+      setPayments((prev) =>
+        prev.map((p) =>
+          p.id === paymentId
+            ? { ...p, status: newStatus, paid_at: newStatus === 'paid' ? new Date().toISOString() : null }
+            : p,
+        ),
+      );
+      toast({ title: 'Success', description: `Payment marked as ${newStatus === 'paid' ? 'paid' : 'unpaid'}` });
+      onOrderUpdated();
+    } catch (error: any) {
+      console.error('Error toggling payment division:', error);
+      toast({ variant: 'destructive', title: 'Error', description: error?.message || 'Failed to update payment' });
+    } finally {
+      setTogglingPaymentId(null);
+    }
+  };
+
+  const handleChildGenderSaveImpl = async (newGender: string) => {
     if (!order) return;
     try {
       setSavingGender(true);
