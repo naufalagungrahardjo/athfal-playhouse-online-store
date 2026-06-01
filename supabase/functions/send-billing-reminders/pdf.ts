@@ -1,4 +1,5 @@
 import { jsPDF } from "https://esm.sh/jspdf@2.5.1";
+import { Image } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
 
 type RGB = [number, number, number];
 
@@ -31,17 +32,26 @@ const toBase64 = (bytes: Uint8Array): string => {
   return btoa(binary);
 };
 
-const fetchImage = async (url: string): Promise<{ dataUrl: string; fmt: "PNG" | "JPEG" } | null> => {
+// Fetch an image, downscale it, and flatten onto white -> small JPEG data URL.
+// This keeps the PDF small (raw full-res images bloat jsPDF output massively).
+const fetchImage = async (
+  url: string,
+  maxSize = 600,
+): Promise<{ dataUrl: string; fmt: "JPEG" } | null> => {
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
-    const ct = (res.headers.get("content-type") || "").toLowerCase();
     const bytes = new Uint8Array(await res.arrayBuffer());
-    let fmt: "PNG" | "JPEG" | null = null;
-    if (ct.includes("png") || url.toLowerCase().endsWith(".png")) fmt = "PNG";
-    else if (ct.includes("jpeg") || ct.includes("jpg") || /\.jpe?g$/i.test(url)) fmt = "JPEG";
-    if (!fmt) return null;
-    return { dataUrl: `data:image/${fmt.toLowerCase()};base64,${toBase64(bytes)}`, fmt };
+    const decoded = await Image.decode(bytes);
+    const ratio = Math.min(1, maxSize / Math.max(decoded.width, decoded.height));
+    const w = Math.max(1, Math.round(decoded.width * ratio));
+    const h = Math.max(1, Math.round(decoded.height * ratio));
+    if (ratio < 1) decoded.resize(w, h);
+    // Flatten onto white background (handles PNG transparency).
+    const canvas = new Image(decoded.width, decoded.height).fill(0xffffffff);
+    canvas.composite(decoded, 0, 0);
+    const jpeg = await canvas.encodeJPEG(85);
+    return { dataUrl: `data:image/jpeg;base64,${toBase64(jpeg)}`, fmt: "JPEG" };
   } catch {
     return null;
   }
