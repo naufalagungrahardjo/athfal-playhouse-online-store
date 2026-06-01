@@ -236,19 +236,30 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // Require shared cron secret to prevent unauthenticated abuse / spam
-    const cronSecret = Deno.env.get("CRON_SECRET");
+    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
+
+    // Require shared cron secret to prevent unauthenticated abuse / spam.
+    // The expected value comes from the CRON_SECRET env var when present,
+    // otherwise from the cron_secrets table (set alongside the cron job).
     const provided =
       req.headers.get("x-cron-secret") ||
       req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-    if (!cronSecret || provided !== cronSecret) {
+    let expected = Deno.env.get("CRON_SECRET") || "";
+    if (!expected) {
+      const { data: secretRow } = await supabase
+        .from("cron_secrets")
+        .select("secret")
+        .eq("name", "send-billing-reminders")
+        .maybeSingle();
+      expected = secretRow?.secret || "";
+    }
+    if (!expected || provided !== expected) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
     const nowIso = new Date().toISOString();
 
     const { data: notices, error: ne } = await supabase

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Plus, UserPlus, Download, X } from "lucide-react";
+import { Pencil, Trash2, Plus, UserPlus, Download, X, Mail, MailCheck } from "lucide-react";
 import { useBillingNotices, BillingNotice } from "@/hooks/useBillingNotices";
 import { BillingNoticeFormDialog } from "./BillingNoticeFormDialog";
 import { AssignOrdersDialog } from "./AssignOrdersDialog";
@@ -16,7 +16,7 @@ interface Props {
 }
 
 export const BillingNoticesTab = ({ orders }: Props) => {
-  const { notices, assignments, loading, createNotice, updateNotice, deleteNotice, assignToOrders, unassign } = useBillingNotices();
+  const { notices, assignments, loading, createNotice, updateNotice, deleteNotice, assignToOrders, unassign, setEmailReminder } = useBillingNotices();
   const { user } = useAuth();
   const role = getAdminRole(user);
   const canDelete = role === "super_admin" || role === "orders_manager";
@@ -25,6 +25,7 @@ export const BillingNoticesTab = ({ orders }: Props) => {
   const [editing, setEditing] = useState<BillingNotice | null>(null);
   const [assignOpen, setAssignOpen] = useState<BillingNotice | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const ordersById = useMemo(() => {
     const m = new Map<string, any>();
@@ -120,6 +121,22 @@ export const BillingNoticesTab = ({ orders }: Props) => {
                                 <div className="flex gap-2">
                                   <Button size="sm" variant="outline" disabled={!order} onClick={() => order && handleDownload(n, a.order_id)}>
                                     <Download className="h-4 w-4 mr-1" /> PDF
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant={a.email_reminder_enabled ? "default" : "outline"}
+                                    disabled={togglingId === a.id}
+                                    onClick={async () => {
+                                      setTogglingId(a.id);
+                                      await setEmailReminder(a.id, !a.email_reminder_enabled);
+                                      setTogglingId(null);
+                                    }}
+                                    title={a.email_reminder_enabled
+                                      ? `Reminder email will be sent to ${order?.customer_email || "the customer"} at the due date/time${a.email_reminder_sent_at ? ` (sent ${new Date(a.email_reminder_sent_at).toLocaleString()})` : ""}`
+                                      : `Enable: send a reminder email to ${order?.customer_email || "the customer"} at the due date/time`}
+                                  >
+                                    {a.email_reminder_sent_at ? <MailCheck className="h-4 w-4 mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
+                                    {a.email_reminder_enabled ? (a.email_reminder_sent_at ? "Sent" : "Reminder On") : "Email on Due"}
                                   </Button>
                                   <Button size="sm" variant="ghost" onClick={() => unassign(a.id)}>
                                     <X className="h-4 w-4" />
