@@ -28,11 +28,17 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
   const effectiveStock = product.is_sold_out ? 0 : product.stock;
   const activePrice = selectedVariant ? selectedVariant.price : product.price;
 
+  const selectedDivisions = selectedVariant?.price_divisions || [];
+  const selectedTotal = selectedDivisions.length > 0
+    ? selectedDivisions.reduce((sum, d) => sum + d, 0)
+    : selectedVariant?.price ?? 0;
+  const hasInstallment = selectedDivisions.length > 1;
+
   const handleAddToCart = () => {
     const variantKey = selectedVariant ? `variant_${selectedVariant.id}` : 'normal';
     const cartId = `${product.id}__${variantKey}`;
     const cartProduct = selectedVariant 
-      ? { ...product, id: cartId, price: selectedVariant.price, name: `${product.name} - ${selectedVariant.name}` }
+      ? { ...product, id: cartId, price: selectedVariant.price, name: `${product.name} - ${selectedVariant.name}`, priceDivisions: selectedVariant.price_divisions }
       : { ...product, id: cartId, name: `${product.name} - Pembayaran Lunas` };
     addItem(cartProduct, quantity);
   };
@@ -41,7 +47,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
     const variantKey = selectedVariant ? `variant_${selectedVariant.id}` : 'normal';
     const cartId = `${product.id}__${variantKey}`;
     const cartProduct = selectedVariant 
-      ? { ...product, id: cartId, price: selectedVariant.price, name: `${product.name} - ${selectedVariant.name}` }
+      ? { ...product, id: cartId, price: selectedVariant.price, name: `${product.name} - ${selectedVariant.name}`, priceDivisions: selectedVariant.price_divisions }
       : { ...product, id: cartId, name: `${product.name} - Pembayaran Lunas` };
     addItem(cartProduct, quantity);
     window.location.href = '/cart';
@@ -73,6 +79,13 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
         ) : (
           <>
             <p className="text-2xl font-bold text-athfal-green mb-1">{formatCurrency(activePrice)}</p>
+            {hasInstallment && (
+              <p className="text-sm text-muted-foreground mb-1">
+                {language === 'id'
+                  ? `Pembayaran pertama dari total ${formatCurrency(selectedTotal)} · ${selectedDivisions.length} kali pembayaran`
+                  : `First payment of a total ${formatCurrency(selectedTotal)} · ${selectedDivisions.length} payments`}
+              </p>
+            )}
             {product.admission_date && (
               <p className="text-sm text-muted-foreground mb-4">
                 📅 {language === 'id' ? 'Tanggal Masuk' : 'Admission Date'}: {new Date(product.admission_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
