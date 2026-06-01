@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { generateBillingNoticePdfBase64 } from "./pdf.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -178,18 +179,11 @@ const buildBillingHtml = ({
           </div>
         </div>
 
-        <div style="margin-top:24px; border:1px solid ${BRAND.peach}; border-radius:18px; background:${BRAND.lightPeach}; padding:20px;">
-          <table style="width:100%; border-collapse:collapse;">
-            <tr>
-              <td>
-                <div style="font-size:20px; font-weight:700; color:${BRAND.green}; margin:0 0 8px;">${escapeHtml(notice.title)}</div>
-                <div style="font-size:14px; color:${BRAND.muted};">Due ${escapeHtml(formatDate(notice.due_date))}</div>
-              </td>
-              <td style="text-align:right; vertical-align:top; font-size:30px; font-weight:700; color:${BRAND.pink}; white-space:nowrap;">
-                ${escapeHtml(formatIDR(notice.amount))}
-              </td>
-            </tr>
-          </table>
+        <div style="margin-top:24px; border:1px solid ${BRAND.peach}; border-radius:18px; background:${BRAND.lightPeach}; padding:22px;">
+          <div style="font-size:19px; font-weight:700; color:${BRAND.green}; line-height:1.35; margin:0 0 6px;">${escapeHtml(notice.title)}</div>
+          <div style="font-size:13px; color:${BRAND.muted}; margin:0 0 16px;">Due ${escapeHtml(formatDate(notice.due_date))}</div>
+          <div style="font-size:14px; color:${BRAND.muted}; margin:0 0 2px;">Amount</div>
+          <div style="font-size:26px; font-weight:700; color:${BRAND.pink}; line-height:1.2; word-break:break-word;">${escapeHtml(formatIDR(notice.amount))}</div>
         </div>
 
         ${notice.description?.trim() ? `
@@ -336,6 +330,24 @@ Deno.serve(async (req) => {
         orderLink,
       });
 
+      // Build PDF attachment (same content as the admin-downloadable PDF).
+      let attachments: Array<{ filename: string; content: string }> | undefined;
+      try {
+        const pdfBase64 = await generateBillingNoticePdfBase64({
+          notice,
+          order,
+          paymentMethods,
+          logoUrl: LOGO_URL,
+        });
+        const safe = (s: string) =>
+          (s || "billing-notice").replace(/[^a-z0-9-_ ]/gi, "").trim().replace(/\s+/g, "_");
+        attachments = [
+          { filename: `${safe(notice.title)}_${safe(order.customer_name)}.pdf`, content: pdfBase64 },
+        ];
+      } catch (pdfErr) {
+        console.error("PDF generation failed for assignment", assignment.id, String(pdfErr));
+      }
+
       const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -347,6 +359,7 @@ Deno.serve(async (req) => {
           to: [order.customer_email],
           subject: `Pengingat Tagihan: ${notice.title}`,
           html,
+          ...(attachments ? { attachments } : {}),
         }),
       });
 
