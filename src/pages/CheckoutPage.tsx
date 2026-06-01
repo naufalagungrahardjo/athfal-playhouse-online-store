@@ -346,12 +346,15 @@ const CheckoutPage = () => {
           {/* Order Summary */}
           <div>
             <OrderSummary
-              items={items}
+              items={summaryItems}
               appliedPromo={appliedPromo}
-              getTotalPrice={getTotalPrice}
+              getTotalPrice={getFullSubtotal}
               getDiscountAmount={getDiscountAmount}
               taxAmount={taxAmount}
               total={total}
+              hasInstallment={hasInstallment}
+              firstPaymentDueNow={firstPaymentDueNow}
+              remainingLater={remainingLater}
               formatCurrency={formatCurrency}
               onApplyPromo={handleApplyPromo}
               onRemovePromo={handleRemovePromo}
