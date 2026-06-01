@@ -670,6 +670,50 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
             </div>
           </div>
 
+          {/* Payment Divisions (installment toggles) */}
+          {payments.length > 0 && (
+            <>
+              <Separator />
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Payment Divisions</h3>
+                <p className="text-xs text-gray-500 mb-3">
+                  Toggle each division when the customer pays it. Paid divisions immediately count as revenue
+                  (except for refunded/cancelled orders).
+                </p>
+                <ul className="space-y-2">
+                  {payments.map((p) => (
+                    <li
+                      key={p.id}
+                      className="flex items-center justify-between gap-3 bg-white border rounded px-3 py-2"
+                    >
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-medium truncate">
+                          {p.notes || `Pembayaran ${p.payment_number}`}
+                        </span>
+                        <span className="font-semibold text-sm">{formatCurrency(p.amount)}</span>
+                        {p.status === 'paid' && p.paid_at && (
+                          <span className="text-xs text-gray-500">
+                            Paid: {new Date(p.paid_at).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge className={p.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}>
+                          {p.status === 'paid' ? 'Paid' : 'Unpaid'}
+                        </Badge>
+                        <Switch
+                          checked={p.status === 'paid'}
+                          disabled={togglingPaymentId === p.id}
+                          onCheckedChange={() => handleTogglePaymentDivision(p.id, p.status)}
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
+
           {/* Notes */}
           {order.notes && (
             <>
