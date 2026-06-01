@@ -10,6 +10,8 @@ type OrderSummaryProps = {
     name: string;
     quantity: number;
     price: number;
+    firstPaymentUnit?: number;
+    installments?: number;
   }[];
   appliedPromo: null | {
     id: string;
@@ -29,6 +31,9 @@ type OrderSummaryProps = {
   getDiscountAmount: () => number;
   taxAmount: number;
   total: number;
+  hasInstallment?: boolean;
+  firstPaymentDueNow?: number;
+  remainingLater?: number;
   formatCurrency: (amount: number) => string;
   onApplyPromo: (promo: any) => void;
   onRemovePromo: () => void;
@@ -41,6 +46,9 @@ const OrderSummary = ({
   getDiscountAmount,
   taxAmount,
   total,
+  hasInstallment,
+  firstPaymentDueNow,
+  remainingLater,
   formatCurrency,
   onApplyPromo,
   onRemovePromo,
@@ -56,6 +64,11 @@ const OrderSummary = ({
             <div>
               <p className="font-medium">{item.name}</p>
               <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+              {!!item.installments && item.installments > 1 && (
+                <p className="text-xs text-athfal-green">
+                  {item.installments}x · bayar pertama {formatCurrency((item.firstPaymentUnit || 0) * item.quantity)}
+                </p>
+              )}
             </div>
             <p className="font-medium">{formatCurrency(item.price * item.quantity)}</p>
           </div>
@@ -89,6 +102,18 @@ const OrderSummary = ({
             <span>Total:</span>
             <span>{formatCurrency(total)}</span>
           </div>
+          {hasInstallment && (
+            <div className="mt-2 rounded-lg bg-athfal-green/10 p-3 space-y-1">
+              <div className="flex justify-between font-semibold text-athfal-green">
+                <span>Pay now (first payment):</span>
+                <span>{formatCurrency(firstPaymentDueNow || 0)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Remaining (paid later):</span>
+                <span>{formatCurrency(remainingLater || 0)}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </CardContent>

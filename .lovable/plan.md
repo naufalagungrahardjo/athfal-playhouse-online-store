@@ -1,105 +1,59 @@
+# Multi-Division Sub-Product Pricing
 
-# Storage Capacity Report + Check-In/Out Feature Plan
+## Goal
+Let each product (e.g. "Bumi Class X") have unlimited sub-products (Lunas, Cicilan 2x, Cicilan 3x…), and each sub-product have unlimited **price divisions** (Price 1, Price 2 … Price n). The sum of divisions is the sub-product's total. Customers see/pay the **first** division; admins see and toggle the rest, and toggled-paid divisions count as revenue immediately. Buying any sub-product reduces the product's quantity.
 
-## Part 1 — Current Supabase Storage Status
+This **extends the existing variant system** (`product_variants` = sub-products) rather than building a new one.
 
-Supabase **Free tier** gives you **1 GB of file storage** total (across all buckets).
+## How it maps to what exists
+- Sub-products = `product_variants` (already wired into product page, cart, checkout).
+- Installment tracking = `order_payments` (already exists: `payment_number`, `amount`, `status`, `paid_at`; `sync_order_amount_paid` trigger keeps `orders.amount_paid` in sync).
+- Revenue = dashboard already scales by `amount_paid / total_amount`, so paid divisions automatically become revenue. **No analytics change needed.**
 
-**Current usage (live query):**
-- `images` bucket: **357 files / ~268 MB** (≈ 26.8% used)
-- `teacher-evidence` bucket: 0 files / 0 MB
-- **Free space remaining: ~756 MB** (≈ 73.2% free)
+## Data model
+Add one column:
+- `product_variants.price_divisions jsonb default '[]'` — ordered array of integer amounts `[500000, 2500000]`. `price_divisions[0]` is the customer-facing first division; `product_variants.price` is kept equal to it for backward compatibility. The variant total = sum of the array.
 
-**How many photos can fit in the remaining ~756 MB?**
+## Behavior
 
-| Photo quality (compressed JPEG from phone camera) | Avg size | Photos that fit in 756 MB |
-|---|---|---|
-| Low (640×480, ~70% quality) — recommended for check-in | ~80 KB | **~9,400 photos** |
-| Medium (1280×720) | ~250 KB | **~3,000 photos** |
-| High (1920×1080) | ~500 KB | **~1,500 photos** |
-| Original phone photo (no compression, 3–5 MB) | ~4 MB | **~190 photos** |
+### 1. Admin product editor (`ProductVariantManager`)
+- Each sub-product row gets a **Price Divisions** editor: add/remove rows of amounts (Price 1, Price 2, …). A live "Total" shows the sum.
+- On save: store the full array in `price_divisions` and set `price` = first division.
+- Existing single-price variants keep working (treated as a one-division `[price]`).
+- Product `stock` field stays the single shared quantity for the whole product (matches the screenshot where qty 12 is at the product level).
 
-**Recommendation:** compress every photo to ≤ 640×480 / ~80 KB before upload. With ~30 students × 2 photos/day (in + out) × 20 school days = **1,200 photos/month ≈ 96 MB/month** → about **7–8 months of capacity** on free tier with the existing budget.
+### 2. Storefront (`ProductMainSection`, cart)
+- Sub-product buttons keep showing the **first division** as the price (unchanged), with a small "Total Rp 3.000.000 · n pembayaran" hint underneath.
+- Cart line shows the first division (the amount due now). Unchanged logic.
 
-Alternative: upload to **Google Drive** (the project already has a working `upload-to-drive` edge function with a service account). Free Google Drive gives 15 GB and would last years. Downside: photos live outside the app and are harder to display inline.
+### 3. Checkout (`useOrderProcessing`, `OrderSummary`)
+- The created order's `subtotal`/`total_amount` = the **full** sub-product value (sum of all divisions) so outstanding amounts and revenue work.
+- The order summary shows two lines: **Total** (e.g. 3,000,000) and **First payment due now** (e.g. 500,000).
+- After inserting the order + items, call a new RPC `setup_order_payments_for_order(order_id)`.
 
----
+### 4. New RPC `setup_order_payments_for_order` (SECURITY DEFINER)
+- Removes any auto-created payment for the order, then for each ordered sub-product inserts one `order_payments` row per division: division 1 = `status 'paid'` (paid now), divisions 2…n = `status 'unpaid'`, with `notes` labeling the division. Non-variant / "Lunas" single-division items become a single fully-paid payment (same as today). `sync_order_amount_paid` then sets `amount_paid` to the first-division sum.
 
-## Part 2 — Feature Feasibility: YES, fully doable
+### 5. Stock RPC change
+- Update `deduct_stock_for_order` / `restore_stock_for_order` so sub-product (variant) line items decrement/restore the **parent product's** `stock` (shared pool), matching "choosing a sub-product reduces the product quantity."
 
-All required pieces already exist in the project:
-- Teacher role + login (`admin_accounts.role = 'teacher'`)
-- Student / program / enrollment / attendance tables (`students`, `class_programs`, `student_enrollments`, `student_attendance`)
-- A working photo-upload edge function to Google Drive (`upload-to-drive`)
-- A private storage bucket (`teacher-evidence`) as a fallback
-- Camera capture works in the browser via `<input type="file" accept="image/*" capture="environment">` — no native app needed
+### 6. Admin order details (`OrderDetailsDialog`)
+- Add a **Payment Divisions** panel listing each `order_payments` row: label, amount, and a **paid/unpaid toggle (Switch)**.
+- Toggling updates `status` + `paid_at`; `amount_paid` and dashboard/analytics revenue update automatically (immediately, refunds/cancelled stay at 0 per existing rule).
 
----
+## Technical notes
+- Division amounts are treated as the exact rupiah the customer transfers (tax-inclusive); for division-based variant items the order's `tax_amount` is 0 so `total = subtotal` and `validate_order_totals` passes. Ordinary non-variant products keep their current tax behavior.
+- `auto_mark_order_paid` stays for plain products; the new RPC overrides payments only for variant orders.
+- Types file (`src/integrations/supabase/types.ts`) refreshes automatically after the migration.
 
-## Part 3 — Implementation Plan
+## Files
+- Migration: add `price_divisions`; create `setup_order_payments_for_order`; update `deduct_stock_for_order` & `restore_stock_for_order`.
+- `src/components/admin/ProductVariantManager.tsx` — divisions editor.
+- `src/hooks/useProductVariants.ts` — include `price_divisions`.
+- `src/components/product/ProductMainSection.tsx` — total/first-payment hint.
+- `src/hooks/useOrderProcessing.ts` — full-value order totals + RPC call.
+- `src/components/checkout/OrderSummary.tsx` (+ CheckoutPage wiring) — show Total vs First payment due now.
+- `src/components/admin/OrderDetailsDialog.tsx` — payment-division toggles.
 
-### A. New database table — `student_checkinout`
-Stores every check-in / check-out event with photo evidence, separate from the existing pedagogical `student_attendance` table (so we don't pollute the report card columns).
-
-Columns:
-- `id` uuid PK
-- `enrollment_id` uuid (FK → `student_enrollments`)
-- `program_id` uuid (denormalized for fast filtering)
-- `student_id` uuid (denormalized)
-- `meeting_number` int (which session of the program)
-- `event_type` text — `check_in` | `check_out`
-- `event_time` timestamptz default now()
-- `photo_url` text (Drive webViewLink OR signed Supabase URL)
-- `photo_storage` text — `drive` | `supabase`
-- `teacher_email` text
-- `created_at`, `updated_at`
-
-RLS:
-- Teachers can `INSERT` and `SELECT` their own rows
-- Admin / super_admin can `SELECT` all
-- Unique index on `(enrollment_id, meeting_number, event_type)` to prevent duplicate check-ins for the same session
-
-### B. Auto-update existing attendance to "present"
-DB trigger `after insert on student_checkinout`: when a `check_in` row is inserted, upsert into `student_attendance` for that `(enrollment_id, meeting_number, teacher_email)` setting `attendance_status = 'present'` (preserving descriptive fields if a row already exists).
-
-### C. New page — Teacher Check-In/Out Record
-- Route: `/admin/check-in-out` (visible only to `teacher` and `super_admin` in `getAdminNavigation.ts`)
-- UI flow on mobile/tablet:
-  1. Select **Class (program)** dropdown — only programs the teacher's students are enrolled in
-  2. Select **Session #** dropdown
-  3. Select **Student** dropdown (filtered by class)
-  4. Select **Status** — Check In / Check Out
-  5. Tap big **"Open Camera & Submit"** button
-  6. Native camera opens (`<input type="file" capture="environment">`)
-  7. Photo is **client-side compressed** to 640×480 / ~80 KB (canvas + `toBlob`) before upload
-  8. Upload via existing `upload-to-drive` edge function (preferred) — falls back to `teacher-evidence` bucket if no Drive folder configured
-  9. Insert row into `student_checkinout` → trigger marks attendance as present
-  10. Toast confirmation + show today's recent records below
-
-- Recent records panel: list of today's check-ins/outs with thumbnail, student name, time, status — live-refreshed via React Query.
-
-### D. Admin view (super_admin)
-- New tab inside `AdminStudents` called **"Check-In/Out Log"** with:
-  - Filter by date range, class, student
-  - Table: date, student, class, event type, time, photo (click to open), teacher
-  - Export to CSV
-
-### E. Edge function
-Reuse the existing `upload-to-drive` function as-is. No new function needed. Uploaded files go into the teacher's pre-configured Drive folder.
-
-### F. Storage strategy choice (recommend asking user)
-Default to **Google Drive** for photo storage (essentially unlimited for this use case) and keep `teacher-evidence` Supabase bucket as automatic fallback. This matches the existing teacher-evidence flow.
-
----
-
-## Part 4 — What you need to do
-
-1. Approve this plan.
-2. Confirm storage choice: **Google Drive (recommended)** vs **Supabase only** vs **let teachers' Drive folder decide (current pattern)**.
-3. Confirm whether check-out should also auto-update anything (e.g. record `leave_time`) or just be logged.
-
-After approval I will:
-- Create the migration (table + RLS + trigger + indexes)
-- Build the new `/admin/check-in-out` page with camera capture + client-side compression
-- Add the admin log tab
-- Wire navigation/role permissions
+## Out of scope
+- No changes to analytics math, billing-notice emails, or the legacy `product_installment_plans` table.

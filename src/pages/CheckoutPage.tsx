@@ -168,17 +168,12 @@ const CheckoutPage = () => {
       return;
     }
 
-    console.log('Processing order with payment method:', formData.paymentMethod);
-    console.log('Available payment methods:', paymentMethods);
-
-    // Send the ORIGINAL (non-discounted) subtotal to the DB.
-    // The validate_order_totals trigger computes: total = subtotal + tax - discount
+    // The order total reflects the FULL value of each sub-product (sum of all price
+    // divisions). The first division is what the customer pays now (tracked server-side).
     const discountAmount = appliedPromo ? getDiscountAmount() : 0;
-    const originalSubtotal = getTotalPrice();
-    const taxAmount = appliedPromo ? getDiscountedTax() : getTotalTax();
-    const totalAmount = Math.round(originalSubtotal) + Math.round(taxAmount) - Math.round(discountAmount);
-
-    console.log('Order totals:', { subtotal, taxAmount, totalAmount, discountAmount });
+    const fullSubtotal = getFullSubtotal();
+    const taxAmount = getFullTax();
+    const totalAmount = Math.round(fullSubtotal) + Math.round(taxAmount) - Math.round(discountAmount);
 
     const result = await processOrder({
       ...formData,
@@ -187,7 +182,7 @@ const CheckoutPage = () => {
       childBirthdate: formData.childBirthdate,
       childGender: formData.childGender,
       items,
-      subtotal: Math.round(originalSubtotal),
+      subtotal: Math.round(fullSubtotal),
       taxAmount: Math.round(taxAmount),
       totalAmount: Math.round(totalAmount),
       promoCode: appliedPromo?.code || null,
@@ -219,6 +214,34 @@ const CheckoutPage = () => {
   // Extract base product ID from composite cart ID (e.g., "PROD1__variant_xxx" -> "PROD1")
   const getBaseProductId = (cartId: string) => cartId.split('__')[0];
 
+  // ---- Installment-aware pricing helpers ----
+  // priceDivisions[0] is the first payment; the sum is the full sub-product price.
+  const getDivisions = (item: typeof items[0]): number[] | undefined => {
+    const divs = (item.product as any).priceDivisions as number[] | undefined;
+    return Array.isArray(divs) && divs.length > 0 ? divs : undefined;
+  };
+  const isInstallmentItem = (item: typeof items[0]) => {
+    const divs = getDivisions(item);
+    return !!divs && divs.length > 1;
+  };
+  const lineFull = (item: typeof items[0]) => {
+    const divs = getDivisions(item);
+    const unit = divs ? divs.reduce((a, b) => a + (Number(b) || 0), 0) : item.product.price;
+    return unit * item.quantity;
+  };
+  const lineFirstPayment = (item: typeof items[0]) => {
+    const divs = getDivisions(item);
+    const unit = divs ? (Number(divs[0]) || 0) : item.product.price;
+    return unit * item.quantity;
+  };
+  const lineTax = (item: typeof items[0]) => {
+    // Division-based sub-products are treated as tax-inclusive (no extra tax)
+    if (getDivisions(item)) return 0;
+    return item.product.price * item.quantity * (item.product.tax / 100);
+  };
+
+  const getFullSubtotal = () => items.reduce((sum, item) => sum + lineFull(item), 0);
+
   // Check if a cart item is eligible for the promo
   const isItemEligible = (item: typeof items[0]) => {
     if (!appliedPromo || appliedPromo.applies_to === 'all') return true;
@@ -232,32 +255,24 @@ const CheckoutPage = () => {
     return true;
   };
 
-  // Calculate discount amount (only on eligible items)
+  // Calculate discount amount (only on eligible items), based on the full value
   const getDiscountAmount = () => {
     if (!appliedPromo) return 0;
     return items.reduce((total, item) => {
       if (!isItemEligible(item)) return total;
-      const itemSubtotal = item.product.price * item.quantity;
-      return total + itemSubtotal * (appliedPromo.discount_percentage / 100);
+      return total + lineFull(item) * (appliedPromo.discount_percentage / 100);
     }, 0);
   };
 
-  // Get discounted subtotal
-  const getDiscountedSubtotal = () => {
-    return getTotalPrice() - getDiscountAmount();
-  };
-
-  // Get tax on discounted amount
-  const getDiscountedTax = () => {
-    if (!appliedPromo) return getTotalTax();
-    
+  // Tax across the order (division items are tax-inclusive => 0), promo-aware
+  const getFullTax = () => {
     return items.reduce((total, item) => {
-      const eligible = isItemEligible(item);
+      if (getDivisions(item)) return total;
+      const eligible = appliedPromo && isItemEligible(item);
       const price = eligible
-        ? item.product.price * (1 - (appliedPromo.discount_percentage / 100))
+        ? item.product.price * (1 - appliedPromo!.discount_percentage / 100)
         : item.product.price;
-      const itemTax = (price * item.quantity) * (item.product.tax / 100);
-      return total + itemTax;
+      return total + price * item.quantity * (item.product.tax / 100);
     }, 0);
   };
 
@@ -269,9 +284,30 @@ const CheckoutPage = () => {
     }).format(amount);
   };
 
-  const subtotal = appliedPromo ? getDiscountedSubtotal() : getTotalPrice();
-  const taxAmount = appliedPromo ? getDiscountedTax() : getTotalTax();
-  const total = subtotal + taxAmount;
+  const discountAmount = appliedPromo ? getDiscountAmount() : 0;
+  const fullSubtotal = getFullSubtotal();
+  const taxAmount = getFullTax();
+  const total = fullSubtotal + taxAmount - discountAmount;
+
+  // Installment summary
+  const hasInstallment = items.some(isInstallmentItem);
+  const firstPaymentDueNow = Math.max(
+    0,
+    items.reduce((sum, item) => sum + (getDivisions(item) ? lineFirstPayment(item) : lineFull(item) + lineTax(item)), 0) - discountAmount,
+  );
+  const remainingLater = Math.max(0, total - firstPaymentDueNow);
+
+  const summaryItems = items.map((item) => {
+    const divs = getDivisions(item);
+    return {
+      id: item.product.id,
+      name: item.name,
+      quantity: item.quantity,
+      price: divs ? divs.reduce((a, b) => a + (Number(b) || 0), 0) : item.product.price,
+      firstPaymentUnit: divs ? (Number(divs[0]) || 0) : item.product.price,
+      installments: divs && divs.length > 1 ? divs.length : 0,
+    };
+  });
 
   const activePaymentMethods = paymentMethods.filter(method => method.active);
 

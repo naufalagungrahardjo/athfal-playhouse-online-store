@@ -7,7 +7,26 @@ export interface ProductVariant {
   name: string;
   price: number;
   order_num: number;
+  price_divisions?: number[];
 }
+
+// Normalize the jsonb price_divisions column into a number[]; fall back to [price]
+export const normalizeDivisions = (raw: unknown, price: number): number[] => {
+  if (Array.isArray(raw)) {
+    const nums = raw.map((n) => Number(n)).filter((n) => Number.isFinite(n));
+    if (nums.length > 0) return nums;
+  }
+  return price > 0 ? [price] : [];
+};
+
+const mapVariant = (v: any): ProductVariant => ({
+  id: v.id,
+  product_id: v.product_id,
+  name: v.name,
+  price: v.price,
+  order_num: v.order_num,
+  price_divisions: normalizeDivisions(v.price_divisions, v.price),
+});
 
 export const useProductVariants = (productId?: string) => {
   const queryClient = useQueryClient();
@@ -22,7 +41,7 @@ export const useProductVariants = (productId?: string) => {
         .eq('product_id', productId)
         .order('order_num', { ascending: true });
       if (error) throw error;
-      return (data || []) as ProductVariant[];
+      return (data || []).map(mapVariant);
     },
     enabled: !!productId,
   });
@@ -46,9 +65,10 @@ export const useAllProductVariants = () => {
         .order('order_num', { ascending: true });
       if (error) throw error;
       const map: Record<string, ProductVariant[]> = {};
-      (data || []).forEach(v => {
-        if (!map[v.product_id]) map[v.product_id] = [];
-        map[v.product_id].push(v);
+      (data || []).forEach((v) => {
+        const mapped = mapVariant(v);
+        if (!map[mapped.product_id]) map[mapped.product_id] = [];
+        map[mapped.product_id].push(mapped);
       });
       return map;
     },
