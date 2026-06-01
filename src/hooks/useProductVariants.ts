@@ -7,6 +7,7 @@ export interface ProductVariant {
   name: string;
   price: number;
   order_num: number;
+  price_divisions?: number[];
 }
 
 export const useProductVariants = (productId?: string) => {
