@@ -239,6 +239,15 @@ export const useOrderProcessing = () => {
 
       // Order items created successfully
 
+      // Set up per-division payments (first division paid, remaining unpaid).
+      // Non-variant items become a single fully-paid payment.
+      const { error: paymentsSetupError } = await supabase
+        .rpc('setup_order_payments_for_order' as any, { p_order_id: orderId });
+
+      if (paymentsSetupError) {
+        logger.error(`[${errorId}] Payment division setup failed (non-blocking): ${paymentsSetupError.message}`);
+      }
+
       // Deduct stock via SECURITY DEFINER RPC (bypasses RLS)
       const { error: stockDeductError } = await supabase
         .rpc('deduct_stock_for_order', { p_order_id: orderId });
