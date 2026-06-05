@@ -34,6 +34,7 @@ interface OrderDetails {
   promo_code?: string;
   discount_amount?: number;
   created_at: string;
+  unique_code?: number | null;
   items: OrderItem[];
   payments?: OrderPaymentDivision[];
 }

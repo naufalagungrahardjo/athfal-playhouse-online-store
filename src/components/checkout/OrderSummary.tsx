@@ -108,6 +108,15 @@ const OrderSummary = ({
             <span>Total:</span>
             <span>{formatCurrency(total)}</span>
           </div>
+          <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800">
+            <p className="font-semibold">Kode unik pembayaran</p>
+            <p className="mt-1">
+              Sistem akan menambahkan <span className="font-semibold">kode unik 3 digit (001–999)</span> ke total pembayaran Anda
+              untuk memudahkan verifikasi. Kode unik ini hanya ditambahkan pada{" "}
+              <span className="font-semibold">pembayaran pertama</span>. Contoh: total Rp175.000 menjadi Rp175.001.
+              Kode unik final akan ditampilkan di halaman detail pesanan.
+            </p>
+          </div>
           {hasInstallment && (
             <div className="mt-2 space-y-2">
               {/* Highlighted current bill the customer must pay now */}
