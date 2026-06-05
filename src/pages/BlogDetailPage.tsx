@@ -80,6 +80,30 @@ const BlogDetailPage = () => {
     );
   }
 
+  const articleJsonLd = {
+    "@type": "Article",
+    headline: blog.title,
+    image: blog.image,
+    datePublished: blog.date,
+    author: {
+      "@type": "Person",
+      name: blog.author || "Athfal Playhouse",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Athfal Playhouse",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://athfalplayhouse.com/lovable-uploads/banner_1.png",
+      },
+    },
+    description: blog.meta_description || stripHtml(blog.content).substring(0, 155),
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://athfalplayhouse.com/blog/${blog.slug || blog.id}`,
+    },
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <SEOHead
@@ -88,6 +112,7 @@ const BlogDetailPage = () => {
         image={blog.image}
         url={`/blog/${blog.slug || blog.id}`}
         type="article"
+        jsonLd={articleJsonLd}
       />
       <div className="w-full">
         <div className="max-w-[760px] mx-auto px-2 sm:px-6 py-12">
