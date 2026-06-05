@@ -73,6 +73,25 @@ serve(async (req) => {
       }
     }
 
+    // SECURITY: Idempotency — claim the alert atomically so the email is sent at most
+    // once per order. This prevents attackers (or retries) from spamming admin inboxes
+    // by repeatedly invoking this endpoint with a valid recent orderId.
+    const { data: claimed, error: claimError } = await supabaseAdmin
+      .from("orders")
+      .update({ order_alert_sent_at: new Date().toISOString() })
+      .eq("id", orderId)
+      .is("order_alert_sent_at", null)
+      .select("id");
+    if (claimError) {
+      throw new Error(`Failed to claim order alert: ${claimError.message}`);
+    }
+    if (!claimed || claimed.length === 0) {
+      return new Response(
+        JSON.stringify({ success: true, message: "Alert already sent for this order" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { data: dbItems } = await supabaseAdmin
       .from("order_items")
       .select("product_name, product_price, quantity")
