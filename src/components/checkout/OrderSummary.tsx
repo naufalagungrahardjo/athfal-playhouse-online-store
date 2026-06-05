@@ -120,14 +120,14 @@ const OrderSummary = ({
           {hasInstallment && (
             <div className="mt-2 space-y-2">
               {/* Highlighted current bill the customer must pay now */}
-              <div className="rounded-lg border-2 border-athfal-green bg-athfal-green/10 p-3">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-athfal-green">Pay now (first payment):</span>
-                  <span className="font-bold text-lg text-athfal-green">
+              <div className="rounded-xl border-2 border-athfal-green bg-athfal-green p-4 shadow-md">
+                <div className="flex justify-between items-center gap-2">
+                  <span className="font-bold text-white">Pay now (first payment):</span>
+                  <span className="font-extrabold text-2xl text-white whitespace-nowrap">
                     {formatCurrency(firstPaymentDueNow || 0)}
                   </span>
                 </div>
-                <p className="text-xs text-athfal-green/80 mt-1">
+                <p className="text-xs text-white/90 mt-1">
                   This is the amount you need to pay now (after discount).
                 </p>
               </div>
