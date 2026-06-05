@@ -6,6 +6,7 @@ interface SEOHeadProps {
   image?: string;
   url?: string;
   type?: string;
+  jsonLd?: Record<string, any> | Record<string, any>[];
 }
 
 const SITE_NAME = "Athfal Playhouse";
@@ -19,9 +20,18 @@ export const SEOHead = ({
   image = DEFAULT_IMAGE,
   url,
   type = "website",
+  jsonLd,
 }: SEOHeadProps) => {
   const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} - Tempat Bermain & Belajar Islami untuk Anak`;
   const fullUrl = url ? `${BASE_URL}${url}` : BASE_URL;
+
+  const jsonLdScript = jsonLd
+    ? JSON.stringify(
+        Array.isArray(jsonLd)
+          ? jsonLd.map((item) => ({ "@context": "https://schema.org", ...item }))
+          : { "@context": "https://schema.org", ...jsonLd }
+      )
+    : null;
 
   return (
     <Helmet>
@@ -39,6 +49,10 @@ export const SEOHead = ({
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
+
+      {jsonLdScript && (
+        <script type="application/ld+json">{jsonLdScript}</script>
+      )}
     </Helmet>
   );
 };

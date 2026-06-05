@@ -90,6 +90,24 @@ const ProductDetailPage = () => {
     );
   }
 
+  const productJsonLd = {
+    "@type": "Product",
+    name: product.name,
+    image: product.media && product.media.length > 0
+      ? product.media.filter(m => m.type === 'image').map(m => m.url)
+      : [product.image],
+    description: product.description,
+    offers: {
+      "@type": "Offer",
+      price: String(product.price),
+      priceCurrency: "IDR",
+      availability: product.stock > 0 && !product.is_sold_out
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      url: `https://athfalplayhouse.com/product/${product.id}`,
+    },
+  };
+
   return (
     <div className="min-h-screen">
       <SEOHead
@@ -98,6 +116,7 @@ const ProductDetailPage = () => {
         image={product.image}
         url={`/product/${id}`}
         type="product"
+        jsonLd={productJsonLd}
       />
       <div className="athfal-container py-12">
         <ProductBreadcrumb

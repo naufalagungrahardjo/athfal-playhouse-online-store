@@ -45,8 +45,25 @@ const FAQPage = () => {
     );
   }
 
+  const faqJsonLd = {
+    "@type": "FAQPage",
+    mainEntity: filteredFAQs.map((faq) => ({
+      "@type": "Question",
+      name: language === "id" ? faq.question_id : faq.question_en,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: language === "id" ? faq.answer_id : faq.answer_en,
+      },
+    })),
+  };
+
   return (
     <div className="min-h-screen">
+      <SEOHead
+        title={language === "id" ? "Pertanyaan yang Sering Diajukan" : "Frequently Asked Questions"}
+        url="/faq"
+        jsonLd={faqJsonLd}
+      />
       <div className="athfal-container py-12">
         <h1 className="text-3xl font-bold text-athfal-pink mb-8">
           {language === "id" ? "Pertanyaan yang Sering Diajukan" : "Frequently Asked Questions"}
