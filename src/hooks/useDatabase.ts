@@ -82,14 +82,23 @@ export const useDatabase = () => {
 
   const fetchPaymentMethods = async () => {
     try {
-      const { data, error } = await supabase
-        .from('payment_methods')
-        .select('*')
-        .order('created_at');
+      // Admins get full rows (including the internal mdr_rate) via a secure
+      // SECURITY DEFINER accessor. For non-admins this returns no rows, so we
+      // fall back to the public, non-sensitive columns (mdr_rate is hidden).
+      const { data: adminData } = await supabase.rpc('get_admin_payment_methods');
 
-      if (error) {
-        logger.error('Error fetching payment methods:', error);
-        throw error;
+      let data = adminData;
+      if (!data || data.length === 0) {
+        const { data: publicData, error } = await supabase
+          .from('payment_methods')
+          .select('id, bank_name, account_number, account_name, active, payment_steps, image, created_at, updated_at')
+          .order('created_at');
+
+        if (error) {
+          logger.error('Error fetching payment methods:', error);
+          throw error;
+        }
+        data = publicData;
       }
       
       const processedData: DatabasePaymentMethod[] = data?.map(method => ({
