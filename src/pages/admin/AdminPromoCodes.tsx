@@ -205,10 +205,11 @@ const AdminPromoCodes = () => {
   };
 
   const exportPromoCSV = () => {
-    const headers = ["Code", "Discount %", "Description", "Status", "Usage Count", "Usage Limit", "Valid From", "Valid Until", "Applies To"];
+    const headers = ["Code", "Discount", "Description", "Status", "Usage Count", "Usage Limit", "Valid From", "Valid Until", "Applies To"];
     const rows = promoCodes.map(p => {
       const s = getPromoStatus(p);
-      return [p.code, String(p.discount_percentage), p.description || "", s.status, String(p.usage_count), p.usage_limit != null ? String(p.usage_limit) : "∞", formatDate(p.valid_from), formatDate(p.valid_until), p.applies_to];
+      const discount = p.discount_type === 'fixed' ? `Rp${p.discount_amount}` : `${p.discount_percentage}%`;
+      return [p.code, discount, p.description || "", s.status, String(p.usage_count), p.usage_limit != null ? String(p.usage_limit) : "∞", formatDate(p.valid_from), formatDate(p.valid_until), p.applies_to];
     });
     const csv = [headers.join(","), ...rows.map(r => r.map(f => `"${(f || "").replace(/"/g, '""')}"`).join(","))].join("\r\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -244,7 +245,7 @@ const AdminPromoCodes = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Code</TableHead>
-              <TableHead>Discount (%)</TableHead>
+              <TableHead>Discount</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Usage</TableHead>
@@ -268,7 +269,11 @@ const AdminPromoCodes = () => {
                 return (
                   <TableRow key={promo.id}>
                     <TableCell className="font-medium">{promo.code}</TableCell>
-                    <TableCell>{promo.discount_percentage}%</TableCell>
+                    <TableCell>
+                      {promo.discount_type === 'fixed'
+                        ? `Rp${(promo.discount_amount || 0).toLocaleString('id-ID')}`
+                        : `${promo.discount_percentage}%`}
+                    </TableCell>
                     <TableCell>{promo.description || '-'}</TableCell>
                     <TableCell>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
