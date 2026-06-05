@@ -380,6 +380,7 @@ const CheckoutPage = () => {
               hasInstallment={hasInstallment}
               firstPaymentDueNow={firstPaymentDueNow}
               remainingLater={remainingLater}
+              remainingSchedule={remainingSchedule}
               formatCurrency={formatCurrency}
               onApplyPromo={handleApplyPromo}
               onRemovePromo={handleRemovePromo}
