@@ -34,6 +34,8 @@ type PromoCode = {
   id: string;
   code: string;
   discount_percentage: number;
+  discount_type: string;
+  discount_amount: number;
   description: string | null;
   is_active: boolean;
   valid_from: string | null;
@@ -52,6 +54,8 @@ const AdminPromoCodes = () => {
   const [formData, setFormData] = useState({
     code: '',
     discount_percentage: 10,
+    discount_type: 'percentage' as string,
+    discount_amount: 0,
     description: '',
     is_active: true,
     valid_from: '',
@@ -88,6 +92,8 @@ const AdminPromoCodes = () => {
     setFormData({
       code: '',
       discount_percentage: 10,
+      discount_type: 'percentage',
+      discount_amount: 0,
       description: '',
       is_active: true,
       valid_from: '',
@@ -107,6 +113,8 @@ const AdminPromoCodes = () => {
       setFormData({
         code: promo.code,
         discount_percentage: promo.discount_percentage,
+        discount_type: promo.discount_type || 'percentage',
+        discount_amount: promo.discount_amount || 0,
         description: promo.description || '',
         is_active: promo.is_active,
         valid_from: promo.valid_from ? new Date(promo.valid_from).toISOString().split('T')[0] : '',
