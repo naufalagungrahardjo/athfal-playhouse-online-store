@@ -137,7 +137,11 @@ export default function PromoCodeInput({ appliedPromo, onApplyPromo, onRemovePro
           <Tag className="w-4 h-4 text-green-600" />
           <div>
             <p className="font-medium text-green-900">{appliedPromo.code}</p>
-            <p className="text-sm text-green-700">{appliedPromo.discount_percentage}% discount</p>
+            <p className="text-sm text-green-700">
+              {appliedPromo.discount_type === 'fixed'
+                ? `Rp${(appliedPromo.discount_amount || 0).toLocaleString('id-ID')} discount`
+                : `${appliedPromo.discount_percentage}% discount`}
+            </p>
           </div>
         </div>
         <Button
