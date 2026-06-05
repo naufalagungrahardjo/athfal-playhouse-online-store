@@ -250,10 +250,57 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                     </div>
                   )}
                   <Separator className="my-2" />
-                  <div className="flex justify-between font-bold">
+                  <div className="flex justify-between text-lg">
                     <span>{language === 'id' ? 'Total' : 'Total'}</span>
                     <span className="text-athfal-green">{formatCurrency(order.total_amount)}</span>
                   </div>
+
+                  {/* Installment breakdown — mirrors the checkout order summary */}
+                  {order.payments && order.payments.length > 1 && (() => {
+                    const sorted = [...order.payments].sort((a, b) => a.payment_number - b.payment_number);
+                    const firstPaymentDueNow = sorted[0]?.amount || 0;
+                    const remainingSchedule = sorted.slice(1);
+                    const remainingLater = remainingSchedule.reduce((sum, p) => sum + p.amount, 0);
+                    return (
+                      <div className="mt-2 space-y-2">
+                        {/* Highlighted current bill the customer must pay now */}
+                        <div className="rounded-lg border-2 border-athfal-green bg-athfal-green/10 p-3">
+                          <div className="flex justify-between items-center">
+                            <span className="font-semibold text-athfal-green">
+                              {language === 'id' ? 'Bayar sekarang (pembayaran pertama):' : 'Pay now (first payment):'}
+                            </span>
+                            <span className="font-bold text-lg text-athfal-green">
+                              {formatCurrency(firstPaymentDueNow)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-athfal-green/80 mt-1">
+                            {language === 'id'
+                              ? 'Ini adalah jumlah yang perlu Anda bayar sekarang (setelah diskon).'
+                              : 'This is the amount you need to pay now (after discount).'}
+                          </p>
+                        </div>
+
+                        {/* Remaining payments, broken down by division */}
+                        {remainingSchedule.length > 0 && (
+                          <div className="rounded-lg bg-gray-50 p-3 space-y-1.5">
+                            <div className="flex justify-between text-sm font-medium text-gray-700">
+                              <span>{language === 'id' ? 'Sisa (dibayar nanti):' : 'Remaining (paid later):'}</span>
+                              <span>{formatCurrency(remainingLater)}</span>
+                            </div>
+                            <Separator className="my-1" />
+                            {remainingSchedule.map((p) => (
+                              <div key={p.id} className="flex justify-between text-sm text-gray-600">
+                                <span>
+                                  {language === 'id' ? 'Pembayaran' : 'Payment'} {p.payment_number}:
+                                </span>
+                                <span>{formatCurrency(p.amount)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Payment Divisions */}
