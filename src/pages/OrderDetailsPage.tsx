@@ -255,6 +255,54 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                     <span className="text-athfal-green">{formatCurrency(order.total_amount)}</span>
                   </div>
                 </div>
+
+                {/* Payment Divisions */}
+                {order.payments && order.payments.length > 1 && (() => {
+                  const discountRatio = order.subtotal > 0 ? (order.discount_amount || 0) / order.subtotal : 0;
+                  const hasDiscount = discountRatio > 0.0001;
+                  const discountPct = Math.round(discountRatio * 100);
+                  return (
+                    <div className="mb-6">
+                      <h4 className="font-semibold text-gray-800 mb-2">
+                        {language === 'id' ? 'Rincian Pembayaran' : 'Payment Divisions'}
+                      </h4>
+                      <div className="overflow-x-auto border rounded">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50 text-gray-600">
+                            <tr>
+                              <th className="text-left font-medium px-3 py-2">Item</th>
+                              <th className="text-right font-medium px-3 py-2">{language === 'id' ? 'Harga' : 'Price'}</th>
+                              {hasDiscount && <th className="text-right font-medium px-3 py-2">{language === 'id' ? 'Diskon' : 'Discount'}</th>}
+                              <th className="text-right font-medium px-3 py-2">{language === 'id' ? 'Total Harga' : 'Total Price'}</th>
+                              <th className="text-center font-medium px-3 py-2">{language === 'id' ? 'Status' : 'Status'}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {order.payments.map((p) => {
+                              const total = p.amount;
+                              const original = hasDiscount ? Math.round(p.amount / (1 - discountRatio)) : p.amount;
+                              return (
+                                <tr key={p.id} className="border-t">
+                                  <td className="px-3 py-2">{p.notes || `Pembayaran ${p.payment_number}`}</td>
+                                  <td className="px-3 py-2 text-right whitespace-nowrap">{formatCurrency(original)}</td>
+                                  {hasDiscount && <td className="px-3 py-2 text-right whitespace-nowrap text-green-600">{discountPct}%</td>}
+                                  <td className="px-3 py-2 text-right whitespace-nowrap font-semibold">{formatCurrency(total)}</td>
+                                  <td className="px-3 py-2 text-center">
+                                    <span className={`inline-block rounded px-2 py-0.5 text-xs ${p.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}>
+                                      {p.status === 'paid'
+                                        ? (language === 'id' ? 'Lunas' : 'Paid')
+                                        : (language === 'id' ? 'Belum' : 'Unpaid')}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
 
