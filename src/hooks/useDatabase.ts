@@ -87,7 +87,7 @@ export const useDatabase = () => {
       // fall back to the public, non-sensitive columns (mdr_rate is hidden).
       const { data: adminData } = await supabase.rpc('get_admin_payment_methods');
 
-      let data = adminData;
+      let data: any[] | null = adminData as any[] | null;
       if (!data || data.length === 0) {
         const { data: publicData, error } = await supabase
           .from('payment_methods')
