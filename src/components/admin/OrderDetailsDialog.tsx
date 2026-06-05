@@ -721,6 +721,11 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
                             <tr key={p.id} className="border-t">
                               <td className="px-3 py-2">
                                 <span className="font-medium">{p.notes || `Pembayaran ${p.payment_number}`}</span>
+                                {planByPaymentId[p.id] && (
+                                  <span className="block text-xs text-athfal-green font-medium">
+                                    Plan: {planByPaymentId[p.id]}
+                                  </span>
+                                )}
                                 {p.status === 'paid' && p.paid_at && (
                                   <span className="block text-xs text-gray-500">
                                     Paid: {new Date(p.paid_at).toLocaleString()}
