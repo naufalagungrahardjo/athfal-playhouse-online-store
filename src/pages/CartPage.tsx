@@ -564,7 +564,9 @@ const CartPage = () => {
                             <span className="font-medium">{appliedPromo.code}</span>
                           </div>
                           <p className="text-sm text-green-700">
-                            {appliedPromo.discount_percentage}% {language === 'id' ? 'diskon diterapkan' : 'discount applied'}
+                            {appliedPromo.discount_type === 'fixed'
+                              ? `Rp${(appliedPromo.discount_amount || 0).toLocaleString('id-ID')}`
+                              : `${appliedPromo.discount_percentage}%`} {language === 'id' ? 'diskon diterapkan' : 'discount applied'}
                           </p>
                         </div>
                         <Button 
@@ -609,7 +611,9 @@ const CartPage = () => {
                     {appliedPromo && (
                       <div className="flex justify-between text-green-600">
                         <span>
-                          {language === 'id' ? 'Diskon' : 'Discount'} ({appliedPromo.discount_percentage}%)
+                          {language === 'id' ? 'Diskon' : 'Discount'} ({appliedPromo.discount_type === 'fixed'
+                            ? `Rp${(appliedPromo.discount_amount || 0).toLocaleString('id-ID')}`
+                            : `${appliedPromo.discount_percentage}%`})
                         </span>
                         <span>-{formatCurrency(getDiscountAmount())}</span>
                       </div>
