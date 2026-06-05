@@ -669,48 +669,88 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
           </div>
 
           {/* Payment Divisions (installment toggles) */}
-          {payments.length > 0 && (
-            <>
-              <Separator />
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Payment Divisions</h3>
-                <p className="text-xs text-gray-500 mb-3">
-                  Toggle each division when the customer pays it. Paid divisions immediately count as revenue
-                  (except for refunded/cancelled orders).
-                </p>
-                <ul className="space-y-2">
-                  {payments.map((p) => (
-                    <li
-                      key={p.id}
-                      className="flex items-center justify-between gap-3 bg-white border rounded px-3 py-2"
-                    >
-                      <div className="flex flex-col min-w-0">
-                        <span className="font-medium truncate">
-                          {p.notes || `Pembayaran ${p.payment_number}`}
-                        </span>
-                        <span className="font-semibold text-sm">{formatCurrency(p.amount)}</span>
-                        {p.status === 'paid' && p.paid_at && (
-                          <span className="text-xs text-gray-500">
-                            Paid: {new Date(p.paid_at).toLocaleString()}
-                          </span>
-                        )}
+          {payments.length > 0 && (() => {
+            const discountRatio = order.subtotal > 0 ? (order.discount_amount || 0) / order.subtotal : 0;
+            const hasDiscount = discountRatio > 0.0001;
+            const discountPct = Math.round(discountRatio * 100);
+            const outstanding = getPayable(amountPaid, order.total_amount);
+            return (
+              <>
+                <Separator />
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Payment Divisions</h3>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Toggle each division when the customer pays it. Paid divisions immediately count as revenue
+                    (except for refunded/cancelled orders).
+                    {hasDiscount && ` A ${discountPct}% discount applies to every division.`}
+                  </p>
+                  <div className="overflow-x-auto border rounded">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 text-gray-600">
+                        <tr>
+                          <th className="text-left font-medium px-3 py-2">Item</th>
+                          <th className="text-right font-medium px-3 py-2">Price</th>
+                          {hasDiscount && <th className="text-right font-medium px-3 py-2">Discount</th>}
+                          <th className="text-right font-medium px-3 py-2">Total Price</th>
+                          <th className="text-center font-medium px-3 py-2">Paid</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {payments.map((p) => {
+                          const total = p.amount;
+                          const original = hasDiscount ? Math.round(p.amount / (1 - discountRatio)) : p.amount;
+                          return (
+                            <tr key={p.id} className="border-t">
+                              <td className="px-3 py-2">
+                                <span className="font-medium">{p.notes || `Pembayaran ${p.payment_number}`}</span>
+                                {p.status === 'paid' && p.paid_at && (
+                                  <span className="block text-xs text-gray-500">
+                                    Paid: {new Date(p.paid_at).toLocaleString()}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap">{formatCurrency(original)}</td>
+                              {hasDiscount && (
+                                <td className="px-3 py-2 text-right whitespace-nowrap text-green-600">{discountPct}%</td>
+                              )}
+                              <td className="px-3 py-2 text-right whitespace-nowrap font-semibold">{formatCurrency(total)}</td>
+                              <td className="px-3 py-2">
+                                <div className="flex items-center justify-center gap-2">
+                                  <Switch
+                                    checked={p.status === 'paid'}
+                                    disabled={togglingPaymentId === p.id}
+                                    onCheckedChange={() => handleTogglePaymentDivision(p.id, p.status)}
+                                  />
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="mt-3 bg-gray-50 rounded p-3 space-y-1 text-sm">
+                    {hasDiscount && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Discount ({discountPct}%):</span>
+                        <span>-{formatCurrency(order.discount_amount || 0)}</span>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Badge className={p.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}>
-                          {p.status === 'paid' ? 'Paid' : 'Unpaid'}
-                        </Badge>
-                        <Switch
-                          checked={p.status === 'paid'}
-                          disabled={togglingPaymentId === p.id}
-                          onCheckedChange={() => handleTogglePaymentDivision(p.id, p.status)}
-                        />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </>
-          )}
+                    )}
+                    <div className="flex justify-between font-semibold">
+                      <span>Total payable after discount:</span>
+                      <span>{formatCurrency(order.total_amount)}</span>
+                    </div>
+                    <div className="flex justify-between font-bold">
+                      <span>Outstanding after discount:</span>
+                      <span className={outstanding > 0 ? 'text-red-600' : 'text-green-600'}>
+                        {formatCurrency(outstanding)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
 
           {/* Notes */}
           {order.notes && (
