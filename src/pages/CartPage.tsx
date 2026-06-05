@@ -23,6 +23,8 @@ type PromoCode = {
   id: string;
   code: string;
   discount_percentage: number;
+  discount_type?: string;
+  discount_amount?: number;
   description: string | null;
   is_active: boolean;
   valid_from: string | null;
@@ -240,6 +242,8 @@ const CartPage = () => {
         id: rpcData[0].id,
         code: rpcData[0].code,
         discount_percentage: rpcData[0].discount_percentage,
+        discount_type: rpcData[0].discount_type || 'percentage',
+        discount_amount: rpcData[0].discount_amount || 0,
         description: null,
         is_active: true,
         valid_from: null,
@@ -255,7 +259,9 @@ const CartPage = () => {
       setAppliedPromo(data as PromoCode);
       toast({
         title: language === 'id' ? 'Kode promo diterapkan' : 'Promo code applied',
-        description: `${data.discount_percentage}% ${language === 'id' ? 'diskon diterapkan' : 'discount applied'}`
+        description: data.discount_type === 'fixed'
+          ? `Rp${(data.discount_amount || 0).toLocaleString('id-ID')} ${language === 'id' ? 'diskon diterapkan' : 'discount applied'}`
+          : `${data.discount_percentage}% ${language === 'id' ? 'diskon diterapkan' : 'discount applied'}`
       });
       setCouponCode('');
     } catch (error) {
@@ -291,6 +297,10 @@ const CartPage = () => {
     const eligibleSubtotal = items
       .filter(isItemEligible)
       .reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    // Fixed nominal discount: flat amount capped at the eligible subtotal
+    if (appliedPromo.discount_type === 'fixed') {
+      return Math.min(appliedPromo.discount_amount || 0, eligibleSubtotal);
+    }
     return eligibleSubtotal * (appliedPromo.discount_percentage / 100);
   };
   
@@ -302,7 +312,11 @@ const CartPage = () => {
   // Get tax on discounted amount
   const getDiscountedTax = () => {
     if (!appliedPromo) return getTaxAmount();
-    
+    // Fixed nominal discounts do not scale per-item price, so tax stays on full price
+    if (appliedPromo.discount_type === 'fixed') {
+      return getTaxAmount();
+    }
+
     return items.reduce((total, item) => {
       const price = isItemEligible(item)
         ? item.product.price * (1 - (appliedPromo.discount_percentage / 100))
@@ -550,7 +564,9 @@ const CartPage = () => {
                             <span className="font-medium">{appliedPromo.code}</span>
                           </div>
                           <p className="text-sm text-green-700">
-                            {appliedPromo.discount_percentage}% {language === 'id' ? 'diskon diterapkan' : 'discount applied'}
+                            {appliedPromo.discount_type === 'fixed'
+                              ? `Rp${(appliedPromo.discount_amount || 0).toLocaleString('id-ID')}`
+                              : `${appliedPromo.discount_percentage}%`} {language === 'id' ? 'diskon diterapkan' : 'discount applied'}
                           </p>
                         </div>
                         <Button 
@@ -595,7 +611,9 @@ const CartPage = () => {
                     {appliedPromo && (
                       <div className="flex justify-between text-green-600">
                         <span>
-                          {language === 'id' ? 'Diskon' : 'Discount'} ({appliedPromo.discount_percentage}%)
+                          {language === 'id' ? 'Diskon' : 'Discount'} ({appliedPromo.discount_type === 'fixed'
+                            ? `Rp${(appliedPromo.discount_amount || 0).toLocaleString('id-ID')}`
+                            : `${appliedPromo.discount_percentage}%`})
                         </span>
                         <span>-{formatCurrency(getDiscountAmount())}</span>
                       </div>
