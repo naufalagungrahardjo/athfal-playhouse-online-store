@@ -776,26 +776,25 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Product Sales Proportion</CardTitle></CardHeader>
               <CardContent>
                 {productProportionData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={isMobile ? 280 : 400}>
-                    <PieChart>
-                      <Pie data={productProportionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={isMobile ? 40 : 50} outerRadius={isMobile ? 100 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
-                        {productProportionData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                      </Pie>
-                      <Tooltip formatter={(value: number, name: string, props: any) => [`${value} units (${props.payload.percentage}%)`, name]} />
-                      {!isMobile && <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />}
-                    </PieChart>
-                  </ResponsiveContainer>
-                )}
-                {isMobile && (
-                  <div className="mt-3 space-y-1 max-h-48 overflow-y-auto text-xs">
-                    {productProportionData.map((d, i) => (
-                      <div key={d.name} className="flex items-start gap-2">
-                        <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                        <span className="flex-1 break-words">{d.name}</span>
-                        <span className="text-muted-foreground tabular-nums">{d.percentage}%</span>
-                      </div>
-                    ))}
-                  </div>
+                  <>
+                    <ResponsiveContainer width="100%" height={isMobile ? 240 : 300}>
+                      <PieChart>
+                        <Pie data={productProportionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={isMobile ? 40 : 60} outerRadius={isMobile ? 90 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                          {productProportionData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip formatter={(value: number, name: string, props: any) => [`${value} units (${props.payload.percentage}%)`, name]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="mt-3 space-y-1 max-h-48 overflow-y-auto text-xs pr-1">
+                      {productProportionData.map((d, i) => (
+                        <div key={d.name} className="flex items-center gap-2">
+                          <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                          <span className="flex-1 truncate" title={d.name}>{d.name}</span>
+                          <span className="text-muted-foreground tabular-nums shrink-0">{d.percentage}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -804,26 +803,25 @@ const AdminAnalytics = () => {
               <CardHeader><CardTitle>Payment Method Proportion</CardTitle></CardHeader>
               <CardContent>
                 {paymentProportionData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
-                  <ResponsiveContainer width="100%" height={isMobile ? 280 : 400}>
-                    <PieChart>
-                      <Pie data={paymentProportionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={isMobile ? 40 : 50} outerRadius={isMobile ? 100 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
-                        {paymentProportionData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                      </Pie>
-                      <Tooltip formatter={(value: number, name: string, props: any) => [`${value} orders (${props.payload.percentage}%)`, name]} />
-                      {!isMobile && <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />}
-                    </PieChart>
-                  </ResponsiveContainer>
-                )}
-                {isMobile && (
-                  <div className="mt-3 space-y-1 max-h-48 overflow-y-auto text-xs">
-                    {paymentProportionData.map((d, i) => (
-                      <div key={d.name} className="flex items-start gap-2">
-                        <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                        <span className="flex-1 break-words">{d.name}</span>
-                        <span className="text-muted-foreground tabular-nums">{d.percentage}%</span>
-                      </div>
-                    ))}
-                  </div>
+                  <>
+                    <ResponsiveContainer width="100%" height={isMobile ? 240 : 300}>
+                      <PieChart>
+                        <Pie data={paymentProportionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={isMobile ? 40 : 60} outerRadius={isMobile ? 90 : 110} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                          {paymentProportionData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip formatter={(value: number, name: string, props: any) => [`${value} orders (${props.payload.percentage}%)`, name]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="mt-3 space-y-1 max-h-48 overflow-y-auto text-xs pr-1">
+                      {paymentProportionData.map((d, i) => (
+                        <div key={d.name} className="flex items-center gap-2">
+                          <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                          <span className="flex-1 truncate" title={d.name}>{d.name}</span>
+                          <span className="text-muted-foreground tabular-nums shrink-0">{d.percentage}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>
