@@ -35,6 +35,16 @@ interface OrderDetails {
   discount_amount?: number;
   created_at: string;
   items: OrderItem[];
+  payments?: OrderPaymentDivision[];
+}
+
+export interface OrderPaymentDivision {
+  id: string;
+  payment_number: number;
+  amount: number;
+  status: string;
+  paid_at: string | null;
+  notes: string | null;
 }
 
 export const useOrderDetails = (orderId?: string, lookupToken?: string) => {
@@ -111,6 +121,21 @@ export const useOrderDetails = (orderId?: string, lookupToken?: string) => {
         return;
       }
 
+      // Fetch payment divisions (installments) for this order
+      let paymentsData: any[] = [];
+      if (lookupToken) {
+        const { data: rpcPayments } = await supabase
+          .rpc('get_order_payments_by_token', { p_order_id: orderId, p_token: lookupToken });
+        paymentsData = rpcPayments || [];
+      } else {
+        const { data: pays } = await supabase
+          .from('order_payments')
+          .select('id, payment_number, amount, status, paid_at, notes')
+          .eq('order_id', orderId)
+          .order('payment_number', { ascending: true });
+        paymentsData = pays || [];
+      }
+
       logger.log('Order fetched:', orderData);
 
       const baseProductIds = [...new Set(itemsData.map((item: any) => getBaseProductId(item.product_id)).filter(Boolean))];
@@ -166,7 +191,15 @@ export const useOrderDetails = (orderId?: string, lookupToken?: string) => {
 
       setOrder({
         ...orderData,
-        items: itemsWithImages
+        items: itemsWithImages,
+        payments: paymentsData.map((p: any) => ({
+          id: p.id,
+          payment_number: p.payment_number,
+          amount: p.amount,
+          status: p.status,
+          paid_at: p.paid_at ?? null,
+          notes: p.notes ?? null,
+        })),
       });
     } catch (error) {
       logger.error('Error fetching order details:', error);
