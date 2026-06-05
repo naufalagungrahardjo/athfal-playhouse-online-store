@@ -718,6 +718,7 @@ export type Database = {
           id: string
           lookup_token: string | null
           notes: string | null
+          order_alert_sent_at: string | null
           payment_method: string
           promo_code: string | null
           status: string
@@ -745,6 +746,7 @@ export type Database = {
           id?: string
           lookup_token?: string | null
           notes?: string | null
+          order_alert_sent_at?: string | null
           payment_method: string
           promo_code?: string | null
           status?: string
@@ -772,6 +774,7 @@ export type Database = {
           id?: string
           lookup_token?: string | null
           notes?: string | null
+          order_alert_sent_at?: string | null
           payment_method?: string
           promo_code?: string | null
           status?: string
@@ -1633,6 +1636,11 @@ export type Database = {
         Args: { p_order_id: string }
         Returns: number
       }
+      can_insert_order_item: { Args: { p_order_id: string }; Returns: boolean }
+      can_insert_order_payment: {
+        Args: { p_order_id: string }
+        Returns: boolean
+      }
       create_mdr_expense_for_order: {
         Args: { p_order_id: string }
         Returns: boolean
@@ -1766,6 +1774,10 @@ export type Database = {
       is_admin_account: { Args: { email: string }; Returns: boolean }
       is_admin_user: { Args: { user_id: string }; Returns: boolean }
       is_class_super: { Args: never; Returns: boolean }
+      is_division_order_item: {
+        Args: { p_product_id: string }
+        Returns: boolean
+      }
       is_non_teacher_admin: { Args: { email: string }; Returns: boolean }
       is_super_admin: { Args: { email: string }; Returns: boolean }
       list_teacher_recipients: {
@@ -1778,6 +1790,16 @@ export type Database = {
       normalize_student_program_text: {
         Args: { p_text: string }
         Returns: string
+      }
+      order_item_promo_eligible: {
+        Args: {
+          p_applies_to: string
+          p_category: string
+          p_category_slugs: string[]
+          p_product_id: string
+          p_product_ids: string[]
+        }
+        Returns: boolean
       }
       program_matches_product_names: {
         Args: { p_product_name: string; p_source_product_names: string[] }
