@@ -18,6 +18,8 @@ type PromoCode = {
   id: string;
   code: string;
   discount_percentage: number;
+  discount_type: string;
+  discount_amount: number;
   description: string | null;
   is_active: boolean;
   valid_from: string | null;
