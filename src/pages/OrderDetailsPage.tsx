@@ -249,11 +249,40 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                       <span className="text-green-600">-{formatCurrency(order.discount_amount)}</span>
                     </div>
                   )}
+                  {order.unique_code != null && order.unique_code > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">
+                        {language === 'id' ? 'Kode Unik' : 'Unique Code'}{' '}
+                        <span className="font-mono font-semibold text-athfal-pink">
+                          {order.unique_code.toString().padStart(3, '0')}
+                        </span>
+                      </span>
+                      <span>+{formatCurrency(order.unique_code)}</span>
+                    </div>
+                  )}
                   <Separator className="my-2" />
                   <div className="flex justify-between text-lg">
                     <span>{language === 'id' ? 'Total' : 'Total'}</span>
                     <span className="text-athfal-green">{formatCurrency(order.total_amount)}</span>
                   </div>
+
+                  {order.unique_code != null && order.unique_code > 0 && (
+                    <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800 mt-2">
+                      {language === 'id' ? (
+                        <>
+                          Mohon transfer <span className="font-semibold">tepat sesuai total</span> termasuk{' '}
+                          <span className="font-semibold">kode unik {order.unique_code.toString().padStart(3, '0')}</span>{' '}
+                          di 3 digit terakhir agar pembayaran dapat diverifikasi otomatis. Kode unik hanya berlaku pada pembayaran pertama.
+                        </>
+                      ) : (
+                        <>
+                          Please transfer the <span className="font-semibold">exact total</span> including the{' '}
+                          <span className="font-semibold">unique code {order.unique_code.toString().padStart(3, '0')}</span>{' '}
+                          in the last 3 digits so your payment can be verified automatically. The unique code applies to the first payment only.
+                        </>
+                      )}
+                    </div>
+                  )}
 
                   {/* Installment breakdown — only for genuine installments that still
                       have unpaid future payments. Orders made up of several fully-paid
