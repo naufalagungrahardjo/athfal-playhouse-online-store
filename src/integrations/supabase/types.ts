@@ -725,6 +725,7 @@ export type Database = {
           subtotal: number
           tax_amount: number
           total_amount: number
+          unique_code: number | null
           updated_at: string | null
           user_id: string | null
         }
@@ -751,6 +752,7 @@ export type Database = {
           subtotal: number
           tax_amount: number
           total_amount: number
+          unique_code?: number | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -777,6 +779,7 @@ export type Database = {
           subtotal?: number
           tax_amount?: number
           total_amount?: number
+          unique_code?: number | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -1621,6 +1624,10 @@ export type Database = {
         Args: { p_program_id: string; p_session_date: string }
         Returns: string
       }
+      assign_order_unique_code: {
+        Args: { p_order_id: string }
+        Returns: number
+      }
       auto_cancel_stale_orders: { Args: never; Returns: number }
       auto_enroll_order_to_active_programs: {
         Args: { p_order_id: string }
@@ -1698,6 +1705,7 @@ export type Database = {
           subtotal: number
           tax_amount: number
           total_amount: number
+          unique_code: number
           updated_at: string
           user_id: string
         }[]
