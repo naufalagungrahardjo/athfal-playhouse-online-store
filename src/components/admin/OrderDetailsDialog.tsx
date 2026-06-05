@@ -335,6 +335,24 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
 
   if (!order) return null;
 
+  // Map each payment division to the installment plan of the order item it belongs to.
+  // Payments are stored sequentially per item, with the per-item "Pembayaran N" index
+  // resetting to 1 whenever a new item's divisions begin.
+  const planByPaymentId = (() => {
+    const map: Record<string, string> = {};
+    const orderItems = order.items || [];
+    const sorted = [...payments].sort((a, b) => a.payment_number - b.payment_number);
+    let itemIdx = -1;
+    for (const p of sorted) {
+      const match = p.notes?.match(/Pembayaran\s+(\d+)/i);
+      const idx = match ? parseInt(match[1], 10) : 1;
+      if (idx === 1) itemIdx++;
+      const plan = orderItems[itemIdx]?.installment_plan_name;
+      if (plan) map[p.id] = plan;
+    }
+    return map;
+  })();
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -703,6 +721,11 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
                             <tr key={p.id} className="border-t">
                               <td className="px-3 py-2">
                                 <span className="font-medium">{p.notes || `Pembayaran ${p.payment_number}`}</span>
+                                {planByPaymentId[p.id] && (
+                                  <span className="block text-xs text-athfal-green font-medium">
+                                    Plan: {planByPaymentId[p.id]}
+                                  </span>
+                                )}
                                 {p.status === 'paid' && p.paid_at && (
                                   <span className="block text-xs text-gray-500">
                                     Paid: {new Date(p.paid_at).toLocaleString()}
