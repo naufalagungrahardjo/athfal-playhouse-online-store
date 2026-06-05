@@ -1639,6 +1639,27 @@ export type Database = {
         Args: { p_child_name: string }
         Returns: string
       }
+      get_admin_payment_methods: {
+        Args: never
+        Returns: {
+          account_name: string
+          account_number: string
+          active: boolean
+          bank_name: string
+          created_at: string
+          id: string
+          image: string | null
+          mdr_rate: number
+          payment_steps: Json | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "payment_methods"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_my_child_attendance: {
         Args: never
         Returns: {
