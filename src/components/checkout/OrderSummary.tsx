@@ -17,6 +17,8 @@ type OrderSummaryProps = {
     id: string;
     code: string;
     discount_percentage: number;
+    discount_type: string;
+    discount_amount: number;
     description: string | null;
     is_active: boolean;
     valid_from: string | null;
@@ -96,7 +98,9 @@ const OrderSummary = ({
           </div>
           {appliedPromo && (
             <div className="flex justify-between text-green-600">
-              <span>Discount ({appliedPromo.code} - {appliedPromo.discount_percentage}%):</span>
+              <span>Discount ({appliedPromo.code} - {appliedPromo.discount_type === 'fixed'
+                ? `Rp${(appliedPromo.discount_amount || 0).toLocaleString('id-ID')}`
+                : `${appliedPromo.discount_percentage}%`}):</span>
               <span>-{formatCurrency(getDiscountAmount())}</span>
             </div>
           )}

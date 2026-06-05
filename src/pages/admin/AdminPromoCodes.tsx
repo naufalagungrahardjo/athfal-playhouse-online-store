@@ -34,6 +34,8 @@ type PromoCode = {
   id: string;
   code: string;
   discount_percentage: number;
+  discount_type: string;
+  discount_amount: number;
   description: string | null;
   is_active: boolean;
   valid_from: string | null;
@@ -52,6 +54,8 @@ const AdminPromoCodes = () => {
   const [formData, setFormData] = useState({
     code: '',
     discount_percentage: 10,
+    discount_type: 'percentage' as string,
+    discount_amount: 0,
     description: '',
     is_active: true,
     valid_from: '',
@@ -88,6 +92,8 @@ const AdminPromoCodes = () => {
     setFormData({
       code: '',
       discount_percentage: 10,
+      discount_type: 'percentage',
+      discount_amount: 0,
       description: '',
       is_active: true,
       valid_from: '',
@@ -107,6 +113,8 @@ const AdminPromoCodes = () => {
       setFormData({
         code: promo.code,
         discount_percentage: promo.discount_percentage,
+        discount_type: promo.discount_type || 'percentage',
+        discount_amount: promo.discount_amount || 0,
         description: promo.description || '',
         is_active: promo.is_active,
         valid_from: promo.valid_from ? new Date(promo.valid_from).toISOString().split('T')[0] : '',
@@ -197,10 +205,11 @@ const AdminPromoCodes = () => {
   };
 
   const exportPromoCSV = () => {
-    const headers = ["Code", "Discount %", "Description", "Status", "Usage Count", "Usage Limit", "Valid From", "Valid Until", "Applies To"];
+    const headers = ["Code", "Discount", "Description", "Status", "Usage Count", "Usage Limit", "Valid From", "Valid Until", "Applies To"];
     const rows = promoCodes.map(p => {
       const s = getPromoStatus(p);
-      return [p.code, String(p.discount_percentage), p.description || "", s.status, String(p.usage_count), p.usage_limit != null ? String(p.usage_limit) : "∞", formatDate(p.valid_from), formatDate(p.valid_until), p.applies_to];
+      const discount = p.discount_type === 'fixed' ? `Rp${p.discount_amount}` : `${p.discount_percentage}%`;
+      return [p.code, discount, p.description || "", s.status, String(p.usage_count), p.usage_limit != null ? String(p.usage_limit) : "∞", formatDate(p.valid_from), formatDate(p.valid_until), p.applies_to];
     });
     const csv = [headers.join(","), ...rows.map(r => r.map(f => `"${(f || "").replace(/"/g, '""')}"`).join(","))].join("\r\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -236,7 +245,7 @@ const AdminPromoCodes = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Code</TableHead>
-              <TableHead>Discount (%)</TableHead>
+              <TableHead>Discount</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Usage</TableHead>
@@ -260,7 +269,11 @@ const AdminPromoCodes = () => {
                 return (
                   <TableRow key={promo.id}>
                     <TableCell className="font-medium">{promo.code}</TableCell>
-                    <TableCell>{promo.discount_percentage}%</TableCell>
+                    <TableCell>
+                      {promo.discount_type === 'fixed'
+                        ? `Rp${(promo.discount_amount || 0).toLocaleString('id-ID')}`
+                        : `${promo.discount_percentage}%`}
+                    </TableCell>
                     <TableCell>{promo.description || '-'}</TableCell>
                     <TableCell>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
@@ -303,32 +316,67 @@ const AdminPromoCodes = () => {
           </DialogHeader>
           
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="code">Promo Code</Label>
-                <Input
-                  id="code"
-                  name="code"
-                  value={formData.code}
-                  onChange={handleInputChange}
-                  placeholder="e.g. SUMMER20"
-                  required
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="discount_percentage">Discount Percentage</Label>
-                <Input
-                  id="discount_percentage"
-                  name="discount_percentage"
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={formData.discount_percentage}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
+            <div>
+              <Label htmlFor="code">Promo Code</Label>
+              <Input
+                id="code"
+                name="code"
+                value={formData.code}
+                onChange={handleInputChange}
+                placeholder="e.g. SUMMER20"
+                required
+              />
+            </div>
+
+            <div className="space-y-3 border rounded-lg p-4">
+              <Label className="text-base font-semibold">Discount Type</Label>
+              <RadioGroup
+                value={formData.discount_type}
+                onValueChange={(value) => setFormData({ ...formData, discount_type: value })}
+                className="flex flex-col sm:flex-row gap-3"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="percentage" id="type_percentage" />
+                  <Label htmlFor="type_percentage">Percentage (%)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="fixed" id="type_fixed" />
+                  <Label htmlFor="type_fixed">Nominal (Rp)</Label>
+                </div>
+              </RadioGroup>
+
+              {formData.discount_type === 'fixed' ? (
+                <div>
+                  <Label htmlFor="discount_amount">Nominal Discount (Rp)</Label>
+                  <Input
+                    id="discount_amount"
+                    name="discount_amount"
+                    type="number"
+                    min="1"
+                    value={formData.discount_amount || ''}
+                    onChange={(e) => setFormData({ ...formData, discount_amount: e.target.value === '' ? 0 : Number(e.target.value) })}
+                    placeholder="e.g. 100000"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    For products with price divisions, this amount is deducted from the first payment only.
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <Label htmlFor="discount_percentage">Discount Percentage</Label>
+                  <Input
+                    id="discount_percentage"
+                    name="discount_percentage"
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={formData.discount_percentage}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+              )}
             </div>
             
             <div>

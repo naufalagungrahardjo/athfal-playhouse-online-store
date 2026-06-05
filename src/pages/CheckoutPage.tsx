@@ -18,6 +18,8 @@ type PromoCode = {
   id: string;
   code: string;
   discount_percentage: number;
+  discount_type: string;
+  discount_amount: number;
   description: string | null;
   is_active: boolean;
   valid_from: string | null;
@@ -258,6 +260,14 @@ const CheckoutPage = () => {
   // Calculate discount amount (only on eligible items), based on the full value
   const getDiscountAmount = () => {
     if (!appliedPromo) return 0;
+    // Fixed nominal discount: a flat amount capped at the eligible subtotal
+    if (appliedPromo.discount_type === 'fixed') {
+      const eligibleFull = items.reduce(
+        (total, item) => (isItemEligible(item) ? total + lineFull(item) : total),
+        0
+      );
+      return Math.min(appliedPromo.discount_amount || 0, eligibleFull);
+    }
     return items.reduce((total, item) => {
       if (!isItemEligible(item)) return total;
       return total + lineFull(item) * (appliedPromo.discount_percentage / 100);
@@ -268,7 +278,8 @@ const CheckoutPage = () => {
   const getFullTax = () => {
     return items.reduce((total, item) => {
       if (getDivisions(item)) return total;
-      const eligible = appliedPromo && isItemEligible(item);
+      // Fixed nominal discounts do not scale per-item price, so tax stays on full price
+      const eligible = appliedPromo && appliedPromo.discount_type !== 'fixed' && isItemEligible(item);
       const price = eligible
         ? item.product.price * (1 - appliedPromo!.discount_percentage / 100)
         : item.product.price;
@@ -293,8 +304,12 @@ const CheckoutPage = () => {
   const hasInstallment = items.some(isInstallmentItem);
 
   // Per-item discount factor (promo applies proportionally to each price division)
+  // (Fixed nominal discounts are NOT scaled per division; they are deducted from the
+  //  first payment only, handled below.)
   const discountFactor = (item: typeof items[0]) =>
-    appliedPromo && isItemEligible(item) ? 1 - appliedPromo.discount_percentage / 100 : 1;
+    appliedPromo && appliedPromo.discount_type !== 'fixed' && isItemEligible(item)
+      ? 1 - appliedPromo.discount_percentage / 100
+      : 1;
 
   // Build an aggregated payment schedule across all installment items.
   // Each entry is the net (after-discount) amount due for that payment number.
@@ -318,7 +333,13 @@ const CheckoutPage = () => {
     return sum + base + tax;
   }, 0);
 
-  const firstPaymentDueNow = Math.max(0, Math.round((paymentSchedule[0] || 0) + nonInstallmentNow));
+  // For fixed nominal promos, deduct the whole discount from the first payment only.
+  const fixedDiscountNow =
+    appliedPromo && appliedPromo.discount_type === 'fixed' ? getDiscountAmount() : 0;
+  const firstPaymentDueNow = Math.max(
+    0,
+    Math.round((paymentSchedule[0] || 0) + nonInstallmentNow - fixedDiscountNow)
+  );
   const remainingSchedule = paymentSchedule.slice(1).map((amt) => Math.round(amt));
   const remainingLater = Math.max(0, remainingSchedule.reduce((a, b) => a + b, 0));
 
