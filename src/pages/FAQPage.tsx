@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -10,6 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useDatabase } from "@/hooks/useDatabase";
+import { SEOHead } from "@/components/SEOHead";
 
 const FAQPage = () => {
   const { language } = useLanguage();
