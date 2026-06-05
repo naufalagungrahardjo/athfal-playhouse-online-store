@@ -35,11 +35,11 @@ const OtherIncomeTab = () => {
     const [fundsRes, incomeRes, pmRes] = await Promise.all([
       supabase.from('expense_fund_sources' as any).select('id, name'),
       supabase.from('other_income' as any).select('*').order('date', { ascending: false }),
-      supabase.from('payment_methods').select('bank_name, mdr_rate'),
+      supabase.rpc('get_admin_payment_methods'),
     ]);
     setFundSources((fundsRes.data as any) || []);
     setIncomes((incomeRes.data as any) || []);
-    setPaymentMethods((pmRes.data as any) || []);
+    setPaymentMethods(((pmRes.data as any) || []).map((p: any) => ({ bank_name: p.bank_name, mdr_rate: p.mdr_rate })));
     setLoading(false);
   };
 
