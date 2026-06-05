@@ -9,6 +9,8 @@ type PromoCode = {
   id: string;
   code: string;
   discount_percentage: number;
+  discount_type: string;
+  discount_amount: number;
   description: string | null;
   is_active: boolean;
   valid_from: string | null;
@@ -84,6 +86,8 @@ export default function PromoCodeInput({ appliedPromo, onApplyPromo, onRemovePro
         id: promo.id,
         code: promo.code,
         discount_percentage: promo.discount_percentage,
+        discount_type: (promo as any).discount_type || 'percentage',
+        discount_amount: (promo as any).discount_amount || 0,
         description: null,
         is_active: true,
         valid_from: null,
@@ -101,7 +105,9 @@ export default function PromoCodeInput({ appliedPromo, onApplyPromo, onRemovePro
       
       toast({
         title: "Success!",
-        description: `${promo.discount_percentage}% discount applied`
+        description: appliedPromo.discount_type === 'fixed'
+          ? `Rp${(appliedPromo.discount_amount).toLocaleString('id-ID')} discount applied`
+          : `${promo.discount_percentage}% discount applied`
       });
     } catch (error) {
       console.error('Error applying promo code:', error);
