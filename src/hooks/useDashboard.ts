@@ -74,18 +74,29 @@ export const useDashboard = (dateRange?: DateRange) => {
       // Revenue is scaled by paid ratio (cash basis): only count actually-received money
       const totalOrders = orders?.length || 0;
       const revenueOrders = orders?.filter(o => o.status !== 'cancelled' && o.status !== 'refund') || [];
+      // Discounts must NEVER be counted as revenue or received cash — they only
+      // appear in the "Discount Given" figure. We therefore work with NET values:
+      //  - netTotal = subtotal + tax - discount (the real value of the sale)
+      //  - netPaid  = cash received, capped at netTotal so a discount can never
+      //    leak into revenue/paid even if legacy data recorded a higher amount_paid.
+      const netTotal = (o: any) =>
+        Math.max(0, (o.subtotal || 0) + (o.tax_amount || 0) - (o.discount_amount || 0));
+      const netPaid = (o: any) => Math.min(Math.max(0, o.amount_paid || 0), netTotal(o));
       const paidRatio = (o: any) => {
-        const total = o.total_amount || 0;
-        if (total <= 0) return 0;
-        return Math.min(1, Math.max(0, (o.amount_paid || 0) / total));
+        const nt = netTotal(o);
+        if (nt <= 0) return 0;
+        return Math.min(1, Math.max(0, netPaid(o) / nt));
       };
-      const revenueBeforeTax = revenueOrders.reduce((sum, o) => sum + (o.subtotal || 0) * paidRatio(o), 0);
-      const revenueAfterTax = revenueOrders.reduce((sum, o) => sum + ((o.subtotal || 0) + (o.tax_amount || 0)) * paidRatio(o), 0);
+      const revenueBeforeTax = revenueOrders.reduce(
+        (sum, o) => sum + Math.max(0, (o.subtotal || 0) - (o.discount_amount || 0)) * paidRatio(o),
+        0,
+      );
+      const revenueAfterTax = revenueOrders.reduce((sum, o) => sum + netTotal(o) * paidRatio(o), 0);
       const totalDiscount = revenueOrders.reduce((sum, o) => sum + (o.discount_amount || 0), 0);
-      const revenueAfterDiscount = revenueBeforeTax - totalDiscount;
-      const totalAmountPaid = revenueOrders.reduce((sum, o) => sum + (o.amount_paid || 0), 0);
+      const revenueAfterDiscount = revenueBeforeTax; // discount already excluded above
+      const totalAmountPaid = revenueOrders.reduce((sum, o) => sum + netPaid(o), 0);
       const outstandingReceivables = revenueOrders.reduce(
-        (sum, o) => sum + Math.max(0, (o.total_amount || 0) - (o.amount_paid || 0)),
+        (sum, o) => sum + Math.max(0, netTotal(o) - netPaid(o)),
         0,
       );
       const totalProducts = productsCount || 0;
