@@ -224,13 +224,17 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
         .eq('id', paymentId);
       if (error) throw error;
       // Refresh local payments + order (sync_order_amount_paid trigger updates amount_paid)
-      setPayments((prev) =>
-        prev.map((p) =>
-          p.id === paymentId
-            ? { ...p, status: newStatus, paid_at: newStatus === 'paid' ? new Date().toISOString() : null }
-            : p,
-        ),
+      const updatedPayments = payments.map((p) =>
+        p.id === paymentId
+          ? { ...p, status: newStatus, paid_at: newStatus === 'paid' ? new Date().toISOString() : null }
+          : p,
       );
+      setPayments(updatedPayments);
+      // Recompute the amount paid locally so Payable (Outstanding) updates immediately
+      const newAmountPaid = updatedPayments
+        .filter((p) => p.status === 'paid')
+        .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+      setAmountPaid(newAmountPaid);
       toast({ title: 'Success', description: `Payment marked as ${newStatus === 'paid' ? 'paid' : 'unpaid'}` });
       onOrderUpdated();
     } catch (error: any) {
