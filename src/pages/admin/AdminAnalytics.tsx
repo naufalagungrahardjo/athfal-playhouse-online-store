@@ -50,20 +50,29 @@ interface OrderWithItems {
   items: { product_id: string; product_name: string; quantity: number; product_price: number }[];
 }
 
+// Net value of the sale (discount removed). Discounts are never revenue.
+const getNetTotal = (order: OrderWithItems): number =>
+  Math.max(0, (order.subtotal || 0) + (order.tax_amount || 0) - (order.discount_amount || 0));
+
+// Cash received, capped at the net total so a discount can never inflate revenue.
+const getNetPaid = (order: OrderWithItems): number =>
+  Math.min(Math.max(0, order.amount_paid || 0), getNetTotal(order));
+
 const getPaidRatio = (order: OrderWithItems): number => {
-  const total = order.total_amount || 0;
-  if (total <= 0) return 0;
-  return Math.min(1, Math.max(0, (order.amount_paid || 0) / total));
+  const nt = getNetTotal(order);
+  if (nt <= 0) return 0;
+  return Math.min(1, Math.max(0, getNetPaid(order) / nt));
 };
 
 const getOrderRevenue = (order: OrderWithItems, revenueType: RevenueType): number => {
-  // Cash basis: scale revenue components by the paid ratio so analytics
-  // reflect cash actually collected, not what is owed.
+  // Cash basis: scale revenue by the paid ratio and ALWAYS exclude discounts so
+  // analytics reflect cash actually collected, never the discount given.
   const ratio = getPaidRatio(order);
+  const netBeforeTax = Math.max(0, (order.subtotal || 0) - (order.discount_amount || 0));
   switch (revenueType) {
-    case 'before_tax': return (order.subtotal || 0) * ratio;
-    case 'after_tax': return ((order.subtotal || 0) + (order.tax_amount || 0)) * ratio;
-    case 'after_discount': return ((order.subtotal || 0) - (order.discount_amount || 0)) * ratio;
+    case 'before_tax': return netBeforeTax * ratio;
+    case 'after_tax': return getNetTotal(order) * ratio;
+    case 'after_discount': return netBeforeTax * ratio;
   }
 };
 
