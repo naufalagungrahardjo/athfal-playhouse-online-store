@@ -34,6 +34,7 @@ type OrderSummaryProps = {
   hasInstallment?: boolean;
   firstPaymentDueNow?: number;
   remainingLater?: number;
+  remainingSchedule?: number[];
   formatCurrency: (amount: number) => string;
   onApplyPromo: (promo: any) => void;
   onRemovePromo: () => void;
@@ -49,6 +50,7 @@ const OrderSummary = ({
   hasInstallment,
   firstPaymentDueNow,
   remainingLater,
+  remainingSchedule,
   formatCurrency,
   onApplyPromo,
   onRemovePromo,
@@ -98,20 +100,41 @@ const OrderSummary = ({
               <span>-{formatCurrency(getDiscountAmount())}</span>
             </div>
           )}
-          <div className="flex justify-between font-bold text-lg border-t pt-2">
+          <div className="flex justify-between text-lg border-t pt-2">
             <span>Total:</span>
             <span>{formatCurrency(total)}</span>
           </div>
           {hasInstallment && (
-            <div className="mt-2 rounded-lg bg-athfal-green/10 p-3 space-y-1">
-              <div className="flex justify-between font-semibold text-athfal-green">
-                <span>Pay now (first payment):</span>
-                <span>{formatCurrency(firstPaymentDueNow || 0)}</span>
+            <div className="mt-2 space-y-2">
+              {/* Highlighted current bill the customer must pay now */}
+              <div className="rounded-lg border-2 border-athfal-green bg-athfal-green/10 p-3">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-athfal-green">Pay now (first payment):</span>
+                  <span className="font-bold text-lg text-athfal-green">
+                    {formatCurrency(firstPaymentDueNow || 0)}
+                  </span>
+                </div>
+                <p className="text-xs text-athfal-green/80 mt-1">
+                  This is the amount you need to pay now (after discount).
+                </p>
               </div>
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>Remaining (paid later):</span>
-                <span>{formatCurrency(remainingLater || 0)}</span>
-              </div>
+
+              {/* Remaining payments, broken down by division */}
+              {remainingSchedule && remainingSchedule.length > 0 && (
+                <div className="rounded-lg bg-gray-50 p-3 space-y-1.5">
+                  <div className="flex justify-between text-sm font-medium text-gray-700">
+                    <span>Remaining (paid later):</span>
+                    <span>{formatCurrency(remainingLater || 0)}</span>
+                  </div>
+                  <Separator className="my-1" />
+                  {remainingSchedule.map((amount, idx) => (
+                    <div key={idx} className="flex justify-between text-sm text-gray-600">
+                      <span>Payment {idx + 2}:</span>
+                      <span>{formatCurrency(amount)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
