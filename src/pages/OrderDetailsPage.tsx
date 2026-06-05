@@ -97,7 +97,7 @@ const OrderDetailsPage = () => {
 ${itemsList}
 
 *${language === 'id' ? 'Total' : 'Total'}: ${formatCurrency(order.total_amount)}*
-
+${order.unique_code ? `\n*${language === 'id' ? 'Kode Unik' : 'Unique Code'}: ${order.unique_code.toString().padStart(3, '0')}*\n` : ''}
 ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi pesanan saya.' : 'I have made the payment and would like to confirm my order.'}
     `;
 
