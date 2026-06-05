@@ -291,11 +291,36 @@ const CheckoutPage = () => {
 
   // Installment summary
   const hasInstallment = items.some(isInstallmentItem);
-  const firstPaymentDueNow = Math.max(
-    0,
-    items.reduce((sum, item) => sum + (getDivisions(item) ? lineFirstPayment(item) : lineFull(item) + lineTax(item)), 0) - discountAmount,
-  );
-  const remainingLater = Math.max(0, total - firstPaymentDueNow);
+
+  // Per-item discount factor (promo applies proportionally to each price division)
+  const discountFactor = (item: typeof items[0]) =>
+    appliedPromo && isItemEligible(item) ? 1 - appliedPromo.discount_percentage / 100 : 1;
+
+  // Build an aggregated payment schedule across all installment items.
+  // Each entry is the net (after-discount) amount due for that payment number.
+  const paymentSchedule: number[] = [];
+  items.forEach((item) => {
+    const divs = getDivisions(item);
+    if (!divs) return;
+    const factor = discountFactor(item);
+    divs.forEach((d, i) => {
+      const net = (Number(d) || 0) * factor * item.quantity;
+      paymentSchedule[i] = (paymentSchedule[i] || 0) + net;
+    });
+  });
+
+  // Non-installment items are paid in full now (after discount + tax)
+  const nonInstallmentNow = items.reduce((sum, item) => {
+    if (getDivisions(item)) return sum;
+    const factor = discountFactor(item);
+    const base = item.product.price * factor * item.quantity;
+    const tax = item.product.price * factor * item.quantity * (item.product.tax / 100);
+    return sum + base + tax;
+  }, 0);
+
+  const firstPaymentDueNow = Math.max(0, Math.round((paymentSchedule[0] || 0) + nonInstallmentNow));
+  const remainingSchedule = paymentSchedule.slice(1).map((amt) => Math.round(amt));
+  const remainingLater = Math.max(0, remainingSchedule.reduce((a, b) => a + b, 0));
 
   const summaryItems = items.map((item) => {
     const divs = getDivisions(item);
@@ -355,6 +380,7 @@ const CheckoutPage = () => {
               hasInstallment={hasInstallment}
               firstPaymentDueNow={firstPaymentDueNow}
               remainingLater={remainingLater}
+              remainingSchedule={remainingSchedule}
               formatCurrency={formatCurrency}
               onApplyPromo={handleApplyPromo}
               onRemovePromo={handleRemovePromo}
