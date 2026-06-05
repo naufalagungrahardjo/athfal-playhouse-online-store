@@ -255,8 +255,11 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                     <span className="text-athfal-green">{formatCurrency(order.total_amount)}</span>
                   </div>
 
-                  {/* Installment breakdown — mirrors the checkout order summary */}
-                  {order.payments && order.payments.length > 1 && (() => {
+                  {/* Installment breakdown — only for genuine installments that still
+                      have unpaid future payments. Orders made up of several fully-paid
+                      sub-variants are NOT installments and must not be shown this way. */}
+                  {order.payments && order.payments.length > 1 &&
+                    order.payments.some((p) => p.status !== 'paid') && (() => {
                     const sorted = [...order.payments].sort((a, b) => a.payment_number - b.payment_number);
                     const firstPaymentDueNow = sorted[0]?.amount || 0;
                     const remainingSchedule = sorted.slice(1);
