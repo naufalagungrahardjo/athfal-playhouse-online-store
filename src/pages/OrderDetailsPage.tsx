@@ -289,23 +289,39 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                       sub-variants are NOT installments and must not be shown this way. */}
                   {order.payments && order.payments.length > 1 &&
                     order.payments.some((p) => p.status !== 'paid') && (() => {
-                    const sorted = [...order.payments].sort((a, b) => a.payment_number - b.payment_number);
-                    const firstPaymentDueNow = sorted[0]?.amount || 0;
-                    const remainingSchedule = sorted.slice(1);
+                    // Payments are stored per-product with a global, sequential
+                    // payment_number. To mirror the checkout summary we must group
+                    // them by their per-product installment index (the "Pembayaran N"
+                    // recorded in notes) so the 1st payment of every product is summed
+                    // together, the 2nd payments together, etc.
+                    const groups = new Map<number, number>();
+                    let fallbackIndex = 0;
+                    [...order.payments]
+                      .sort((a, b) => a.payment_number - b.payment_number)
+                      .forEach((p) => {
+                        const match = p.notes?.match(/Pembayaran\s+(\d+)/i);
+                        const idx = match ? parseInt(match[1], 10) : (++fallbackIndex);
+                        groups.set(idx, (groups.get(idx) || 0) + p.amount);
+                      });
+                    const schedule = [...groups.entries()]
+                      .sort((a, b) => a[0] - b[0])
+                      .map(([index, amount]) => ({ index, amount }));
+                    const firstPaymentDueNow = schedule[0]?.amount || 0;
+                    const remainingSchedule = schedule.slice(1);
                     const remainingLater = remainingSchedule.reduce((sum, p) => sum + p.amount, 0);
                     return (
                       <div className="mt-2 space-y-2">
                         {/* Highlighted current bill the customer must pay now */}
-                        <div className="rounded-lg border-2 border-athfal-green bg-athfal-green/10 p-3">
-                          <div className="flex justify-between items-center">
-                            <span className="font-semibold text-athfal-green">
+                        <div className="rounded-xl border-2 border-athfal-green bg-athfal-green p-4 shadow-md">
+                          <div className="flex justify-between items-center gap-2">
+                            <span className="font-bold text-white">
                               {language === 'id' ? 'Bayar sekarang (pembayaran pertama):' : 'Pay now (first payment):'}
                             </span>
-                            <span className="font-bold text-lg text-athfal-green">
+                            <span className="font-extrabold text-2xl text-white whitespace-nowrap">
                               {formatCurrency(firstPaymentDueNow)}
                             </span>
                           </div>
-                          <p className="text-xs text-athfal-green/80 mt-1">
+                          <p className="text-xs text-white/90 mt-1">
                             {language === 'id'
                               ? 'Ini adalah jumlah yang perlu Anda bayar sekarang (setelah diskon).'
                               : 'This is the amount you need to pay now (after discount).'}
@@ -321,9 +337,9 @@ ${language === 'id' ? 'Saya telah melakukan pembayaran dan ingin mengonfirmasi p
                             </div>
                             <Separator className="my-1" />
                             {remainingSchedule.map((p) => (
-                              <div key={p.id} className="flex justify-between text-sm text-gray-600">
+                              <div key={p.index} className="flex justify-between text-sm text-gray-600">
                                 <span>
-                                  {language === 'id' ? 'Pembayaran' : 'Payment'} {p.payment_number}:
+                                  {language === 'id' ? 'Pembayaran' : 'Payment'} {p.index}:
                                 </span>
                                 <span>{formatCurrency(p.amount)}</span>
                               </div>
