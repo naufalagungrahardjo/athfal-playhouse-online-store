@@ -1210,7 +1210,9 @@ export type Database = {
           code: string
           created_at: string | null
           description: string | null
+          discount_amount: number
           discount_percentage: number
+          discount_type: string
           id: string
           is_active: boolean | null
           updated_at: string | null
@@ -1226,7 +1228,9 @@ export type Database = {
           code: string
           created_at?: string | null
           description?: string | null
-          discount_percentage: number
+          discount_amount?: number
+          discount_percentage?: number
+          discount_type?: string
           id?: string
           is_active?: boolean | null
           updated_at?: string | null
@@ -1242,7 +1246,9 @@ export type Database = {
           code?: string
           created_at?: string | null
           description?: string | null
+          discount_amount?: number
           discount_percentage?: number
+          discount_type?: string
           id?: string
           is_active?: boolean | null
           updated_at?: string | null
@@ -1767,7 +1773,9 @@ export type Database = {
           applicable_product_ids: string[]
           applies_to: string
           code: string
+          discount_amount: number
           discount_percentage: number
+          discount_type: string
           id: string
           is_valid: boolean
         }[]
