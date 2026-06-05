@@ -239,6 +239,15 @@ export const useOrderProcessing = () => {
 
       // Order items created successfully
 
+      // Assign a sequential 3-digit unique verification code (001-999, cycling).
+      // This adds the code to the order total and (via payment setup) to the first payment only.
+      const { error: uniqueCodeError } = await supabase
+        .rpc('assign_order_unique_code' as any, { p_order_id: orderId });
+
+      if (uniqueCodeError) {
+        logger.error(`[${errorId}] Unique code assignment failed (non-blocking): ${uniqueCodeError.message}`);
+      }
+
       // Set up per-division payments (first division paid, remaining unpaid).
       // Non-variant items become a single fully-paid payment.
       const { error: paymentsSetupError } = await supabase
