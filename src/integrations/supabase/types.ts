@@ -1688,6 +1688,19 @@ export type Database = {
         }[]
       }
       get_order_lookup_token: { Args: { p_order_id: string }; Returns: string }
+      get_order_payments_by_token: {
+        Args: { p_order_id: string; p_token: string }
+        Returns: {
+          amount: number
+          created_at: string
+          id: string
+          notes: string
+          order_id: string
+          paid_at: string
+          payment_number: number
+          status: string
+        }[]
+      }
       get_session_number: {
         Args: { p_program_id: string; p_session_date: string }
         Returns: number
