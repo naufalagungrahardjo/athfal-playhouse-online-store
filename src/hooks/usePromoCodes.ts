@@ -7,6 +7,8 @@ export interface PromoCode {
   id: string;
   code: string;
   discount_percentage: number;
+  discount_type: string;
+  discount_amount: number;
   description: string | null;
   is_active: boolean;
   valid_from: string | null;
@@ -57,13 +59,19 @@ export const usePromoCodes = () => {
       if (!promoCode.code?.trim()) {
         throw new Error('Promo code is required');
       }
-      if (!promoCode.discount_percentage || promoCode.discount_percentage < 1 || promoCode.discount_percentage > 100) {
+      if ((promoCode.discount_type || 'percentage') === 'fixed') {
+        if (!promoCode.discount_amount || promoCode.discount_amount < 1) {
+          throw new Error('Nominal discount amount must be greater than 0');
+        }
+      } else if (!promoCode.discount_percentage || promoCode.discount_percentage < 1 || promoCode.discount_percentage > 100) {
         throw new Error('Discount percentage must be between 1 and 100');
       }
 
       const promoData = {
         code: promoCode.code.trim().toUpperCase(),
         discount_percentage: promoCode.discount_percentage,
+        discount_type: promoCode.discount_type || 'percentage',
+        discount_amount: promoCode.discount_amount || 0,
         description: promoCode.description?.trim() || null,
         is_active: promoCode.is_active,
         valid_from: promoCode.valid_from ? new Date(promoCode.valid_from).toISOString() : null,
