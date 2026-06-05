@@ -242,6 +242,8 @@ const CartPage = () => {
         id: rpcData[0].id,
         code: rpcData[0].code,
         discount_percentage: rpcData[0].discount_percentage,
+        discount_type: rpcData[0].discount_type || 'percentage',
+        discount_amount: rpcData[0].discount_amount || 0,
         description: null,
         is_active: true,
         valid_from: null,
@@ -257,7 +259,9 @@ const CartPage = () => {
       setAppliedPromo(data as PromoCode);
       toast({
         title: language === 'id' ? 'Kode promo diterapkan' : 'Promo code applied',
-        description: `${data.discount_percentage}% ${language === 'id' ? 'diskon diterapkan' : 'discount applied'}`
+        description: data.discount_type === 'fixed'
+          ? `Rp${(data.discount_amount || 0).toLocaleString('id-ID')} ${language === 'id' ? 'diskon diterapkan' : 'discount applied'}`
+          : `${data.discount_percentage}% ${language === 'id' ? 'diskon diterapkan' : 'discount applied'}`
       });
       setCouponCode('');
     } catch (error) {
