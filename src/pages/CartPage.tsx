@@ -297,6 +297,10 @@ const CartPage = () => {
     const eligibleSubtotal = items
       .filter(isItemEligible)
       .reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    // Fixed nominal discount: flat amount capped at the eligible subtotal
+    if (appliedPromo.discount_type === 'fixed') {
+      return Math.min(appliedPromo.discount_amount || 0, eligibleSubtotal);
+    }
     return eligibleSubtotal * (appliedPromo.discount_percentage / 100);
   };
   
@@ -308,7 +312,11 @@ const CartPage = () => {
   // Get tax on discounted amount
   const getDiscountedTax = () => {
     if (!appliedPromo) return getTaxAmount();
-    
+    // Fixed nominal discounts do not scale per-item price, so tax stays on full price
+    if (appliedPromo.discount_type === 'fixed') {
+      return getTaxAmount();
+    }
+
     return items.reduce((total, item) => {
       const price = isItemEligible(item)
         ? item.product.price * (1 - (appliedPromo.discount_percentage / 100))
