@@ -81,6 +81,13 @@ const CartPage = () => {
         }
       });
       setVariantRemaining(map);
+      // Clamp any cart item that already exceeds its variant's remaining quota
+      items.forEach((item) => {
+        const variantId = getVariantIdFromProductId(item.product.id);
+        if (variantId && variantId in map && item.quantity > map[variantId]) {
+          updateQuantity(item.product.id, Math.max(1, map[variantId]));
+        }
+      });
     })();
     return () => {
       cancelled = true;
