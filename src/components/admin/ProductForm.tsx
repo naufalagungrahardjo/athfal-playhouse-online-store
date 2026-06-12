@@ -180,6 +180,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             admission_date: formData.admission_date || null,
             active_from: formData.active_from || null,
             active_until: formData.active_until || null,
+            hide_full_payment: formData.hide_full_payment ?? false,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingProduct.id);
@@ -209,6 +210,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             admission_date: formData.admission_date || null,
             active_from: formData.active_from || null,
             active_until: formData.active_until || null,
+            hide_full_payment: formData.hide_full_payment ?? false,
             is_hidden: true,
           }]);
         
