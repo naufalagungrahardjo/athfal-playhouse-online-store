@@ -220,6 +220,31 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
             ))}
             <p className="text-sm font-medium pt-1">Total: {formatCurrency(divisionsTotal(variant.divisions))}</p>
           </div>
+
+          <div className="space-y-1 pl-7">
+            <Label className="text-xs text-muted-foreground">
+              Available Quota (leave empty for unlimited)
+            </Label>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Input
+                type="number"
+                placeholder="Unlimited"
+                value={variant.quota_limit ?? ''}
+                onChange={(e) => updateVariantQuota(index, e.target.value)}
+                className="w-40"
+                min="0"
+              />
+              {variant.quota_limit !== null && variant.quota_limit !== undefined && (
+                <span className="text-xs text-muted-foreground">
+                  {Math.max(0, variant.quota_limit - (variant.quota_sold || 0))} left
+                  {variant.quota_sold > 0 ? ` · ${variant.quota_sold} sold` : ''}
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              This limits how many times this variant can be purchased. Main product stock is tracked separately.
+            </p>
+          </div>
         </div>
       ))}
 
