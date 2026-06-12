@@ -28,6 +28,7 @@ async function fetchProductsFromDb(): Promise<Product[]> {
     media: product.media as any,
     is_hidden: product.is_hidden ?? false,
     is_sold_out: product.is_sold_out ?? false,
+    hide_full_payment: (product as any).hide_full_payment ?? false,
     admission_date: product.admission_date ?? null,
     active_from: product.active_from ?? null,
     active_until: product.active_until ?? null,

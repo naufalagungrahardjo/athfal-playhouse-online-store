@@ -12,6 +12,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { ProductMediaUpload, ProductMedia } from '@/components/admin/ProductMediaUpload';
 import { RichTextEditor } from '@/components/admin/RichTextEditor';
 import { ProductVariantManager } from '@/components/admin/ProductVariantManager';
+import { Switch } from '@/components/ui/switch';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface ProductFormData {
@@ -31,6 +32,7 @@ interface ProductFormData {
   admission_date?: string;
   active_from?: string;
   active_until?: string;
+  hide_full_payment?: boolean;
 }
 
 interface ProductFormProps {
@@ -81,6 +83,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
     admission_date: '',
     active_from: '',
     active_until: '',
+    hide_full_payment: false,
   });
 
   useEffect(() => {
@@ -121,6 +124,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         admission_date: (editingProduct as any).admission_date || '',
         active_from: (editingProduct as any).active_from || '',
         active_until: (editingProduct as any).active_until || '',
+        hide_full_payment: (editingProduct as any).hide_full_payment ?? false,
       });
     } else {
       setFormData({
@@ -139,6 +143,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         admission_date: '',
         active_from: '',
         active_until: '',
+        hide_full_payment: false,
       });
     }
   }, [editingProduct, isOpen]);
@@ -175,6 +180,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             admission_date: formData.admission_date || null,
             active_from: formData.active_from || null,
             active_until: formData.active_until || null,
+            hide_full_payment: formData.hide_full_payment ?? false,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingProduct.id);
@@ -204,6 +210,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             admission_date: formData.admission_date || null,
             active_from: formData.active_from || null,
             active_until: formData.active_until || null,
+            hide_full_payment: formData.hide_full_payment ?? false,
             is_hidden: true,
           }]);
         
@@ -303,6 +310,20 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             coverImage={formData.image}
             onCoverChange={(url) => setFormData({...formData, image: url})}
           />
+
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div>
+              <Label htmlFor="hide_full_payment" className="font-medium">Hide Full Payment option</Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                When on, customers won't see or be able to choose the main price ("Pembayaran Lunas") on the product page.
+              </p>
+            </div>
+            <Switch
+              id="hide_full_payment"
+              checked={!!formData.hide_full_payment}
+              onCheckedChange={(checked) => setFormData({ ...formData, hide_full_payment: checked })}
+            />
+          </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div>

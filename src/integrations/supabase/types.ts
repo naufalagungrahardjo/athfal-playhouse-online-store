@@ -1124,6 +1124,7 @@ export type Database = {
           created_at: string | null
           description: string
           first_payment: number
+          hide_full_payment: boolean
           id: string
           image: string
           installment: number
@@ -1149,6 +1150,7 @@ export type Database = {
           created_at?: string | null
           description: string
           first_payment?: number
+          hide_full_payment?: boolean
           id?: string
           image: string
           installment?: number
@@ -1174,6 +1176,7 @@ export type Database = {
           created_at?: string | null
           description?: string
           first_payment?: number
+          hide_full_payment?: boolean
           id?: string
           image?: string
           installment?: number

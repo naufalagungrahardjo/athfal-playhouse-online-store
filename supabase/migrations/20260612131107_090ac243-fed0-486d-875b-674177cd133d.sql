@@ -1,0 +1,1 @@
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS hide_full_payment boolean NOT NULL DEFAULT false;

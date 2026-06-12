@@ -24,6 +24,10 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const { variants, loading: variantsLoading } = useProductVariants(product.dbId);
 
+  // When enabled by admin, the full-payment ("Pembayaran Lunas") option is hidden
+  // and customers must pick one of the variants instead.
+  const hideFullPayment = !!product.hide_full_payment && variants.length > 0;
+
   // If admin toggled sold out, treat stock as 0 for customers
   const baseStock = product.is_sold_out ? 0 : product.stock;
   const activePrice = selectedVariant ? selectedVariant.price : product.price;
@@ -74,6 +78,18 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
       setQuantity(effectiveStock);
     }
   }, [effectiveStock, quantity]);
+
+  // When full payment is hidden, auto-select the first available variant so the
+  // customer always has a valid option selected.
+  useEffect(() => {
+    if (hideFullPayment && !variantsLoading && selectedVariant === null) {
+      const firstAvailable = variants.find(v => {
+        const remaining = getVariantRemaining(v);
+        return remaining === null || remaining > 0;
+      });
+      if (firstAvailable) setSelectedVariant(firstAvailable);
+    }
+  }, [hideFullPayment, variantsLoading, variants, selectedVariant]);
 
   // Prepare media for carousel
   const media: ProductMedia[] = (product as any).media && (product as any).media.length > 0
@@ -156,6 +172,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
                   {language === 'id' ? 'Pilih Opsi' : 'Choose Option'}:
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  {!hideFullPayment && (
                   <button
                     onClick={() => setSelectedVariant(null)}
                     className={`flex flex-col items-center justify-center text-center px-3 py-2.5 min-h-[64px] rounded-lg border-2 text-sm font-medium transition-colors ${
@@ -167,6 +184,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
                     <span className="block leading-tight break-words">{language === 'id' ? 'Pembayaran Lunas' : 'Full Payment'}</span>
                     <span className="block text-xs mt-1 opacity-80">{formatCurrency(product.price)}</span>
                   </button>
+                  )}
                   {variants.map(variant => {
                     const remaining = getVariantRemaining(variant);
                     const soldOut = remaining !== null && remaining <= 0;

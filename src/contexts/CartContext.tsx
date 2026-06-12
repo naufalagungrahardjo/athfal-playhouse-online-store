@@ -21,6 +21,7 @@ export interface Product {
   media?: Array<{ url: string; type: 'image' | 'video' }>;
   is_hidden?: boolean;
   is_sold_out?: boolean;
+  hide_full_payment?: boolean;
   admission_date?: string | null;
   active_from?: string | null;
   active_until?: string | null;
