@@ -557,7 +557,7 @@ const CartPage = () => {
                                     variant="outline" 
                                     size="icon"
                                     onClick={() => handleIncreaseQuantity(item.product.id, item.quantity, item.product.stock)}
-                                    disabled={item.product.stock <= item.quantity}
+                                    disabled={getEffectiveMax(item.product.id, item.product.stock) <= item.quantity}
                                     className="h-8 w-8"
                                   >
                                     <Plus className="h-3 w-3" />
