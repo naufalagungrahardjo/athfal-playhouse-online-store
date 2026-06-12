@@ -7,6 +7,7 @@ import { Plus, Trash2, Edit, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ImageUpload } from "@/components/ImageUpload";
 import GalleryItemForm from "../gallery/GalleryItemForm";
+import { PanoramaUploadInput } from "@/components/admin/PanoramaUploadInput";
 import { useGalleryContent, GalleryItem } from "@/hooks/useGalleryContent";
 import { useState } from "react";
 
@@ -46,6 +47,22 @@ const GalleryAdminTab = () => {
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImageIcon className="h-5 w-5" />
+            Lokasi &amp; Fasilitas (360° Panorama)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PanoramaUploadInput
+            value={galleryContent.panoramas}
+            onChange={(urls) => saveGalleryContent({ ...galleryContent, panoramas: urls })}
+            label="Gallery Panoramic Images"
+            hint="Upload regular wide/panoramic photos for the Gallery page. They are auto-converted to draggable 360° views. You can upload several."
+          />
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
