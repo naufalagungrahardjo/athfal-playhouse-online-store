@@ -14,6 +14,8 @@ interface Variant {
   name: string;
   order_num: number;
   divisions: number[];
+  quota_limit: number | null;
+  quota_sold: number;
 }
 
 interface ProductVariantManagerProps {
@@ -46,13 +48,15 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
           name: v.name,
           order_num: v.order_num,
           divisions: normalizeDivisions((v as any).price_divisions, v.price),
+          quota_limit: (v as any).quota_limit ?? null,
+          quota_sold: (v as any).quota_sold ?? 0,
         }))
       );
     }
   };
 
   const addVariant = () => {
-    setVariants([...variants, { name: '', order_num: variants.length + 1, divisions: [0] }]);
+    setVariants([...variants, { name: '', order_num: variants.length + 1, divisions: [0], quota_limit: null, quota_sold: 0 }]);
   };
 
   const removeVariant = async (index: number) => {
@@ -65,6 +69,11 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
 
   const updateVariantName = (index: number, value: string) => {
     setVariants(variants.map((v, i) => (i === index ? { ...v, name: value } : v)));
+  };
+
+  const updateVariantQuota = (index: number, value: string) => {
+    const parsed = value === '' ? null : Math.max(0, Math.round(Number(value) || 0));
+    setVariants(variants.map((v, i) => (i === index ? { ...v, quota_limit: parsed } : v)));
   };
 
   const addDivision = (index: number) => {
@@ -98,24 +107,41 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
     }
     setLoading(true);
     try {
-      await supabase.from('product_variants').delete().eq('product_id', productDbId);
-      
-      if (variants.length > 0) {
-        const toInsert = variants.map((v, i) => {
-          const divisions = (v.divisions.length > 0 ? v.divisions : [0]).map((d) => Math.round(Number(d) || 0));
-          return {
-            product_id: productDbId,
-            name: v.name,
-            // price = first division (the customer-facing "pay now" price)
-            price: divisions[0] || 0,
-            price_divisions: divisions,
-            order_num: i + 1,
-          };
-        });
-        const { error } = await supabase.from('product_variants').insert(toInsert);
-        if (error) throw error;
+      // Preserve existing variant IDs so quota tracking (quota_sold) survives edits.
+      const existing = await supabase
+        .from('product_variants')
+        .select('id')
+        .eq('product_id', productDbId);
+      const existingIds = new Set((existing.data || []).map((v) => v.id));
+      const keptIds = new Set(variants.filter((v) => v.id).map((v) => v.id as string));
+
+      // Delete variants the admin removed.
+      const toDelete = [...existingIds].filter((id) => !keptIds.has(id));
+      if (toDelete.length > 0) {
+        await supabase.from('product_variants').delete().in('id', toDelete);
       }
-      
+
+      for (let i = 0; i < variants.length; i++) {
+        const v = variants[i];
+        const divisions = (v.divisions.length > 0 ? v.divisions : [0]).map((d) => Math.round(Number(d) || 0));
+        const payload: any = {
+          product_id: productDbId,
+          name: v.name,
+          // price = first division (the customer-facing "pay now" price)
+          price: divisions[0] || 0,
+          price_divisions: divisions,
+          order_num: i + 1,
+          quota_limit: v.quota_limit,
+        };
+        if (v.id && existingIds.has(v.id)) {
+          const { error } = await supabase.from('product_variants').update(payload).eq('id', v.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.from('product_variants').insert(payload);
+          if (error) throw error;
+        }
+      }
+
       toast({ title: 'Success', description: 'Variants saved successfully' });
       await fetchVariants();
       // Invalidate all variant caches so storefront reflects changes
