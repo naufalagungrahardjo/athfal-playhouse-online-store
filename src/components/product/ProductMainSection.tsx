@@ -24,6 +24,10 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const { variants, loading: variantsLoading } = useProductVariants(product.dbId);
 
+  // When enabled by admin, the full-payment ("Pembayaran Lunas") option is hidden
+  // and customers must pick one of the variants instead.
+  const hideFullPayment = !!product.hide_full_payment && variants.length > 0;
+
   // If admin toggled sold out, treat stock as 0 for customers
   const baseStock = product.is_sold_out ? 0 : product.stock;
   const activePrice = selectedVariant ? selectedVariant.price : product.price;
@@ -74,6 +78,18 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
       setQuantity(effectiveStock);
     }
   }, [effectiveStock, quantity]);
+
+  // When full payment is hidden, auto-select the first available variant so the
+  // customer always has a valid option selected.
+  useEffect(() => {
+    if (hideFullPayment && !variantsLoading && selectedVariant === null) {
+      const firstAvailable = variants.find(v => {
+        const remaining = getVariantRemaining(v);
+        return remaining === null || remaining > 0;
+      });
+      if (firstAvailable) setSelectedVariant(firstAvailable);
+    }
+  }, [hideFullPayment, variantsLoading, variants, selectedVariant]);
 
   // Prepare media for carousel
   const media: ProductMedia[] = (product as any).media && (product as any).media.length > 0
