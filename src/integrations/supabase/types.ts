@@ -1772,6 +1772,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin_account: { Args: { email: string }; Returns: boolean }
+      is_admin_account_ci: { Args: never; Returns: boolean }
       is_admin_user: { Args: { user_id: string }; Returns: boolean }
       is_class_super: { Args: never; Returns: boolean }
       is_division_order_item: {
@@ -1779,6 +1780,8 @@ export type Database = {
         Returns: boolean
       }
       is_non_teacher_admin: { Args: { email: string }; Returns: boolean }
+      is_product_deleter: { Args: never; Returns: boolean }
+      is_product_manager: { Args: never; Returns: boolean }
       is_super_admin: { Args: { email: string }; Returns: boolean }
       list_teacher_recipients: {
         Args: never
