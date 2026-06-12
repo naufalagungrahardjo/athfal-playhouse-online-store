@@ -167,20 +167,34 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
                     <span className="block leading-tight break-words">{language === 'id' ? 'Pembayaran Lunas' : 'Full Payment'}</span>
                     <span className="block text-xs mt-1 opacity-80">{formatCurrency(product.price)}</span>
                   </button>
-                  {variants.map(variant => (
-                    <button
-                      key={variant.id}
-                      onClick={() => setSelectedVariant(variant)}
-                      className={`flex flex-col items-center justify-center text-center px-3 py-2.5 min-h-[64px] rounded-lg border-2 text-sm font-medium transition-colors ${
-                        selectedVariant?.id === variant.id
-                          ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
-                          : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
-                      }`}
-                    >
-                      <span className="block leading-tight break-words">{variant.name}</span>
-                      <span className="block text-xs mt-1 opacity-80">{formatCurrency(variant.price)}</span>
-                    </button>
-                  ))}
+                  {variants.map(variant => {
+                    const remaining = getVariantRemaining(variant);
+                    const soldOut = remaining !== null && remaining <= 0;
+                    return (
+                      <button
+                        key={variant.id}
+                        onClick={() => !soldOut && setSelectedVariant(variant)}
+                        disabled={soldOut}
+                        className={`flex flex-col items-center justify-center text-center px-3 py-2.5 min-h-[64px] rounded-lg border-2 text-sm font-medium transition-colors ${
+                          soldOut
+                            ? 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed opacity-60'
+                            : selectedVariant?.id === variant.id
+                              ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
+                              : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
+                        }`}
+                      >
+                        <span className="block leading-tight break-words">{variant.name}</span>
+                        <span className="block text-xs mt-1 opacity-80">{formatCurrency(variant.price)}</span>
+                        {remaining !== null && (
+                          <span className="block text-[11px] mt-0.5 opacity-70">
+                            {soldOut
+                              ? (language === 'id' ? 'Habis' : 'Sold out')
+                              : (language === 'id' ? `Sisa ${remaining}` : `${remaining} left`)}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
