@@ -8,6 +8,8 @@ export interface ProductVariant {
   price: number;
   order_num: number;
   price_divisions?: number[];
+  quota_limit?: number | null;
+  quota_sold?: number;
 }
 
 // Normalize the jsonb price_divisions column into a number[]; fall back to [price]
@@ -26,7 +28,15 @@ const mapVariant = (v: any): ProductVariant => ({
   price: v.price,
   order_num: v.order_num,
   price_divisions: normalizeDivisions(v.price_divisions, v.price),
+  quota_limit: v.quota_limit ?? null,
+  quota_sold: v.quota_sold ?? 0,
 });
+
+// Remaining purchasable quota for a variant. null = unlimited.
+export const getVariantRemaining = (v: ProductVariant): number | null => {
+  if (v.quota_limit === null || v.quota_limit === undefined) return null;
+  return Math.max(0, v.quota_limit - (v.quota_sold || 0));
+};
 
 export const useProductVariants = (productId?: string) => {
   const queryClient = useQueryClient();
