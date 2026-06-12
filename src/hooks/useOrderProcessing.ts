@@ -69,6 +69,42 @@ export const useOrderProcessing = () => {
         }
       }
 
+      // Validate per-variant quota limits
+      const qtyByVariant: Record<string, number> = {};
+      for (const item of orderData.items) {
+        const variantId = getVariantIdFromProductId(item.product.id);
+        if (variantId) {
+          qtyByVariant[variantId] = (qtyByVariant[variantId] || 0) + item.quantity;
+        }
+      }
+      const variantIds = Object.keys(qtyByVariant);
+      if (variantIds.length > 0) {
+        const { data: freshVariants, error: variantError } = await supabase
+          .from('product_variants')
+          .select('id, name, quota_limit, quota_sold')
+          .in('id', variantIds);
+        if (variantError) {
+          toast({ variant: "destructive", title: "Stock Error", description: `Could not verify variant availability. [${errorId}]` });
+          setProcessing(false);
+          return { success: false };
+        }
+        for (const [variantId, totalQty] of Object.entries(qtyByVariant)) {
+          const variant: any = (freshVariants || []).find((v: any) => v.id === variantId);
+          if (!variant || variant.quota_limit === null || variant.quota_limit === undefined) continue;
+          const remaining = Math.max(0, variant.quota_limit - (variant.quota_sold ?? 0));
+          if (remaining <= 0) {
+            toast({ variant: "destructive", title: "Option Sold Out", description: `The option "${variant.name}" is no longer available.` });
+            setProcessing(false);
+            return { success: false };
+          }
+          if (totalQty > remaining) {
+            toast({ variant: "destructive", title: "Insufficient Quota", description: `Only ${remaining} left for "${variant.name}", please adjust your cart before checkout.` });
+            setProcessing(false);
+            return { success: false };
+          }
+        }
+      }
+
       // Validate required fields for guest orders
       if (
         !orderData.customerName ||
