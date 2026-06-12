@@ -12,6 +12,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { ProductMediaUpload, ProductMedia } from '@/components/admin/ProductMediaUpload';
 import { RichTextEditor } from '@/components/admin/RichTextEditor';
 import { ProductVariantManager } from '@/components/admin/ProductVariantManager';
+import { Switch } from '@/components/ui/switch';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface ProductFormData {
@@ -31,6 +32,7 @@ interface ProductFormData {
   admission_date?: string;
   active_from?: string;
   active_until?: string;
+  hide_full_payment?: boolean;
 }
 
 interface ProductFormProps {
