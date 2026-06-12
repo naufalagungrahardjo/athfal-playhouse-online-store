@@ -311,6 +311,20 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
             onCoverChange={(url) => setFormData({...formData, image: url})}
           />
 
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div>
+              <Label htmlFor="hide_full_payment" className="font-medium">Hide Full Payment option</Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                When on, customers won't see or be able to choose the main price ("Pembayaran Lunas") on the product page.
+              </p>
+            </div>
+            <Switch
+              id="hide_full_payment"
+              checked={!!formData.hide_full_payment}
+              onCheckedChange={(checked) => setFormData({ ...formData, hide_full_payment: checked })}
+            />
+          </div>
+
           <div className="grid grid-cols-3 gap-4">
             <div>
               <Label htmlFor="price">Price (IDR)</Label>
