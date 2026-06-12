@@ -16,6 +16,7 @@ export interface GalleryContent {
   heroSubtitle: { id: string; en: string };
   heroImage: string;
   items: GalleryItem[];
+  panoramas: string[];
 }
 
 const DEFAULT_GALLERY_CONTENT: GalleryContent = {
@@ -28,7 +29,8 @@ const DEFAULT_GALLERY_CONTENT: GalleryContent = {
     en: "See precious moments and fun activities at Athfal Playhouse",
   },
   heroImage: "https://images.unsplash.com/photo-1544925808-1b704a4ab262?w=800&h=600&fit=crop&auto=format",
-  items: []
+  items: [],
+  panoramas: [],
 };
 
 function mergeGalleryContent(stored: any): GalleryContent {
@@ -38,6 +40,7 @@ function mergeGalleryContent(stored: any): GalleryContent {
     heroSubtitle: stored.heroSubtitle || DEFAULT_GALLERY_CONTENT.heroSubtitle,
     heroImage: stored.heroImage || DEFAULT_GALLERY_CONTENT.heroImage,
     items: Array.isArray(stored.items) ? stored.items : [],
+    panoramas: Array.isArray(stored.panoramas) ? stored.panoramas : [],
   };
 }
 
