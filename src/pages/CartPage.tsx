@@ -9,6 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Trash2, Plus, Minus, ShoppingCart, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from "@/integrations/supabase/client";
+import { getVariantIdFromProductId } from '@/lib/orderItemMetadata';
 
 // Format currency
 const formatCurrency = (amount: number) => {
@@ -45,11 +46,55 @@ const CartPage = () => {
   const [couponCode, setCouponCode] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
   const [isCheckingPromo, setIsCheckingPromo] = useState(false);
+  // Remaining purchasable quota per variant id (null/absent = unlimited)
+  const [variantRemaining, setVariantRemaining] = useState<Record<string, number>>({});
 
   // Refresh product stock & sold-out status on mount
   useEffect(() => {
     refreshCartStock();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch per-variant quota for items in the cart so quantities can be capped here
+  useEffect(() => {
+    const variantIds = [
+      ...new Set(
+        items
+          .map((item) => getVariantIdFromProductId(item.product.id))
+          .filter((id): id is string => !!id)
+      ),
+    ];
+    if (variantIds.length === 0) {
+      setVariantRemaining({});
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('product_variants')
+        .select('id, quota_limit, quota_sold')
+        .in('id', variantIds);
+      if (cancelled || !data) return;
+      const map: Record<string, number> = {};
+      data.forEach((v: any) => {
+        if (v.quota_limit !== null && v.quota_limit !== undefined) {
+          map[v.id] = Math.max(0, v.quota_limit - (v.quota_sold ?? 0));
+        }
+      });
+      setVariantRemaining(map);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [items]);
+
+  // Effective max quantity for an item: min of main stock and remaining variant quota
+  const getEffectiveMax = (cartId: string, maxStock: number) => {
+    const variantId = getVariantIdFromProductId(cartId);
+    if (variantId && variantId in variantRemaining) {
+      return Math.min(maxStock, variantRemaining[variantId]);
+    }
+    return maxStock;
+  };
 
   // Calculate aggregate quantity for a base product across all variants in the cart
   const getAggregateQuantity = (cartId: string, excludeId?: string) => {
@@ -68,6 +113,19 @@ const CartPage = () => {
     const fullProductName = items.find(item => item.product.id === productId)?.product.name || 'this product';
     // Extract base product name (remove variant part after " - ")
     const productName = fullProductName.split(' - ')[0];
+    const variantId = getVariantIdFromProductId(productId);
+    // Enforce per-variant quota limit first
+    if (variantId && variantId in variantRemaining && currentQuantity >= variantRemaining[variantId]) {
+      const variantLabel = fullProductName.split(' - ').slice(1).join(' - ') || fullProductName;
+      toast({
+        variant: 'destructive',
+        title: language === 'id' ? 'Kuota tidak cukup' : 'Insufficient quota',
+        description: language === 'id'
+          ? `Hanya tersisa ${variantRemaining[variantId]} untuk "${variantLabel}", silakan sesuaikan keranjang Anda.`
+          : `Only ${variantRemaining[variantId]} left for "${variantLabel}", please adjust your cart.`
+      });
+      return;
+    }
     if (aggregateQty >= maxStock) {
       toast({
         variant: 'destructive',
