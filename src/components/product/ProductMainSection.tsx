@@ -172,6 +172,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
                   {language === 'id' ? 'Pilih Opsi' : 'Choose Option'}:
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  {!hideFullPayment && (
                   <button
                     onClick={() => setSelectedVariant(null)}
                     className={`flex flex-col items-center justify-center text-center px-3 py-2.5 min-h-[64px] rounded-lg border-2 text-sm font-medium transition-colors ${
@@ -183,6 +184,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
                     <span className="block leading-tight break-words">{language === 'id' ? 'Pembayaran Lunas' : 'Full Payment'}</span>
                     <span className="block text-xs mt-1 opacity-80">{formatCurrency(product.price)}</span>
                   </button>
+                  )}
                   {variants.map(variant => {
                     const remaining = getVariantRemaining(variant);
                     const soldOut = remaining !== null && remaining <= 0;
