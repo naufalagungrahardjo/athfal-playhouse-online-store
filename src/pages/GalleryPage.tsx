@@ -171,7 +171,7 @@ const GalleryPage = () => {
           </div>
         )}
 
-        {content.items.length === 0 && (
+        {content.items.length === 0 && (!content.panoramas || content.panoramas.length === 0) && (
           <div className="text-center py-12">
             <p className="text-gray-500">
               {language === "id" ? "Belum ada konten galeri." : "No gallery content yet."}
