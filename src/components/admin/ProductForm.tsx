@@ -83,6 +83,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
     admission_date: '',
     active_from: '',
     active_until: '',
+    hide_full_payment: false,
   });
 
   useEffect(() => {
