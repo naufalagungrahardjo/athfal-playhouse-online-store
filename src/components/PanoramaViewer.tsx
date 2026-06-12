@@ -1,8 +1,12 @@
-import { useState } from 'react';
-import { ReactPhotoSphereViewer } from 'react-photo-sphere-viewer';
+import { lazy, Suspense, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Compass } from 'lucide-react';
+import { Compass, Loader2 } from 'lucide-react';
+
+// Heavy (pulls in three.js) — load only when a panorama is opened.
+const ReactPhotoSphereViewer = lazy(() =>
+  import('react-photo-sphere-viewer').then((m) => ({ default: m.ReactPhotoSphereViewer }))
+);
 
 interface PanoramaViewerProps {
   panoramas: string[];
@@ -44,13 +48,21 @@ export function PanoramaViewer({ panoramas, label = 'Panorama 360°', hint }: Pa
           <DialogTitle className="sr-only">{label} - Panorama 360°</DialogTitle>
           <div className="relative w-full h-full bg-black">
             {open && (
-              <ReactPhotoSphereViewer
-                src={panoramas[activeIdx]}
-                height="100%"
-                width="100%"
-                navbar={['zoom', 'move', 'fullscreen']}
-                defaultZoomLvl={0}
-              />
+              <Suspense
+                fallback={
+                  <div className="absolute inset-0 flex items-center justify-center text-white">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+                }
+              >
+                <ReactPhotoSphereViewer
+                  src={panoramas[activeIdx]}
+                  height="100%"
+                  width="100%"
+                  navbar={['zoom', 'move', 'fullscreen']}
+                  defaultZoomLvl={0}
+                />
+              </Suspense>
             )}
             {panoramas.length > 1 && (
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/60 backdrop-blur p-2 rounded-full z-10">
