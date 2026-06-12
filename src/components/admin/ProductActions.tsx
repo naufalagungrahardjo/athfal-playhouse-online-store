@@ -19,6 +19,7 @@ export interface ProductFormData {
   first_payment: number;
   installment: number;
   installment_months: number;
+  hide_full_payment?: boolean;
 }
 
 export const useProductActions = (onProductsUpdated: () => void, editingProduct: ProductFormData | null) => {

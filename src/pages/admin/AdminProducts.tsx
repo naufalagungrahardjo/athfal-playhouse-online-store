@@ -43,6 +43,7 @@ const AdminProducts = () => {
       admission_date: p.admission_date ?? '',
       active_from: p.active_from ?? '',
       active_until: p.active_until ?? '',
+      hide_full_payment: p.hide_full_payment ?? false,
     }));
     setProducts(formatted);
     setLoading(false);
