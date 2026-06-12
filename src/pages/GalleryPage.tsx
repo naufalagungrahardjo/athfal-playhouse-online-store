@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGalleryContent } from "@/hooks/useGalleryContent";
 import { getVideoSource } from "@/components/admin/VideoUrlInput";
+import { PanoramaViewer } from "@/components/PanoramaViewer";
 
 const InstagramEmbed = ({ url, title }: { url: string; title: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -149,6 +150,24 @@ const GalleryPage = () => {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Lokasi & Fasilitas (360° panoramas) */}
+        {content.panoramas && content.panoramas.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-semibold text-athfal-green mb-4">
+              {language === "id" ? "Lokasi & Fasilitas" : "Location & Facilities"}
+            </h2>
+            <PanoramaViewer
+              panoramas={content.panoramas}
+              label={language === "id" ? "Lokasi & Fasilitas" : "Location & Facilities"}
+              hint={
+                language === "id"
+                  ? "Klik gambar untuk menjelajahi ruangan — seret untuk melihat sekeliling secara 360°."
+                  : "Click an image to explore the space — drag to look around in 360°."
+              }
+            />
           </div>
         )}
 
