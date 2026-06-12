@@ -124,6 +124,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         admission_date: (editingProduct as any).admission_date || '',
         active_from: (editingProduct as any).active_from || '',
         active_until: (editingProduct as any).active_until || '',
+        hide_full_payment: (editingProduct as any).hide_full_payment ?? false,
       });
     } else {
       setFormData({
@@ -142,6 +143,7 @@ export const ProductForm = ({ isOpen, onClose, editingProduct, onProductSaved }:
         admission_date: '',
         active_from: '',
         active_until: '',
+        hide_full_payment: false,
       });
     }
   }, [editingProduct, isOpen]);
