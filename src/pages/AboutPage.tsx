@@ -5,6 +5,7 @@ import { Linkedin } from "lucide-react";
 import { ManagementSlider } from "@/components/ManagementSlider";
 import { useAboutContent } from "@/hooks/useAboutContent";
 import { SEOHead } from "@/components/SEOHead";
+import { PanoramaViewer } from "@/components/PanoramaViewer";
 
 const AboutPage = () => {
   const { language } = useLanguage();
@@ -60,6 +61,23 @@ const AboutPage = () => {
           <p className="text-gray-700">
             {language === "id" ? content.valuesDescription.id : content.valuesDescription.en}
           </p>
+
+          {content.locationPanoramas && content.locationPanoramas.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-2xl font-semibold text-athfal-green mb-4">
+                {language === "id" ? "Lokasi Kami" : "Our Location"}
+              </h2>
+              <PanoramaViewer
+                panoramas={content.locationPanoramas}
+                label={language === "id" ? "Lokasi Kami" : "Our Location"}
+                hint={
+                  language === "id"
+                    ? "Klik gambar untuk menjelajahi lokasi kami — seret untuk melihat sekeliling."
+                    : "Click an image to explore our location — drag to look around."
+                }
+              />
+            </div>
+          )}
         </div>
 
         <h2 className="text-2xl font-bold text-athfal-pink mb-6">
