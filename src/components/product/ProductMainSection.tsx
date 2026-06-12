@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Plus, Minus, ShoppingCart } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Product } from "@/contexts/CartContext";
 import { ProductMediaCarousel, ProductMedia } from "@/components/product/ProductMediaCarousel";
 import { useProductVariants, ProductVariant, getVariantRemaining } from "@/hooks/useProductVariants";
@@ -68,10 +68,12 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
     if (quantity > 1) setQuantity(quantity - 1);
   };
 
-  // Reset quantity if it exceeds the available amount after switching variants.
-  if (quantity > effectiveStock && effectiveStock >= 1 && quantity !== 1) {
-    setQuantity(1);
-  }
+  // Clamp quantity when switching variants changes the available amount.
+  useEffect(() => {
+    if (effectiveStock >= 1 && quantity > effectiveStock) {
+      setQuantity(effectiveStock);
+    }
+  }, [effectiveStock, quantity]);
 
   // Prepare media for carousel
   const media: ProductMedia[] = (product as any).media && (product as any).media.length > 0
