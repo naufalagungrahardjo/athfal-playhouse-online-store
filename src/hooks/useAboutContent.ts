@@ -25,6 +25,7 @@ export interface AboutContent {
   aboutDecorativeImage?: string;
   aboutVideoUrl?: string;
   teamMembers: TeamMember[];
+  locationPanoramas?: string[];
 }
 
 // Default content: used as fallback until data is loaded

@@ -279,6 +279,10 @@ const AdminWebsiteCopy = () => {
             content={aboutContentDraft}
             onContentChange={handleAboutContentChange}
             onImageChange={handleAboutImageChange}
+            onPanoramasChange={(urls) => {
+              setAboutContentDraft({ ...aboutContentDraft, locationPanoramas: urls });
+              setHasAboutChanges(true);
+            }}
             onSaveVideoUrl={(url) => {
               saveAboutContent({ ...aboutContentDraft, aboutVideoUrl: url });
               setHasAboutChanges(false);

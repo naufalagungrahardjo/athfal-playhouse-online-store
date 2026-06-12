@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Edit, FileText } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { VideoUrlInput } from "@/components/admin/VideoUrlInput";
+import { PanoramaUploadInput } from "@/components/admin/PanoramaUploadInput";
 import TeamMemberForm from "../team/TeamMemberForm";
 import { TeamMember } from "@/hooks/useAboutContent";
 import { useState } from "react";
@@ -16,6 +17,7 @@ interface AboutUsAdminTabProps {
   content: any;
   onContentChange: (section: string, language: 'id' | 'en', value: string) => void;
   onImageChange: (field: string, value: string) => void;
+  onPanoramasChange?: (urls: string[]) => void;
   onSaveVideoUrl?: (url: string) => void;
   onAddTeamMember: (member: Omit<TeamMember, 'id'>) => void;
   onUpdateTeamMember: (id: string, member: Partial<TeamMember>) => void;
@@ -26,6 +28,7 @@ const AboutUsAdminTab = ({
   content: aboutContent,
   onContentChange,
   onImageChange,
+  onPanoramasChange,
   onSaveVideoUrl,
   onAddTeamMember,
   onUpdateTeamMember,
@@ -227,6 +230,24 @@ const AboutUsAdminTab = ({
               />
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Lokasi Kami (360° Panorama) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Lokasi Kami (360° Panorama)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PanoramaUploadInput
+            value={aboutContent.locationPanoramas || []}
+            onChange={(urls) => onPanoramasChange?.(urls)}
+            label="About Page Panoramic Images"
+            hint="Upload regular wide/panoramic photos for the 'Lokasi Kami' section on the Tentang Athfal Playhouse page. They are auto-converted to draggable 360° views. You can upload several."
+          />
         </CardContent>
       </Card>
 
