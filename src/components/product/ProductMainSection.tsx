@@ -1,10 +1,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Plus, Minus, ShoppingCart } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Product } from "@/contexts/CartContext";
 import { ProductMediaCarousel, ProductMedia } from "@/components/product/ProductMediaCarousel";
-import { useProductVariants, ProductVariant } from "@/hooks/useProductVariants";
+import { useProductVariants, ProductVariant, getVariantRemaining } from "@/hooks/useProductVariants";
 
 interface ProductMainSectionProps {
   product: Product;
@@ -25,8 +25,15 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
   const { variants, loading: variantsLoading } = useProductVariants(product.dbId);
 
   // If admin toggled sold out, treat stock as 0 for customers
-  const effectiveStock = product.is_sold_out ? 0 : product.stock;
+  const baseStock = product.is_sold_out ? 0 : product.stock;
   const activePrice = selectedVariant ? selectedVariant.price : product.price;
+
+  // When a variant with a quota is selected, the purchasable amount is capped
+  // by both the main product stock and the variant's remaining quota.
+  const selectedVariantRemaining = selectedVariant ? getVariantRemaining(selectedVariant) : null;
+  const effectiveStock = selectedVariantRemaining !== null
+    ? Math.min(baseStock, selectedVariantRemaining)
+    : baseStock;
 
   const selectedDivisions = selectedVariant?.price_divisions || [];
   const selectedTotal = selectedDivisions.length > 0
@@ -60,6 +67,13 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
   const decreaseQuantity = () => {
     if (quantity > 1) setQuantity(quantity - 1);
   };
+
+  // Clamp quantity when switching variants changes the available amount.
+  useEffect(() => {
+    if (effectiveStock >= 1 && quantity > effectiveStock) {
+      setQuantity(effectiveStock);
+    }
+  }, [effectiveStock, quantity]);
 
   // Prepare media for carousel
   const media: ProductMedia[] = (product as any).media && (product as any).media.length > 0
@@ -153,20 +167,34 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
                     <span className="block leading-tight break-words">{language === 'id' ? 'Pembayaran Lunas' : 'Full Payment'}</span>
                     <span className="block text-xs mt-1 opacity-80">{formatCurrency(product.price)}</span>
                   </button>
-                  {variants.map(variant => (
-                    <button
-                      key={variant.id}
-                      onClick={() => setSelectedVariant(variant)}
-                      className={`flex flex-col items-center justify-center text-center px-3 py-2.5 min-h-[64px] rounded-lg border-2 text-sm font-medium transition-colors ${
-                        selectedVariant?.id === variant.id
-                          ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
-                          : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
-                      }`}
-                    >
-                      <span className="block leading-tight break-words">{variant.name}</span>
-                      <span className="block text-xs mt-1 opacity-80">{formatCurrency(variant.price)}</span>
-                    </button>
-                  ))}
+                  {variants.map(variant => {
+                    const remaining = getVariantRemaining(variant);
+                    const soldOut = remaining !== null && remaining <= 0;
+                    return (
+                      <button
+                        key={variant.id}
+                        onClick={() => !soldOut && setSelectedVariant(variant)}
+                        disabled={soldOut}
+                        className={`flex flex-col items-center justify-center text-center px-3 py-2.5 min-h-[64px] rounded-lg border-2 text-sm font-medium transition-colors ${
+                          soldOut
+                            ? 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed opacity-60'
+                            : selectedVariant?.id === variant.id
+                              ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
+                              : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
+                        }`}
+                      >
+                        <span className="block leading-tight break-words">{variant.name}</span>
+                        <span className="block text-xs mt-1 opacity-80">{formatCurrency(variant.price)}</span>
+                        {remaining !== null && (
+                          <span className="block text-[11px] mt-0.5 opacity-70">
+                            {soldOut
+                              ? (language === 'id' ? 'Habis' : 'Sold out')
+                              : (language === 'id' ? `Sisa ${remaining}` : `${remaining} left`)}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

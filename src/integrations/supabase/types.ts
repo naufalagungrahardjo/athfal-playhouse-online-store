@@ -1072,6 +1072,8 @@ export type Database = {
           price: number
           price_divisions: Json
           product_id: string
+          quota_limit: number | null
+          quota_sold: number
           stock: number
           updated_at: string
         }
@@ -1084,6 +1086,8 @@ export type Database = {
           price: number
           price_divisions?: Json
           product_id: string
+          quota_limit?: number | null
+          quota_sold?: number
           stock?: number
           updated_at?: string
         }
@@ -1096,6 +1100,8 @@ export type Database = {
           price?: number
           price_divisions?: Json
           product_id?: string
+          quota_limit?: number | null
+          quota_sold?: number
           stock?: number
           updated_at?: string
         }
