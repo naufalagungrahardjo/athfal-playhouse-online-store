@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, GripVertical } from 'lucide-react';
+import { Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -65,6 +65,14 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
       await supabase.from('product_variants').delete().eq('id', variant.id);
     }
     setVariants(variants.filter((_, i) => i !== index));
+  };
+
+  const moveVariant = (index: number, direction: 'up' | 'down') => {
+    const target = direction === 'up' ? index - 1 : index + 1;
+    if (target < 0 || target >= variants.length) return;
+    const next = [...variants];
+    [next[index], next[target]] = [next[target], next[index]];
+    setVariants(next.map((v, i) => ({ ...v, order_num: i + 1 })));
   };
 
   const updateVariantName = (index: number, value: string) => {
@@ -178,7 +186,30 @@ export const ProductVariantManager = ({ productDbId }: ProductVariantManagerProp
       {variants.map((variant, index) => (
         <div key={index} className="border rounded-lg p-3 space-y-3 bg-muted/30">
           <div className="flex items-center gap-3">
-            <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <div className="flex flex-col flex-shrink-0">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5"
+                disabled={index === 0}
+                onClick={() => moveVariant(index, 'up')}
+                title="Move up"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5"
+                disabled={index === variants.length - 1}
+                onClick={() => moveVariant(index, 'down')}
+                title="Move down"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </div>
             <Input
               placeholder="Sub-product name (e.g. Cicilan 2x)"
               value={variant.name}
