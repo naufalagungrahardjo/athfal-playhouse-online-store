@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { X, Image as ImageIcon, Video, Star } from 'lucide-react';
+import { X, Image as ImageIcon, Video, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FileUploadInput } from '@/components/FileUploadInput';
 import { VideoUrlInput } from '@/components/admin/VideoUrlInput';
 
@@ -60,10 +60,19 @@ export const ProductMediaUpload = ({ value, onChange, coverImage, onCoverChange 
     }
   };
 
+  const handleMove = (index: number, direction: -1 | 1) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= value.length) return;
+    const newMedia = [...value];
+    [newMedia[index], newMedia[newIndex]] = [newMedia[newIndex], newMedia[index]];
+    onChange(newMedia);
+  };
+
   return (
     <div className="space-y-4">
       <Label>Product Images & Videos</Label>
       <p className="text-sm text-muted-foreground">Click the star icon to set as cover image for homepage</p>
+      <p className="text-sm text-muted-foreground">Use the arrows to rearrange the display order</p>
       <p className="text-xs text-muted-foreground">📐 Recommended image size: 500×500px (1:1 square). Displays at 450×450px on product page.</p>
       
       {/* Display existing media */}
@@ -105,6 +114,27 @@ export const ProductMediaUpload = ({ value, onChange, coverImage, onCoverChange 
             >
               <X className="w-4 h-4" />
             </button>
+            {/* Reorder buttons */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                type="button"
+                onClick={() => handleMove(index, -1)}
+                disabled={index === 0}
+                className="bg-background/90 text-foreground rounded-full p-1 shadow disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Move left"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleMove(index, 1)}
+                disabled={index === value.length - 1}
+                className="bg-background/90 text-foreground rounded-full p-1 shadow disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Move right"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         ))}
       </div>
