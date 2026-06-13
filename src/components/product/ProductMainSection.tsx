@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { Product } from "@/contexts/CartContext";
 import { ProductMediaCarousel, ProductMedia } from "@/components/product/ProductMediaCarousel";
 import { useProductVariants, ProductVariant, getVariantRemaining } from "@/hooks/useProductVariants";
+import { useCategories } from "@/hooks/useCategories";
 
 interface ProductMainSectionProps {
   product: Product;
@@ -23,6 +24,16 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const { variants, loading: variantsLoading } = useProductVariants(product.dbId);
+  const { categories } = useCategories();
+
+  const categoryLabel =
+    categories.find((c) => c.slug === product.category)?.title ||
+    (product.category === 'pop-up-class' ? 'Pop Up Class' :
+      product.category === 'bumi-class' ? 'Bumi Class' :
+      product.category === 'tahsin-class' ? 'Tahsin Class' :
+      product.category === 'play-kit' ? 'Play Kit' :
+      product.category === 'consultation' ? 'Psychological Consultation' :
+      'Merchandise & Others');
 
   // When enabled by admin, the full-payment ("Pembayaran Lunas") option is hidden
   // and customers must pick one of the variants instead.
@@ -128,12 +139,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
           <div className="flex items-center mb-4">
             <span className="font-medium text-gray-700 w-24">{language === 'id' ? 'Kategori' : 'Category'}:</span>
             <span className="text-gray-600">
-              {product.category === 'pop-up-class' ? 'Pop Up Class' :
-                product.category === 'bumi-class' ? 'Bumi Class' :
-                product.category === 'tahsin-class' ? 'Tahsin Class' :
-                product.category === 'play-kit' ? 'Play Kit' :
-                product.category === 'consultation' ? 'Psychological Consultation' :
-                'Merchandise & Others'}
+              {categoryLabel}
             </span>
           </div>
           <div className="flex items-center mb-4">

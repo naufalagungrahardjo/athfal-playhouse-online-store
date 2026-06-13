@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock } from "lucide-react";
 import { Product } from "@/contexts/CartContext";
 import DOMPurify from "dompurify";
+import { useCategories } from "@/hooks/useCategories";
 
 interface ProductTabsProps {
   product: Product;
@@ -10,6 +11,17 @@ interface ProductTabsProps {
 }
 
 const ProductTabs: React.FC<ProductTabsProps> = ({ product, language, formatCurrency }) => {
+  const { categories } = useCategories();
+
+  const categoryLabel =
+    categories.find((c) => c.slug === product.category)?.title ||
+    (product.category === 'pop-up-class' ? 'Pop Up Class' :
+      product.category === 'bumi-class' ? 'Bumi Class' :
+      product.category === 'tahsin-class' ? 'Tahsin Class' :
+      product.category === 'play-kit' ? 'Play Kit' :
+      product.category === 'consultation' ? 'Psychological Consultation' :
+      'Merchandise & Others');
+
   // Convert plain text with newlines to HTML paragraphs
   const formatDescription = (text: string) => {
     // If already contains HTML tags, return as-is
@@ -50,12 +62,7 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ product, language, formatCurr
               <li className="flex items-start">
                 <span className="font-medium text-gray-700 w-32">{language === 'id' ? 'Kategori' : 'Category'}:</span>
                 <span className="text-gray-600">
-                  {product.category === 'pop-up-class' ? 'Pop Up Class' :
-                    product.category === 'bumi-class' ? 'Bumi Class' :
-                    product.category === 'tahsin-class' ? 'Tahsin Class' :
-                    product.category === 'play-kit' ? 'Play Kit' :
-                    product.category === 'consultation' ? 'Psychological Consultation' :
-                    'Merchandise & Others'}
+                  {categoryLabel}
                 </span>
               </li>
               <li className="flex items-start">
