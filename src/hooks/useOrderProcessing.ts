@@ -223,10 +223,17 @@ export const useOrderProcessing = () => {
 
       if (orderError) {
         logger.error(`[${errorId}] Order creation failed`);
+        const friendly = orderError.message?.includes('phone')
+          ? 'Please enter a valid phone number (at least 7 digits).'
+          : orderError.message?.includes('email')
+          ? 'Please enter a valid email address.'
+          : orderError.message?.includes('name')
+          ? 'Please enter a valid full name.'
+          : 'An error occurred while placing your order. Please try again.';
         toast({
           variant: "destructive",
           title: "Order Failed",
-          description: `An error occurred while placing your order. Please try again. [${errorId}]`
+          description: `${friendly} [${errorId}]`
         });
         setProcessing(false);
         return { success: false };
