@@ -124,6 +124,30 @@ export const useOrderProcessing = () => {
         return { success: false };
       }
 
+      // Validate phone number format (must contain at least 7 digits) to match the
+      // database trigger, so the customer gets a clear, actionable message.
+      const phoneDigits = (orderData.customerPhone || '').replace(/\D/g, '');
+      if (phoneDigits.length < 7) {
+        toast({
+          variant: "destructive",
+          title: "Invalid Phone Number",
+          description: `Please enter a valid phone number (at least 7 digits). [${errorId}]`
+        });
+        setProcessing(false);
+        return { success: false };
+      }
+
+      // Validate email format to match the database trigger.
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(orderData.customerEmail)) {
+        toast({
+          variant: "destructive",
+          title: "Invalid Email",
+          description: `Please enter a valid email address. [${errorId}]`
+        });
+        setProcessing(false);
+        return { success: false };
+      }
+
       // Enforce promo code usage limit BEFORE creating order
       if (orderData.promoCodeId && orderData.promoCode) {
         // Pre-validate and increment promo usage
