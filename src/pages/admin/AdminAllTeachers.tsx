@@ -168,7 +168,11 @@ export default function AdminAllTeachers() {
     if (stuRes.data) setStudentList(stuRes.data as any);
     if (progRes.data) setProgramList(progRes.data as any);
 
-    const teacherEmails = (teacherAccRes.data || []).map((t: any) => t.email);
+    // Include every staff/admin account plus anyone who already has an
+    // attendance record, so non-teacher roles also show up here.
+    const accountEmails = (teacherAccRes.data || []).map((t: any) => t.email);
+    const recordEmails = (attRes.data || []).map((a: any) => a.teacher_email).filter(Boolean);
+    const teacherEmails = Array.from(new Set([...accountEmails, ...recordEmails]));
     setTeachers(teacherEmails);
 
     // Load display names from users table by email
