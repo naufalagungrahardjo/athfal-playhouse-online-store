@@ -69,6 +69,8 @@ export default function AdminCheckInOut() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [todayRecords, setTodayRecords] = useState<CheckRecord[]>([]);
   const [driveFolder, setDriveFolder] = useState<string | null>(null);
+  const [teacherRecords, setTeacherRecords] = useState<any[]>([]);
+  const [teacherNames, setTeacherNames] = useState<Record<string, string>>({});
 
   const [programId, setProgramId] = useState<string>("");
   const [studentId, setStudentId] = useState<string>("");
@@ -190,7 +192,7 @@ export default function AdminCheckInOut() {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    const [pRes, sRes, eRes, rRes, settingsRes] = await Promise.all([
+    const [pRes, sRes, eRes, rRes, settingsRes, taRes] = await Promise.all([
       supabase.from("class_programs" as any).select("id,name,num_meetings,students_hidden").order("start_date", { ascending: false }),
       supabase.from("students" as any).select("id,name").order("name"),
       supabase.from("student_enrollments" as any).select("id,student_id,program_id"),
@@ -200,12 +202,27 @@ export default function AdminCheckInOut() {
         .gte("event_time", todayStart.toISOString())
         .order("event_time", { ascending: false }),
       supabase.from("teacher_settings").select("google_drive_folder").eq("teacher_email", teacherEmail).maybeSingle(),
+      supabase
+        .from("teacher_attendance")
+        .select("*")
+        .eq("date", today)
+        .order("arrival_time", { ascending: false }),
     ]);
     if (pRes.data) setPrograms(pRes.data as any);
     if (sRes.data) setStudents(sRes.data as any);
     if (eRes.data) setEnrollments(eRes.data as any);
     if (rRes.data) setTodayRecords(rRes.data as any);
     if (settingsRes.data) setDriveFolder((settingsRes.data as any).google_drive_folder || null);
+    if (taRes.data) {
+      setTeacherRecords(taRes.data as any);
+      const emails = Array.from(new Set((taRes.data as any[]).map((t) => t.teacher_email).filter(Boolean)));
+      if (emails.length) {
+        const { data: uData } = await supabase.from("users").select("email,name").in("email", emails);
+        const map: Record<string, string> = {};
+        (uData as any[] | null)?.forEach((u) => { if (u.email) map[u.email.toLowerCase()] = u.name; });
+        setTeacherNames(map);
+      }
+    }
   };
 
   useEffect(() => {
@@ -340,6 +357,8 @@ export default function AdminCheckInOut() {
 
   const studentName = (id: string) => students.find((s) => s.id === id)?.name || "—";
   const programName = (id: string) => programs.find((p) => p.id === id)?.name || "—";
+  const teacherDisplayName = (email: string) =>
+    teacherNames[email?.toLowerCase()] || email?.split("@")[0] || "—";
 
   return (
     <div className="space-y-4 max-w-2xl mx-auto">
@@ -562,7 +581,7 @@ export default function AdminCheckInOut() {
 
       {!restrictedRole && (<Card>
         <CardHeader>
-          <CardTitle className="text-base">Today&apos;s Records</CardTitle>
+          <CardTitle className="text-base">Student Record</CardTitle>
         </CardHeader>
         <CardContent>
           {todayRecords.length === 0 ? (
@@ -590,6 +609,47 @@ export default function AdminCheckInOut() {
                       {r.event_type === "check_in" ? "IN" : "OUT"}
                     </p>
                     <p className="text-xs text-muted-foreground">{format(new Date(r.event_time), "HH:mm")}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>)}
+
+      {!restrictedRole && (<Card>
+        <CardHeader>
+          <CardTitle className="text-base">Teachers Record</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {teacherRecords.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No teacher records yet today.</p>
+          ) : (
+            <ul className="divide-y">
+              {teacherRecords.map((t) => (
+                <li key={t.id} className="py-2 flex items-center gap-3">
+                  {t.evidence_url ? (
+                    <a href={t.evidence_url} target="_blank" rel="noopener noreferrer">
+                      <img src={t.evidence_url} alt="evidence" className="w-12 h-12 object-cover rounded border" />
+                    </a>
+                  ) : (
+                    <div className="w-12 h-12 rounded border bg-muted" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{teacherDisplayName(t.teacher_email)}</p>
+                    <p className="text-xs text-muted-foreground truncate">{t.teacher_email}</p>
+                  </div>
+                  <div className="text-right space-y-0.5">
+                    <p className="text-xs">
+                      <span className="font-semibold text-green-600">IN</span>{" "}
+                      <span className="text-muted-foreground">
+                        {t.arrival_time ? format(new Date(t.arrival_time), "HH:mm") : "—"}
+                      </span>
+                    </p>
+                    <p className="text-xs">
+                      <span className="font-semibold text-orange-600">OUT</span>{" "}
+                      <span className="text-muted-foreground">{t.leave_time || "—"}</span>
+                    </p>
                   </div>
                 </li>
               ))}
