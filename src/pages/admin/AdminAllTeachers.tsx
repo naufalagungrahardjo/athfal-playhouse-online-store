@@ -151,7 +151,7 @@ export default function AdminAllTeachers() {
       supabase.from("teacher_attendance").select("*").order("date", { ascending: false }),
       supabase.from("teacher_leaves").select("*").order("created_at", { ascending: false }),
       supabase.from("teacher_settings").select("*"),
-      supabase.from("admin_accounts").select("email").eq("role", "teacher"),
+      supabase.from("admin_accounts").select("email"),
       supabase
         .from("student_checkinout" as any)
         .select("id,student_id,program_id,teacher_email,event_type,event_time,photo_url,session_date")
