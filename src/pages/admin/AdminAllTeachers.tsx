@@ -151,7 +151,7 @@ export default function AdminAllTeachers() {
       supabase.from("teacher_attendance").select("*").order("date", { ascending: false }),
       supabase.from("teacher_leaves").select("*").order("created_at", { ascending: false }),
       supabase.from("teacher_settings").select("*"),
-      supabase.from("admin_accounts").select("email").eq("role", "teacher"),
+      supabase.from("admin_accounts").select("email"),
       supabase
         .from("student_checkinout" as any)
         .select("id,student_id,program_id,teacher_email,event_type,event_time,photo_url,session_date")
@@ -168,7 +168,11 @@ export default function AdminAllTeachers() {
     if (stuRes.data) setStudentList(stuRes.data as any);
     if (progRes.data) setProgramList(progRes.data as any);
 
-    const teacherEmails = (teacherAccRes.data || []).map((t: any) => t.email);
+    // Include every staff/admin account plus anyone who already has an
+    // attendance record, so non-teacher roles also show up here.
+    const accountEmails = (teacherAccRes.data || []).map((t: any) => t.email);
+    const recordEmails = (attRes.data || []).map((a: any) => a.teacher_email).filter(Boolean);
+    const teacherEmails = Array.from(new Set([...accountEmails, ...recordEmails]));
     setTeachers(teacherEmails);
 
     // Load display names from users table by email
