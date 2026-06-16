@@ -209,13 +209,6 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
                       >
                         <span className="block leading-tight break-words">{variant.name}</span>
                         <span className="block text-xs mt-1 opacity-80">{formatCurrency(variant.price)}</span>
-                        {remaining !== null && (
-                          <span className="block text-[11px] mt-0.5 opacity-70">
-                            {soldOut
-                              ? (language === 'id' ? 'Habis' : 'Sold out')
-                              : (language === 'id' ? `Sisa ${remaining}` : `${remaining} left`)}
-                          </span>
-                        )}
                       </button>
                     );
                   })}
