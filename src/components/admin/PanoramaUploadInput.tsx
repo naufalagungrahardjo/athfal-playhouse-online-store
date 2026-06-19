@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { convertToEquirectangular } from '@/lib/panoramaConvert';
 import { Compass, Trash2, Loader2, Plus } from 'lucide-react';
 
 interface PanoramaUploadInputProps {
@@ -17,7 +18,7 @@ export const PanoramaUploadInput = ({
   value,
   onChange,
   label = 'Panoramic Images',
-  hint = 'Upload your original wide / 360° panoramic photos — they are shown as a draggable view with correct proportions (no cropping or stretching).',
+  hint = 'Upload regular wide/panoramic photos — they are automatically converted to a draggable 360° view.',
 }: PanoramaUploadInputProps) => {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -36,9 +37,12 @@ export const PanoramaUploadInput = ({
           toast({ variant: 'destructive', title: 'File too large', description: `${original.name} exceeds 15MB` });
           continue;
         }
-        // Upload the original photo untouched. Partial / wide panoramas are
-        // rendered correctly by the viewer via panoData (no lossy padding).
-        const prepared = original;
+        let prepared = original;
+        try {
+          prepared = await convertToEquirectangular(original);
+        } catch (err) {
+          console.warn('Panorama conversion failed, uploading original', err);
+        }
         const fileExt = prepared.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `panoramas/${fileName}`;
@@ -111,7 +115,7 @@ export const PanoramaUploadInput = ({
       />
       {uploading && (
         <p className="text-xs text-blue-500 flex items-center gap-1">
-          <Loader2 className="h-3 w-3 animate-spin" /> Uploading panoramas...
+          <Loader2 className="h-3 w-3 animate-spin" /> Converting & uploading panoramas...
         </p>
       )}
 
