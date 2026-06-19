@@ -111,7 +111,7 @@ export const PanoramaUploadInput = ({
       />
       {uploading && (
         <p className="text-xs text-blue-500 flex items-center gap-1">
-          <Loader2 className="h-3 w-3 animate-spin" /> Converting & uploading panoramas...
+          <Loader2 className="h-3 w-3 animate-spin" /> Uploading panoramas...
         </p>
       )}
 
