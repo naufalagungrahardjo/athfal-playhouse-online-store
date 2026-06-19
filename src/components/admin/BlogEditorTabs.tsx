@@ -11,6 +11,8 @@ import { format } from "date-fns";
 import { Blog } from "@/hooks/useBlogs";
 import { RichTextEditor } from "./RichTextEditor";
 import { Dispatch, SetStateAction, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Sparkles, PenLine } from "lucide-react";
 
 import {
   BlogTitleInput
@@ -67,6 +69,36 @@ export const BlogEditorTabs = ({
           title={blog.title}
           setTitle={title => setBlog(prev => prev ? { ...prev, title } : prev)}
         />
+        <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium">Sumber Konten</p>
+              <p className="text-xs text-muted-foreground">
+                Aktifkan "Konten AI" jika kamu menyalin-tempel konten dari AI (mis. NotebookLM).
+                Sistem akan memakai spasi/HTML dari AI dan tidak menambah jarak putih otomatis.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant={blog.is_ai_content ? "default" : "outline"}
+              size="sm"
+              onClick={() =>
+                setBlog(prev => (prev ? { ...prev, is_ai_content: !prev.is_ai_content } : prev))
+              }
+              className={blog.is_ai_content ? "bg-athfal-pink hover:bg-athfal-pink/90" : ""}
+            >
+              {blog.is_ai_content ? (
+                <>
+                  <Sparkles className="h-4 w-4 mr-1.5" /> Konten AI: ON
+                </>
+              ) : (
+                <>
+                  <PenLine className="h-4 w-4 mr-1.5" /> Konten AI: OFF
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
         <BlogContentEditor
           value={blog.content}
           onChange={content => setBlog(prev => prev ? { ...prev, content } : prev)}

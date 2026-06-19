@@ -1,0 +1,1 @@
+ALTER TABLE public.blogs ADD COLUMN IF NOT EXISTS is_ai_content boolean NOT NULL DEFAULT false;

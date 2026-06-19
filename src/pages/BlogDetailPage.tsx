@@ -168,7 +168,7 @@ const BlogDetailPage = () => {
             >
               <div
                 dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processInstagramContent(blog.content), { ADD_TAGS: ['iframe', 'blockquote'], ADD_ATTR: ['allowfullscreen', 'frameborder', 'allow', 'scrolling', 'allowtransparency'], ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'a', 'div', 'span', 'blockquote', 'pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'sub', 'sup', 'iframe'], ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'style', 'target', 'rel', 'width', 'height', 'frameborder', 'allowfullscreen', 'allow', 'scrolling', 'allowtransparency'] }) }}
-                className="whitespace-pre-wrap"
+                className={blog.is_ai_content ? undefined : "whitespace-pre-wrap"}
               />
             </div>
           </div>

@@ -15,6 +15,7 @@ export interface Blog {
   published: boolean;
   expiry_date?: string | null;
   meta_description?: string | null;
+  is_ai_content?: boolean;
 }
 
 export const generateSlug = (title: string): string => {
@@ -65,6 +66,7 @@ export const useBlogs = () => {
         published: blog.published || false,
         expiry_date: blog.expiry_date,
         meta_description: blog.meta_description || null,
+        is_ai_content: blog.is_ai_content || false,
         slug: blog.slug || null
       }));
 
@@ -102,6 +104,7 @@ export const useBlogs = () => {
         updated_at: new Date().toISOString(),
         expiry_date: blog.expiry_date ?? null,
         meta_description: blog.meta_description ?? null,
+        is_ai_content: blog.is_ai_content ?? false,
         slug: blog.slug || generateSlug(blog.title)
       };
 
