@@ -234,6 +234,7 @@ export type Database = {
           expiry_date: string | null
           id: string
           image: string
+          is_ai_content: boolean
           meta_description: string | null
           published: boolean
           slug: string | null
@@ -249,6 +250,7 @@ export type Database = {
           expiry_date?: string | null
           id: string
           image: string
+          is_ai_content?: boolean
           meta_description?: string | null
           published?: boolean
           slug?: string | null
@@ -264,6 +266,7 @@ export type Database = {
           expiry_date?: string | null
           id?: string
           image?: string
+          is_ai_content?: boolean
           meta_description?: string | null
           published?: boolean
           slug?: string | null
