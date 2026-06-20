@@ -3,7 +3,11 @@
 // ThingLink's pano-to-360 output. Pure client-side via <canvas>.
 
 const TARGET_RATIO = 2; // width / height = 2:1
-const MAX_WIDTH = 8192;
+// Mobile browsers (especially iOS Safari / Android Chrome) silently fail to
+// render canvases wider/taller than ~4096px — toBlob then returns a blank or
+// broken image. 4096x2048 is the standard, reliable equirectangular size and
+// is sharp enough for web 360° viewers.
+const MAX_WIDTH = 4096;
 
 function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -15,6 +19,55 @@ function loadImage(file: File): Promise<HTMLImageElement> {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+/**
+ * Resolution-independent blur: draw the given edge strip of the source heavily
+ * downscaled onto a tiny canvas, then scale it back up into the pad area with
+ * smoothing enabled. This produces a soft ThingLink-style gradient on EVERY
+ * browser (no reliance on ctx.filter = 'blur()', which is flaky on mobile).
+ */
+function drawBlurredStrip(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  // source rect (the thin edge strip to sample)
+  sx: number, sy: number, sw: number, sh: number,
+  // destination rect (the pad zone to fill)
+  dx: number, dy: number, dw: number, dh: number,
+) {
+  if (dw <= 0 || dh <= 0) return;
+  const tmp = document.createElement('canvas');
+  // Tiny intermediate buffer — the heavy downscale is what creates the blur.
+  tmp.width = 64;
+  tmp.height = 8;
+  const tctx = tmp.getContext('2d');
+  if (!tctx) return;
+  tctx.imageSmoothingEnabled = true;
+  tctx.imageSmoothingQuality = 'high';
+  tctx.drawImage(img, sx, sy, sw, sh, 0, 0, tmp.width, tmp.height);
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(tmp, 0, 0, tmp.width, tmp.height, dx, dy, dw, dh);
+  ctx.restore();
+}
+
+/** Average colour of an edge band, used as a neutral backdrop fill. */
+function edgeAverageColor(
+  img: HTMLImageElement, sx: number, sy: number, sw: number, sh: number,
+): string {
+  try {
+    const c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    const cx = c.getContext('2d', { willReadFrequently: true });
+    if (!cx) return '#969696';
+    cx.drawImage(img, sx, sy, sw, sh, 0, 0, 1, 1);
+    const [r, g, b] = cx.getImageData(0, 0, 1, 1).data;
+    return `rgb(${r}, ${g}, ${b})`;
+  } catch {
+    return '#969696';
+  }
 }
 
 /**
