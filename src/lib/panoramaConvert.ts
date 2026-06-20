@@ -3,7 +3,11 @@
 // ThingLink's pano-to-360 output. Pure client-side via <canvas>.
 
 const TARGET_RATIO = 2; // width / height = 2:1
-const MAX_WIDTH = 8192;
+// Mobile browsers (especially iOS Safari / Android Chrome) silently fail to
+// render canvases wider/taller than ~4096px — toBlob then returns a blank or
+// broken image. 4096x2048 is the standard, reliable equirectangular size and
+// is sharp enough for web 360° viewers.
+const MAX_WIDTH = 4096;
 
 function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -15,6 +19,55 @@ function loadImage(file: File): Promise<HTMLImageElement> {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+/**
+ * Resolution-independent blur: draw the given edge strip of the source heavily
+ * downscaled onto a tiny canvas, then scale it back up into the pad area with
+ * smoothing enabled. This produces a soft ThingLink-style gradient on EVERY
+ * browser (no reliance on ctx.filter = 'blur()', which is flaky on mobile).
+ */
+function drawBlurredStrip(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  // source rect (the thin edge strip to sample)
+  sx: number, sy: number, sw: number, sh: number,
+  // destination rect (the pad zone to fill)
+  dx: number, dy: number, dw: number, dh: number,
+) {
+  if (dw <= 0 || dh <= 0) return;
+  const tmp = document.createElement('canvas');
+  // Tiny intermediate buffer — the heavy downscale is what creates the blur.
+  tmp.width = 64;
+  tmp.height = 8;
+  const tctx = tmp.getContext('2d');
+  if (!tctx) return;
+  tctx.imageSmoothingEnabled = true;
+  tctx.imageSmoothingQuality = 'high';
+  tctx.drawImage(img, sx, sy, sw, sh, 0, 0, tmp.width, tmp.height);
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(tmp, 0, 0, tmp.width, tmp.height, dx, dy, dw, dh);
+  ctx.restore();
+}
+
+/** Average colour of an edge band, used as a neutral backdrop fill. */
+function edgeAverageColor(
+  img: HTMLImageElement, sx: number, sy: number, sw: number, sh: number,
+): string {
+  try {
+    const c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    const cx = c.getContext('2d', { willReadFrequently: true });
+    if (!cx) return '#969696';
+    cx.drawImage(img, sx, sy, sw, sh, 0, 0, 1, 1);
+    const [r, g, b] = cx.getImageData(0, 0, 1, 1).data;
+    return `rgb(${r}, ${g}, ${b})`;
+  } catch {
+    return '#969696';
+  }
 }
 
 /**
@@ -64,51 +117,52 @@ export async function convertToEquirectangular(file: File): Promise<File> {
   const ctx = canvas.getContext('2d');
   if (!ctx) return file;
 
-  // Neutral dark backdrop in case of any uncovered pixels
-  ctx.fillStyle = '#1a1a1a';
+  // Neutral backdrop (sampled from the source edge) in case of any uncovered
+  // pixels — matches ThingLink's soft grey rather than harsh black.
+  ctx.fillStyle = edgeAverageColor(img, 0, 0, img.naturalWidth, Math.max(4, Math.round(img.naturalHeight * 0.02)));
   ctx.fillRect(0, 0, outW, outH);
 
-  // --- Edge-stretch padding only (no full-image blur background) ---
-  // Use a small strip from the edge of the source, stretch it across the
-  // pad zone, then heavy-blur so only smooth colour remains.
-  const STRIP = 8; // pixels of source edge to sample
+  // --- Edge-stretch padding (resolution-independent blur, mobile-safe) ---
+  // Sample a thin strip of the source edge, then stretch+soften it across the
+  // pad zone via a tiny intermediate canvas. No ctx.filter dependency.
+  const STRIP_FRAC = 0.02; // fraction of source dimension to sample as the edge
+  const OVERLAP = 24;      // overlap into the sharp image to hide the seam
 
   if (ratio > TARGET_RATIO && drawY > 0) {
-    // TOP pad: stretch top STRIP rows of source upward
-    ctx.save();
-    ctx.filter = 'blur(40px)';
-    ctx.drawImage(img, 0, 0, img.naturalWidth, STRIP, 0, -20, outW, drawY + 20);
-    ctx.restore();
-
-    // BOTTOM pad: stretch bottom STRIP rows downward
-    ctx.save();
-    ctx.filter = 'blur(40px)';
+    const strip = Math.max(4, Math.round(img.naturalHeight * STRIP_FRAC));
+    // TOP pad: stretch the top edge rows upward
+    drawBlurredStrip(
+      ctx, img,
+      0, 0, img.naturalWidth, strip,
+      0, -OVERLAP, outW, drawY + OVERLAP * 2,
+    );
+    // BOTTOM pad: stretch the bottom edge rows downward
     const bottomY = drawY + srcH;
-    ctx.drawImage(
-      img,
-      0, img.naturalHeight - STRIP, img.naturalWidth, STRIP,
-      0, bottomY - 20, outW, (outH - bottomY) + 20
+    drawBlurredStrip(
+      ctx, img,
+      0, img.naturalHeight - strip, img.naturalWidth, strip,
+      0, bottomY - OVERLAP, outW, (outH - bottomY) + OVERLAP * 2,
     );
-    ctx.restore();
   } else if (ratio < TARGET_RATIO && drawX > 0) {
+    const strip = Math.max(4, Math.round(img.naturalWidth * STRIP_FRAC));
     // LEFT pad
-    ctx.save();
-    ctx.filter = 'blur(40px)';
-    ctx.drawImage(img, 0, 0, STRIP, img.naturalHeight, -20, 0, drawX + 20, outH);
-    ctx.restore();
-    // RIGHT pad
-    ctx.save();
-    ctx.filter = 'blur(40px)';
-    const rightX = drawX + srcW;
-    ctx.drawImage(
-      img,
-      img.naturalWidth - STRIP, 0, STRIP, img.naturalHeight,
-      rightX - 20, 0, (outW - rightX) + 20, outH
+    drawBlurredStrip(
+      ctx, img,
+      0, 0, strip, img.naturalHeight,
+      -OVERLAP, 0, drawX + OVERLAP * 2, outH,
     );
-    ctx.restore();
+    // RIGHT pad
+    const rightX = drawX + srcW;
+    drawBlurredStrip(
+      ctx, img,
+      img.naturalWidth - strip, 0, strip, img.naturalHeight,
+      rightX - OVERLAP, 0, (outW - rightX) + OVERLAP * 2, outH,
+    );
   }
 
   // --- Draw original sharp image centred ---
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, drawX, drawY, srcW, srcH);
 
   const blob: Blob = await new Promise((resolve, reject) => {
