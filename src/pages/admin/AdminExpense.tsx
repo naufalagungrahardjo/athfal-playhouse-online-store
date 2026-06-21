@@ -400,20 +400,22 @@ const AdminExpense = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Order ID</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Fund Source</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead className="text-right">Discount</TableHead>
-                      <TableHead className="text-right">Final Price</TableHead>
+                      <SortHead label="Created Date" sortKeyName="created_at" />
+                      <SortHead label="Transaction Date" sortKeyName="date" />
+                      <SortHead label="Description" sortKeyName="description" />
+                      <SortHead label="Order ID" sortKeyName="order_id" />
+                      <SortHead label="Category" sortKeyName="category" />
+                      <SortHead label="Fund Source" sortKeyName="fund_source" />
+                      <SortHead label="Amount" sortKeyName="amount" className="text-right" />
+                      <SortHead label="Discount" sortKeyName="discount" className="text-right" />
+                      <SortHead label="Final Price" sortKeyName="final_price" className="text-right" />
                       <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredExpenses.map(exp => (
+                    {sortedExpenses.map(exp => (
                       <TableRow key={exp.id}>
+                        <TableCell className="whitespace-nowrap">{format(new Date(exp.created_at), 'EEE, d MMM yyyy')}</TableCell>
                         <TableCell className="whitespace-nowrap">{format(new Date(exp.date), 'EEE, d MMM yyyy')}</TableCell>
                         <TableCell className="max-w-[250px]">
                           <div className="overflow-x-auto whitespace-nowrap scrollbar-thin">
