@@ -727,6 +727,7 @@ export type Database = {
           order_alert_sent_at: string | null
           payment_confirmed: boolean
           payment_method: string
+          payment_note: string | null
           promo_code: string | null
           status: string
           stock_deducted: boolean
@@ -757,6 +758,7 @@ export type Database = {
           order_alert_sent_at?: string | null
           payment_confirmed?: boolean
           payment_method: string
+          payment_note?: string | null
           promo_code?: string | null
           status?: string
           stock_deducted?: boolean
@@ -787,6 +789,7 @@ export type Database = {
           order_alert_sent_at?: string | null
           payment_confirmed?: boolean
           payment_method?: string
+          payment_note?: string | null
           promo_code?: string | null
           status?: string
           stock_deducted?: boolean
