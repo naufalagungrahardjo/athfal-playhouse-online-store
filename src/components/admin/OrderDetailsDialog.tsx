@@ -137,7 +137,7 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
     setLoadingPayments(true);
     supabase
       .from('order_payments')
-      .select('id, payment_number, amount, status, paid_at, created_at, notes')
+      .select('id, payment_number, amount, status, paid_at, created_at, notes, evidence_url')
       .eq('order_id', order.id)
       .order('payment_number', { ascending: true })
       .then(({ data }) => {
