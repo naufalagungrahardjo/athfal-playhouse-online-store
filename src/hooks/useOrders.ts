@@ -39,6 +39,7 @@ interface Order {
   items?: OrderItem[];
   discount_amount?: number | null;
   promo_code?: string | null;
+  transaction_date?: string | null;
 }
 
 export const useOrders = () => {

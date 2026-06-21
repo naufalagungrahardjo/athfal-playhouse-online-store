@@ -61,6 +61,7 @@ const ManualOrderTab = () => {
   const [childGender, setChildGender] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [notes, setNotes] = useState('');
+  const [transactionDate, setTransactionDate] = useState('');
   const [items, setItems] = useState<LineItem[]>([{ productDbId: '', variantId: null, quantity: 1 }]);
 
   const childAge = useMemo(() => {
@@ -213,6 +214,7 @@ const ManualOrderTab = () => {
         child_gender: childGender || null,
         payment_method: paymentMethod,
         notes: notes.trim() ? `[Manual Order] ${notes.trim()}` : '[Manual Order]',
+        transaction_date: transactionDate || null,
         subtotal: totals.subtotal,
         tax_amount: totals.tax,
         total_amount: totals.total,
@@ -278,6 +280,7 @@ const ManualOrderTab = () => {
       setCustomerName(''); setCustomerEmail(''); setCustomerPhone(''); setCustomerAddress('');
       setGuardianStatus(''); setChildName(''); setChildBirthdate(''); setChildGender('');
       setPaymentMethod(''); setNotes('');
+      setTransactionDate('');
       setSelectedCustomerKey('');
       setCustomerMode('new');
       setItems([{ productDbId: '', variantId: null, quantity: 1 }]);
@@ -393,6 +396,15 @@ const ManualOrderTab = () => {
           <div>
             <Label>Usia Anak</Label>
             <Input value={childAge} readOnly className="bg-muted cursor-not-allowed" placeholder="Otomatis dari tanggal lahir" />
+          </div>
+          <div>
+            <Label>Transaction Date</Label>
+            <Input
+              type="date"
+              value={transactionDate}
+              onChange={e => setTransactionDate(e.target.value)}
+              max={new Date().toISOString().split('T')[0]}
+            />
           </div>
           </div>
         </CardContent>

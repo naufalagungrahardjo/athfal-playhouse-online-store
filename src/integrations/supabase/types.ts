@@ -729,6 +729,7 @@ export type Database = {
           subtotal: number
           tax_amount: number
           total_amount: number
+          transaction_date: string | null
           unique_code: number | null
           updated_at: string | null
           user_id: string | null
@@ -757,6 +758,7 @@ export type Database = {
           subtotal: number
           tax_amount: number
           total_amount: number
+          transaction_date?: string | null
           unique_code?: number | null
           updated_at?: string | null
           user_id?: string | null
@@ -785,6 +787,7 @@ export type Database = {
           subtotal?: number
           tax_amount?: number
           total_amount?: number
+          transaction_date?: string | null
           unique_code?: number | null
           updated_at?: string | null
           user_id?: string | null
