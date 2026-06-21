@@ -137,6 +137,7 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
   const [search, setSearch] = useState("");
   const [pickerSearch, setPickerSearch] = useState("");
   const [confirmedOverrides, setConfirmedOverrides] = useState<Record<string, boolean>>({});
+  const [noteOverrides, setNoteOverrides] = useState<Record<string, string>>({});
   const [sortKey, setSortKey] = useState<SortKey>("order_date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [colFilters, setColFilters] = useState<Record<SortKey, string>>({
@@ -200,6 +201,19 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
     if (error) {
       setConfirmedOverrides((prev) => ({ ...prev, [o.id]: !value }));
       toast.error("Failed to update payment confirmation");
+    }
+  };
+
+  const getNote = (o: any) => noteOverrides[o.id] ?? (o.payment_note || "");
+
+  const updatePaymentNote = async (o: any, value: string) => {
+    setNoteOverrides((prev) => ({ ...prev, [o.id]: value }));
+    const { error } = await supabase
+      .from("orders")
+      .update({ payment_note: value })
+      .eq("id", o.id);
+    if (error) {
+      toast.error("Failed to save payment note");
     }
   };
 
@@ -715,6 +729,14 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
                         />
                         <span className="text-[11px] text-muted-foreground">Payment confirmed</span>
                       </label>
+                      <Input
+                        type="text"
+                        placeholder="Payment note..."
+                        value={getNote(o)}
+                        onChange={(e) => setNoteOverrides((prev) => ({ ...prev, [o.id]: e.target.value }))}
+                        onBlur={(e) => updatePaymentNote(o, e.target.value)}
+                        className="mt-1 h-6 text-[11px] px-1.5 py-0 w-[140px] ml-auto"
+                      />
                     </TableCell>
                     <TableCell>
                       <Button size="icon" variant="ghost" onClick={() => onViewDetails(o)}>
