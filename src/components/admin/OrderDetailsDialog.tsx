@@ -212,24 +212,34 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
     }
   };
 
-  const handleTogglePaymentDivision = async (paymentId: string, currentStatus: string) => {
+  const applyPaymentDivision = async (
+    paymentId: string,
+    newStatus: 'paid' | 'unpaid',
+    evidenceUrl?: string,
+  ) => {
     if (!order) return;
-    const newStatus = currentStatus === 'paid' ? 'unpaid' : 'paid';
     try {
       setTogglingPaymentId(paymentId);
+      const updatePayload: any = {
+        status: newStatus,
+        paid_at: newStatus === 'paid' ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString(),
+      };
+      if (evidenceUrl !== undefined) updatePayload.evidence_url = evidenceUrl;
       const { error } = await supabase
         .from('order_payments')
-        .update({
-          status: newStatus,
-          paid_at: newStatus === 'paid' ? new Date().toISOString() : null,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updatePayload)
         .eq('id', paymentId);
       if (error) throw error;
       // Refresh local payments + order (sync_order_amount_paid trigger updates amount_paid)
       const updatedPayments = payments.map((p) =>
         p.id === paymentId
-          ? { ...p, status: newStatus, paid_at: newStatus === 'paid' ? new Date().toISOString() : null }
+          ? {
+              ...p,
+              status: newStatus,
+              paid_at: newStatus === 'paid' ? new Date().toISOString() : null,
+              evidence_url: evidenceUrl !== undefined ? evidenceUrl : p.evidence_url,
+            }
           : p,
       );
       setPayments(updatedPayments);
@@ -245,6 +255,40 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
       toast({ variant: 'destructive', title: 'Error', description: error?.message || 'Failed to update payment' });
     } finally {
       setTogglingPaymentId(null);
+    }
+  };
+
+  const handlePaymentSwitch = (paymentId: string, checked: boolean) => {
+    if (checked) {
+      // Require evidence upload before marking as paid
+      setPendingPaymentId(paymentId);
+      evidenceInputRef.current?.click();
+    } else {
+      applyPaymentDivision(paymentId, 'unpaid');
+    }
+  };
+
+  const handleEvidenceFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    const paymentId = pendingPaymentId;
+    setPendingPaymentId(null);
+    if (!file || !paymentId || !order) return;
+    try {
+      setUploadingEvidenceId(paymentId);
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `payment-evidence/${order.id}/${paymentId}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('images')
+        .upload(path, file, { upsert: true, contentType: file.type || undefined });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(path);
+      await applyPaymentDivision(paymentId, 'paid', publicUrl);
+    } catch (error: any) {
+      console.error('Error uploading payment evidence:', error);
+      toast({ variant: 'destructive', title: 'Error', description: error?.message || 'Failed to upload evidence' });
+    } finally {
+      setUploadingEvidenceId(null);
     }
   };
 
