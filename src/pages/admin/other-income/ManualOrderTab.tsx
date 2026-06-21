@@ -214,6 +214,7 @@ const ManualOrderTab = () => {
         child_gender: childGender || null,
         payment_method: paymentMethod,
         notes: notes.trim() ? `[Manual Order] ${notes.trim()}` : '[Manual Order]',
+        transaction_date: transactionDate || null,
         subtotal: totals.subtotal,
         tax_amount: totals.tax,
         total_amount: totals.total,
