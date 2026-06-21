@@ -150,6 +150,13 @@ const HistoryManualOrderTab = () => {
                       </TableCell>
                       <TableCell className="text-right whitespace-nowrap font-medium">
                         {formatCurrency(o.total_amount || 0)}
+                        <label className="mt-1 flex items-center justify-end gap-1.5 cursor-pointer font-normal">
+                          <Checkbox
+                            checked={isConfirmed(o)}
+                            onCheckedChange={(v) => togglePaymentConfirmed(o, v === true)}
+                          />
+                          <span className="text-[11px] text-muted-foreground">Payment confirmed</span>
+                        </label>
                       </TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="sm" onClick={() => handleView(o)}>
