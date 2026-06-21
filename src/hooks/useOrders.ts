@@ -41,6 +41,7 @@ interface Order {
   promo_code?: string | null;
   transaction_date?: string | null;
   payment_confirmed?: boolean | null;
+  payment_note?: string | null;
 }
 
 export const useOrders = () => {
