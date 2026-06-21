@@ -734,6 +734,13 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
           </div>
 
           {/* Payment Divisions (installment toggles) */}
+          <input
+            ref={evidenceInputRef}
+            type="file"
+            accept="image/*,application/pdf"
+            className="hidden"
+            onChange={handleEvidenceFileChange}
+          />
           {payments.length > 0 && (() => {
             const discountRatio = order.subtotal > 0 ? (order.discount_amount || 0) / order.subtotal : 0;
             const hasDiscount = discountRatio > 0.0001;
