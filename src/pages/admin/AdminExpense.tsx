@@ -188,6 +188,62 @@ const AdminExpense = () => {
     });
   }, [expenses, expSearch, catMap, fundMap]);
 
+  // Sorting
+  type SortKey = 'created_at' | 'date' | 'description' | 'order_id' | 'category' | 'fund_source' | 'amount' | 'discount' | 'final_price';
+  const [sortKey, setSortKey] = useState<SortKey>('created_at');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const sortedExpenses = useMemo(() => {
+    const getValue = (exp: Expense): string | number => {
+      switch (sortKey) {
+        case 'created_at': return new Date(exp.created_at).getTime();
+        case 'date': return new Date(exp.date).getTime();
+        case 'description': return (exp.description || '').toLowerCase();
+        case 'order_id': return (exp.order_id || '').toLowerCase();
+        case 'category': return (exp.category_id ? catMap[exp.category_id] || '' : '').toLowerCase();
+        case 'fund_source': return (exp.fund_source_id ? fundMap[exp.fund_source_id] || '' : '').toLowerCase();
+        case 'amount': return exp.amount;
+        case 'discount': return exp.discount || 0;
+        case 'final_price': return exp.amount - (exp.discount || 0);
+        default: return 0;
+      }
+    };
+    const sorted = [...filteredExpenses].sort((a, b) => {
+      const va = getValue(a);
+      const vb = getValue(b);
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [filteredExpenses, sortKey, sortDir, catMap, fundMap]);
+
+  const SortHead = ({ label, sortKeyName, className }: { label: string; sortKeyName: SortKey; className?: string }) => (
+    <TableHead className={className}>
+      <button
+        type="button"
+        onClick={() => toggleSort(sortKeyName)}
+        className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+      >
+        {label}
+        {sortKey === sortKeyName ? (
+          sortDir === 'asc' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />
+        ) : (
+          <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
+        )}
+      </button>
+    </TableHead>
+  );
+
   if (loading) return <div className="p-6">Loading...</div>;
 
   return (
