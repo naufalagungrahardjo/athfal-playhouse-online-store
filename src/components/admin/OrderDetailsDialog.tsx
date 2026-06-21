@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
@@ -69,9 +69,12 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
   const [savingPayment, setSavingPayment] = useState(false);
   const [childGender, setChildGender] = useState<string>(order?.child_gender || '');
   const [savingGender, setSavingGender] = useState(false);
-  const [payments, setPayments] = useState<Array<{ id: string; payment_number: number; amount: number; status: string; paid_at: string | null; created_at: string; notes: string | null }>>([]);
+  const [payments, setPayments] = useState<Array<{ id: string; payment_number: number; amount: number; status: string; paid_at: string | null; created_at: string; notes: string | null; evidence_url: string | null }>>([]);
   const [loadingPayments, setLoadingPayments] = useState(false);
   const [togglingPaymentId, setTogglingPaymentId] = useState<string | null>(null);
+  const [pendingPaymentId, setPendingPaymentId] = useState<string | null>(null);
+  const [uploadingEvidenceId, setUploadingEvidenceId] = useState<string | null>(null);
+  const evidenceInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const isSuperAdmin = getAdminRole(user) === 'super_admin';
@@ -134,7 +137,7 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
     setLoadingPayments(true);
     supabase
       .from('order_payments')
-      .select('id, payment_number, amount, status, paid_at, created_at, notes')
+      .select('id, payment_number, amount, status, paid_at, created_at, notes, evidence_url')
       .eq('order_id', order.id)
       .order('payment_number', { ascending: true })
       .then(({ data }) => {
@@ -209,24 +212,34 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
     }
   };
 
-  const handleTogglePaymentDivision = async (paymentId: string, currentStatus: string) => {
+  const applyPaymentDivision = async (
+    paymentId: string,
+    newStatus: 'paid' | 'unpaid',
+    evidenceUrl?: string,
+  ) => {
     if (!order) return;
-    const newStatus = currentStatus === 'paid' ? 'unpaid' : 'paid';
     try {
       setTogglingPaymentId(paymentId);
+      const updatePayload: any = {
+        status: newStatus,
+        paid_at: newStatus === 'paid' ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString(),
+      };
+      if (evidenceUrl !== undefined) updatePayload.evidence_url = evidenceUrl;
       const { error } = await supabase
         .from('order_payments')
-        .update({
-          status: newStatus,
-          paid_at: newStatus === 'paid' ? new Date().toISOString() : null,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updatePayload)
         .eq('id', paymentId);
       if (error) throw error;
       // Refresh local payments + order (sync_order_amount_paid trigger updates amount_paid)
       const updatedPayments = payments.map((p) =>
         p.id === paymentId
-          ? { ...p, status: newStatus, paid_at: newStatus === 'paid' ? new Date().toISOString() : null }
+          ? {
+              ...p,
+              status: newStatus,
+              paid_at: newStatus === 'paid' ? new Date().toISOString() : null,
+              evidence_url: evidenceUrl !== undefined ? evidenceUrl : p.evidence_url,
+            }
           : p,
       );
       setPayments(updatedPayments);
@@ -242,6 +255,40 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
       toast({ variant: 'destructive', title: 'Error', description: error?.message || 'Failed to update payment' });
     } finally {
       setTogglingPaymentId(null);
+    }
+  };
+
+  const handlePaymentSwitch = (paymentId: string, checked: boolean) => {
+    if (checked) {
+      // Require evidence upload before marking as paid
+      setPendingPaymentId(paymentId);
+      evidenceInputRef.current?.click();
+    } else {
+      applyPaymentDivision(paymentId, 'unpaid');
+    }
+  };
+
+  const handleEvidenceFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    const paymentId = pendingPaymentId;
+    setPendingPaymentId(null);
+    if (!file || !paymentId || !order) return;
+    try {
+      setUploadingEvidenceId(paymentId);
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `payment-evidence/${order.id}/${paymentId}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('images')
+        .upload(path, file, { upsert: true, contentType: file.type || undefined });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(path);
+      await applyPaymentDivision(paymentId, 'paid', publicUrl);
+    } catch (error: any) {
+      console.error('Error uploading payment evidence:', error);
+      toast({ variant: 'destructive', title: 'Error', description: error?.message || 'Failed to upload evidence' });
+    } finally {
+      setUploadingEvidenceId(null);
     }
   };
 
@@ -687,6 +734,13 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
           </div>
 
           {/* Payment Divisions (installment toggles) */}
+          <input
+            ref={evidenceInputRef}
+            type="file"
+            accept="image/*,application/pdf"
+            className="hidden"
+            onChange={handleEvidenceFileChange}
+          />
           {payments.length > 0 && (() => {
             const discountRatio = order.subtotal > 0 ? (order.discount_amount || 0) / order.subtotal : 0;
             const hasDiscount = discountRatio > 0.0001;
@@ -731,6 +785,16 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
                                     Paid: {new Date(p.paid_at).toLocaleString()}
                                   </span>
                                 )}
+                                {p.evidence_url && (
+                                  <a
+                                    href={p.evidence_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block text-xs text-blue-600 hover:underline mt-0.5"
+                                  >
+                                    View payment evidence
+                                  </a>
+                                )}
                               </td>
                               <td className="px-3 py-2 text-right whitespace-nowrap">{formatCurrency(original)}</td>
                               {hasDiscount && (
@@ -741,9 +805,12 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
                                 <div className="flex items-center justify-center gap-2">
                                   <Switch
                                     checked={p.status === 'paid'}
-                                    disabled={togglingPaymentId === p.id}
-                                    onCheckedChange={() => handleTogglePaymentDivision(p.id, p.status)}
+                                    disabled={togglingPaymentId === p.id || uploadingEvidenceId === p.id}
+                                    onCheckedChange={(checked) => handlePaymentSwitch(p.id, checked)}
                                   />
+                                  {uploadingEvidenceId === p.id && (
+                                    <span className="text-xs text-gray-500">Uploading…</span>
+                                  )}
                                 </div>
                               </td>
                             </tr>
