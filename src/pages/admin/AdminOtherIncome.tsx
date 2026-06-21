@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import OtherIncomeTab from './other-income/OtherIncomeTab';
 import CapitalTab from './other-income/CapitalTab';
 import ManualOrderTab from './other-income/ManualOrderTab';
+import HistoryManualOrderTab from './other-income/HistoryManualOrderTab';
 
 const AdminOtherIncome = () => {
   return (
@@ -12,6 +13,7 @@ const AdminOtherIncome = () => {
           <TabsTrigger value="income">Other Income</TabsTrigger>
           <TabsTrigger value="capital">Capital</TabsTrigger>
           <TabsTrigger value="manual-order">Manual Order</TabsTrigger>
+          <TabsTrigger value="history-manual-order">History Manual Order</TabsTrigger>
         </TabsList>
         <TabsContent value="income">
           <OtherIncomeTab />
@@ -21,6 +23,9 @@ const AdminOtherIncome = () => {
         </TabsContent>
         <TabsContent value="manual-order">
           <ManualOrderTab />
+        </TabsContent>
+        <TabsContent value="history-manual-order">
+          <HistoryManualOrderTab />
         </TabsContent>
       </Tabs>
     </div>
