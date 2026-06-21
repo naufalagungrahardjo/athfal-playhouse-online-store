@@ -659,6 +659,7 @@ export type Database = {
           amount: number
           created_at: string
           due_date: string | null
+          evidence_url: string | null
           id: string
           last_reminder_sent_at: string | null
           notes: string | null
@@ -672,6 +673,7 @@ export type Database = {
           amount?: number
           created_at?: string
           due_date?: string | null
+          evidence_url?: string | null
           id?: string
           last_reminder_sent_at?: string | null
           notes?: string | null
@@ -685,6 +687,7 @@ export type Database = {
           amount?: number
           created_at?: string
           due_date?: string | null
+          evidence_url?: string | null
           id?: string
           last_reminder_sent_at?: string | null
           notes?: string | null
