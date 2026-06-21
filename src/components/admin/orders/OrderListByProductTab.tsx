@@ -337,7 +337,12 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
               </TableHeader>
               <TableBody>
                 {matchedRows.map(({ order: o, matchedItems }) => (
-                  <TableRow key={o.id}>
+                  <TableRow
+                    key={o.id}
+                    className={cn(
+                      isManualOrder(o) && "bg-green-50 hover:bg-green-100"
+                    )}
+                  >
                     <TableCell className="whitespace-nowrap text-xs">
                       {new Date(o.created_at).toLocaleDateString()}
                       <div className="text-muted-foreground">
