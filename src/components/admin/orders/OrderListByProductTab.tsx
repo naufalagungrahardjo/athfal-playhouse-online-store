@@ -31,6 +31,9 @@ const csvEscape = (v: any) => {
   return s;
 };
 
+const isManualOrder = (o: any) =>
+  typeof o.notes === "string" && o.notes.startsWith("[Manual Order]");
+
 export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
   const [selectedProductNames, setSelectedProductNames] = useState<string[]>([]);
   const [search, setSearch] = useState("");
