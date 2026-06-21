@@ -722,6 +722,7 @@ export type Database = {
           lookup_token: string | null
           notes: string | null
           order_alert_sent_at: string | null
+          payment_confirmed: boolean
           payment_method: string
           promo_code: string | null
           status: string
@@ -751,6 +752,7 @@ export type Database = {
           lookup_token?: string | null
           notes?: string | null
           order_alert_sent_at?: string | null
+          payment_confirmed?: boolean
           payment_method: string
           promo_code?: string | null
           status?: string
@@ -780,6 +782,7 @@ export type Database = {
           lookup_token?: string | null
           notes?: string | null
           order_alert_sent_at?: string | null
+          payment_confirmed?: boolean
           payment_method?: string
           promo_code?: string | null
           status?: string
