@@ -708,6 +708,13 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
                       <div className="text-muted-foreground">
                         Paid: {fmtIDR(o.amount_paid || 0)}
                       </div>
+                      <label className="mt-1 flex items-center justify-end gap-1.5 cursor-pointer">
+                        <Checkbox
+                          checked={isConfirmed(o)}
+                          onCheckedChange={(v) => togglePaymentConfirmed(o, v === true)}
+                        />
+                        <span className="text-[11px] text-muted-foreground">Payment confirmed</span>
+                      </label>
                     </TableCell>
                     <TableCell>
                       <Button size="icon" variant="ghost" onClick={() => onViewDetails(o)}>
