@@ -227,12 +227,14 @@ const AdminExpense = () => {
     return sorted;
   }, [filteredExpenses, sortKey, sortDir, catMap, fundMap]);
 
-  const SortHead = ({ label, sortKeyName, className }: { label: string; sortKeyName: SortKey; className?: string }) => (
+  const SortHead = ({ label, sortKeyName, className }: { label: string; sortKeyName: SortKey; className?: string }) => {
+    const isRight = className?.includes('text-right');
+    return (
     <TableHead className={className}>
       <button
         type="button"
         onClick={() => toggleSort(sortKeyName)}
-        className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+        className={`inline-flex items-center gap-1 hover:text-foreground transition-colors w-full ${isRight ? 'justify-end' : ''}`}
       >
         {label}
         {sortKey === sortKeyName ? (
@@ -243,6 +245,7 @@ const AdminExpense = () => {
       </button>
     </TableHead>
   );
+  };
 
   if (loading) return <div className="p-6">Loading...</div>;
 
