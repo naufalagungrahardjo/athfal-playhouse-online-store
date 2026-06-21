@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Eye, Download, ChevronDown, X } from "lucide-react";
+import { Search, Eye, Download, ChevronDown, X, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -34,10 +34,120 @@ const csvEscape = (v: any) => {
 const isManualOrder = (o: any) =>
   typeof o.notes === "string" && o.notes.startsWith("[Manual Order]");
 
+type SortKey =
+  | "order_date"
+  | "product"
+  | "customer"
+  | "contact"
+  | "child_info"
+  | "variant"
+  | "qty"
+  | "payment"
+  | "status"
+  | "total";
+
+type SortDir = "asc" | "desc";
+
+const defaultSortDir = (key: SortKey): SortDir => {
+  if (key === "order_date" || key === "qty" || key === "total") return "desc";
+  return "asc";
+};
+
+const COL_KEYS: SortKey[] = [
+  "order_date",
+  "product",
+  "customer",
+  "contact",
+  "child_info",
+  "variant",
+  "qty",
+  "payment",
+  "status",
+  "total",
+];
+
+const getColumnText = (row: { order: any; matchedItems: any[] }, key: SortKey): string => {
+  const o = row.order;
+  const items = row.matchedItems;
+  switch (key) {
+    case "order_date":
+      return new Date(o.created_at).toLocaleString().toLowerCase();
+    case "product":
+      return Array.from(new Set(items.map((it: any) => it.product_name))).join(" ").toLowerCase();
+    case "customer":
+      return [o.customer_name, o.guardian_status, o.customer_address].filter(Boolean).join(" ").toLowerCase();
+    case "contact":
+      return [o.customer_email, o.customer_phone].filter(Boolean).join(" ").toLowerCase();
+    case "child_info":
+      return [o.child_name, o.child_gender, o.child_age].filter(Boolean).join(" ").toLowerCase();
+    case "variant":
+      return items
+        .map((it: any) => [it.session_name, it.installment_plan_name].filter(Boolean).join(" "))
+        .join(" ")
+        .toLowerCase();
+    case "qty":
+      return String(items.reduce((s: number, it: any) => s + (Number(it.quantity) || 0), 0));
+    case "payment":
+      return String(o.payment_method || "").toLowerCase();
+    case "status":
+      return String(o.status || "").toLowerCase();
+    case "total":
+      return [o.total_amount, o.amount_paid].filter((v) => v != null).join(" ");
+    default:
+      return "";
+  }
+};
+
+const getSortValue = (row: { order: any; matchedItems: any[] }, key: SortKey): string | number => {
+  const o = row.order;
+  const items = row.matchedItems;
+  switch (key) {
+    case "order_date":
+      return new Date(o.created_at).getTime();
+    case "product":
+      return Array.from(new Set(items.map((it: any) => it.product_name))).join(" ").toLowerCase();
+    case "customer":
+      return String(o.customer_name || "").toLowerCase();
+    case "contact":
+      return [o.customer_email, o.customer_phone].filter(Boolean).join(" ").toLowerCase();
+    case "child_info":
+      return [o.child_name, o.child_gender, o.child_age].filter(Boolean).join(" ").toLowerCase();
+    case "variant":
+      return items
+        .map((it: any) => [it.session_name, it.installment_plan_name].filter(Boolean).join(" "))
+        .join(" ")
+        .toLowerCase();
+    case "qty":
+      return items.reduce((s: number, it: any) => s + (Number(it.quantity) || 0), 0);
+    case "payment":
+      return String(o.payment_method || "").toLowerCase();
+    case "status":
+      return String(o.status || "").toLowerCase();
+    case "total":
+      return Number(o.total_amount) || 0;
+    default:
+      return 0;
+  }
+};
+
 export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
   const [selectedProductNames, setSelectedProductNames] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [pickerSearch, setPickerSearch] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("order_date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [colFilters, setColFilters] = useState<Record<SortKey, string>>({
+    order_date: "",
+    product: "",
+    customer: "",
+    contact: "",
+    child_info: "",
+    variant: "",
+    qty: "",
+    payment: "",
+    status: "",
+    total: "",
+  });
 
   // Build distinct product list from order items
   const productOptions = useMemo(() => {
@@ -66,6 +176,34 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
     );
   };
 
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir(defaultSortDir(key));
+    }
+  };
+
+  const updateColFilter = (key: SortKey, value: string) => {
+    setColFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const clearColFilters = () => {
+    setColFilters({
+      order_date: "",
+      product: "",
+      customer: "",
+      contact: "",
+      child_info: "",
+      variant: "",
+      qty: "",
+      payment: "",
+      status: "",
+      total: "",
+    });
+  };
+
   // Orders containing any of the selected products
   const matchedRows = useMemo(() => {
     if (selectedProductNames.length === 0) return [];
@@ -78,47 +216,65 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
       if (matchedItems.length === 0) continue;
       rows.push({ order: o, matchedItems });
     }
-    // Filter by search across customer and child fields
+    return rows;
+  }, [orders, selectedProductNames]);
+
+  // Apply global search + per-column filters
+  const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const filtered = !q
-      ? rows
-      : rows.filter(({ order: o, matchedItems }) => {
-          const fields = [
-            o.id,
-            o.customer_name,
-            o.customer_email,
-            o.customer_phone,
-            o.customer_address,
-            o.guardian_status,
-            o.child_name,
-            o.child_age,
-            o.child_gender,
-            o.payment_method,
-            o.status,
-            o.notes,
-            o.promo_code,
-            ...matchedItems.map((it: any) => it.session_name || ""),
-            ...matchedItems.map((it: any) => it.installment_plan_name || ""),
-          ];
-          return fields.some((v) => v != null && String(v).toLowerCase().includes(q));
-        });
-    // Sort newest first
-    return filtered.sort(
-      (a, b) => new Date(b.order.created_at).getTime() - new Date(a.order.created_at).getTime()
-    );
-  }, [orders, selectedProductNames, search]);
+    let rows = matchedRows;
+    if (q) {
+      rows = rows.filter(({ order: o, matchedItems }) => {
+        const fields = [
+          o.id,
+          o.customer_name,
+          o.customer_email,
+          o.customer_phone,
+          o.customer_address,
+          o.guardian_status,
+          o.child_name,
+          o.child_age,
+          o.child_gender,
+          o.payment_method,
+          o.status,
+          o.notes,
+          o.promo_code,
+          ...matchedItems.map((it: any) => it.product_name || ""),
+          ...matchedItems.map((it: any) => it.session_name || ""),
+          ...matchedItems.map((it: any) => it.installment_plan_name || ""),
+        ];
+        return fields.some((v) => v != null && String(v).toLowerCase().includes(q));
+      });
+    }
+    for (const key of COL_KEYS) {
+      const term = colFilters[key].trim().toLowerCase();
+      if (!term) continue;
+      rows = rows.filter((row) => getColumnText(row, key).includes(term));
+    }
+    return rows;
+  }, [matchedRows, search, colFilters]);
+
+  const sortedRows = useMemo(() => {
+    const aDir = sortDir === "asc" ? 1 : -1;
+    return [...filteredRows].sort((aRow, bRow) => {
+      const a = getSortValue(aRow, sortKey);
+      const b = getSortValue(bRow, sortKey);
+      if (typeof a === "number" && typeof b === "number") return (a - b) * aDir;
+      return String(a).localeCompare(String(b)) * aDir;
+    });
+  }, [filteredRows, sortKey, sortDir]);
 
   const totals = useMemo(() => {
     let qty = 0;
     let revenue = 0;
-    for (const r of matchedRows) {
+    for (const r of sortedRows) {
       for (const it of r.matchedItems) {
         qty += Number(it.quantity) || 0;
         revenue += (Number(it.product_price) || 0) * (Number(it.quantity) || 0);
       }
     }
-    return { qty, revenue, customers: matchedRows.length };
-  }, [matchedRows]);
+    return { qty, revenue, customers: sortedRows.length };
+  }, [sortedRows]);
 
   const exportCSV = () => {
     const headers = [
@@ -146,7 +302,7 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
       "Notes",
     ];
     const lines: string[] = [headers.join(",")];
-    for (const { order: o, matchedItems } of matchedRows) {
+    for (const { order: o, matchedItems } of sortedRows) {
       for (const it of matchedItems) {
         lines.push(
           [
@@ -189,6 +345,39 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  const SortHead = ({
+    label,
+    sKey,
+    className,
+  }: {
+    label: string;
+    sKey: SortKey;
+    className?: string;
+  }) => {
+    const active = sortKey === sKey;
+    return (
+      <TableHead
+        className={cn("cursor-pointer select-none whitespace-nowrap", className)}
+        onClick={() => handleSort(sKey)}
+      >
+        <div className={cn("flex items-center gap-1", className?.includes("text-right") && "justify-end")}>
+          <span>{label}</span>
+          {active ? (
+            sortDir === "asc" ? (
+              <ArrowUp className="h-3.5 w-3.5" />
+            ) : (
+              <ArrowDown className="h-3.5 w-3.5" />
+            )
+          ) : (
+            <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
+          )}
+        </div>
+      </TableHead>
+    );
+  };
+
+  const anyColFilter = Object.values(colFilters).some((v) => v.trim());
 
   return (
     <Card>
@@ -279,7 +468,7 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
               disabled={selectedProductNames.length === 0}
             />
           </div>
-          <Button variant="outline" onClick={exportCSV} disabled={matchedRows.length === 0}>
+          <Button variant="outline" onClick={exportCSV} disabled={sortedRows.length === 0}>
             <Download className="h-4 w-4 mr-2" /> Export CSV
           </Button>
         </div>
@@ -313,7 +502,7 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
           <div className="text-center py-12 text-muted-foreground">
             Tick one or more products to see all customers who ordered them.
           </div>
-        ) : matchedRows.length === 0 ? (
+        ) : sortedRows.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             No orders found for the selected products.
           </div>
@@ -322,21 +511,117 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Order Date</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Child Info</TableHead>
-                  <TableHead>Variant / Session</TableHead>
-                  <TableHead>Qty</TableHead>
-                  <TableHead>Payment</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead></TableHead>
+                  <SortHead label="Order Date" sKey="order_date" />
+                  <SortHead label="Product" sKey="product" />
+                  <SortHead label="Customer" sKey="customer" />
+                  <SortHead label="Contact" sKey="contact" />
+                  <SortHead label="Child Info" sKey="child_info" />
+                  <SortHead label="Variant / Session" sKey="variant" />
+                  <SortHead label="Qty" sKey="qty" />
+                  <SortHead label="Payment" sKey="payment" />
+                  <SortHead label="Status" sKey="status" />
+                  <SortHead label="Total" sKey="total" className="text-right" />
+                  <TableHead className="w-10"></TableHead>
+                </TableRow>
+                <TableRow className="hover:bg-transparent border-b">
+                  <TableHead className="py-1 px-2">
+                    <Input
+                      placeholder="Filter date"
+                      value={colFilters.order_date}
+                      onChange={(e) => updateColFilter("order_date", e.target.value)}
+                      className="h-7 text-xs px-2"
+                    />
+                  </TableHead>
+                  <TableHead className="py-1 px-2">
+                    <Input
+                      placeholder="Filter product"
+                      value={colFilters.product}
+                      onChange={(e) => updateColFilter("product", e.target.value)}
+                      className="h-7 text-xs px-2"
+                    />
+                  </TableHead>
+                  <TableHead className="py-1 px-2">
+                    <Input
+                      placeholder="Filter customer"
+                      value={colFilters.customer}
+                      onChange={(e) => updateColFilter("customer", e.target.value)}
+                      className="h-7 text-xs px-2"
+                    />
+                  </TableHead>
+                  <TableHead className="py-1 px-2">
+                    <Input
+                      placeholder="Filter contact"
+                      value={colFilters.contact}
+                      onChange={(e) => updateColFilter("contact", e.target.value)}
+                      className="h-7 text-xs px-2"
+                    />
+                  </TableHead>
+                  <TableHead className="py-1 px-2">
+                    <Input
+                      placeholder="Filter child"
+                      value={colFilters.child_info}
+                      onChange={(e) => updateColFilter("child_info", e.target.value)}
+                      className="h-7 text-xs px-2"
+                    />
+                  </TableHead>
+                  <TableHead className="py-1 px-2">
+                    <Input
+                      placeholder="Filter variant"
+                      value={colFilters.variant}
+                      onChange={(e) => updateColFilter("variant", e.target.value)}
+                      className="h-7 text-xs px-2"
+                    />
+                  </TableHead>
+                  <TableHead className="py-1 px-2">
+                    <Input
+                      placeholder="Filter qty"
+                      value={colFilters.qty}
+                      onChange={(e) => updateColFilter("qty", e.target.value)}
+                      className="h-7 text-xs px-2"
+                    />
+                  </TableHead>
+                  <TableHead className="py-1 px-2">
+                    <Input
+                      placeholder="Filter payment"
+                      value={colFilters.payment}
+                      onChange={(e) => updateColFilter("payment", e.target.value)}
+                      className="h-7 text-xs px-2"
+                    />
+                  </TableHead>
+                  <TableHead className="py-1 px-2">
+                    <Input
+                      placeholder="Filter status"
+                      value={colFilters.status}
+                      onChange={(e) => updateColFilter("status", e.target.value)}
+                      className="h-7 text-xs px-2"
+                    />
+                  </TableHead>
+                  <TableHead className="py-1 px-2 text-right">
+                    <Input
+                      placeholder="Filter total"
+                      value={colFilters.total}
+                      onChange={(e) => updateColFilter("total", e.target.value)}
+                      className="h-7 text-xs px-2"
+                    />
+                  </TableHead>
+                  <TableHead className="py-1 px-2 w-10">
+                    {anyColFilter && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={clearColFilters}
+                        aria-label="Clear column filters"
+                        title="Clear column filters"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {matchedRows.map(({ order: o, matchedItems }) => (
+                {sortedRows.map(({ order: o, matchedItems }) => (
                   <TableRow
                     key={o.id}
                     className={cn(
