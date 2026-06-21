@@ -7,6 +7,7 @@ import { Search, Eye, Download, ChevronDown, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -29,6 +30,9 @@ const csvEscape = (v: any) => {
   if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
   return s;
 };
+
+const isManualOrder = (o: any) =>
+  typeof o.notes === "string" && o.notes.startsWith("[Manual Order]");
 
 export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
   const [selectedProductNames, setSelectedProductNames] = useState<string[]>([]);
@@ -333,7 +337,12 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
               </TableHeader>
               <TableBody>
                 {matchedRows.map(({ order: o, matchedItems }) => (
-                  <TableRow key={o.id}>
+                  <TableRow
+                    key={o.id}
+                    className={cn(
+                      isManualOrder(o) && "bg-green-50 hover:bg-green-100"
+                    )}
+                  >
                     <TableCell className="whitespace-nowrap text-xs">
                       {new Date(o.created_at).toLocaleDateString()}
                       <div className="text-muted-foreground">
