@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -134,6 +136,7 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
   const [selectedProductNames, setSelectedProductNames] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [pickerSearch, setPickerSearch] = useState("");
+  const [confirmedOverrides, setConfirmedOverrides] = useState<Record<string, boolean>>({});
   const [sortKey, setSortKey] = useState<SortKey>("order_date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [colFilters, setColFilters] = useState<Record<SortKey, string>>({
@@ -182,6 +185,21 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
     } else {
       setSortKey(key);
       setSortDir(defaultSortDir(key));
+    }
+  };
+
+  const isConfirmed = (o: any) =>
+    confirmedOverrides[o.id] ?? !!o.payment_confirmed;
+
+  const togglePaymentConfirmed = async (o: any, value: boolean) => {
+    setConfirmedOverrides((prev) => ({ ...prev, [o.id]: value }));
+    const { error } = await supabase
+      .from("orders")
+      .update({ payment_confirmed: value })
+      .eq("id", o.id);
+    if (error) {
+      setConfirmedOverrides((prev) => ({ ...prev, [o.id]: !value }));
+      toast.error("Failed to update payment confirmation");
     }
   };
 
