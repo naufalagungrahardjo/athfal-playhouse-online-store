@@ -33,6 +33,7 @@ const HistoryManualOrderTab = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [confirmedOverrides, setConfirmedOverrides] = useState<Record<string, boolean>>({});
+  const [noteOverrides, setNoteOverrides] = useState<Record<string, string>>({});
 
   const isConfirmed = (o: any) => confirmedOverrides[o.id] ?? !!o.payment_confirmed;
 
@@ -45,6 +46,19 @@ const HistoryManualOrderTab = () => {
     if (error) {
       setConfirmedOverrides((prev) => ({ ...prev, [o.id]: !value }));
       toast.error('Failed to update payment confirmation');
+    }
+  };
+
+  const getNote = (o: any) => noteOverrides[o.id] ?? (o.payment_note || '');
+
+  const updatePaymentNote = async (o: any, value: string) => {
+    setNoteOverrides((prev) => ({ ...prev, [o.id]: value }));
+    const { error } = await supabase
+      .from('orders')
+      .update({ payment_note: value })
+      .eq('id', o.id);
+    if (error) {
+      toast.error('Failed to save payment note');
     }
   };
 
@@ -150,13 +164,21 @@ const HistoryManualOrderTab = () => {
                       </TableCell>
                       <TableCell className="text-right whitespace-nowrap font-medium">
                         {formatCurrency(o.total_amount || 0)}
-                        <label className="mt-1 flex items-center justify-end gap-1.5 cursor-pointer font-normal">
-                          <Checkbox
-                            checked={isConfirmed(o)}
-                            onCheckedChange={(v) => togglePaymentConfirmed(o, v === true)}
-                          />
-                          <span className="text-[11px] text-muted-foreground">Payment confirmed</span>
-                        </label>
+                      <label className="mt-1 flex items-center justify-end gap-1.5 cursor-pointer font-normal">
+                        <Checkbox
+                          checked={isConfirmed(o)}
+                          onCheckedChange={(v) => togglePaymentConfirmed(o, v === true)}
+                        />
+                        <span className="text-[11px] text-muted-foreground">Payment confirmed</span>
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Payment note..."
+                        value={getNote(o)}
+                        onChange={(e) => setNoteOverrides((prev) => ({ ...prev, [o.id]: e.target.value }))}
+                        onBlur={(e) => updatePaymentNote(o, e.target.value)}
+                        className="mt-1 h-6 text-[11px] px-1.5 py-0 w-[140px] ml-auto"
+                      />
                       </TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="sm" onClick={() => handleView(o)}>
