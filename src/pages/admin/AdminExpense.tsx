@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
-import { Trash2, Plus, Pencil, Search } from 'lucide-react';
+import { Trash2, Plus, Pencil, Search, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 
@@ -188,6 +188,65 @@ const AdminExpense = () => {
     });
   }, [expenses, expSearch, catMap, fundMap]);
 
+  // Sorting
+  type SortKey = 'created_at' | 'date' | 'description' | 'order_id' | 'category' | 'fund_source' | 'amount' | 'discount' | 'final_price';
+  const [sortKey, setSortKey] = useState<SortKey>('created_at');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const sortedExpenses = useMemo(() => {
+    const getValue = (exp: Expense): string | number => {
+      switch (sortKey) {
+        case 'created_at': return new Date(exp.created_at).getTime();
+        case 'date': return new Date(exp.date).getTime();
+        case 'description': return (exp.description || '').toLowerCase();
+        case 'order_id': return (exp.order_id || '').toLowerCase();
+        case 'category': return (exp.category_id ? catMap[exp.category_id] || '' : '').toLowerCase();
+        case 'fund_source': return (exp.fund_source_id ? fundMap[exp.fund_source_id] || '' : '').toLowerCase();
+        case 'amount': return exp.amount;
+        case 'discount': return exp.discount || 0;
+        case 'final_price': return exp.amount - (exp.discount || 0);
+        default: return 0;
+      }
+    };
+    const sorted = [...filteredExpenses].sort((a, b) => {
+      const va = getValue(a);
+      const vb = getValue(b);
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [filteredExpenses, sortKey, sortDir, catMap, fundMap]);
+
+  const SortHead = ({ label, sortKeyName, className }: { label: string; sortKeyName: SortKey; className?: string }) => {
+    const isRight = className?.includes('text-right');
+    return (
+    <TableHead className={className}>
+      <button
+        type="button"
+        onClick={() => toggleSort(sortKeyName)}
+        className={`inline-flex items-center gap-1 hover:text-foreground transition-colors w-full ${isRight ? 'justify-end' : ''}`}
+      >
+        {label}
+        {sortKey === sortKeyName ? (
+          sortDir === 'asc' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />
+        ) : (
+          <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
+        )}
+      </button>
+    </TableHead>
+  );
+  };
+
   if (loading) return <div className="p-6">Loading...</div>;
 
   return (
@@ -344,20 +403,22 @@ const AdminExpense = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Order ID</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Fund Source</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead className="text-right">Discount</TableHead>
-                      <TableHead className="text-right">Final Price</TableHead>
+                      <SortHead label="Created Date" sortKeyName="created_at" />
+                      <SortHead label="Transaction Date" sortKeyName="date" />
+                      <SortHead label="Description" sortKeyName="description" />
+                      <SortHead label="Order ID" sortKeyName="order_id" />
+                      <SortHead label="Category" sortKeyName="category" />
+                      <SortHead label="Fund Source" sortKeyName="fund_source" />
+                      <SortHead label="Amount" sortKeyName="amount" className="text-right" />
+                      <SortHead label="Discount" sortKeyName="discount" className="text-right" />
+                      <SortHead label="Final Price" sortKeyName="final_price" className="text-right" />
                       <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredExpenses.map(exp => (
+                    {sortedExpenses.map(exp => (
                       <TableRow key={exp.id}>
+                        <TableCell className="whitespace-nowrap">{format(new Date(exp.created_at), 'EEE, d MMM yyyy')}</TableCell>
                         <TableCell className="whitespace-nowrap">{format(new Date(exp.date), 'EEE, d MMM yyyy')}</TableCell>
                         <TableCell className="max-w-[250px]">
                           <div className="overflow-x-auto whitespace-nowrap scrollbar-thin">
