@@ -778,6 +778,16 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
                                     Paid: {new Date(p.paid_at).toLocaleString()}
                                   </span>
                                 )}
+                                {p.evidence_url && (
+                                  <a
+                                    href={p.evidence_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block text-xs text-blue-600 hover:underline mt-0.5"
+                                  >
+                                    View payment evidence
+                                  </a>
+                                )}
                               </td>
                               <td className="px-3 py-2 text-right whitespace-nowrap">{formatCurrency(original)}</td>
                               {hasDiscount && (
@@ -788,9 +798,12 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
                                 <div className="flex items-center justify-center gap-2">
                                   <Switch
                                     checked={p.status === 'paid'}
-                                    disabled={togglingPaymentId === p.id}
-                                    onCheckedChange={() => handleTogglePaymentDivision(p.id, p.status)}
+                                    disabled={togglingPaymentId === p.id || uploadingEvidenceId === p.id}
+                                    onCheckedChange={(checked) => handlePaymentSwitch(p.id, checked)}
                                   />
+                                  {uploadingEvidenceId === p.id && (
+                                    <span className="text-xs text-gray-500">Uploading…</span>
+                                  )}
                                 </div>
                               </td>
                             </tr>
