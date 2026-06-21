@@ -1,9 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useOrders } from '@/hooks/useOrders';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Search, Eye } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { OrderDetailsDialog } from '@/components/admin/OrderDetailsDialog';
@@ -29,6 +32,21 @@ const HistoryManualOrderTab = () => {
   const [search, setSearch] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [confirmedOverrides, setConfirmedOverrides] = useState<Record<string, boolean>>({});
+
+  const isConfirmed = (o: any) => confirmedOverrides[o.id] ?? !!o.payment_confirmed;
+
+  const togglePaymentConfirmed = async (o: any, value: boolean) => {
+    setConfirmedOverrides((prev) => ({ ...prev, [o.id]: value }));
+    const { error } = await supabase
+      .from('orders')
+      .update({ payment_confirmed: value })
+      .eq('id', o.id);
+    if (error) {
+      setConfirmedOverrides((prev) => ({ ...prev, [o.id]: !value }));
+      toast.error('Failed to update payment confirmation');
+    }
+  };
 
   const manualOrders = useMemo(() => {
     const list = (orders || []).filter(isManualOrder);
@@ -132,6 +150,13 @@ const HistoryManualOrderTab = () => {
                       </TableCell>
                       <TableCell className="text-right whitespace-nowrap font-medium">
                         {formatCurrency(o.total_amount || 0)}
+                        <label className="mt-1 flex items-center justify-end gap-1.5 cursor-pointer font-normal">
+                          <Checkbox
+                            checked={isConfirmed(o)}
+                            onCheckedChange={(v) => togglePaymentConfirmed(o, v === true)}
+                          />
+                          <span className="text-[11px] text-muted-foreground">Payment confirmed</span>
+                        </label>
                       </TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="sm" onClick={() => handleView(o)}>
