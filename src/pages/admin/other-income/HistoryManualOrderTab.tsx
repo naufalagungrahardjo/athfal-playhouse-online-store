@@ -94,7 +94,8 @@ const HistoryManualOrderTab = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="whitespace-nowrap">Date</TableHead>
+                    <TableHead className="whitespace-nowrap">Created Date</TableHead>
+                    <TableHead className="whitespace-nowrap">Transaction Date</TableHead>
                     <TableHead className="whitespace-nowrap">Customer</TableHead>
                     <TableHead className="whitespace-nowrap">Products</TableHead>
                     <TableHead className="whitespace-nowrap">Payment</TableHead>
@@ -108,6 +109,11 @@ const HistoryManualOrderTab = () => {
                     <TableRow key={o.id} className="bg-green-50 hover:bg-green-100">
                       <TableCell className="whitespace-nowrap text-sm">
                         {new Date(o.created_at).toLocaleString('id-ID')}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-sm">
+                        {o.transaction_date
+                          ? new Date(o.transaction_date).toLocaleDateString('id-ID')
+                          : '—'}
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">{o.customer_name}</div>
