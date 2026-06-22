@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Plus, Pencil } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
+import { Trash2, Plus, Pencil, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
@@ -30,6 +30,7 @@ const OtherIncomeTab = () => {
   const [editAmount, setEditAmount] = useState('');
   const [editFund, setEditFund] = useState('');
   const [editDate, setEditDate] = useState('');
+  const [search, setSearch] = useState('');
 
   const fetchAll = async () => {
     const [fundsRes, incomeRes, pmRes] = await Promise.all([
@@ -46,6 +47,21 @@ const OtherIncomeTab = () => {
   useEffect(() => { fetchAll(); }, []);
 
   const fundMap = Object.fromEntries(fundSources.map(f => [f.id, f.name]));
+
+  const filteredIncomes = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return incomes;
+    return incomes.filter(inc => {
+      const fund = inc.fund_source_id ? fundMap[inc.fund_source_id] || '' : '';
+      const fields = [inc.date, inc.description, fund, String(inc.amount)];
+      return fields.some(v => v != null && String(v).toLowerCase().includes(q));
+    });
+  }, [incomes, search, fundMap]);
+
+  const totalAmount = useMemo(
+    () => filteredIncomes.reduce((sum, inc) => sum + (inc.amount || 0), 0),
+    [filteredIncomes]
+  );
 
   const addIncome = async () => {
     if (!description.trim() || !amount) {
@@ -144,10 +160,25 @@ const OtherIncomeTab = () => {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Income Records</CardTitle></CardHeader>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <CardTitle>Income Records</CardTitle>
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by details, amount, fund, date..."
+                className="pl-8"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+        </CardHeader>
         <CardContent>
-          {incomes.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No income records yet</p>
+          {filteredIncomes.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">
+              {incomes.length === 0 ? 'No income records yet' : 'No income matches your search'}
+            </p>
           ) : (
             <Table>
               <TableHeader>
@@ -160,7 +191,7 @@ const OtherIncomeTab = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {incomes.map(inc => (
+                {filteredIncomes.map(inc => (
                   <TableRow key={inc.id}>
                     {editingId === inc.id ? (
                       <>
@@ -199,6 +230,13 @@ const OtherIncomeTab = () => {
                   </TableRow>
                 ))}
               </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={3} className="font-semibold">Total ({filteredIncomes.length})</TableCell>
+                  <TableCell className="text-right font-bold">{formatCurrency(totalAmount)}</TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableFooter>
             </Table>
           )}
         </CardContent>
