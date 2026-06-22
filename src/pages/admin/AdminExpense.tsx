@@ -186,19 +186,62 @@ const AdminExpense = () => {
 
   const [expSearch, setExpSearch] = useState('');
 
+  type ColFilters = {
+    created_at: string;
+    date: string;
+    description: string;
+    order_id: string;
+    category: string;
+    fund_source: string;
+    amount: string;
+    discount: string;
+    final_price: string;
+  };
+  const emptyColFilters: ColFilters = {
+    created_at: '', date: '', description: '', order_id: '',
+    category: '', fund_source: '', amount: '', discount: '', final_price: '',
+  };
+  const [colFilters, setColFilters] = useState<ColFilters>(emptyColFilters);
+  const setColFilter = (key: keyof ColFilters, value: string) =>
+    setColFilters(prev => ({ ...prev, [key]: value }));
+  const hasColFilters = Object.values(colFilters).some(v => v.trim() !== '');
+
   const filteredExpenses = useMemo(() => {
-    if (!expSearch.trim()) return expenses;
-    const q = expSearch.toLowerCase();
+    const q = expSearch.trim().toLowerCase();
+    if (!q && !hasColFilters) return expenses;
     return expenses.filter(exp => {
       const desc = exp.description?.toLowerCase() || '';
       const cat = (exp.category_id ? catMap[exp.category_id] || '' : '').toLowerCase();
       const fund = (exp.fund_source_id ? fundMap[exp.fund_source_id] || '' : '').toLowerCase();
       const amount = String(exp.amount);
+      const discount = String(exp.discount || 0);
       const finalPrice = String(exp.amount - (exp.discount || 0));
-      const dateStr = format(new Date(exp.date), 'dd MMM yyyy').toLowerCase();
-      return desc.includes(q) || cat.includes(q) || fund.includes(q) || amount.includes(q) || finalPrice.includes(q) || dateStr.includes(q);
+      const createdStr = format(new Date(exp.created_at), 'EEE, d MMM yyyy').toLowerCase();
+      const dateStr = format(new Date(exp.date), 'EEE, d MMM yyyy').toLowerCase();
+      const orderId = (exp.order_id || '').toLowerCase();
+
+      // Global search
+      if (q) {
+        const globalMatch =
+          desc.includes(q) || cat.includes(q) || fund.includes(q) ||
+          amount.includes(q) || finalPrice.includes(q) || dateStr.includes(q);
+        if (!globalMatch) return false;
+      }
+
+      // Per-column filters (all must match)
+      const f = colFilters;
+      if (f.created_at.trim() && !createdStr.includes(f.created_at.toLowerCase())) return false;
+      if (f.date.trim() && !dateStr.includes(f.date.toLowerCase())) return false;
+      if (f.description.trim() && !desc.includes(f.description.toLowerCase())) return false;
+      if (f.order_id.trim() && !orderId.includes(f.order_id.toLowerCase())) return false;
+      if (f.category.trim() && !cat.includes(f.category.toLowerCase())) return false;
+      if (f.fund_source.trim() && !fund.includes(f.fund_source.toLowerCase())) return false;
+      if (f.amount.trim() && !amount.includes(f.amount.replace(/\D/g, ''))) return false;
+      if (f.discount.trim() && !discount.includes(f.discount.replace(/\D/g, ''))) return false;
+      if (f.final_price.trim() && !finalPrice.includes(f.final_price.replace(/\D/g, ''))) return false;
+      return true;
     });
-  }, [expenses, expSearch, catMap, fundMap]);
+  }, [expenses, expSearch, catMap, fundMap, colFilters, hasColFilters]);
 
   // Sorting
   type SortKey = 'created_at' | 'date' | 'description' | 'order_id' | 'category' | 'fund_source' | 'amount' | 'discount' | 'final_price';
@@ -270,6 +313,17 @@ const AdminExpense = () => {
     </TableHead>
   );
   };
+
+  const FilterCell = ({ filterKey, className }: { filterKey: keyof ColFilters; className?: string }) => (
+    <TableHead className={`pt-0 pb-2 ${className || ''}`}>
+      <Input
+        value={colFilters[filterKey]}
+        onChange={e => setColFilter(filterKey, e.target.value)}
+        placeholder="Filter..."
+        className="h-7 text-xs font-normal"
+      />
+    </TableHead>
+  );
 
   if (loading) return <div className="p-6">Loading...</div>;
 
@@ -437,6 +491,29 @@ const AdminExpense = () => {
                       <SortHead label="Discount" sortKeyName="discount" className="text-right" />
                       <SortHead label="Final Price" sortKeyName="final_price" className="text-right" />
                       <TableHead className="w-[80px]">Actions</TableHead>
+                    </TableRow>
+                    <TableRow className="hover:bg-transparent">
+                      <FilterCell filterKey="created_at" />
+                      <FilterCell filterKey="date" />
+                      <FilterCell filterKey="description" />
+                      <FilterCell filterKey="order_id" />
+                      <FilterCell filterKey="category" />
+                      <FilterCell filterKey="fund_source" />
+                      <FilterCell filterKey="amount" />
+                      <FilterCell filterKey="discount" />
+                      <FilterCell filterKey="final_price" />
+                      <TableHead className="pt-0 pb-2">
+                        {hasColFilters && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => setColFilters(emptyColFilters)}
+                          >
+                            Clear
+                          </Button>
+                        )}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
