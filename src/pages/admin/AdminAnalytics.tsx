@@ -544,6 +544,24 @@ const AdminAnalytics = () => {
     });
   }, [revenueVsExpenseData]);
 
+  // Profitability margin over time: period margin % and cumulative margin %
+  // Margin % = (income - expense) / income * 100, where income = all revenue.
+  const profitabilityData = useMemo(() => {
+    let cumRevenue = 0;
+    let cumExpense = 0;
+    return revenueVsExpenseData.map(d => {
+      cumRevenue += d.revenue;
+      cumExpense += d.expense;
+      const periodMargin = d.revenue > 0 ? ((d.revenue - d.expense) / d.revenue) * 100 : 0;
+      const cumulativeMargin = cumRevenue > 0 ? ((cumRevenue - cumExpense) / cumRevenue) * 100 : 0;
+      return {
+        date: d.date,
+        periodMargin: Number(periodMargin.toFixed(1)),
+        cumulativeMargin: Number(cumulativeMargin.toFixed(1)),
+      };
+    });
+  }, [revenueVsExpenseData]);
+
   // Revenue composition pie
   const revenueCompositionData = useMemo(() => {
     const data = [
