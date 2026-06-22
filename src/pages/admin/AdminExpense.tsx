@@ -506,27 +506,27 @@ const AdminExpense = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <SortHead label="Created Date" sortKeyName="created_at" />
-                      <SortHead label="Transaction Date" sortKeyName="date" />
-                      <SortHead label="Description" sortKeyName="description" />
-                      <SortHead label="Order ID" sortKeyName="order_id" />
-                      <SortHead label="Category" sortKeyName="category" />
-                      <SortHead label="Fund Source" sortKeyName="fund_source" />
-                      <SortHead label="Amount" sortKeyName="amount" className="text-right" />
-                      <SortHead label="Discount" sortKeyName="discount" className="text-right" />
-                      <SortHead label="Final Price" sortKeyName="final_price" className="text-right" />
+                      <SortHead label="Created Date" sortKeyName="created_at" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                      <SortHead label="Transaction Date" sortKeyName="date" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                      <SortHead label="Description" sortKeyName="description" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                      <SortHead label="Order ID" sortKeyName="order_id" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                      <SortHead label="Category" sortKeyName="category" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                      <SortHead label="Fund Source" sortKeyName="fund_source" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                      <SortHead label="Amount" sortKeyName="amount" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-right" />
+                      <SortHead label="Discount" sortKeyName="discount" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-right" />
+                      <SortHead label="Final Price" sortKeyName="final_price" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-right" />
                       <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
                     <TableRow className="hover:bg-transparent">
-                      <FilterCell filterKey="created_at" />
-                      <FilterCell filterKey="date" />
-                      <FilterCell filterKey="description" />
-                      <FilterCell filterKey="order_id" />
-                      <FilterCell filterKey="category" />
-                      <FilterCell filterKey="fund_source" />
-                      <FilterCell filterKey="amount" />
-                      <FilterCell filterKey="discount" />
-                      <FilterCell filterKey="final_price" />
+                      <FilterCell filterKey="created_at" value={colFilters.created_at} onChange={setColFilter} />
+                      <FilterCell filterKey="date" value={colFilters.date} onChange={setColFilter} />
+                      <FilterCell filterKey="description" value={colFilters.description} onChange={setColFilter} />
+                      <FilterCell filterKey="order_id" value={colFilters.order_id} onChange={setColFilter} />
+                      <FilterCell filterKey="category" value={colFilters.category} onChange={setColFilter} />
+                      <FilterCell filterKey="fund_source" value={colFilters.fund_source} onChange={setColFilter} />
+                      <FilterCell filterKey="amount" value={colFilters.amount} onChange={setColFilter} />
+                      <FilterCell filterKey="discount" value={colFilters.discount} onChange={setColFilter} />
+                      <FilterCell filterKey="final_price" value={colFilters.final_price} onChange={setColFilter} />
                       <TableHead className="pt-0 pb-2">
                         {hasColFilters && (
                           <Button
