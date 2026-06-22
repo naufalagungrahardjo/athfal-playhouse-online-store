@@ -314,6 +314,17 @@ const AdminExpense = () => {
   );
   };
 
+  const FilterCell = ({ filterKey, className }: { filterKey: keyof ColFilters; className?: string }) => (
+    <TableHead className={`pt-0 pb-2 ${className || ''}`}>
+      <Input
+        value={colFilters[filterKey]}
+        onChange={e => setColFilter(filterKey, e.target.value)}
+        placeholder="Filter..."
+        className="h-7 text-xs font-normal"
+      />
+    </TableHead>
+  );
+
   if (loading) return <div className="p-6">Loading...</div>;
 
   return (
