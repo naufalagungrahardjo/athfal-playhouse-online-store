@@ -15,7 +15,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
-  BarChart, Bar, AreaChart, Area
+  BarChart, Bar, AreaChart, Area, ReferenceLine
 } from 'recharts';
 
 const COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#0ea5e9', '#8b5cf6', '#14b8a6', '#f97316', '#ec4899', '#64748b'];
@@ -544,6 +544,24 @@ const AdminAnalytics = () => {
     });
   }, [revenueVsExpenseData]);
 
+  // Profitability margin over time: period margin % and cumulative margin %
+  // Margin % = (income - expense) / income * 100, where income = all revenue.
+  const profitabilityData = useMemo(() => {
+    let cumRevenue = 0;
+    let cumExpense = 0;
+    return revenueVsExpenseData.map(d => {
+      cumRevenue += d.revenue;
+      cumExpense += d.expense;
+      const periodMargin = d.revenue > 0 ? ((d.revenue - d.expense) / d.revenue) * 100 : 0;
+      const cumulativeMargin = cumRevenue > 0 ? ((cumRevenue - cumExpense) / cumRevenue) * 100 : 0;
+      return {
+        date: d.date,
+        periodMargin: Number(periodMargin.toFixed(1)),
+        cumulativeMargin: Number(cumulativeMargin.toFixed(1)),
+      };
+    });
+  }, [revenueVsExpenseData]);
+
   // Revenue composition pie
   const revenueCompositionData = useMemo(() => {
     const data = [
@@ -595,6 +613,9 @@ const AdminAnalytics = () => {
         return;
       }
 
+      // Respect the Net Income "Include / Exclude Capital" toggle: when capital is
+      // excluded, capital inflows are not counted in the fund balance either.
+      if (!includeCapital) return;
       const name = c.fund_source_id ? (expFundMap[c.fund_source_id] || 'Unknown') : 'Unknown';
       ensure(name);
       balanceMap[name].capitalIn += c.amount;
@@ -620,7 +641,7 @@ const AdminAnalytics = () => {
         net: v.salesIn + v.otherIn + v.capitalIn + v.transferIn - v.transferOut - v.expenseOut,
       }))
       .sort((a, b) => b.net - a.net);
-  }, [orders, otherIncomes, expenses, capitalInflows, expFundMap, netRevenueType, dateRange]);
+  }, [orders, otherIncomes, expenses, capitalInflows, expFundMap, netRevenueType, dateRange, includeCapital]);
 
   // Fund balance pie (net positive only)
   const fundBalancePieData = useMemo(() => {
@@ -1176,6 +1197,33 @@ const AdminAnalytics = () => {
                     <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 60} />
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
                     <Line type="monotone" dataKey="cumulative" stroke="#0ea5e9" strokeWidth={2} dot={{ r: isMobile ? 2 : 3 }} name="Cumulative Net" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Profitability Margin (%) */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{netGranLabel} & Cumulative Profitability (%)</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Margin = (Income − Expense) ÷ Income. Income = all revenue
+                {includeCapital ? ' (Sales + Other + Capital)' : ' (Sales + Other)'}.
+              </p>
+            </CardHeader>
+            <CardContent>
+              {profitabilityData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                <ResponsiveContainer width="100%" height={isMobile ? 280 : 350}>
+                  <LineChart data={profitabilityData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${v}%`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 50} />
+                    <Tooltip formatter={(value: number, name: string) => [`${value}%`, name]} />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
+                    <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
+                    <Line type="monotone" dataKey="periodMargin" stroke="#f59e0b" strokeWidth={2} dot={{ r: isMobile ? 2 : 3 }} name={`${netGranLabel} Margin %`} />
+                    <Line type="monotone" dataKey="cumulativeMargin" stroke="#0ea5e9" strokeWidth={2} dot={{ r: isMobile ? 2 : 3 }} name="Cumulative Margin %" />
                   </LineChart>
                 </ResponsiveContainer>
               )}
