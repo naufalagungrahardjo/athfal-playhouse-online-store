@@ -466,8 +466,8 @@ const AdminExpense = () => {
                             <Input
                               type="text"
                               placeholder="Note..."
-                              value={exp.check_notes || ''}
-                              onChange={(e) => updateCheck(exp.id, { check_notes: e.target.value })}
+                              defaultValue={exp.check_notes || ''}
+                              onBlur={(e) => updateCheck(exp.id, { check_notes: e.target.value })}
                               className="h-7 text-xs text-right w-full min-w-[120px]"
                               aria-label="Check note"
                             />
