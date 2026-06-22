@@ -52,12 +52,13 @@ export const MultiSelectFilter = ({
         <Button
           variant="outline"
           className={cn(width, 'justify-between font-normal', className)}
+          title={label}
         >
           <span className="truncate">{label}</span>
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[240px] p-0" align="start">
+      <PopoverContent className="min-w-[240px] max-w-[420px] p-0" align="start">
         <div className="max-h-72 overflow-y-auto p-1">
           <button
             type="button"
@@ -76,9 +77,12 @@ export const MultiSelectFilter = ({
               type="button"
               onClick={() => toggle(opt.value)}
               className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+              title={opt.label}
             >
-              <Checkbox checked={selected.includes(opt.value)} className="pointer-events-none" />
-              <span className="truncate text-left">{opt.label}</span>
+              <Checkbox checked={selected.includes(opt.value)} className="pointer-events-none shrink-0" />
+              <span className="overflow-x-auto whitespace-nowrap text-left scrollbar-thin">
+                {opt.label}
+              </span>
             </button>
           ))}
           {options.length === 0 && (
