@@ -218,10 +218,27 @@ const AdminAnalytics = () => {
     return map;
   }, [products]);
 
+  // Distinct products/variants that actually appear in orders, used for the Sales product filter.
+  // Each order_items.product_id may be a composite "baseId__variant" so each variant is selectable.
+  const productOptions = useMemo(() => {
+    const map: Record<string, string> = {};
+    orders.forEach(o => o.items.forEach(it => {
+      if (it.product_id && !map[it.product_id]) {
+        map[it.product_id] = it.product_name || it.product_id;
+      }
+    }));
+    return Object.entries(map)
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+  }, [orders]);
+
   // ===== Shared filter predicates (also applied to Net Income) =====
   const orderCatMatch = (o: OrderWithItems) =>
     categoryFilter.length === 0 ||
     o.items.some(it => categoryFilter.includes(productCategoryMap[it.product_id]));
+  const orderProductMatch = (o: OrderWithItems) =>
+    productFilter.length === 0 ||
+    o.items.some(it => productFilter.includes(it.product_id));
   const expCatMatch = (id: string | null) =>
     expCatFilter.length === 0 || expCatFilter.includes(id || '');
   const expFundMatch = (id: string | null) =>
