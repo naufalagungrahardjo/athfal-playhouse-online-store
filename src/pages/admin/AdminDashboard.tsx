@@ -310,6 +310,19 @@ const AdminDashboard = () => {
           <OrderManagement onClose={handleCloseDialog} onOrderUpdate={fetchDashboardStats} />
         </DialogContent>
       </Dialog>
+
+      {/* Fund Balance Dialog */}
+      <Dialog open={selectedView === 'fundBalance'} onOpenChange={handleCloseDialog}>
+        <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>💰 Fund Balance by Source / Bank</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mb-4">
+            Where your money sits: inflows from sales, other income, capital, and fund transfers vs outflows from expenses per fund source.
+          </p>
+          <FundBalanceTable data={summary.fundBalance} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
