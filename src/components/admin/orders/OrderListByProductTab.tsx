@@ -500,8 +500,10 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
               >
                 <span className="truncate text-left">
                   {selectedProductNames.length === 0
-                    ? "Select products to combine..."
-                    : `${selectedProductNames.length} product${selectedProductNames.length > 1 ? "s" : ""} selected`}
+                    ? includeOtherIncome
+                      ? "Other Income selected"
+                      : "Select products to combine..."
+                    : `${selectedProductNames.length} product${selectedProductNames.length > 1 ? "s" : ""} selected${includeOtherIncome ? " + Other Income" : ""}`}
                 </span>
                 <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
               </Button>
@@ -527,11 +529,27 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
                   <button
                     type="button"
                     className="text-muted-foreground hover:underline"
-                    onClick={() => setSelectedProductNames([])}
+                    onClick={() => {
+                      setSelectedProductNames([]);
+                      setIncludeOtherIncome(false);
+                    }}
                   >
                     Clear
                   </button>
                 </div>
+              </div>
+              <div className="px-2 py-2 border-b">
+                <label className="flex items-start gap-2 px-2 py-2 rounded-sm hover:bg-accent cursor-pointer">
+                  <Checkbox
+                    checked={includeOtherIncome}
+                    onCheckedChange={(v) => setIncludeOtherIncome(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm flex-1">
+                    Other Income{" "}
+                    <span className="text-muted-foreground">({otherIncomes.length})</span>
+                  </span>
+                </label>
               </div>
               <ScrollArea className="h-[320px]">
                 {filteredProductOptions.length === 0 ? (
