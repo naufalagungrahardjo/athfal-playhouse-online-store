@@ -770,7 +770,13 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
                   <TableCell className="font-bold">{totals.qty}</TableCell>
                   <TableCell colSpan={2} />
                   <TableCell className="text-right font-bold whitespace-nowrap">
-                    {fmtIDR(totals.totalAmount)}
+                    <div>{fmtIDR(totals.cashReceived)}</div>
+                    <div className="text-[11px] font-normal text-muted-foreground">
+                      Cash received
+                    </div>
+                    <div className="text-[11px] font-normal text-muted-foreground">
+                      Billed: {fmtIDR(totals.totalAmount)}
+                    </div>
                   </TableCell>
                   <TableCell />
                 </TableRow>
