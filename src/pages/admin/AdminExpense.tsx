@@ -29,6 +29,74 @@ type Expense = {
   check_notes: string | null;
 };
 
+type SortKey = 'created_at' | 'date' | 'description' | 'order_id' | 'category' | 'fund_source' | 'amount' | 'discount' | 'final_price';
+type ColFilters = {
+  created_at: string;
+  date: string;
+  description: string;
+  order_id: string;
+  category: string;
+  fund_source: string;
+  amount: string;
+  discount: string;
+  final_price: string;
+};
+
+const SortHead = ({
+  label,
+  sortKeyName,
+  sortKey,
+  sortDir,
+  onSort,
+  className,
+}: {
+  label: string;
+  sortKeyName: SortKey;
+  sortKey: SortKey;
+  sortDir: 'asc' | 'desc';
+  onSort: (key: SortKey) => void;
+  className?: string;
+}) => {
+  const isRight = className?.includes('text-right');
+  return (
+    <TableHead className={className}>
+      <button
+        type="button"
+        onClick={() => onSort(sortKeyName)}
+        className={`inline-flex items-center gap-1 hover:text-foreground transition-colors w-full ${isRight ? 'justify-end' : ''}`}
+      >
+        {label}
+        {sortKey === sortKeyName ? (
+          sortDir === 'asc' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />
+        ) : (
+          <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
+        )}
+      </button>
+    </TableHead>
+  );
+};
+
+const FilterCell = ({
+  filterKey,
+  value,
+  onChange,
+  className,
+}: {
+  filterKey: keyof ColFilters;
+  value: string;
+  onChange: (key: keyof ColFilters, value: string) => void;
+  className?: string;
+}) => (
+  <TableHead className={`pt-0 pb-2 ${className || ''}`}>
+    <Input
+      value={value}
+      onChange={e => onChange(filterKey, e.target.value)}
+      placeholder="Filter..."
+      className="h-7 text-xs font-normal"
+    />
+  </TableHead>
+);
+
 const AdminExpense = () => {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [fundSources, setFundSources] = useState<FundSource[]>([]);
@@ -186,17 +254,6 @@ const AdminExpense = () => {
 
   const [expSearch, setExpSearch] = useState('');
 
-  type ColFilters = {
-    created_at: string;
-    date: string;
-    description: string;
-    order_id: string;
-    category: string;
-    fund_source: string;
-    amount: string;
-    discount: string;
-    final_price: string;
-  };
   const emptyColFilters: ColFilters = {
     created_at: '', date: '', description: '', order_id: '',
     category: '', fund_source: '', amount: '', discount: '', final_price: '',
@@ -244,7 +301,6 @@ const AdminExpense = () => {
   }, [expenses, expSearch, catMap, fundMap, colFilters, hasColFilters]);
 
   // Sorting
-  type SortKey = 'created_at' | 'date' | 'description' | 'order_id' | 'category' | 'fund_source' | 'amount' | 'discount' | 'final_price';
   const [sortKey, setSortKey] = useState<SortKey>('created_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
@@ -293,37 +349,6 @@ const AdminExpense = () => {
       { amount: 0, discount: 0, final: 0 }
     );
   }, [sortedExpenses]);
-
-  const SortHead = ({ label, sortKeyName, className }: { label: string; sortKeyName: SortKey; className?: string }) => {
-    const isRight = className?.includes('text-right');
-    return (
-    <TableHead className={className}>
-      <button
-        type="button"
-        onClick={() => toggleSort(sortKeyName)}
-        className={`inline-flex items-center gap-1 hover:text-foreground transition-colors w-full ${isRight ? 'justify-end' : ''}`}
-      >
-        {label}
-        {sortKey === sortKeyName ? (
-          sortDir === 'asc' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />
-        ) : (
-          <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
-        )}
-      </button>
-    </TableHead>
-  );
-  };
-
-  const FilterCell = ({ filterKey, className }: { filterKey: keyof ColFilters; className?: string }) => (
-    <TableHead className={`pt-0 pb-2 ${className || ''}`}>
-      <Input
-        value={colFilters[filterKey]}
-        onChange={e => setColFilter(filterKey, e.target.value)}
-        placeholder="Filter..."
-        className="h-7 text-xs font-normal"
-      />
-    </TableHead>
-  );
 
   if (loading) return <div className="p-6">Loading...</div>;
 
@@ -481,27 +506,27 @@ const AdminExpense = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <SortHead label="Created Date" sortKeyName="created_at" />
-                      <SortHead label="Transaction Date" sortKeyName="date" />
-                      <SortHead label="Description" sortKeyName="description" />
-                      <SortHead label="Order ID" sortKeyName="order_id" />
-                      <SortHead label="Category" sortKeyName="category" />
-                      <SortHead label="Fund Source" sortKeyName="fund_source" />
-                      <SortHead label="Amount" sortKeyName="amount" className="text-right" />
-                      <SortHead label="Discount" sortKeyName="discount" className="text-right" />
-                      <SortHead label="Final Price" sortKeyName="final_price" className="text-right" />
+                      <SortHead label="Created Date" sortKeyName="created_at" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                      <SortHead label="Transaction Date" sortKeyName="date" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                      <SortHead label="Description" sortKeyName="description" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                      <SortHead label="Order ID" sortKeyName="order_id" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                      <SortHead label="Category" sortKeyName="category" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                      <SortHead label="Fund Source" sortKeyName="fund_source" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                      <SortHead label="Amount" sortKeyName="amount" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-right" />
+                      <SortHead label="Discount" sortKeyName="discount" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-right" />
+                      <SortHead label="Final Price" sortKeyName="final_price" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-right" />
                       <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
                     <TableRow className="hover:bg-transparent">
-                      <FilterCell filterKey="created_at" />
-                      <FilterCell filterKey="date" />
-                      <FilterCell filterKey="description" />
-                      <FilterCell filterKey="order_id" />
-                      <FilterCell filterKey="category" />
-                      <FilterCell filterKey="fund_source" />
-                      <FilterCell filterKey="amount" />
-                      <FilterCell filterKey="discount" />
-                      <FilterCell filterKey="final_price" />
+                      <FilterCell filterKey="created_at" value={colFilters.created_at} onChange={setColFilter} />
+                      <FilterCell filterKey="date" value={colFilters.date} onChange={setColFilter} />
+                      <FilterCell filterKey="description" value={colFilters.description} onChange={setColFilter} />
+                      <FilterCell filterKey="order_id" value={colFilters.order_id} onChange={setColFilter} />
+                      <FilterCell filterKey="category" value={colFilters.category} onChange={setColFilter} />
+                      <FilterCell filterKey="fund_source" value={colFilters.fund_source} onChange={setColFilter} />
+                      <FilterCell filterKey="amount" value={colFilters.amount} onChange={setColFilter} />
+                      <FilterCell filterKey="discount" value={colFilters.discount} onChange={setColFilter} />
+                      <FilterCell filterKey="final_price" value={colFilters.final_price} onChange={setColFilter} />
                       <TableHead className="pt-0 pb-2">
                         {hasColFilters && (
                           <Button
