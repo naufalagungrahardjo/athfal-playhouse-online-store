@@ -301,14 +301,27 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
     let qty = 0;
     let revenue = 0;
     let totalAmount = 0;
+    let cashReceived = 0;
     for (const r of sortedRows) {
-      totalAmount += Number(r.order.total_amount) || 0;
+      const o = r.order;
+      totalAmount += Number(o.total_amount) || 0;
+      // Cash actually collected (matches Analytics / bank): paid installments
+      // only, capped at the net order value, excluding cancelled & refunded orders.
+      if (o.status !== "cancelled" && o.status !== "refund") {
+        const net = Math.max(
+          0,
+          (Number(o.subtotal) || 0) +
+            (Number(o.tax_amount) || 0) -
+            (Number(o.discount_amount) || 0)
+        );
+        cashReceived += Math.min(Math.max(0, Number(o.amount_paid) || 0), net);
+      }
       for (const it of r.matchedItems) {
         qty += Number(it.quantity) || 0;
         revenue += (Number(it.product_price) || 0) * (Number(it.quantity) || 0);
       }
     }
-    return { qty, revenue, totalAmount, customers: sortedRows.length };
+    return { qty, revenue, totalAmount, cashReceived, customers: sortedRows.length };
   }, [sortedRows]);
 
   const exportCSV = () => {
@@ -757,7 +770,13 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
                   <TableCell className="font-bold">{totals.qty}</TableCell>
                   <TableCell colSpan={2} />
                   <TableCell className="text-right font-bold whitespace-nowrap">
-                    {fmtIDR(totals.totalAmount)}
+                    <div>{fmtIDR(totals.cashReceived)}</div>
+                    <div className="text-[11px] font-normal text-muted-foreground">
+                      Cash received
+                    </div>
+                    <div className="text-[11px] font-normal text-muted-foreground">
+                      Billed: {fmtIDR(totals.totalAmount)}
+                    </div>
                   </TableCell>
                   <TableCell />
                 </TableRow>
