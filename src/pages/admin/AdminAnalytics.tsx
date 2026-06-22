@@ -135,6 +135,25 @@ const AdminAnalytics = () => {
   const [salesRevenueType, setSalesRevenueType] = useState<RevenueType>('before_tax');
   const [netRevenueType, setNetRevenueType] = useState<RevenueType>('before_tax');
 
+  // Clear every filter across all analytics tabs
+  const clearAllFilters = () => {
+    setDateRange(undefined);
+    setCategoryFilter([]);
+    setStatusFilter('all');
+    setTimeGranularity('daily');
+    setExpCatFilter([]);
+    setExpFundFilter('all');
+    setExpGranularity('monthly');
+    setIncFundFilter('all');
+    setIncGranularity('monthly');
+    setCapFundFilter('all');
+    setCapGranularity('monthly');
+    setNetGranularity('monthly');
+    setIncludeCapital(false);
+    setSalesRevenueType('before_tax');
+    setNetRevenueType('before_tax');
+  };
+
   const fetchData = async () => {
     const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes, incRes, capRes] = await Promise.all([
       supabase.from('orders').select('id, created_at, payment_method, status, total_amount, subtotal, tax_amount, discount_amount, amount_paid').order('created_at', { ascending: true }),
