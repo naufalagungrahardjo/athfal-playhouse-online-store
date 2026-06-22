@@ -262,13 +262,20 @@ const AdminAnalytics = () => {
         if (dateRange.to && d > new Date(dateRange.to.getTime() + 86400000)) return false;
       }
       if (!orderCatMatch(order)) return false;
+      if (!orderProductMatch(order)) return false;
       return true;
     });
-  }, [orders, dateRange, categoryFilter, statusFilter, productCategoryMap]);
+  }, [orders, dateRange, categoryFilter, productFilter, statusFilter, productCategoryMap]);
 
   const getFilteredItems = (order: OrderWithItems) => {
-    if (categoryFilter.length === 0) return order.items;
-    return order.items.filter(item => categoryFilter.includes(productCategoryMap[item.product_id]));
+    let items = order.items;
+    if (categoryFilter.length > 0) {
+      items = items.filter(item => categoryFilter.includes(productCategoryMap[item.product_id]));
+    }
+    if (productFilter.length > 0) {
+      items = items.filter(item => productFilter.includes(item.product_id));
+    }
+    return items;
   };
 
   const salesQuantityData = useMemo(() => {
