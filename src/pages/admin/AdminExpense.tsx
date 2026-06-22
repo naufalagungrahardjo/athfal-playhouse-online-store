@@ -452,7 +452,27 @@ const AdminExpense = () => {
                         <TableCell className="text-xs font-mono max-w-[120px] truncate">{exp.order_id ? exp.order_id.slice(0, 8) + '...' : '-'}</TableCell>
                         <TableCell>{exp.category_id ? catMap[exp.category_id] || '-' : '-'}</TableCell>
                         <TableCell>{exp.fund_source_id ? fundMap[exp.fund_source_id] || '-' : '-'}</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(exp.amount)}</TableCell>
+                        <TableCell className="text-right align-top">
+                          <div className="flex flex-col items-end gap-1.5 min-w-[130px]">
+                            <span className="font-medium">{formatCurrency(exp.amount)}</span>
+                            <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+                              <Checkbox
+                                checked={!!exp.is_checked}
+                                onCheckedChange={(val) => updateCheck(exp.id, { is_checked: val === true })}
+                                aria-label="Mark expense as checked"
+                              />
+                              Checked
+                            </label>
+                            <Input
+                              type="text"
+                              placeholder="Note..."
+                              value={exp.check_notes || ''}
+                              onChange={(e) => updateCheck(exp.id, { check_notes: e.target.value })}
+                              className="h-7 text-xs text-right w-full min-w-[120px]"
+                              aria-label="Check note"
+                            />
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right">{formatCurrency(exp.discount || 0)}</TableCell>
                         <TableCell className="text-right font-bold">{formatCurrency(exp.amount - (exp.discount || 0))}</TableCell>
                         <TableCell>
