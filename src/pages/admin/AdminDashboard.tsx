@@ -152,6 +152,52 @@ const AdminDashboard = () => {
         </div>
       </div>
 
+      {/* Financial Summary (Profit & Loss) */}
+      {showRevenue && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <ClickableStatsCard
+            title="Sales Revenue"
+            value={formatCurrency(summary.salesRevenue)}
+            icon={DollarSign}
+          />
+          <ClickableStatsCard
+            title="Other Income"
+            value={formatCurrency(summary.otherIncome)}
+            icon={HandCoins}
+          />
+          <ClickableStatsCard
+            title="Capital Inflow"
+            value={formatCurrency(summary.capitalInflow)}
+            icon={PiggyBank}
+          />
+          <ClickableStatsCard
+            title="Total Expenses"
+            value={formatCurrency(summary.totalExpenses)}
+            icon={Receipt}
+            className="border-red-200 bg-red-50"
+          />
+          <ClickableStatsCard
+            title="Net Income"
+            value={formatCurrency(summary.netIncome)}
+            icon={TrendingUp}
+            className={summary.netIncome >= 0 ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}
+          />
+          <ClickableStatsCard
+            title="Target to BEP"
+            value={formatCurrency(summary.targetToBEP)}
+            icon={Target}
+            className={summary.targetToBEP >= 0 ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'}
+          />
+          <ClickableStatsCard
+            title="Bank Balance"
+            value={formatCurrency(summary.bankBalance)}
+            icon={Banknote}
+            onClick={() => setSelectedView('fundBalance')}
+            className="border-blue-200 bg-blue-50"
+          />
+        </div>
+      )}
+
       {/* Revenue & Summary Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {showRevenue && (
