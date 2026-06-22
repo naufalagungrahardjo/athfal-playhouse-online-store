@@ -613,9 +613,9 @@ const AdminAnalytics = () => {
         return;
       }
 
-      // Respect the Net Income "Include / Exclude Capital" toggle: when capital is
-      // excluded, capital inflows are not counted in the fund balance either.
-      if (!includeCapital) return;
+      // Fund Balance reflects the ACTUAL cash in each bank/source, so capital
+      // inflows are always counted here (the money physically sits in the bank)
+      // regardless of the Net Income "Include / Exclude Capital" toggle.
       const name = c.fund_source_id ? (expFundMap[c.fund_source_id] || 'Unknown') : 'Unknown';
       ensure(name);
       balanceMap[name].capitalIn += c.amount;
