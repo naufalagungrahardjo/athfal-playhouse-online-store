@@ -726,6 +726,9 @@ const AdminAnalytics = () => {
               </Popover>
               {dateRange && <Button variant="ghost" size="sm" onClick={() => setDateRange(undefined)}>Clear</Button>}
             </div>
+            <Button variant="outline" size="sm" className="mt-2 w-full" onClick={clearAllFilters}>
+              Clear All Filters
+            </Button>
           </div>
         </div>
       </div>
