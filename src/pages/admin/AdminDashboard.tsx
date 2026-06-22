@@ -2,9 +2,11 @@
 import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useDashboard } from '@/hooks/useDashboard';
+import { useFinancialSummary } from '@/hooks/useFinancialSummary';
 import { supabase } from '@/integrations/supabase/client';
 import { ClickableStatsCard } from '@/components/admin/ClickableStatsCard';
 import { OrderManagement } from '@/components/admin/OrderManagement';
+import { FundBalanceTable } from '@/components/admin/FundBalanceTable';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -26,7 +28,12 @@ import {
   BadgePercent,
   Wallet,
   Coins,
-  CalendarIcon
+  CalendarIcon,
+  Banknote,
+  PiggyBank,
+  Target,
+  HandCoins,
+  Receipt
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,6 +43,7 @@ const AdminDashboard = () => {
   const [selectedView, setSelectedView] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const { stats, loading, fetchDashboardStats } = useDashboard(dateRange);
+  const { summary } = useFinancialSummary(dateRange);
   const { user } = useAuth();
   const adminRole = getAdminRole(user);
 
