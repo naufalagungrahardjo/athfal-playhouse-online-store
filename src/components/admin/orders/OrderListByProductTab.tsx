@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -135,6 +135,9 @@ const getSortValue = (row: { order: any; matchedItems: any[] }, key: SortKey): s
 
 export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
   const [selectedProductNames, setSelectedProductNames] = useState<string[]>([]);
+  const [includeOtherIncome, setIncludeOtherIncome] = useState(false);
+  const [otherIncomes, setOtherIncomes] = useState<any[]>([]);
+  const [fundSources, setFundSources] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [pickerSearch, setPickerSearch] = useState("");
   const [confirmedOverrides, setConfirmedOverrides] = useState<Record<string, boolean>>({});
@@ -153,6 +156,58 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
     status: "",
     total: "",
   });
+
+  // Load Other Income + fund sources so they can be combined into this list.
+  useEffect(() => {
+    const load = async () => {
+      const [incRes, fundRes] = await Promise.all([
+        supabase.from("other_income" as any).select("*").order("date", { ascending: false }),
+        supabase.from("expense_fund_sources" as any).select("id, name"),
+      ]);
+      setOtherIncomes((incRes.data as any) || []);
+      setFundSources((fundRes.data as any) || []);
+    };
+    load();
+  }, []);
+
+  const fundMap = useMemo(
+    () => Object.fromEntries((fundSources || []).map((f: any) => [f.id, f.name])),
+    [fundSources]
+  );
+
+  // Pseudo-rows representing Other Income entries (fund source shown as payment).
+  const incomeRows = useMemo(() => {
+    if (!includeOtherIncome) return [];
+    return (otherIncomes || []).map((inc: any) => {
+      const fundName = inc.fund_source_id ? fundMap[inc.fund_source_id] || "Unknown" : "Unknown";
+      const pseudo = {
+        id: `income-${inc.id}`,
+        __isIncome: true,
+        created_at: inc.date,
+        customer_name: inc.description,
+        customer_email: "",
+        customer_phone: "",
+        customer_address: "",
+        guardian_status: "",
+        child_name: "",
+        child_gender: "",
+        child_age: "",
+        payment_method: fundName,
+        status: "income",
+        notes: "",
+        promo_code: "",
+        total_amount: Number(inc.amount) || 0,
+        amount_paid: Number(inc.amount) || 0,
+        subtotal: Number(inc.amount) || 0,
+        tax_amount: 0,
+        discount_amount: 0,
+      };
+      const matchedItems = [
+        { product_name: "Other Income", quantity: 0, product_price: 0, session_name: "", installment_plan_name: "" },
+      ];
+      return { order: pseudo, matchedItems };
+    });
+  }, [includeOtherIncome, otherIncomes, fundMap]);
 
   // Build distinct product list from order items
   const productOptions = useMemo(() => {
@@ -239,18 +294,20 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
 
   // Orders containing any of the selected products
   const matchedRows = useMemo(() => {
-    if (selectedProductNames.length === 0) return [];
-    const selectedSet = new Set(selectedProductNames);
     const rows: any[] = [];
-    for (const o of orders || []) {
-      const matchedItems = (o.items || []).filter(
-        (it: any) => selectedSet.has(it.product_name)
-      );
-      if (matchedItems.length === 0) continue;
-      rows.push({ order: o, matchedItems });
+    if (selectedProductNames.length > 0) {
+      const selectedSet = new Set(selectedProductNames);
+      for (const o of orders || []) {
+        const matchedItems = (o.items || []).filter(
+          (it: any) => selectedSet.has(it.product_name)
+        );
+        if (matchedItems.length === 0) continue;
+        rows.push({ order: o, matchedItems });
+      }
     }
+    rows.push(...incomeRows);
     return rows;
-  }, [orders, selectedProductNames]);
+  }, [orders, selectedProductNames, incomeRows]);
 
   // Apply global search + per-column filters
   const filteredRows = useMemo(() => {
@@ -426,6 +483,7 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
   };
 
   const anyColFilter = Object.values(colFilters).some((v) => v.trim());
+  const hasSelection = selectedProductNames.length > 0 || includeOtherIncome;
 
   return (
     <Card>
@@ -442,8 +500,10 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
               >
                 <span className="truncate text-left">
                   {selectedProductNames.length === 0
-                    ? "Select products to combine..."
-                    : `${selectedProductNames.length} product${selectedProductNames.length > 1 ? "s" : ""} selected`}
+                    ? includeOtherIncome
+                      ? "Other Income selected"
+                      : "Select products to combine..."
+                    : `${selectedProductNames.length} product${selectedProductNames.length > 1 ? "s" : ""} selected${includeOtherIncome ? " + Other Income" : ""}`}
                 </span>
                 <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
               </Button>
@@ -469,11 +529,27 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
                   <button
                     type="button"
                     className="text-muted-foreground hover:underline"
-                    onClick={() => setSelectedProductNames([])}
+                    onClick={() => {
+                      setSelectedProductNames([]);
+                      setIncludeOtherIncome(false);
+                    }}
                   >
                     Clear
                   </button>
                 </div>
+              </div>
+              <div className="px-2 py-2 border-b">
+                <label className="flex items-start gap-2 px-2 py-2 rounded-sm hover:bg-accent cursor-pointer">
+                  <Checkbox
+                    checked={includeOtherIncome}
+                    onCheckedChange={(v) => setIncludeOtherIncome(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm flex-1">
+                    Other Income{" "}
+                    <span className="text-muted-foreground">({otherIncomes.length})</span>
+                  </span>
+                </label>
               </div>
               <ScrollArea className="h-[320px]">
                 {filteredProductOptions.length === 0 ? (
@@ -513,7 +589,7 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10"
-              disabled={selectedProductNames.length === 0}
+              disabled={!hasSelection}
             />
           </div>
           <Button variant="outline" onClick={exportCSV} disabled={sortedRows.length === 0}>
@@ -521,7 +597,7 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
           </Button>
         </div>
 
-        {selectedProductNames.length > 0 && (
+        {hasSelection && (
           <>
             <div className="flex flex-wrap gap-1.5">
               {selectedProductNames.map((name) => (
@@ -537,6 +613,19 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
                   </button>
                 </Badge>
               ))}
+              {includeOtherIncome && (
+                <Badge variant="outline" className="gap-1 pr-1">
+                  <span className="max-w-[260px] truncate">Other Income</span>
+                  <button
+                    type="button"
+                    onClick={() => setIncludeOtherIncome(false)}
+                    className="rounded-sm hover:bg-muted p-0.5"
+                    aria-label="Remove Other Income"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
             </div>
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary">Orders: {totals.customers}</Badge>
@@ -546,9 +635,9 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
           </>
         )}
 
-        {selectedProductNames.length === 0 ? (
+        {!hasSelection ? (
           <div className="text-center py-12 text-muted-foreground">
-            Tick one or more products to see all customers who ordered them.
+            Tick one or more products (or Other Income) to see the list.
           </div>
         ) : sortedRows.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
@@ -735,29 +824,37 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
                     </TableCell>
                     <TableCell className="text-right whitespace-nowrap text-xs">
                       <div>{fmtIDR(o.total_amount)}</div>
-                      <div className="text-muted-foreground">
-                        Paid: {fmtIDR(o.amount_paid || 0)}
-                      </div>
-                      <label className="mt-1 flex items-center justify-end gap-1.5 cursor-pointer">
-                        <Checkbox
-                          checked={isConfirmed(o)}
-                          onCheckedChange={(v) => togglePaymentConfirmed(o, v === true)}
-                        />
-                        <span className="text-[11px] text-muted-foreground">Payment confirmed</span>
-                      </label>
-                      <Input
-                        type="text"
-                        placeholder="Payment note..."
-                        value={getNote(o)}
-                        onChange={(e) => setNoteOverrides((prev) => ({ ...prev, [o.id]: e.target.value }))}
-                        onBlur={(e) => updatePaymentNote(o, e.target.value)}
-                        className="mt-1 h-6 text-[11px] px-1.5 py-0 w-[140px] ml-auto"
-                      />
+                      {o.__isIncome ? (
+                        <div className="text-muted-foreground">Other Income</div>
+                      ) : (
+                        <>
+                          <div className="text-muted-foreground">
+                            Paid: {fmtIDR(o.amount_paid || 0)}
+                          </div>
+                          <label className="mt-1 flex items-center justify-end gap-1.5 cursor-pointer">
+                            <Checkbox
+                              checked={isConfirmed(o)}
+                              onCheckedChange={(v) => togglePaymentConfirmed(o, v === true)}
+                            />
+                            <span className="text-[11px] text-muted-foreground">Payment confirmed</span>
+                          </label>
+                          <Input
+                            type="text"
+                            placeholder="Payment note..."
+                            value={getNote(o)}
+                            onChange={(e) => setNoteOverrides((prev) => ({ ...prev, [o.id]: e.target.value }))}
+                            onBlur={(e) => updatePaymentNote(o, e.target.value)}
+                            className="mt-1 h-6 text-[11px] px-1.5 py-0 w-[140px] ml-auto"
+                          />
+                        </>
+                      )}
                     </TableCell>
                     <TableCell>
-                      <Button size="icon" variant="ghost" onClick={() => onViewDetails(o)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                      {!o.__isIncome && (
+                        <Button size="icon" variant="ghost" onClick={() => onViewDetails(o)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
