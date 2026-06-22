@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableFooter } from "@/components/ui/table";
 
 interface Props {
   orders: any[];
@@ -299,13 +300,15 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
   const totals = useMemo(() => {
     let qty = 0;
     let revenue = 0;
+    let totalAmount = 0;
     for (const r of sortedRows) {
+      totalAmount += Number(r.order.total_amount) || 0;
       for (const it of r.matchedItems) {
         qty += Number(it.quantity) || 0;
         revenue += (Number(it.product_price) || 0) * (Number(it.quantity) || 0);
       }
     }
-    return { qty, revenue, customers: sortedRows.length };
+    return { qty, revenue, totalAmount, customers: sortedRows.length };
   }, [sortedRows]);
 
   const exportCSV = () => {
@@ -746,6 +749,19 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
                   </TableRow>
                 ))}
               </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={6} className="font-semibold">
+                    Total ({totals.customers})
+                  </TableCell>
+                  <TableCell className="font-bold">{totals.qty}</TableCell>
+                  <TableCell colSpan={2} />
+                  <TableCell className="text-right font-bold whitespace-nowrap">
+                    {fmtIDR(totals.totalAmount)}
+                  </TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableFooter>
             </Table>
           </div>
         )}
