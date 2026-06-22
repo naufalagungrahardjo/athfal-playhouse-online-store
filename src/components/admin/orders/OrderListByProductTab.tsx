@@ -135,6 +135,9 @@ const getSortValue = (row: { order: any; matchedItems: any[] }, key: SortKey): s
 
 export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
   const [selectedProductNames, setSelectedProductNames] = useState<string[]>([]);
+  const [includeOtherIncome, setIncludeOtherIncome] = useState(false);
+  const [otherIncomes, setOtherIncomes] = useState<any[]>([]);
+  const [fundSources, setFundSources] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [pickerSearch, setPickerSearch] = useState("");
   const [confirmedOverrides, setConfirmedOverrides] = useState<Record<string, boolean>>({});
@@ -153,6 +156,58 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
     status: "",
     total: "",
   });
+
+  // Load Other Income + fund sources so they can be combined into this list.
+  useEffect(() => {
+    const load = async () => {
+      const [incRes, fundRes] = await Promise.all([
+        supabase.from("other_income" as any).select("*").order("date", { ascending: false }),
+        supabase.from("expense_fund_sources" as any).select("id, name"),
+      ]);
+      setOtherIncomes((incRes.data as any) || []);
+      setFundSources((fundRes.data as any) || []);
+    };
+    load();
+  }, []);
+
+  const fundMap = useMemo(
+    () => Object.fromEntries((fundSources || []).map((f: any) => [f.id, f.name])),
+    [fundSources]
+  );
+
+  // Pseudo-rows representing Other Income entries (fund source shown as payment).
+  const incomeRows = useMemo(() => {
+    if (!includeOtherIncome) return [];
+    return (otherIncomes || []).map((inc: any) => {
+      const fundName = inc.fund_source_id ? fundMap[inc.fund_source_id] || "Unknown" : "Unknown";
+      const pseudo = {
+        id: `income-${inc.id}`,
+        __isIncome: true,
+        created_at: inc.date,
+        customer_name: inc.description,
+        customer_email: "",
+        customer_phone: "",
+        customer_address: "",
+        guardian_status: "",
+        child_name: "",
+        child_gender: "",
+        child_age: "",
+        payment_method: fundName,
+        status: "income",
+        notes: "",
+        promo_code: "",
+        total_amount: Number(inc.amount) || 0,
+        amount_paid: Number(inc.amount) || 0,
+        subtotal: Number(inc.amount) || 0,
+        tax_amount: 0,
+        discount_amount: 0,
+      };
+      const matchedItems = [
+        { product_name: "Other Income", quantity: 0, product_price: 0, session_name: "", installment_plan_name: "" },
+      ];
+      return { order: pseudo, matchedItems };
+    });
+  }, [includeOtherIncome, otherIncomes, fundMap]);
 
   // Build distinct product list from order items
   const productOptions = useMemo(() => {
