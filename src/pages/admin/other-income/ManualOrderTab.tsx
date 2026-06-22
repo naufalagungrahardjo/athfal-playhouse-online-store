@@ -456,16 +456,27 @@ const ManualOrderTab = () => {
       <Card>
         <CardHeader><CardTitle>Payment & Notes</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label>Payment Method *</Label>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger><SelectValue placeholder="Select payment method" /></SelectTrigger>
-              <SelectContent>
-                {paymentMethods.map(pm => <SelectItem key={pm.id} value={pm.bank_name}>{pm.bank_name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground mt-1">MDR fee will be auto-applied to expenses if configured for this method.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Transaction Date</Label>
+              <Input
+                type="date"
+                value={transactionDate}
+                onChange={e => setTransactionDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+            <div>
+              <Label>Payment Method *</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger><SelectValue placeholder="Select payment method" /></SelectTrigger>
+                <SelectContent>
+                  {paymentMethods.map(pm => <SelectItem key={pm.id} value={pm.bank_name}>{pm.bank_name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+          <p className="text-xs text-muted-foreground">MDR fee will be auto-applied to expenses if configured for the selected method.</p>
           <div>
             <Label>Notes</Label>
             <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} />
