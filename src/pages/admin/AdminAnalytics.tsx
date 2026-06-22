@@ -794,6 +794,16 @@ const AdminAnalytics = () => {
               />
             </div>
             <div>
+              <label className="text-sm font-medium block mb-1">Product / Variant</label>
+              <MultiSelectFilter
+                options={productOptions}
+                selected={productFilter}
+                onChange={setProductFilter}
+                allLabel="All Products"
+                width="w-[260px]"
+              />
+            </div>
+            <div>
               <label className="text-sm font-medium block mb-1">Order Status</label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
