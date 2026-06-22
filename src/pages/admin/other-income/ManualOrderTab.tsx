@@ -280,7 +280,7 @@ const ManualOrderTab = () => {
       setCustomerName(''); setCustomerEmail(''); setCustomerPhone(''); setCustomerAddress('');
       setGuardianStatus(''); setChildName(''); setChildBirthdate(''); setChildGender('');
       setPaymentMethod(''); setNotes('');
-      setTransactionDate('');
+      setTransactionDate(new Date().toISOString().split('T')[0]);
       setSelectedCustomerKey('');
       setCustomerMode('new');
       setItems([{ productDbId: '', variantId: null, quantity: 1 }]);
