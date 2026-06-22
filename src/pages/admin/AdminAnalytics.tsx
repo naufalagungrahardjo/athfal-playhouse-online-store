@@ -1252,6 +1252,12 @@ const AdminAnalytics = () => {
             <Card>
               <CardHeader><CardTitle>Money Flow Summary</CardTitle></CardHeader>
               <CardContent className="flex flex-col justify-center h-auto sm:h-[350px] space-y-3 sm:space-y-4">
+                {includeCapital && (
+                  <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/20">
+                    <span className="text-xs sm:text-sm font-medium">Capital Inflow</span>
+                    <span className="font-bold text-emerald-600 text-xs sm:text-base truncate ml-2">{formatCurrency(totalAllCapital)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-green-50 dark:bg-green-950/20">
                   <span className="text-xs sm:text-sm font-medium">Sales Revenue</span>
                   <span className="font-bold text-green-600 text-xs sm:text-base truncate ml-2">{formatCurrency(totalSalesRevenue)}</span>
@@ -1262,7 +1268,7 @@ const AdminAnalytics = () => {
                 </div>
                 <div className="border-t pt-2 flex justify-between items-center p-2 sm:p-3">
                   <span className="text-xs sm:text-sm font-medium">Total Revenue</span>
-                  <span className="font-bold text-xs sm:text-base truncate ml-2">{formatCurrency(totalSalesRevenue + totalOtherIncome)}</span>
+                  <span className="font-bold text-xs sm:text-base truncate ml-2">{formatCurrency(totalSalesRevenue + totalOtherIncome + (includeCapital ? totalAllCapital : 0))}</span>
                 </div>
                 <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-red-50 dark:bg-red-950/20">
                   <span className="text-xs sm:text-sm font-medium">- Total Expenses</span>
