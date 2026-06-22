@@ -210,23 +210,16 @@ export default function AdminAllTeachers() {
       if (teacherFilter !== "all" && a.teacher_email !== teacherFilter) return false;
       if (dateFrom && a.date < dateFrom) return false;
       if (dateTo && a.date > dateTo) return false;
-      if (filterMonth !== "all") {
-        const month = new Date(a.date).getMonth();
-        if (month !== parseInt(filterMonth)) return false;
-      }
-      if (filterYear !== "all") {
-        const year = new Date(a.date).getFullYear();
-        if (year !== parseInt(filterYear)) return false;
-      }
       return true;
     });
-  }, [attendances, teacherFilter, dateFrom, dateTo, filterMonth, filterYear]);
+  }, [attendances, teacherFilter, dateFrom, dateTo]);
 
   // Summary: per-teacher attendance stats from filtered data
   const attendanceSummary = useMemo(() => {
     const [thH, thM] = (lateThreshold || "08:30").split(":").map(Number);
     const summary: Record<string, { totalDays: number; totalOnTime: number; totalLate: number; weekdays: number; weekend: number }> = {};
-    for (const email of teachers) {
+    const emailsToShow = teacherFilter === "all" ? teachers : [teacherFilter];
+    for (const email of emailsToShow) {
       summary[email] = { totalDays: 0, totalOnTime: 0, totalLate: 0, weekdays: 0, weekend: 0 };
     }
     for (const a of filteredAttendances) {
@@ -248,7 +241,7 @@ export default function AdminAllTeachers() {
       }
     }
     return summary;
-  }, [filteredAttendances, teachers, lateThreshold]);
+  }, [filteredAttendances, teachers, lateThreshold, teacherFilter]);
 
   // Filtered leaves
   const filteredLeaves = useMemo(() => {
