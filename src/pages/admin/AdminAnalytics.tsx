@@ -286,7 +286,7 @@ const AdminAnalytics = () => {
       map[key] = (map[key] || 0) + qty;
     });
     return Object.entries(map).sort().map(([date, qty]) => ({ date, quantity: qty }));
-  }, [filteredOrders, categoryFilter, timeGranularity]);
+  }, [filteredOrders, categoryFilter, productFilter, timeGranularity]);
 
   const salesValueData = useMemo(() => {
     const map: Record<string, number> = {};
@@ -309,7 +309,7 @@ const AdminAnalytics = () => {
     return Object.entries(map)
       .map(([name, qty]) => ({ name, value: qty, percentage: total > 0 ? ((qty / total) * 100).toFixed(1) : '0' }))
       .sort((a, b) => b.value - a.value);
-  }, [filteredOrders, categoryFilter]);
+  }, [filteredOrders, categoryFilter, productFilter]);
 
   const paymentProportionData = useMemo(() => {
     const map: Record<string, number> = {};
@@ -335,7 +335,7 @@ const AdminAnalytics = () => {
     return Object.keys(qtyMap)
       .map(name => ({ name, quantity: qtyMap[name], value: valMap[name] }))
       .sort((a, b) => b.quantity - a.quantity);
-  }, [filteredOrders, categoryFilter]);
+  }, [filteredOrders, categoryFilter, productFilter]);
 
   // Helper: net expense = amount - discount
   const getExpenseNet = (e: any) => (e.amount || 0) - (e.discount || 0);
