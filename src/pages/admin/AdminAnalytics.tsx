@@ -515,13 +515,13 @@ const AdminAnalytics = () => {
   const revenueVsExpenseData = useMemo(() => {
     const map: Record<string, { revenue: number; expense: number; net: number }> = {};
     // Sales revenue
-    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).forEach(o => {
+    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).filter(o => orderCatMatch(o)).forEach(o => {
       const key = formatDateKey(o.created_at, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
       map[key].revenue += getOrderRevenue(o, netRevenueType);
     });
     // Other income
-    otherIncomes.filter(i => inRange(i.date)).forEach(i => {
+    otherIncomes.filter(i => inRange(i.date)).filter(i => incFundMatch(i.fund_source_id)).forEach(i => {
       const key = formatDateKey(i.date, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
       map[key].revenue += i.amount;
@@ -531,6 +531,7 @@ const AdminAnalytics = () => {
       capitalInflows
         .filter(c => (c.type || 'inflow') !== 'transfer')
         .filter(c => inRange(c.date))
+        .filter(c => capFundMatch(c.fund_source_id))
         .forEach(c => {
         const key = formatDateKey(c.date, netGranularity);
         if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
@@ -538,7 +539,7 @@ const AdminAnalytics = () => {
         });
     }
     // Expenses
-    expenses.filter(e => inRange(e.date)).forEach(e => {
+    expenses.filter(e => inRange(e.date)).filter(e => expCatMatch(e.category_id) && expFundMatch(e.fund_source_id)).forEach(e => {
       const key = formatDateKey(e.date, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
       map[key].expense += getExpenseNet(e);
@@ -546,7 +547,7 @@ const AdminAnalytics = () => {
     // Calculate net
     Object.values(map).forEach(v => { v.net = v.revenue - v.expense; });
     return Object.entries(map).sort().map(([date, vals]) => ({ date, ...vals }));
-  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, netGranularity, netRevenueType, dateRange]);
+  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, netGranularity, netRevenueType, dateRange, categoryFilter, productCategoryMap, expCatFilter, expFundFilter, incFundFilter, capFundFilter]);
 
   // Cumulative net income over time
   const cumulativeNetData = useMemo(() => {
