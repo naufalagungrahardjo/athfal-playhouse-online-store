@@ -483,6 +483,7 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
   };
 
   const anyColFilter = Object.values(colFilters).some((v) => v.trim());
+  const hasSelection = selectedProductNames.length > 0 || includeOtherIncome;
 
   return (
     <Card>
