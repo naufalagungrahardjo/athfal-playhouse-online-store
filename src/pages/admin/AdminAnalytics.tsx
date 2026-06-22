@@ -593,7 +593,7 @@ const AdminAnalytics = () => {
     // Calculate net
     Object.values(map).forEach(v => { v.net = v.revenue - v.expense; });
     return Object.entries(map).sort().map(([date, vals]) => ({ date, ...vals }));
-  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, netGranularity, netRevenueType, dateRange, categoryFilter, productCategoryMap, expCatFilter, expFundFilter, incFundFilter, capFundFilter]);
+  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, netGranularity, netRevenueType, dateRange, categoryFilter, productFilter, productCategoryMap, expCatFilter, expFundFilter, incFundFilter, capFundFilter]);
 
   // Cumulative net income over time
   const cumulativeNetData = useMemo(() => {
@@ -702,7 +702,7 @@ const AdminAnalytics = () => {
         net: v.salesIn + v.otherIn + v.capitalIn + v.transferIn - v.transferOut - v.expenseOut,
       }))
       .sort((a, b) => b.net - a.net);
-  }, [orders, otherIncomes, expenses, capitalInflows, expFundMap, netRevenueType, dateRange, includeCapital, categoryFilter, productCategoryMap, expCatFilter, expFundFilter, incFundFilter, capFundFilter]);
+  }, [orders, otherIncomes, expenses, capitalInflows, expFundMap, netRevenueType, dateRange, includeCapital, categoryFilter, productFilter, productCategoryMap, expCatFilter, expFundFilter, incFundFilter, capFundFilter]);
 
   // Fund balance pie (net positive only)
   const fundBalancePieData = useMemo(() => {
