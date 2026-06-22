@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
 import { Trash2, Plus, Pencil, Search, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { format } from 'date-fns';
@@ -227,6 +227,18 @@ const AdminExpense = () => {
     return sorted;
   }, [filteredExpenses, sortKey, sortDir, catMap, fundMap]);
 
+  const expenseTotals = useMemo(() => {
+    return sortedExpenses.reduce(
+      (acc, exp) => {
+        acc.amount += exp.amount || 0;
+        acc.discount += exp.discount || 0;
+        acc.final += (exp.amount || 0) - (exp.discount || 0);
+        return acc;
+      },
+      { amount: 0, discount: 0, final: 0 }
+    );
+  }, [sortedExpenses]);
+
   const SortHead = ({ label, sortKeyName, className }: { label: string; sortKeyName: SortKey; className?: string }) => {
     const isRight = className?.includes('text-right');
     return (
@@ -440,6 +452,15 @@ const AdminExpense = () => {
                       </TableRow>
                     ))}
                   </TableBody>
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell colSpan={6} className="font-semibold">Total ({sortedExpenses.length})</TableCell>
+                      <TableCell className="text-right font-bold">{formatCurrency(expenseTotals.amount)}</TableCell>
+                      <TableCell className="text-right font-bold">{formatCurrency(expenseTotals.discount)}</TableCell>
+                      <TableCell className="text-right font-bold">{formatCurrency(expenseTotals.final)}</TableCell>
+                      <TableCell />
+                    </TableRow>
+                  </TableFooter>
                 </Table>
               )}
             </CardContent>
