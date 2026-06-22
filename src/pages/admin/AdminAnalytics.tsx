@@ -12,6 +12,7 @@ import { DateRange } from 'react-day-picker';
 import { formatCurrency } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { MultiSelectFilter } from '@/components/admin/MultiSelectFilter';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
