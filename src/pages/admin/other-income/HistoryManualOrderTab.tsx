@@ -17,6 +17,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from '@/components/ui/table';
 
 const isManualOrder = (o: any) =>
@@ -86,6 +87,11 @@ const HistoryManualOrderTab = () => {
       return fields.some((v) => v != null && String(v).toLowerCase().includes(q));
     });
   }, [manualOrders, search]);
+
+  const totalAmount = useMemo(
+    () => filtered.reduce((sum, o) => sum + (o.total_amount || 0), 0),
+    [filtered]
+  );
 
   const handleView = (o: any) => {
     setSelectedOrder(o);
@@ -188,6 +194,13 @@ const HistoryManualOrderTab = () => {
                     </TableRow>
                   ))}
                 </TableBody>
+                <TableFooter>
+                  <TableRow>
+                    <TableCell colSpan={6} className="font-semibold">Total ({filtered.length})</TableCell>
+                    <TableCell className="text-right font-bold whitespace-nowrap">{formatCurrency(totalAmount)}</TableCell>
+                    <TableCell />
+                  </TableRow>
+                </TableFooter>
               </Table>
             </div>
           )}
