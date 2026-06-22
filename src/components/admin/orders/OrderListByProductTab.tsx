@@ -613,6 +613,19 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
                   </button>
                 </Badge>
               ))}
+              {includeOtherIncome && (
+                <Badge variant="outline" className="gap-1 pr-1">
+                  <span className="max-w-[260px] truncate">Other Income</span>
+                  <button
+                    type="button"
+                    onClick={() => setIncludeOtherIncome(false)}
+                    className="rounded-sm hover:bg-muted p-0.5"
+                    aria-label="Remove Other Income"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
             </div>
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary">Orders: {totals.customers}</Badge>
