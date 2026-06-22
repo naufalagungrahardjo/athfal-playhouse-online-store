@@ -589,7 +589,7 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10"
-              disabled={selectedProductNames.length === 0}
+              disabled={!hasSelection}
             />
           </div>
           <Button variant="outline" onClick={exportCSV} disabled={sortedRows.length === 0}>
@@ -597,7 +597,7 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
           </Button>
         </div>
 
-        {selectedProductNames.length > 0 && (
+        {hasSelection && (
           <>
             <div className="flex flex-wrap gap-1.5">
               {selectedProductNames.map((name) => (
@@ -622,9 +622,9 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
           </>
         )}
 
-        {selectedProductNames.length === 0 ? (
+        {!hasSelection ? (
           <div className="text-center py-12 text-muted-foreground">
-            Tick one or more products to see all customers who ordered them.
+            Tick one or more products (or Other Income) to see the list.
           </div>
         ) : sortedRows.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
