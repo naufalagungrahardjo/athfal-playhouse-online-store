@@ -580,30 +580,10 @@ export default function AdminAllTeachers() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label>Month</Label>
-                  <Select value={filterMonth} onValueChange={setFilterMonth}>
-                    <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Months</SelectItem>
-                      {getMonthOptions().map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Year</Label>
-                  <Select value={filterYear} onValueChange={setFilterYear}>
-                    <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Years</SelectItem>
-                      {getYearOptions().map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
                 <div><Label>From</Label><Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} /></div>
                 <div><Label>To</Label><Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} /></div>
-                {(dateFrom || dateTo || filterMonth !== "all" || filterYear !== "all") && (
-                  <Button variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); setFilterMonth("all"); setFilterYear("all"); }}>Clear filters</Button>
+                {(dateFrom || dateTo) && (
+                  <Button variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); }}>Clear filters</Button>
                 )}
                 <Button variant="outline" onClick={exportAttendanceCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
                 {isSuperAdmin && (
@@ -619,8 +599,8 @@ export default function AdminAllTeachers() {
                         <AlertDialogTitle>Delete attendance history?</AlertDialogTitle>
                         <AlertDialogDescription>
                           This will permanently delete <strong>{filteredAttendances.length}</strong> attendance record(s) for{" "}
-                          <strong>{teacherFilter === "all" ? "ALL teachers" : teacherFilter}</strong>
-                          {(dateFrom || dateTo || filterMonth !== "all" || filterYear !== "all") ? " matching the current date filters" : ""}.
+                          <strong>{teacherFilter === "all" ? "ALL teachers" : displayName(teacherFilter)}</strong>
+                          {(dateFrom || dateTo) ? " matching the current date filters" : ""}.
                           This cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
