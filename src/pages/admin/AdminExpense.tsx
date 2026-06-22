@@ -254,17 +254,6 @@ const AdminExpense = () => {
 
   const [expSearch, setExpSearch] = useState('');
 
-  type ColFilters = {
-    created_at: string;
-    date: string;
-    description: string;
-    order_id: string;
-    category: string;
-    fund_source: string;
-    amount: string;
-    discount: string;
-    final_price: string;
-  };
   const emptyColFilters: ColFilters = {
     created_at: '', date: '', description: '', order_id: '',
     category: '', fund_source: '', amount: '', discount: '', final_price: '',
@@ -312,7 +301,6 @@ const AdminExpense = () => {
   }, [expenses, expSearch, catMap, fundMap, colFilters, hasColFilters]);
 
   // Sorting
-  type SortKey = 'created_at' | 'date' | 'description' | 'order_id' | 'category' | 'fund_source' | 'amount' | 'discount' | 'final_price';
   const [sortKey, setSortKey] = useState<SortKey>('created_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
@@ -361,37 +349,6 @@ const AdminExpense = () => {
       { amount: 0, discount: 0, final: 0 }
     );
   }, [sortedExpenses]);
-
-  const SortHead = ({ label, sortKeyName, className }: { label: string; sortKeyName: SortKey; className?: string }) => {
-    const isRight = className?.includes('text-right');
-    return (
-    <TableHead className={className}>
-      <button
-        type="button"
-        onClick={() => toggleSort(sortKeyName)}
-        className={`inline-flex items-center gap-1 hover:text-foreground transition-colors w-full ${isRight ? 'justify-end' : ''}`}
-      >
-        {label}
-        {sortKey === sortKeyName ? (
-          sortDir === 'asc' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />
-        ) : (
-          <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
-        )}
-      </button>
-    </TableHead>
-  );
-  };
-
-  const FilterCell = ({ filterKey, className }: { filterKey: keyof ColFilters; className?: string }) => (
-    <TableHead className={`pt-0 pb-2 ${className || ''}`}>
-      <Input
-        value={colFilters[filterKey]}
-        onChange={e => setColFilter(filterKey, e.target.value)}
-        placeholder="Filter..."
-        className="h-7 text-xs font-normal"
-      />
-    </TableHead>
-  );
 
   if (loading) return <div className="p-6">Loading...</div>;
 
