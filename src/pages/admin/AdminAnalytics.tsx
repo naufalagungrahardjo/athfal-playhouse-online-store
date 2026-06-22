@@ -538,8 +538,9 @@ const AdminAnalytics = () => {
       .filter(o => o.status !== 'cancelled' && o.status !== 'refund')
       .filter(o => inRange(o.created_at))
       .filter(o => orderCatMatch(o))
+      .filter(o => orderProductMatch(o))
       .reduce((s, o) => s + getOrderRevenue(o, netRevenueType), 0);
-  }, [orders, netRevenueType, dateRange, categoryFilter, productCategoryMap]);
+  }, [orders, netRevenueType, dateRange, categoryFilter, productFilter, productCategoryMap]);
 
   const totalOtherIncome = useMemo(() => otherIncomes.filter(i => inRange(i.date)).filter(i => incFundMatch(i.fund_source_id)).reduce((s, i) => s + i.amount, 0), [otherIncomes, dateRange, incFundFilter]);
   const totalAllExpenses = useMemo(() => expenses.filter(e => inRange(e.date)).filter(e => expCatMatch(e.category_id) && expFundMatch(e.fund_source_id)).reduce((s, e) => s + getExpenseNet(e), 0), [expenses, dateRange, expCatFilter, expFundFilter]);
@@ -560,7 +561,7 @@ const AdminAnalytics = () => {
   const revenueVsExpenseData = useMemo(() => {
     const map: Record<string, { revenue: number; expense: number; net: number }> = {};
     // Sales revenue
-    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).filter(o => orderCatMatch(o)).forEach(o => {
+    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).filter(o => orderCatMatch(o)).filter(o => orderProductMatch(o)).forEach(o => {
       const key = formatDateKey(o.created_at, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
       map[key].revenue += getOrderRevenue(o, netRevenueType);
