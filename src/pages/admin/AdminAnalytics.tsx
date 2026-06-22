@@ -197,6 +197,19 @@ const AdminAnalytics = () => {
     return map;
   }, [products]);
 
+  // ===== Shared filter predicates (also applied to Net Income) =====
+  const orderCatMatch = (o: OrderWithItems) =>
+    categoryFilter.length === 0 ||
+    o.items.some(it => categoryFilter.includes(productCategoryMap[it.product_id]));
+  const expCatMatch = (id: string | null) =>
+    expCatFilter.length === 0 || expCatFilter.includes(id || '');
+  const expFundMatch = (id: string | null) =>
+    expFundFilter === 'all' || id === expFundFilter;
+  const incFundMatch = (id: string | null) =>
+    incFundFilter === 'all' || id === incFundFilter;
+  const capFundMatch = (id: string | null) =>
+    capFundFilter === 'all' || id === capFundFilter;
+
   // Filtered orders
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
@@ -210,17 +223,14 @@ const AdminAnalytics = () => {
         if (d < dateRange.from) return false;
         if (dateRange.to && d > new Date(dateRange.to.getTime() + 86400000)) return false;
       }
-      if (categoryFilter !== 'all') {
-        const hasCategory = order.items.some(item => productCategoryMap[item.product_id] === categoryFilter);
-        if (!hasCategory) return false;
-      }
+      if (!orderCatMatch(order)) return false;
       return true;
     });
   }, [orders, dateRange, categoryFilter, statusFilter, productCategoryMap]);
 
   const getFilteredItems = (order: OrderWithItems) => {
-    if (categoryFilter === 'all') return order.items;
-    return order.items.filter(item => productCategoryMap[item.product_id] === categoryFilter);
+    if (categoryFilter.length === 0) return order.items;
+    return order.items.filter(item => categoryFilter.includes(productCategoryMap[item.product_id]));
   };
 
   const salesQuantityData = useMemo(() => {
