@@ -906,13 +906,12 @@ const AdminAnalytics = () => {
             </div>
             <div>
               <label className="text-sm font-medium block mb-1">Category</label>
-              <Select value={expCatFilter} onValueChange={setExpCatFilter}>
-                <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {expenseCategories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <MultiSelectFilter
+                options={expenseCategories.map(c => ({ value: c.id, label: c.name }))}
+                selected={expCatFilter}
+                onChange={setExpCatFilter}
+                allLabel="All Categories"
+              />
             </div>
             <div>
               <label className="text-sm font-medium block mb-1">Fund Source</label>
