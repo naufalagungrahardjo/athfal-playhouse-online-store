@@ -1671,6 +1671,7 @@ export type Database = {
         Args: { p_order_id: string }
         Returns: boolean
       }
+      can_view_financials: { Args: never; Returns: boolean }
       create_mdr_expense_for_order: {
         Args: { p_order_id: string }
         Returns: boolean

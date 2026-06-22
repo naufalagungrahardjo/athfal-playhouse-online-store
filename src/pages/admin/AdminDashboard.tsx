@@ -1,7 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useDashboard } from '@/hooks/useDashboard';
+import { supabase } from '@/integrations/supabase/client';
 import { ClickableStatsCard } from '@/components/admin/ClickableStatsCard';
 import { OrderManagement } from '@/components/admin/OrderManagement';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -38,13 +39,41 @@ const AdminDashboard = () => {
   const { user } = useAuth();
   const adminRole = getAdminRole(user);
 
+  // Custom menu grants can give non-default roles (e.g. teachers) explicit
+  // dashboard access. Load them so we don't wrongly redirect those users away.
+  const [allowedMenus, setAllowedMenus] = useState<string[] | null>(null);
+  const [menusLoaded, setMenusLoaded] = useState(false);
+  useEffect(() => {
+    const loadMenus = async () => {
+      if (!user?.email) { setMenusLoaded(true); return; }
+      const { data } = await supabase
+        .from('admin_accounts')
+        .select('allowed_menus')
+        .eq('email', user.email)
+        .maybeSingle();
+      setAllowedMenus(data?.allowed_menus ?? null);
+      setMenusLoaded(true);
+    };
+    loadMenus();
+  }, [user?.email]);
+
+  const hasDashboardAccess = !!allowedMenus?.includes('/admin/dashboard');
+
+  if (!menusLoaded) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div>Loading dashboard...</div>
+      </div>
+    );
+  }
+
   // Content manager & content staff should go directly to blogs
-  if (adminRole === 'content_manager' || adminRole === 'content_staff') {
+  if ((adminRole === 'content_manager' || adminRole === 'content_staff') && !hasDashboardAccess) {
     return <Navigate to="/admin/blogs" replace />;
   }
 
   // Teacher should go directly to the Check-In/Check-Out page
-  if (adminRole === 'teacher') {
+  if (adminRole === 'teacher' && !hasDashboardAccess) {
     return <Navigate to="/admin/check-in-out" replace />;
   }
 
