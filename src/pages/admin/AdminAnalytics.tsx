@@ -15,7 +15,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
-  BarChart, Bar, AreaChart, Area
+  BarChart, Bar, AreaChart, Area, ReferenceLine
 } from 'recharts';
 
 const COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#0ea5e9', '#8b5cf6', '#14b8a6', '#f97316', '#ec4899', '#64748b'];
