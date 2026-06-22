@@ -80,7 +80,7 @@ export const MultiSelectFilter = ({
               title={opt.label}
             >
               <Checkbox checked={selected.includes(opt.value)} className="pointer-events-none shrink-0" />
-              <span className="overflow-x-auto whitespace-nowrap text-left scrollbar-thin">
+              <span className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-left">
                 {opt.label}
               </span>
             </button>
