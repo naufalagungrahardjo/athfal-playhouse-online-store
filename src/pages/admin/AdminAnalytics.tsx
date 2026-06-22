@@ -737,13 +737,12 @@ const AdminAnalytics = () => {
             </div>
             <div>
               <label className="text-sm font-medium block mb-1">Product Category</label>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map(cat => <SelectItem key={cat.slug} value={cat.slug}>{cat.title}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <MultiSelectFilter
+                options={categories.map(cat => ({ value: cat.slug, label: cat.title }))}
+                selected={categoryFilter}
+                onChange={setCategoryFilter}
+                allLabel="All Categories"
+              />
             </div>
             <div>
               <label className="text-sm font-medium block mb-1">Order Status</label>
