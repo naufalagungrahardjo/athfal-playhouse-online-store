@@ -463,7 +463,7 @@ const ManualOrderTab = () => {
                 type="date"
                 value={transactionDate}
                 onChange={e => setTransactionDate(e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
+                max={new Date().toLocaleDateString('en-CA')}
               />
             </div>
             <div>
