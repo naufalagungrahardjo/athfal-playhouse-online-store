@@ -25,6 +25,8 @@ type Expense = {
   date: string;
   created_at: string;
   order_id: string | null;
+  is_checked: boolean | null;
+  check_notes: string | null;
 };
 
 const AdminExpense = () => {
