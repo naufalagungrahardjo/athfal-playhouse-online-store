@@ -601,14 +601,14 @@ const AdminAnalytics = () => {
     });
 
     // Sales revenue by payment_method
-    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).forEach(o => {
+    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).filter(o => orderCatMatch(o)).forEach(o => {
       const method = o.payment_method || 'Unknown';
       ensure(method);
       balanceMap[method].salesIn += getOrderRevenue(o, netRevenueType);
     });
 
     // Other income by fund_source_id
-    otherIncomes.filter(i => inRange(i.date)).forEach(i => {
+    otherIncomes.filter(i => inRange(i.date)).filter(i => incFundMatch(i.fund_source_id)).forEach(i => {
       const name = i.fund_source_id ? (expFundMap[i.fund_source_id] || 'Unknown') : 'Unknown';
       ensure(name);
       balanceMap[name].otherIn += i.amount;
@@ -627,6 +627,7 @@ const AdminAnalytics = () => {
         return;
       }
 
+      if (!capFundMatch(c.fund_source_id)) return;
       // Fund Balance reflects the ACTUAL cash in each bank/source, so capital
       // inflows are always counted here (the money physically sits in the bank)
       // regardless of the Net Income "Include / Exclude Capital" toggle.
@@ -636,7 +637,7 @@ const AdminAnalytics = () => {
     });
 
     // Expenses by fund_source_id
-    expenses.filter(e => inRange(e.date)).forEach(e => {
+    expenses.filter(e => inRange(e.date)).filter(e => expCatMatch(e.category_id) && expFundMatch(e.fund_source_id)).forEach(e => {
       const name = e.fund_source_id ? (expFundMap[e.fund_source_id] || 'Unknown') : 'Unknown';
       ensure(name);
       balanceMap[name].expenseOut += getExpenseNet(e);
@@ -655,7 +656,7 @@ const AdminAnalytics = () => {
         net: v.salesIn + v.otherIn + v.capitalIn + v.transferIn - v.transferOut - v.expenseOut,
       }))
       .sort((a, b) => b.net - a.net);
-  }, [orders, otherIncomes, expenses, capitalInflows, expFundMap, netRevenueType, dateRange, includeCapital]);
+  }, [orders, otherIncomes, expenses, capitalInflows, expFundMap, netRevenueType, dateRange, includeCapital, categoryFilter, productCategoryMap, expCatFilter, expFundFilter, incFundFilter, capFundFilter]);
 
   // Fund balance pie (net positive only)
   const fundBalancePieData = useMemo(() => {
