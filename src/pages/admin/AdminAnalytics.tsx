@@ -106,6 +106,7 @@ const AdminAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+  const [productFilter, setProductFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [timeGranularity, setTimeGranularity] = useState<TimeGranularity>('daily');
 
@@ -139,6 +140,7 @@ const AdminAnalytics = () => {
   const clearAllFilters = () => {
     setDateRange(undefined);
     setCategoryFilter([]);
+    setProductFilter([]);
     setStatusFilter('all');
     setTimeGranularity('daily');
     setExpCatFilter([]);
@@ -216,10 +218,27 @@ const AdminAnalytics = () => {
     return map;
   }, [products]);
 
+  // Distinct products/variants that actually appear in orders, used for the Sales product filter.
+  // Each order_items.product_id may be a composite "baseId__variant" so each variant is selectable.
+  const productOptions = useMemo(() => {
+    const map: Record<string, string> = {};
+    orders.forEach(o => o.items.forEach(it => {
+      if (it.product_id && !map[it.product_id]) {
+        map[it.product_id] = it.product_name || it.product_id;
+      }
+    }));
+    return Object.entries(map)
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+  }, [orders]);
+
   // ===== Shared filter predicates (also applied to Net Income) =====
   const orderCatMatch = (o: OrderWithItems) =>
     categoryFilter.length === 0 ||
     o.items.some(it => categoryFilter.includes(productCategoryMap[it.product_id]));
+  const orderProductMatch = (o: OrderWithItems) =>
+    productFilter.length === 0 ||
+    o.items.some(it => productFilter.includes(it.product_id));
   const expCatMatch = (id: string | null) =>
     expCatFilter.length === 0 || expCatFilter.includes(id || '');
   const expFundMatch = (id: string | null) =>
@@ -243,13 +262,20 @@ const AdminAnalytics = () => {
         if (dateRange.to && d > new Date(dateRange.to.getTime() + 86400000)) return false;
       }
       if (!orderCatMatch(order)) return false;
+      if (!orderProductMatch(order)) return false;
       return true;
     });
-  }, [orders, dateRange, categoryFilter, statusFilter, productCategoryMap]);
+  }, [orders, dateRange, categoryFilter, productFilter, statusFilter, productCategoryMap]);
 
   const getFilteredItems = (order: OrderWithItems) => {
-    if (categoryFilter.length === 0) return order.items;
-    return order.items.filter(item => categoryFilter.includes(productCategoryMap[item.product_id]));
+    let items = order.items;
+    if (categoryFilter.length > 0) {
+      items = items.filter(item => categoryFilter.includes(productCategoryMap[item.product_id]));
+    }
+    if (productFilter.length > 0) {
+      items = items.filter(item => productFilter.includes(item.product_id));
+    }
+    return items;
   };
 
   const salesQuantityData = useMemo(() => {
@@ -260,7 +286,7 @@ const AdminAnalytics = () => {
       map[key] = (map[key] || 0) + qty;
     });
     return Object.entries(map).sort().map(([date, qty]) => ({ date, quantity: qty }));
-  }, [filteredOrders, categoryFilter, timeGranularity]);
+  }, [filteredOrders, categoryFilter, productFilter, timeGranularity]);
 
   const salesValueData = useMemo(() => {
     const map: Record<string, number> = {};
@@ -283,7 +309,7 @@ const AdminAnalytics = () => {
     return Object.entries(map)
       .map(([name, qty]) => ({ name, value: qty, percentage: total > 0 ? ((qty / total) * 100).toFixed(1) : '0' }))
       .sort((a, b) => b.value - a.value);
-  }, [filteredOrders, categoryFilter]);
+  }, [filteredOrders, categoryFilter, productFilter]);
 
   const paymentProportionData = useMemo(() => {
     const map: Record<string, number> = {};
@@ -309,7 +335,7 @@ const AdminAnalytics = () => {
     return Object.keys(qtyMap)
       .map(name => ({ name, quantity: qtyMap[name], value: valMap[name] }))
       .sort((a, b) => b.quantity - a.quantity);
-  }, [filteredOrders, categoryFilter]);
+  }, [filteredOrders, categoryFilter, productFilter]);
 
   // Helper: net expense = amount - discount
   const getExpenseNet = (e: any) => (e.amount || 0) - (e.discount || 0);
@@ -512,8 +538,9 @@ const AdminAnalytics = () => {
       .filter(o => o.status !== 'cancelled' && o.status !== 'refund')
       .filter(o => inRange(o.created_at))
       .filter(o => orderCatMatch(o))
+      .filter(o => orderProductMatch(o))
       .reduce((s, o) => s + getOrderRevenue(o, netRevenueType), 0);
-  }, [orders, netRevenueType, dateRange, categoryFilter, productCategoryMap]);
+  }, [orders, netRevenueType, dateRange, categoryFilter, productFilter, productCategoryMap]);
 
   const totalOtherIncome = useMemo(() => otherIncomes.filter(i => inRange(i.date)).filter(i => incFundMatch(i.fund_source_id)).reduce((s, i) => s + i.amount, 0), [otherIncomes, dateRange, incFundFilter]);
   const totalAllExpenses = useMemo(() => expenses.filter(e => inRange(e.date)).filter(e => expCatMatch(e.category_id) && expFundMatch(e.fund_source_id)).reduce((s, e) => s + getExpenseNet(e), 0), [expenses, dateRange, expCatFilter, expFundFilter]);
@@ -534,7 +561,7 @@ const AdminAnalytics = () => {
   const revenueVsExpenseData = useMemo(() => {
     const map: Record<string, { revenue: number; expense: number; net: number }> = {};
     // Sales revenue
-    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).filter(o => orderCatMatch(o)).forEach(o => {
+    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).filter(o => orderCatMatch(o)).filter(o => orderProductMatch(o)).forEach(o => {
       const key = formatDateKey(o.created_at, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
       map[key].revenue += getOrderRevenue(o, netRevenueType);
@@ -566,7 +593,7 @@ const AdminAnalytics = () => {
     // Calculate net
     Object.values(map).forEach(v => { v.net = v.revenue - v.expense; });
     return Object.entries(map).sort().map(([date, vals]) => ({ date, ...vals }));
-  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, netGranularity, netRevenueType, dateRange, categoryFilter, productCategoryMap, expCatFilter, expFundFilter, incFundFilter, capFundFilter]);
+  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, netGranularity, netRevenueType, dateRange, categoryFilter, productFilter, productCategoryMap, expCatFilter, expFundFilter, incFundFilter, capFundFilter]);
 
   // Cumulative net income over time
   const cumulativeNetData = useMemo(() => {
@@ -620,7 +647,7 @@ const AdminAnalytics = () => {
     });
 
     // Sales revenue by payment_method
-    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).filter(o => orderCatMatch(o)).forEach(o => {
+    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).filter(o => orderCatMatch(o)).filter(o => orderProductMatch(o)).forEach(o => {
       const method = o.payment_method || 'Unknown';
       ensure(method);
       balanceMap[method].salesIn += getOrderRevenue(o, netRevenueType);
@@ -675,7 +702,7 @@ const AdminAnalytics = () => {
         net: v.salesIn + v.otherIn + v.capitalIn + v.transferIn - v.transferOut - v.expenseOut,
       }))
       .sort((a, b) => b.net - a.net);
-  }, [orders, otherIncomes, expenses, capitalInflows, expFundMap, netRevenueType, dateRange, includeCapital, categoryFilter, productCategoryMap, expCatFilter, expFundFilter, incFundFilter, capFundFilter]);
+  }, [orders, otherIncomes, expenses, capitalInflows, expFundMap, netRevenueType, dateRange, includeCapital, categoryFilter, productFilter, productCategoryMap, expCatFilter, expFundFilter, incFundFilter, capFundFilter]);
 
   // Fund balance pie (net positive only)
   const fundBalancePieData = useMemo(() => {
@@ -764,6 +791,16 @@ const AdminAnalytics = () => {
                 selected={categoryFilter}
                 onChange={setCategoryFilter}
                 allLabel="All Categories"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Product / Variant</label>
+              <MultiSelectFilter
+                options={productOptions}
+                selected={productFilter}
+                onChange={setProductFilter}
+                allLabel="All Products"
+                width="w-[260px]"
               />
             </div>
             <div>
