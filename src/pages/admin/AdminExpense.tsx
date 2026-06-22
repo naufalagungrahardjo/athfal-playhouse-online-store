@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
@@ -24,6 +25,8 @@ type Expense = {
   date: string;
   created_at: string;
   order_id: string | null;
+  is_checked: boolean | null;
+  check_notes: string | null;
 };
 
 const AdminExpense = () => {
@@ -167,6 +170,15 @@ const AdminExpense = () => {
     await supabase.from('expenses' as any).delete().eq('id', id);
     toast({ title: 'Expense deleted' });
     fetchAll();
+  };
+
+  const updateCheck = async (id: string, patch: { is_checked?: boolean; check_notes?: string }) => {
+    const { error } = await supabase.from('expenses' as any).update({ ...patch, updated_at: new Date().toISOString() }).eq('id', id);
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setExpenses(prev => prev.map(exp => exp.id === id ? { ...exp, ...patch } : exp));
   };
 
   const catMap = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c.name])), [categories]);
@@ -440,7 +452,27 @@ const AdminExpense = () => {
                         <TableCell className="text-xs font-mono max-w-[120px] truncate">{exp.order_id ? exp.order_id.slice(0, 8) + '...' : '-'}</TableCell>
                         <TableCell>{exp.category_id ? catMap[exp.category_id] || '-' : '-'}</TableCell>
                         <TableCell>{exp.fund_source_id ? fundMap[exp.fund_source_id] || '-' : '-'}</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(exp.amount)}</TableCell>
+                        <TableCell className="text-right align-top">
+                          <div className="flex flex-col items-end gap-1.5 min-w-[130px]">
+                            <span className="font-medium">{formatCurrency(exp.amount)}</span>
+                            <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+                              <Checkbox
+                                checked={!!exp.is_checked}
+                                onCheckedChange={(val) => updateCheck(exp.id, { is_checked: val === true })}
+                                aria-label="Mark expense as checked"
+                              />
+                              Checked
+                            </label>
+                            <Input
+                              type="text"
+                              placeholder="Note..."
+                              defaultValue={exp.check_notes || ''}
+                              onBlur={(e) => updateCheck(exp.id, { check_notes: e.target.value })}
+                              className="h-7 text-xs text-right w-full min-w-[120px]"
+                              aria-label="Check note"
+                            />
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right">{formatCurrency(exp.discount || 0)}</TableCell>
                         <TableCell className="text-right font-bold">{formatCurrency(exp.amount - (exp.discount || 0))}</TableCell>
                         <TableCell>

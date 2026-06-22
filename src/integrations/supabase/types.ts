@@ -518,36 +518,42 @@ export type Database = {
         Row: {
           amount: number
           category_id: string | null
+          check_notes: string | null
           created_at: string
           date: string
           description: string
           discount: number
           fund_source_id: string | null
           id: string
+          is_checked: boolean
           order_id: string | null
           updated_at: string
         }
         Insert: {
           amount?: number
           category_id?: string | null
+          check_notes?: string | null
           created_at?: string
           date?: string
           description: string
           discount?: number
           fund_source_id?: string | null
           id?: string
+          is_checked?: boolean
           order_id?: string | null
           updated_at?: string
         }
         Update: {
           amount?: number
           category_id?: string | null
+          check_notes?: string | null
           created_at?: string
           date?: string
           description?: string
           discount?: number
           fund_source_id?: string | null
           id?: string
+          is_checked?: boolean
           order_id?: string | null
           updated_at?: string
         }
