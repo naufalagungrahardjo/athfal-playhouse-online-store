@@ -824,29 +824,37 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
                     </TableCell>
                     <TableCell className="text-right whitespace-nowrap text-xs">
                       <div>{fmtIDR(o.total_amount)}</div>
-                      <div className="text-muted-foreground">
-                        Paid: {fmtIDR(o.amount_paid || 0)}
-                      </div>
-                      <label className="mt-1 flex items-center justify-end gap-1.5 cursor-pointer">
-                        <Checkbox
-                          checked={isConfirmed(o)}
-                          onCheckedChange={(v) => togglePaymentConfirmed(o, v === true)}
-                        />
-                        <span className="text-[11px] text-muted-foreground">Payment confirmed</span>
-                      </label>
-                      <Input
-                        type="text"
-                        placeholder="Payment note..."
-                        value={getNote(o)}
-                        onChange={(e) => setNoteOverrides((prev) => ({ ...prev, [o.id]: e.target.value }))}
-                        onBlur={(e) => updatePaymentNote(o, e.target.value)}
-                        className="mt-1 h-6 text-[11px] px-1.5 py-0 w-[140px] ml-auto"
-                      />
+                      {o.__isIncome ? (
+                        <div className="text-muted-foreground">Other Income</div>
+                      ) : (
+                        <>
+                          <div className="text-muted-foreground">
+                            Paid: {fmtIDR(o.amount_paid || 0)}
+                          </div>
+                          <label className="mt-1 flex items-center justify-end gap-1.5 cursor-pointer">
+                            <Checkbox
+                              checked={isConfirmed(o)}
+                              onCheckedChange={(v) => togglePaymentConfirmed(o, v === true)}
+                            />
+                            <span className="text-[11px] text-muted-foreground">Payment confirmed</span>
+                          </label>
+                          <Input
+                            type="text"
+                            placeholder="Payment note..."
+                            value={getNote(o)}
+                            onChange={(e) => setNoteOverrides((prev) => ({ ...prev, [o.id]: e.target.value }))}
+                            onBlur={(e) => updatePaymentNote(o, e.target.value)}
+                            className="mt-1 h-6 text-[11px] px-1.5 py-0 w-[140px] ml-auto"
+                          />
+                        </>
+                      )}
                     </TableCell>
                     <TableCell>
-                      <Button size="icon" variant="ghost" onClick={() => onViewDetails(o)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                      {!o.__isIncome && (
+                        <Button size="icon" variant="ghost" onClick={() => onViewDetails(o)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
