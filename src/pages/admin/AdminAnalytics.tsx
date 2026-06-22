@@ -595,6 +595,9 @@ const AdminAnalytics = () => {
         return;
       }
 
+      // Respect the Net Income "Include / Exclude Capital" toggle: when capital is
+      // excluded, capital inflows are not counted in the fund balance either.
+      if (!includeCapital) return;
       const name = c.fund_source_id ? (expFundMap[c.fund_source_id] || 'Unknown') : 'Unknown';
       ensure(name);
       balanceMap[name].capitalIn += c.amount;
@@ -620,7 +623,7 @@ const AdminAnalytics = () => {
         net: v.salesIn + v.otherIn + v.capitalIn + v.transferIn - v.transferOut - v.expenseOut,
       }))
       .sort((a, b) => b.net - a.net);
-  }, [orders, otherIncomes, expenses, capitalInflows, expFundMap, netRevenueType, dateRange]);
+  }, [orders, otherIncomes, expenses, capitalInflows, expFundMap, netRevenueType, dateRange, includeCapital]);
 
   // Fund balance pie (net positive only)
   const fundBalancePieData = useMemo(() => {
