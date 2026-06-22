@@ -1203,6 +1203,33 @@ const AdminAnalytics = () => {
             </CardContent>
           </Card>
 
+          {/* Profitability Margin (%) */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{netGranLabel} & Cumulative Profitability (%)</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Margin = (Income − Expense) ÷ Income. Income = all revenue
+                {includeCapital ? ' (Sales + Other + Capital)' : ' (Sales + Other)'}.
+              </p>
+            </CardHeader>
+            <CardContent>
+              {profitabilityData.length === 0 ? <p className="text-muted-foreground text-center py-8">No data</p> : (
+                <ResponsiveContainer width="100%" height={isMobile ? 280 : 350}>
+                  <LineChart data={profitabilityData} margin={isMobile ? { left: -10, right: 10 } : undefined}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 60 : 30} />
+                    <YAxis tickFormatter={(v) => `${v}%`} tick={{ fontSize: isMobile ? 10 : 12 }} width={isMobile ? 40 : 50} />
+                    <Tooltip formatter={(value: number, name: string) => [`${value}%`, name]} />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
+                    <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
+                    <Line type="monotone" dataKey="periodMargin" stroke="#f59e0b" strokeWidth={2} dot={{ r: isMobile ? 2 : 3 }} name={`${netGranLabel} Margin %`} />
+                    <Line type="monotone" dataKey="cumulativeMargin" stroke="#0ea5e9" strokeWidth={2} dot={{ r: isMobile ? 2 : 3 }} name="Cumulative Margin %" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Revenue Composition Pie */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
