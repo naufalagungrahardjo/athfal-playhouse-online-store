@@ -97,8 +97,6 @@ export default function AdminAllTeachers() {
   const [teacherFilter, setTeacherFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [filterMonth, setFilterMonth] = useState<string>("all");
-  const [filterYear, setFilterYear] = useState<string>("all");
 
   // Leave filters
   const [leaveTeacherFilter, setLeaveTeacherFilter] = useState<string>("all");
