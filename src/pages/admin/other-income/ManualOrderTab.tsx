@@ -61,7 +61,7 @@ const ManualOrderTab = () => {
   const [childGender, setChildGender] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [notes, setNotes] = useState('');
-  const [transactionDate, setTransactionDate] = useState('');
+  const [transactionDate, setTransactionDate] = useState(() => new Date().toLocaleDateString('en-CA'));
   const [items, setItems] = useState<LineItem[]>([{ productDbId: '', variantId: null, quantity: 1 }]);
 
   const childAge = useMemo(() => {
@@ -280,7 +280,7 @@ const ManualOrderTab = () => {
       setCustomerName(''); setCustomerEmail(''); setCustomerPhone(''); setCustomerAddress('');
       setGuardianStatus(''); setChildName(''); setChildBirthdate(''); setChildGender('');
       setPaymentMethod(''); setNotes('');
-      setTransactionDate('');
+      setTransactionDate(new Date().toLocaleDateString('en-CA'));
       setSelectedCustomerKey('');
       setCustomerMode('new');
       setItems([{ productDbId: '', variantId: null, quantity: 1 }]);
@@ -397,15 +397,6 @@ const ManualOrderTab = () => {
             <Label>Usia Anak</Label>
             <Input value={childAge} readOnly className="bg-muted cursor-not-allowed" placeholder="Otomatis dari tanggal lahir" />
           </div>
-          <div>
-            <Label>Transaction Date</Label>
-            <Input
-              type="date"
-              value={transactionDate}
-              onChange={e => setTransactionDate(e.target.value)}
-              max={new Date().toISOString().split('T')[0]}
-            />
-          </div>
           </div>
         </CardContent>
       </Card>
@@ -465,16 +456,27 @@ const ManualOrderTab = () => {
       <Card>
         <CardHeader><CardTitle>Payment & Notes</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label>Payment Method *</Label>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger><SelectValue placeholder="Select payment method" /></SelectTrigger>
-              <SelectContent>
-                {paymentMethods.map(pm => <SelectItem key={pm.id} value={pm.bank_name}>{pm.bank_name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground mt-1">MDR fee will be auto-applied to expenses if configured for this method.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Transaction Date</Label>
+              <Input
+                type="date"
+                value={transactionDate}
+                onChange={e => setTransactionDate(e.target.value)}
+                max={new Date().toLocaleDateString('en-CA')}
+              />
+            </div>
+            <div>
+              <Label>Payment Method *</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger><SelectValue placeholder="Select payment method" /></SelectTrigger>
+                <SelectContent>
+                  {paymentMethods.map(pm => <SelectItem key={pm.id} value={pm.bank_name}>{pm.bank_name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+          <p className="text-xs text-muted-foreground">MDR fee will be auto-applied to expenses if configured for the selected method.</p>
           <div>
             <Label>Notes</Label>
             <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} />
