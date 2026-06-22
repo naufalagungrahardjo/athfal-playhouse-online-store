@@ -294,18 +294,20 @@ export const OrderListByProductTab = ({ orders, onViewDetails }: Props) => {
 
   // Orders containing any of the selected products
   const matchedRows = useMemo(() => {
-    if (selectedProductNames.length === 0) return [];
-    const selectedSet = new Set(selectedProductNames);
     const rows: any[] = [];
-    for (const o of orders || []) {
-      const matchedItems = (o.items || []).filter(
-        (it: any) => selectedSet.has(it.product_name)
-      );
-      if (matchedItems.length === 0) continue;
-      rows.push({ order: o, matchedItems });
+    if (selectedProductNames.length > 0) {
+      const selectedSet = new Set(selectedProductNames);
+      for (const o of orders || []) {
+        const matchedItems = (o.items || []).filter(
+          (it: any) => selectedSet.has(it.product_name)
+        );
+        if (matchedItems.length === 0) continue;
+        rows.push({ order: o, matchedItems });
+      }
     }
+    rows.push(...incomeRows);
     return rows;
-  }, [orders, selectedProductNames]);
+  }, [orders, selectedProductNames, incomeRows]);
 
   // Apply global search + per-column filters
   const filteredRows = useMemo(() => {
