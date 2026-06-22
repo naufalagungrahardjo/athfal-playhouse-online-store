@@ -65,20 +65,6 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
   // Super admin with no custom menu override gets everything
   if (role === "super_admin" && !allowedMenus) return allGroups;
 
-  // Class-super email: teachers granted full Class menu access
-  if (role === "teacher" && isClassSuperEmail(email)) {
-    return [{
-      label: 'Class',
-      items: [
-        { name: 'All Teachers', href: '/admin/all-teachers', icon: GraduationCap },
-        { name: 'Teacher', href: '/admin/teacher', icon: ClipboardList },
-        { name: 'Students', href: '/admin/students', icon: BookOpen },
-        { name: 'Check-In/Out', href: '/admin/check-in-out', icon: Camera },
-        { name: 'Inbox', href: '/admin/inbox', icon: Inbox },
-      ],
-    }];
-  }
-
   // If allowedMenus is explicitly set (by super admin), use that as final access
   if (allowedMenus && allowedMenus.length > 0) {
     // Enforce hard role restrictions even if super admin granted extra menus
@@ -113,6 +99,20 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
     }
 
     return filtered;
+  }
+
+  // Class-super email: teachers granted full Class menu access (no custom override set)
+  if (role === "teacher" && isClassSuperEmail(email)) {
+    return [{
+      label: 'Class',
+      items: [
+        { name: 'All Teachers', href: '/admin/all-teachers', icon: GraduationCap },
+        { name: 'Teacher', href: '/admin/teacher', icon: ClipboardList },
+        { name: 'Students', href: '/admin/students', icon: BookOpen },
+        { name: 'Check-In/Out', href: '/admin/check-in-out', icon: Camera },
+        { name: 'Inbox', href: '/admin/inbox', icon: Inbox },
+      ],
+    }];
   }
 
   // Default role-based access (no custom override)
