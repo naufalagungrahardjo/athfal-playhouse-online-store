@@ -106,6 +106,7 @@ const AdminAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+  const [productFilter, setProductFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [timeGranularity, setTimeGranularity] = useState<TimeGranularity>('daily');
 
@@ -139,6 +140,7 @@ const AdminAnalytics = () => {
   const clearAllFilters = () => {
     setDateRange(undefined);
     setCategoryFilter([]);
+    setProductFilter([]);
     setStatusFilter('all');
     setTimeGranularity('daily');
     setExpCatFilter([]);
