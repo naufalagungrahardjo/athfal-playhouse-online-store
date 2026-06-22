@@ -29,6 +29,74 @@ type Expense = {
   check_notes: string | null;
 };
 
+type SortKey = 'created_at' | 'date' | 'description' | 'order_id' | 'category' | 'fund_source' | 'amount' | 'discount' | 'final_price';
+type ColFilters = {
+  created_at: string;
+  date: string;
+  description: string;
+  order_id: string;
+  category: string;
+  fund_source: string;
+  amount: string;
+  discount: string;
+  final_price: string;
+};
+
+const SortHead = ({
+  label,
+  sortKeyName,
+  sortKey,
+  sortDir,
+  onSort,
+  className,
+}: {
+  label: string;
+  sortKeyName: SortKey;
+  sortKey: SortKey;
+  sortDir: 'asc' | 'desc';
+  onSort: (key: SortKey) => void;
+  className?: string;
+}) => {
+  const isRight = className?.includes('text-right');
+  return (
+    <TableHead className={className}>
+      <button
+        type="button"
+        onClick={() => onSort(sortKeyName)}
+        className={`inline-flex items-center gap-1 hover:text-foreground transition-colors w-full ${isRight ? 'justify-end' : ''}`}
+      >
+        {label}
+        {sortKey === sortKeyName ? (
+          sortDir === 'asc' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />
+        ) : (
+          <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
+        )}
+      </button>
+    </TableHead>
+  );
+};
+
+const FilterCell = ({
+  filterKey,
+  value,
+  onChange,
+  className,
+}: {
+  filterKey: keyof ColFilters;
+  value: string;
+  onChange: (key: keyof ColFilters, value: string) => void;
+  className?: string;
+}) => (
+  <TableHead className={`pt-0 pb-2 ${className || ''}`}>
+    <Input
+      value={value}
+      onChange={e => onChange(filterKey, e.target.value)}
+      placeholder="Filter..."
+      className="h-7 text-xs font-normal"
+    />
+  </TableHead>
+);
+
 const AdminExpense = () => {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [fundSources, setFundSources] = useState<FundSource[]>([]);
