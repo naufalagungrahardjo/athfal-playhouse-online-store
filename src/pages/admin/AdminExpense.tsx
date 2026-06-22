@@ -172,6 +172,15 @@ const AdminExpense = () => {
     fetchAll();
   };
 
+  const updateCheck = async (id: string, patch: { is_checked?: boolean; check_notes?: string }) => {
+    const { error } = await supabase.from('expenses' as any).update({ ...patch, updated_at: new Date().toISOString() }).eq('id', id);
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setExpenses(prev => prev.map(exp => exp.id === id ? { ...exp, ...patch } : exp));
+  };
+
   const catMap = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c.name])), [categories]);
   const fundMap = useMemo(() => Object.fromEntries(fundSources.map(f => [f.id, f.name])), [fundSources]);
 
