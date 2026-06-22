@@ -97,8 +97,6 @@ export default function AdminAllTeachers() {
   const [teacherFilter, setTeacherFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [filterMonth, setFilterMonth] = useState<string>("all");
-  const [filterYear, setFilterYear] = useState<string>("all");
 
   // Leave filters
   const [leaveTeacherFilter, setLeaveTeacherFilter] = useState<string>("all");
@@ -212,23 +210,16 @@ export default function AdminAllTeachers() {
       if (teacherFilter !== "all" && a.teacher_email !== teacherFilter) return false;
       if (dateFrom && a.date < dateFrom) return false;
       if (dateTo && a.date > dateTo) return false;
-      if (filterMonth !== "all") {
-        const month = new Date(a.date).getMonth();
-        if (month !== parseInt(filterMonth)) return false;
-      }
-      if (filterYear !== "all") {
-        const year = new Date(a.date).getFullYear();
-        if (year !== parseInt(filterYear)) return false;
-      }
       return true;
     });
-  }, [attendances, teacherFilter, dateFrom, dateTo, filterMonth, filterYear]);
+  }, [attendances, teacherFilter, dateFrom, dateTo]);
 
   // Summary: per-teacher attendance stats from filtered data
   const attendanceSummary = useMemo(() => {
     const [thH, thM] = (lateThreshold || "08:30").split(":").map(Number);
     const summary: Record<string, { totalDays: number; totalOnTime: number; totalLate: number; weekdays: number; weekend: number }> = {};
-    for (const email of teachers) {
+    const emailsToShow = teacherFilter === "all" ? teachers : [teacherFilter];
+    for (const email of emailsToShow) {
       summary[email] = { totalDays: 0, totalOnTime: 0, totalLate: 0, weekdays: 0, weekend: 0 };
     }
     for (const a of filteredAttendances) {
@@ -250,7 +241,7 @@ export default function AdminAllTeachers() {
       }
     }
     return summary;
-  }, [filteredAttendances, teachers, lateThreshold]);
+  }, [filteredAttendances, teachers, lateThreshold, teacherFilter]);
 
   // Filtered leaves
   const filteredLeaves = useMemo(() => {
@@ -589,30 +580,10 @@ export default function AdminAllTeachers() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label>Month</Label>
-                  <Select value={filterMonth} onValueChange={setFilterMonth}>
-                    <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Months</SelectItem>
-                      {getMonthOptions().map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Year</Label>
-                  <Select value={filterYear} onValueChange={setFilterYear}>
-                    <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Years</SelectItem>
-                      {getYearOptions().map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
                 <div><Label>From</Label><Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} /></div>
                 <div><Label>To</Label><Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} /></div>
-                {(dateFrom || dateTo || filterMonth !== "all" || filterYear !== "all") && (
-                  <Button variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); setFilterMonth("all"); setFilterYear("all"); }}>Clear filters</Button>
+                {(dateFrom || dateTo) && (
+                  <Button variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); }}>Clear filters</Button>
                 )}
                 <Button variant="outline" onClick={exportAttendanceCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
                 {isSuperAdmin && (
@@ -628,8 +599,8 @@ export default function AdminAllTeachers() {
                         <AlertDialogTitle>Delete attendance history?</AlertDialogTitle>
                         <AlertDialogDescription>
                           This will permanently delete <strong>{filteredAttendances.length}</strong> attendance record(s) for{" "}
-                          <strong>{teacherFilter === "all" ? "ALL teachers" : teacherFilter}</strong>
-                          {(dateFrom || dateTo || filterMonth !== "all" || filterYear !== "all") ? " matching the current date filters" : ""}.
+                          <strong>{teacherFilter === "all" ? "ALL teachers" : displayName(teacherFilter)}</strong>
+                          {(dateFrom || dateTo) ? " matching the current date filters" : ""}.
                           This cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
@@ -678,7 +649,7 @@ export default function AdminAllTeachers() {
                         {Object.keys(attendanceSummary).length === 0 && (
                           <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No data</TableCell></TableRow>
                         )}
-                        {Object.keys(attendanceSummary).length > 0 && (() => {
+                        {Object.keys(attendanceSummary).length > 0 && teacherFilter === "all" && (() => {
                           const totals = Object.values(attendanceSummary).reduce(
                             (acc, s) => ({
                               totalDays: acc.totalDays + s.totalDays,
