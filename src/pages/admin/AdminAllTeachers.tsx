@@ -649,7 +649,7 @@ export default function AdminAllTeachers() {
                         {Object.keys(attendanceSummary).length === 0 && (
                           <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No data</TableCell></TableRow>
                         )}
-                        {Object.keys(attendanceSummary).length > 0 && (() => {
+                        {Object.keys(attendanceSummary).length > 0 && teacherFilter === "all" && (() => {
                           const totals = Object.values(attendanceSummary).reduce(
                             (acc, s) => ({
                               totalDays: acc.totalDays + s.totalDays,
