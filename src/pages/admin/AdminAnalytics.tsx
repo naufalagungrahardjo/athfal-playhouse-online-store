@@ -647,7 +647,7 @@ const AdminAnalytics = () => {
     });
 
     // Sales revenue by payment_method
-    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).filter(o => orderCatMatch(o)).forEach(o => {
+    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).filter(o => orderCatMatch(o)).filter(o => orderProductMatch(o)).forEach(o => {
       const method = o.payment_method || 'Unknown';
       ensure(method);
       balanceMap[method].salesIn += getOrderRevenue(o, netRevenueType);
