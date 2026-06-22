@@ -12,6 +12,7 @@ import { DateRange } from 'react-day-picker';
 import { formatCurrency } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { MultiSelectFilter } from '@/components/admin/MultiSelectFilter';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -104,7 +105,7 @@ const AdminAnalytics = () => {
   const [products, setProducts] = useState<{ product_id: string; category: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [timeGranularity, setTimeGranularity] = useState<TimeGranularity>('daily');
 
@@ -113,7 +114,7 @@ const AdminAnalytics = () => {
   const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>([]);
   const [fundSources, setFundSources] = useState<FundSource[]>([]);
   const [expGranularity, setExpGranularity] = useState<TimeGranularity>('monthly');
-  const [expCatFilter, setExpCatFilter] = useState('all');
+  const [expCatFilter, setExpCatFilter] = useState<string[]>([]);
   const [expFundFilter, setExpFundFilter] = useState('all');
 
   // Other Income data
@@ -133,6 +134,25 @@ const AdminAnalytics = () => {
   // Revenue type filter (shared for Sales & Net Income)
   const [salesRevenueType, setSalesRevenueType] = useState<RevenueType>('before_tax');
   const [netRevenueType, setNetRevenueType] = useState<RevenueType>('before_tax');
+
+  // Clear every filter across all analytics tabs
+  const clearAllFilters = () => {
+    setDateRange(undefined);
+    setCategoryFilter([]);
+    setStatusFilter('all');
+    setTimeGranularity('daily');
+    setExpCatFilter([]);
+    setExpFundFilter('all');
+    setExpGranularity('monthly');
+    setIncFundFilter('all');
+    setIncGranularity('monthly');
+    setCapFundFilter('all');
+    setCapGranularity('monthly');
+    setNetGranularity('monthly');
+    setIncludeCapital(false);
+    setSalesRevenueType('before_tax');
+    setNetRevenueType('before_tax');
+  };
 
   const fetchData = async () => {
     const [ordersRes, itemsRes, catsRes, prodsRes, expRes, expCatsRes, fundsRes, incRes, capRes] = await Promise.all([
@@ -196,6 +216,19 @@ const AdminAnalytics = () => {
     return map;
   }, [products]);
 
+  // ===== Shared filter predicates (also applied to Net Income) =====
+  const orderCatMatch = (o: OrderWithItems) =>
+    categoryFilter.length === 0 ||
+    o.items.some(it => categoryFilter.includes(productCategoryMap[it.product_id]));
+  const expCatMatch = (id: string | null) =>
+    expCatFilter.length === 0 || expCatFilter.includes(id || '');
+  const expFundMatch = (id: string | null) =>
+    expFundFilter === 'all' || id === expFundFilter;
+  const incFundMatch = (id: string | null) =>
+    incFundFilter === 'all' || id === incFundFilter;
+  const capFundMatch = (id: string | null) =>
+    capFundFilter === 'all' || id === capFundFilter;
+
   // Filtered orders
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
@@ -209,17 +242,14 @@ const AdminAnalytics = () => {
         if (d < dateRange.from) return false;
         if (dateRange.to && d > new Date(dateRange.to.getTime() + 86400000)) return false;
       }
-      if (categoryFilter !== 'all') {
-        const hasCategory = order.items.some(item => productCategoryMap[item.product_id] === categoryFilter);
-        if (!hasCategory) return false;
-      }
+      if (!orderCatMatch(order)) return false;
       return true;
     });
   }, [orders, dateRange, categoryFilter, statusFilter, productCategoryMap]);
 
   const getFilteredItems = (order: OrderWithItems) => {
-    if (categoryFilter === 'all') return order.items;
-    return order.items.filter(item => productCategoryMap[item.product_id] === categoryFilter);
+    if (categoryFilter.length === 0) return order.items;
+    return order.items.filter(item => categoryFilter.includes(productCategoryMap[item.product_id]));
   };
 
   const salesQuantityData = useMemo(() => {
@@ -290,8 +320,8 @@ const AdminAnalytics = () => {
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter(e => {
-      if (expCatFilter !== 'all' && e.category_id !== expCatFilter) return false;
-      if (expFundFilter !== 'all' && e.fund_source_id !== expFundFilter) return false;
+      if (!expCatMatch(e.category_id)) return false;
+      if (!expFundMatch(e.fund_source_id)) return false;
       if (dateRange?.from) {
         const d = new Date(e.date);
         if (d < dateRange.from) return false;
@@ -481,17 +511,19 @@ const AdminAnalytics = () => {
     return orders
       .filter(o => o.status !== 'cancelled' && o.status !== 'refund')
       .filter(o => inRange(o.created_at))
+      .filter(o => orderCatMatch(o))
       .reduce((s, o) => s + getOrderRevenue(o, netRevenueType), 0);
-  }, [orders, netRevenueType, dateRange]);
+  }, [orders, netRevenueType, dateRange, categoryFilter, productCategoryMap]);
 
-  const totalOtherIncome = useMemo(() => otherIncomes.filter(i => inRange(i.date)).reduce((s, i) => s + i.amount, 0), [otherIncomes, dateRange]);
-  const totalAllExpenses = useMemo(() => expenses.filter(e => inRange(e.date)).reduce((s, e) => s + getExpenseNet(e), 0), [expenses, dateRange]);
+  const totalOtherIncome = useMemo(() => otherIncomes.filter(i => inRange(i.date)).filter(i => incFundMatch(i.fund_source_id)).reduce((s, i) => s + i.amount, 0), [otherIncomes, dateRange, incFundFilter]);
+  const totalAllExpenses = useMemo(() => expenses.filter(e => inRange(e.date)).filter(e => expCatMatch(e.category_id) && expFundMatch(e.fund_source_id)).reduce((s, e) => s + getExpenseNet(e), 0), [expenses, dateRange, expCatFilter, expFundFilter]);
   const totalAllCapital = useMemo(
     () => capitalInflows
       .filter(c => (c.type || 'inflow') !== 'transfer')
       .filter(c => inRange(c.date))
+      .filter(c => capFundMatch(c.fund_source_id))
       .reduce((s, c) => s + c.amount, 0),
-    [capitalInflows, dateRange]
+    [capitalInflows, dateRange, capFundFilter]
   );
   const effectiveOtherIncome = includeCapital ? totalOtherIncome + totalAllCapital : totalOtherIncome;
   const netIncome = totalSalesRevenue + effectiveOtherIncome - totalAllExpenses;
@@ -502,13 +534,13 @@ const AdminAnalytics = () => {
   const revenueVsExpenseData = useMemo(() => {
     const map: Record<string, { revenue: number; expense: number; net: number }> = {};
     // Sales revenue
-    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).forEach(o => {
+    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).filter(o => orderCatMatch(o)).forEach(o => {
       const key = formatDateKey(o.created_at, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
       map[key].revenue += getOrderRevenue(o, netRevenueType);
     });
     // Other income
-    otherIncomes.filter(i => inRange(i.date)).forEach(i => {
+    otherIncomes.filter(i => inRange(i.date)).filter(i => incFundMatch(i.fund_source_id)).forEach(i => {
       const key = formatDateKey(i.date, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
       map[key].revenue += i.amount;
@@ -518,6 +550,7 @@ const AdminAnalytics = () => {
       capitalInflows
         .filter(c => (c.type || 'inflow') !== 'transfer')
         .filter(c => inRange(c.date))
+        .filter(c => capFundMatch(c.fund_source_id))
         .forEach(c => {
         const key = formatDateKey(c.date, netGranularity);
         if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
@@ -525,7 +558,7 @@ const AdminAnalytics = () => {
         });
     }
     // Expenses
-    expenses.filter(e => inRange(e.date)).forEach(e => {
+    expenses.filter(e => inRange(e.date)).filter(e => expCatMatch(e.category_id) && expFundMatch(e.fund_source_id)).forEach(e => {
       const key = formatDateKey(e.date, netGranularity);
       if (!map[key]) map[key] = { revenue: 0, expense: 0, net: 0 };
       map[key].expense += getExpenseNet(e);
@@ -533,7 +566,7 @@ const AdminAnalytics = () => {
     // Calculate net
     Object.values(map).forEach(v => { v.net = v.revenue - v.expense; });
     return Object.entries(map).sort().map(([date, vals]) => ({ date, ...vals }));
-  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, netGranularity, netRevenueType, dateRange]);
+  }, [orders, otherIncomes, expenses, capitalInflows, includeCapital, netGranularity, netRevenueType, dateRange, categoryFilter, productCategoryMap, expCatFilter, expFundFilter, incFundFilter, capFundFilter]);
 
   // Cumulative net income over time
   const cumulativeNetData = useMemo(() => {
@@ -587,14 +620,14 @@ const AdminAnalytics = () => {
     });
 
     // Sales revenue by payment_method
-    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).forEach(o => {
+    orders.filter(o => o.status !== 'cancelled' && o.status !== 'refund').filter(o => inRange(o.created_at)).filter(o => orderCatMatch(o)).forEach(o => {
       const method = o.payment_method || 'Unknown';
       ensure(method);
       balanceMap[method].salesIn += getOrderRevenue(o, netRevenueType);
     });
 
     // Other income by fund_source_id
-    otherIncomes.filter(i => inRange(i.date)).forEach(i => {
+    otherIncomes.filter(i => inRange(i.date)).filter(i => incFundMatch(i.fund_source_id)).forEach(i => {
       const name = i.fund_source_id ? (expFundMap[i.fund_source_id] || 'Unknown') : 'Unknown';
       ensure(name);
       balanceMap[name].otherIn += i.amount;
@@ -613,6 +646,7 @@ const AdminAnalytics = () => {
         return;
       }
 
+      if (!capFundMatch(c.fund_source_id)) return;
       // Fund Balance reflects the ACTUAL cash in each bank/source, so capital
       // inflows are always counted here (the money physically sits in the bank)
       // regardless of the Net Income "Include / Exclude Capital" toggle.
@@ -622,7 +656,7 @@ const AdminAnalytics = () => {
     });
 
     // Expenses by fund_source_id
-    expenses.filter(e => inRange(e.date)).forEach(e => {
+    expenses.filter(e => inRange(e.date)).filter(e => expCatMatch(e.category_id) && expFundMatch(e.fund_source_id)).forEach(e => {
       const name = e.fund_source_id ? (expFundMap[e.fund_source_id] || 'Unknown') : 'Unknown';
       ensure(name);
       balanceMap[name].expenseOut += getExpenseNet(e);
@@ -641,7 +675,7 @@ const AdminAnalytics = () => {
         net: v.salesIn + v.otherIn + v.capitalIn + v.transferIn - v.transferOut - v.expenseOut,
       }))
       .sort((a, b) => b.net - a.net);
-  }, [orders, otherIncomes, expenses, capitalInflows, expFundMap, netRevenueType, dateRange, includeCapital]);
+  }, [orders, otherIncomes, expenses, capitalInflows, expFundMap, netRevenueType, dateRange, includeCapital, categoryFilter, productCategoryMap, expCatFilter, expFundFilter, incFundFilter, capFundFilter]);
 
   // Fund balance pie (net positive only)
   const fundBalancePieData = useMemo(() => {
@@ -692,6 +726,9 @@ const AdminAnalytics = () => {
               </Popover>
               {dateRange && <Button variant="ghost" size="sm" onClick={() => setDateRange(undefined)}>Clear</Button>}
             </div>
+            <Button variant="outline" size="sm" className="mt-2 w-full" onClick={clearAllFilters}>
+              Clear All Filters
+            </Button>
           </div>
         </div>
       </div>
@@ -722,13 +759,12 @@ const AdminAnalytics = () => {
             </div>
             <div>
               <label className="text-sm font-medium block mb-1">Product Category</label>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map(cat => <SelectItem key={cat.slug} value={cat.slug}>{cat.title}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <MultiSelectFilter
+                options={categories.map(cat => ({ value: cat.slug, label: cat.title }))}
+                selected={categoryFilter}
+                onChange={setCategoryFilter}
+                allLabel="All Categories"
+              />
             </div>
             <div>
               <label className="text-sm font-medium block mb-1">Order Status</label>
@@ -892,13 +928,12 @@ const AdminAnalytics = () => {
             </div>
             <div>
               <label className="text-sm font-medium block mb-1">Category</label>
-              <Select value={expCatFilter} onValueChange={setExpCatFilter}>
-                <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {expenseCategories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <MultiSelectFilter
+                options={expenseCategories.map(c => ({ value: c.id, label: c.name }))}
+                selected={expCatFilter}
+                onChange={setExpCatFilter}
+                allLabel="All Categories"
+              />
             </div>
             <div>
               <label className="text-sm font-medium block mb-1">Fund Source</label>
