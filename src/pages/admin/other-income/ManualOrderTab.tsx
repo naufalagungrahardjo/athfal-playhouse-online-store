@@ -397,15 +397,6 @@ const ManualOrderTab = () => {
             <Label>Usia Anak</Label>
             <Input value={childAge} readOnly className="bg-muted cursor-not-allowed" placeholder="Otomatis dari tanggal lahir" />
           </div>
-          <div>
-            <Label>Transaction Date</Label>
-            <Input
-              type="date"
-              value={transactionDate}
-              onChange={e => setTransactionDate(e.target.value)}
-              max={new Date().toISOString().split('T')[0]}
-            />
-          </div>
           </div>
         </CardContent>
       </Card>
