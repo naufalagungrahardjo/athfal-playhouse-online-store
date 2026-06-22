@@ -61,7 +61,7 @@ const ManualOrderTab = () => {
   const [childGender, setChildGender] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [notes, setNotes] = useState('');
-  const [transactionDate, setTransactionDate] = useState('');
+  const [transactionDate, setTransactionDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [items, setItems] = useState<LineItem[]>([{ productDbId: '', variantId: null, quantity: 1 }]);
 
   const childAge = useMemo(() => {
