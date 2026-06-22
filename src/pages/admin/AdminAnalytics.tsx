@@ -492,17 +492,19 @@ const AdminAnalytics = () => {
     return orders
       .filter(o => o.status !== 'cancelled' && o.status !== 'refund')
       .filter(o => inRange(o.created_at))
+      .filter(o => orderCatMatch(o))
       .reduce((s, o) => s + getOrderRevenue(o, netRevenueType), 0);
-  }, [orders, netRevenueType, dateRange]);
+  }, [orders, netRevenueType, dateRange, categoryFilter, productCategoryMap]);
 
-  const totalOtherIncome = useMemo(() => otherIncomes.filter(i => inRange(i.date)).reduce((s, i) => s + i.amount, 0), [otherIncomes, dateRange]);
-  const totalAllExpenses = useMemo(() => expenses.filter(e => inRange(e.date)).reduce((s, e) => s + getExpenseNet(e), 0), [expenses, dateRange]);
+  const totalOtherIncome = useMemo(() => otherIncomes.filter(i => inRange(i.date)).filter(i => incFundMatch(i.fund_source_id)).reduce((s, i) => s + i.amount, 0), [otherIncomes, dateRange, incFundFilter]);
+  const totalAllExpenses = useMemo(() => expenses.filter(e => inRange(e.date)).filter(e => expCatMatch(e.category_id) && expFundMatch(e.fund_source_id)).reduce((s, e) => s + getExpenseNet(e), 0), [expenses, dateRange, expCatFilter, expFundFilter]);
   const totalAllCapital = useMemo(
     () => capitalInflows
       .filter(c => (c.type || 'inflow') !== 'transfer')
       .filter(c => inRange(c.date))
+      .filter(c => capFundMatch(c.fund_source_id))
       .reduce((s, c) => s + c.amount, 0),
-    [capitalInflows, dateRange]
+    [capitalInflows, dateRange, capFundFilter]
   );
   const effectiveOtherIncome = includeCapital ? totalOtherIncome + totalAllCapital : totalOtherIncome;
   const netIncome = totalSalesRevenue + effectiveOtherIncome - totalAllExpenses;
