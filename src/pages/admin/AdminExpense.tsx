@@ -492,6 +492,29 @@ const AdminExpense = () => {
                       <SortHead label="Final Price" sortKeyName="final_price" className="text-right" />
                       <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
+                    <TableRow className="hover:bg-transparent">
+                      <FilterCell filterKey="created_at" />
+                      <FilterCell filterKey="date" />
+                      <FilterCell filterKey="description" />
+                      <FilterCell filterKey="order_id" />
+                      <FilterCell filterKey="category" />
+                      <FilterCell filterKey="fund_source" />
+                      <FilterCell filterKey="amount" />
+                      <FilterCell filterKey="discount" />
+                      <FilterCell filterKey="final_price" />
+                      <TableHead className="pt-0 pb-2">
+                        {hasColFilters && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => setColFilters(emptyColFilters)}
+                          >
+                            Clear
+                          </Button>
+                        )}
+                      </TableHead>
+                    </TableRow>
                   </TableHeader>
                   <TableBody>
                     {sortedExpenses.map(exp => (
