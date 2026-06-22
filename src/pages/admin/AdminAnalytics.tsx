@@ -301,8 +301,8 @@ const AdminAnalytics = () => {
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter(e => {
-      if (expCatFilter !== 'all' && e.category_id !== expCatFilter) return false;
-      if (expFundFilter !== 'all' && e.fund_source_id !== expFundFilter) return false;
+      if (!expCatMatch(e.category_id)) return false;
+      if (!expFundMatch(e.fund_source_id)) return false;
       if (dateRange?.from) {
         const d = new Date(e.date);
         if (d < dateRange.from) return false;
