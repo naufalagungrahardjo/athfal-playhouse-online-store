@@ -105,7 +105,7 @@ const AdminAnalytics = () => {
   const [products, setProducts] = useState<{ product_id: string; category: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [timeGranularity, setTimeGranularity] = useState<TimeGranularity>('daily');
 
@@ -114,7 +114,7 @@ const AdminAnalytics = () => {
   const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>([]);
   const [fundSources, setFundSources] = useState<FundSource[]>([]);
   const [expGranularity, setExpGranularity] = useState<TimeGranularity>('monthly');
-  const [expCatFilter, setExpCatFilter] = useState('all');
+  const [expCatFilter, setExpCatFilter] = useState<string[]>([]);
   const [expFundFilter, setExpFundFilter] = useState('all');
 
   // Other Income data
