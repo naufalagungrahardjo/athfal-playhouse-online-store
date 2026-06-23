@@ -373,6 +373,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                         </TableHead>
                       ))}
                       <TableHead className="min-w-[280px] bg-blue-50">Compilation</TableHead>
+                      <TableHead className="min-w-[320px] bg-green-50">Final Report</TableHead>
                       {aiSummary && <TableHead className="min-w-[300px] bg-purple-50">AI Summary</TableHead>}
                     </TableRow>
                   </TableHeader>
@@ -399,6 +400,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                         );
                       })}
                       <TableCell className="bg-blue-50/50 text-xs text-muted-foreground">—</TableCell>
+                      <TableCell className="bg-green-50/50 text-xs text-muted-foreground">—</TableCell>
                       {aiSummary && <TableCell className="bg-purple-50/50" rowSpan={DESCRIPTIVE_FIELDS.length + 1}>
                         <div className="text-xs whitespace-pre-wrap max-h-[400px] overflow-y-auto">{aiSummary}</div>
                       </TableCell>}
@@ -427,6 +429,32 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                         <TableCell className="bg-blue-50/50">
                           <div className="text-xs whitespace-pre-wrap max-h-[120px] overflow-y-auto">
                             {getCompilation(field.key) || <span className="text-muted-foreground">—</span>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="bg-green-50/50 align-top">
+                          <div className="space-y-2">
+                            <Textarea
+                              value={finalReports[field.key] ?? ""}
+                              onChange={(e) => setFinalReports(prev => ({ ...prev, [field.key]: e.target.value }))}
+                              placeholder="Write the final report..."
+                              className="min-h-[80px] text-xs bg-background"
+                            />
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => saveFinalReport(field.key)}
+                                disabled={savingField === field.key || (finalReports[field.key] ?? "") === (savedReports[field.key] ?? "")}
+                              >
+                                {savingField === field.key
+                                  ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                                  : <Check className="h-3.5 w-3.5 mr-1" />}
+                                Save
+                              </Button>
+                              {(finalReports[field.key] ?? "") === (savedReports[field.key] ?? "") && (savedReports[field.key] ?? "") !== "" && (
+                                <span className="text-[10px] text-green-600">Saved</span>
+                              )}
+                            </div>
                           </div>
                         </TableCell>
                       </TableRow>
