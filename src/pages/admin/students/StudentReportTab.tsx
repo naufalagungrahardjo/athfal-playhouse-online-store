@@ -44,10 +44,50 @@ export default function StudentReportTab({ programs, students, enrollments, atte
   const [meetingFilter, setMeetingFilter] = useState("all");
   const [aiSummary, setAiSummary] = useState("");
   const [summaryLoading, setSummaryLoading] = useState(false);
+  // Final report (collaborative free text per field, no author shown)
+  const [finalReports, setFinalReports] = useState<Record<string, string>>({});
+  const [savedReports, setSavedReports] = useState<Record<string, string>>({});
+  const [savingField, setSavingField] = useState<string | null>(null);
   const { toast } = useToast();
   const { datesForProgram } = useProgramSessionDates();
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
+
+  // Load saved final reports whenever the selected student changes
+  useEffect(() => {
+    if (!selectedStudentId) { setFinalReports({}); setSavedReports({}); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("student_final_reports")
+        .select("field_key,content")
+        .eq("student_id", selectedStudentId);
+      const map: Record<string, string> = {};
+      (data || []).forEach((r: any) => { map[r.field_key] = r.content || ""; });
+      setFinalReports(map);
+      setSavedReports(map);
+    })();
+  }, [selectedStudentId]);
+
+  const saveFinalReport = useCallback(async (fieldKey: string) => {
+    if (!selectedStudentId) return;
+    setSavingField(fieldKey);
+    try {
+      const content = finalReports[fieldKey] ?? "";
+      const { error } = await supabase
+        .from("student_final_reports")
+        .upsert(
+          { student_id: selectedStudentId, field_key: fieldKey, content },
+          { onConflict: "student_id,field_key" }
+        );
+      if (error) throw error;
+      setSavedReports(prev => ({ ...prev, [fieldKey]: content }));
+      toast({ title: "Saved", description: "Final report saved." });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to save", variant: "destructive" });
+    } finally {
+      setSavingField(null);
+    }
+  }, [selectedStudentId, finalReports, toast]);
 
   // Map teacher email -> display name (from public.users table)
   const [teacherNames, setTeacherNames] = useState<Record<string, string>>({});
