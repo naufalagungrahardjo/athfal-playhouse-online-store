@@ -4,7 +4,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Loader2, Sparkles } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Download, Loader2, Sparkles, Check } from "lucide-react";
 import { ClassProgram, Student, StudentEnrollment, StudentAttendance } from "@/hooks/useStudents";
 import { useProgramSessionDates } from "@/hooks/useProgramSessionDates";
 import { format, parseISO } from "date-fns";
@@ -43,10 +44,50 @@ export default function StudentReportTab({ programs, students, enrollments, atte
   const [meetingFilter, setMeetingFilter] = useState("all");
   const [aiSummary, setAiSummary] = useState("");
   const [summaryLoading, setSummaryLoading] = useState(false);
+  // Final report (collaborative free text per field, no author shown)
+  const [finalReports, setFinalReports] = useState<Record<string, string>>({});
+  const [savedReports, setSavedReports] = useState<Record<string, string>>({});
+  const [savingField, setSavingField] = useState<string | null>(null);
   const { toast } = useToast();
   const { datesForProgram } = useProgramSessionDates();
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
+
+  // Load saved final reports whenever the selected student changes
+  useEffect(() => {
+    if (!selectedStudentId) { setFinalReports({}); setSavedReports({}); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("student_final_reports")
+        .select("field_key,content")
+        .eq("student_id", selectedStudentId);
+      const map: Record<string, string> = {};
+      (data || []).forEach((r: any) => { map[r.field_key] = r.content || ""; });
+      setFinalReports(map);
+      setSavedReports(map);
+    })();
+  }, [selectedStudentId]);
+
+  const saveFinalReport = useCallback(async (fieldKey: string) => {
+    if (!selectedStudentId) return;
+    setSavingField(fieldKey);
+    try {
+      const content = finalReports[fieldKey] ?? "";
+      const { error } = await supabase
+        .from("student_final_reports")
+        .upsert(
+          { student_id: selectedStudentId, field_key: fieldKey, content },
+          { onConflict: "student_id,field_key" }
+        );
+      if (error) throw error;
+      setSavedReports(prev => ({ ...prev, [fieldKey]: content }));
+      toast({ title: "Saved", description: "Final report saved." });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to save", variant: "destructive" });
+    } finally {
+      setSavingField(null);
+    }
+  }, [selectedStudentId, finalReports, toast]);
 
   // Map teacher email -> display name (from public.users table)
   const [teacherNames, setTeacherNames] = useState<Record<string, string>>({});
@@ -332,6 +373,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                         </TableHead>
                       ))}
                       <TableHead className="min-w-[280px] bg-blue-50">Compilation</TableHead>
+                      <TableHead className="min-w-[320px] bg-green-50">Final Report</TableHead>
                       {aiSummary && <TableHead className="min-w-[300px] bg-purple-50">AI Summary</TableHead>}
                     </TableRow>
                   </TableHeader>
@@ -358,6 +400,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                         );
                       })}
                       <TableCell className="bg-blue-50/50 text-xs text-muted-foreground">—</TableCell>
+                      <TableCell className="bg-green-50/50 text-xs text-muted-foreground">—</TableCell>
                       {aiSummary && <TableCell className="bg-purple-50/50" rowSpan={DESCRIPTIVE_FIELDS.length + 1}>
                         <div className="text-xs whitespace-pre-wrap max-h-[400px] overflow-y-auto">{aiSummary}</div>
                       </TableCell>}
@@ -386,6 +429,32 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                         <TableCell className="bg-blue-50/50">
                           <div className="text-xs whitespace-pre-wrap max-h-[120px] overflow-y-auto">
                             {getCompilation(field.key) || <span className="text-muted-foreground">—</span>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="bg-green-50/50 align-top">
+                          <div className="space-y-2">
+                            <Textarea
+                              value={finalReports[field.key] ?? ""}
+                              onChange={(e) => setFinalReports(prev => ({ ...prev, [field.key]: e.target.value }))}
+                              placeholder="Write the final report..."
+                              className="min-h-[80px] text-xs bg-background"
+                            />
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => saveFinalReport(field.key)}
+                                disabled={savingField === field.key || (finalReports[field.key] ?? "") === (savedReports[field.key] ?? "")}
+                              >
+                                {savingField === field.key
+                                  ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                                  : <Check className="h-3.5 w-3.5 mr-1" />}
+                                Save
+                              </Button>
+                              {(finalReports[field.key] ?? "") === (savedReports[field.key] ?? "") && (savedReports[field.key] ?? "") !== "" && (
+                                <span className="text-[10px] text-green-600">Saved</span>
+                              )}
+                            </div>
                           </div>
                         </TableCell>
                       </TableRow>

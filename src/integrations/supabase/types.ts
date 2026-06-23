@@ -1447,6 +1447,38 @@ export type Database = {
           },
         ]
       }
+      student_final_reports: {
+        Row: {
+          content: string
+          field_key: string
+          id: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          field_key: string
+          id?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          field_key?: string
+          id?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_final_reports_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           created_at: string | null
