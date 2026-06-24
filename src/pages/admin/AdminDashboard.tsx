@@ -3,10 +3,17 @@ import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useFinancialSummary } from '@/hooks/useFinancialSummary';
+import { useDashboardDetails } from '@/hooks/useDashboardDetails';
 import { supabase } from '@/integrations/supabase/client';
 import { ClickableStatsCard } from '@/components/admin/ClickableStatsCard';
 import { OrderManagement } from '@/components/admin/OrderManagement';
 import { FundBalanceTable } from '@/components/admin/FundBalanceTable';
+import {
+  SalesDetailTable,
+  OtherIncomeDetailTable,
+  ReceivableDetailTable,
+  MoneyFlowSummary,
+} from '@/components/admin/DashboardDetailTables';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -44,6 +51,7 @@ const AdminDashboard = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const { stats, loading, fetchDashboardStats } = useDashboard(dateRange);
   const { summary } = useFinancialSummary(dateRange);
+  const { details } = useDashboardDetails(dateRange);
   const { user } = useAuth();
   const adminRole = getAdminRole(user);
 
