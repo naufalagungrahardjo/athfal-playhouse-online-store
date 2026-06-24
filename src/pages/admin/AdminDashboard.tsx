@@ -320,6 +320,52 @@ const AdminDashboard = () => {
           <FundBalanceTable data={summary.fundBalance} />
         </DialogContent>
       </Dialog>
+
+      {/* Sales Revenue Detail Dialog */}
+      <Dialog open={selectedView === 'salesDetail'} onOpenChange={handleCloseDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>🛒 Sales Revenue — Products Sold</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mb-4">
+            Summary of products sold with quantity, customer, and line total.
+          </p>
+          <SalesDetailTable data={details.sales} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Other Income Detail Dialog */}
+      <Dialog open={selectedView === 'otherIncomeDetail'} onOpenChange={handleCloseDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>💵 Other Income Records</DialogTitle>
+          </DialogHeader>
+          <OtherIncomeDetailTable data={details.otherIncome} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Outstanding Receivables Detail Dialog */}
+      <Dialog open={selectedView === 'receivablesDetail'} onOpenChange={handleCloseDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>⏳ Outstanding Receivables</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mb-4">
+            Products sold that have not been fully paid yet, with customer and child name.
+          </p>
+          <ReceivableDetailTable data={details.receivables} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Money Flow Summary (Target to BEP) Dialog */}
+      <Dialog open={selectedView === 'moneyFlow'} onOpenChange={handleCloseDialog}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>📊 Money Flow Summary</DialogTitle>
+          </DialogHeader>
+          <MoneyFlowSummary summary={summary} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
