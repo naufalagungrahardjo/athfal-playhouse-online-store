@@ -51,7 +51,7 @@ export const FundBalanceTable = ({ data }: FundBalanceTableProps) => {
             <td className="p-3 text-right text-purple-600">{formatCurrency(sum('capitalIn'))}</td>
             <td className="p-3 text-right text-emerald-600">{formatCurrency(sum('transferIn'))}</td>
             <td className="p-3 text-right text-amber-600">{formatCurrency(sum('transferOut'))}</td>
-            <td className="p-3 text-right">{formatCurrency(sum('totalIn'))}</td>
+            <td className="p-3 text-right">-</td>
             <td className="p-3 text-right text-destructive">{formatCurrency(sum('expenseOut'))}</td>
             <td className={`p-3 text-right ${totalNet >= 0 ? 'text-green-600' : 'text-destructive'}`}>
               {totalNet < 0 ? '-' : ''}{formatCurrency(Math.abs(totalNet))}
