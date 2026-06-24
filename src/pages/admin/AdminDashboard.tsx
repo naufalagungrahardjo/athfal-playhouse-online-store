@@ -167,11 +167,13 @@ const AdminDashboard = () => {
             title="Sales Revenue"
             value={formatCurrency(summary.salesRevenue)}
             icon={DollarSign}
+            onClick={() => setSelectedView('salesDetail')}
           />
           <ClickableStatsCard
             title="Other Income"
             value={formatCurrency(summary.otherIncome)}
             icon={HandCoins}
+            onClick={() => setSelectedView('otherIncomeDetail')}
           />
           <ClickableStatsCard
             title="Total Revenue (Paid)"
@@ -183,11 +185,11 @@ const AdminDashboard = () => {
             title="Outstanding Receivables"
             value={formatCurrency(stats.outstandingReceivables)}
             icon={DollarSign}
-            onClick={() => setSelectedView('orders')}
+            onClick={() => setSelectedView('receivablesDetail')}
             className="border-red-200 bg-red-50"
           />
           <ClickableStatsCard
-            title="Total Revenue (Receivable)"
+            title="Total Revenue (Paid + Receivable)"
             value={formatCurrency(summary.salesRevenue + summary.otherIncome + stats.outstandingReceivables)}
             icon={Coins}
             className="border-blue-200 bg-blue-50"
@@ -213,6 +215,7 @@ const AdminDashboard = () => {
             title="Target to BEP"
             value={formatCurrency(summary.targetToBEP)}
             icon={Target}
+            onClick={() => setSelectedView('moneyFlow')}
             className={summary.targetToBEP >= 0 ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'}
           />
           <ClickableStatsCard
