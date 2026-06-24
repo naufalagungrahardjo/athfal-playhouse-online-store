@@ -30,6 +30,7 @@ export interface SalesDetailRow {
   quantity: number;
   customerName: string;
   total: number;
+  hasDiscount: boolean;
 }
 
 export interface OtherIncomeDetailRow {
@@ -46,13 +47,22 @@ export interface ReceivableDetailRow {
   outstanding: number;
 }
 
+export interface DiscountDetailRow {
+  productName: string;
+  customerName: string;
+  childName: string;
+  normalPrice: number;
+  discount: number;
+}
+
 export interface DashboardDetails {
   sales: SalesDetailRow[];
   otherIncome: OtherIncomeDetailRow[];
   receivables: ReceivableDetailRow[];
+  discounts: DiscountDetailRow[];
 }
 
-const empty: DashboardDetails = { sales: [], otherIncome: [], receivables: [] };
+const empty: DashboardDetails = { sales: [], otherIncome: [], receivables: [], discounts: [] };
 
 export const useDashboardDetails = (dateRange?: DateRange) => {
   const [details, setDetails] = useState<DashboardDetails>(empty);
@@ -102,16 +112,48 @@ export const useDashboardDetails = (dateRange?: DateRange) => {
       // Sales detail: one row per product sold per order
       const sales: SalesDetailRow[] = [];
       activeOrders.forEach((o) => {
-        (itemsByOrder[o.id] || []).forEach((it) => {
+        const list = itemsByOrder[o.id] || [];
+        const normalSubtotal = list.reduce(
+          (s, it) => s + (it.product_price || 0) * (it.quantity || 0),
+          0,
+        );
+        const orderDiscount = o.discount_amount || 0;
+        list.forEach((it) => {
+          const lineNormal = (it.product_price || 0) * (it.quantity || 0);
+          // Allocate the order discount proportionally across its line items
+          const lineDiscount =
+            normalSubtotal > 0 ? (orderDiscount * lineNormal) / normalSubtotal : 0;
           sales.push({
             productName: it.product_name,
             quantity: it.quantity,
             customerName: o.customer_name,
-            total: (it.product_price || 0) * (it.quantity || 0),
+            total: Math.max(0, lineNormal - lineDiscount),
+            hasDiscount: orderDiscount > 0,
           });
         });
       });
       sales.sort((a, b) => a.customerName.localeCompare(b.customerName));
+
+      // Discount detail: one row per order that received a discount
+      const discounts: DiscountDetailRow[] = activeOrders
+        .filter((o) => (o.discount_amount || 0) > 0)
+        .map((o) => {
+          const list = itemsByOrder[o.id] || [];
+          const productName =
+            list.length > 0 ? list.map((it) => it.product_name).join(', ') : '-';
+          const normalPrice = list.reduce(
+            (s, it) => s + (it.product_price || 0) * (it.quantity || 0),
+            0,
+          );
+          return {
+            productName,
+            customerName: o.customer_name,
+            childName: o.child_name || '-',
+            normalPrice,
+            discount: o.discount_amount || 0,
+          };
+        })
+        .sort((a, b) => a.customerName.localeCompare(b.customerName));
 
       // Other income records
       const otherIncome: OtherIncomeDetailRow[] = otherIncomes
@@ -151,7 +193,7 @@ export const useDashboardDetails = (dateRange?: DateRange) => {
         });
       receivables.sort((a, b) => a.customerName.localeCompare(b.customerName));
 
-      setDetails({ sales, otherIncome, receivables });
+      setDetails({ sales, otherIncome, receivables, discounts });
     } catch (error) {
       console.error('Error fetching dashboard details:', error);
     } finally {
