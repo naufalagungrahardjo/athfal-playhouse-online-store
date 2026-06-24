@@ -3,10 +3,17 @@ import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useFinancialSummary } from '@/hooks/useFinancialSummary';
+import { useDashboardDetails } from '@/hooks/useDashboardDetails';
 import { supabase } from '@/integrations/supabase/client';
 import { ClickableStatsCard } from '@/components/admin/ClickableStatsCard';
 import { OrderManagement } from '@/components/admin/OrderManagement';
 import { FundBalanceTable } from '@/components/admin/FundBalanceTable';
+import {
+  SalesDetailTable,
+  OtherIncomeDetailTable,
+  ReceivableDetailTable,
+  MoneyFlowSummary,
+} from '@/components/admin/DashboardDetailTables';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -44,6 +51,7 @@ const AdminDashboard = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const { stats, loading, fetchDashboardStats } = useDashboard(dateRange);
   const { summary } = useFinancialSummary(dateRange);
+  const { details } = useDashboardDetails(dateRange);
   const { user } = useAuth();
   const adminRole = getAdminRole(user);
 
@@ -159,11 +167,13 @@ const AdminDashboard = () => {
             title="Sales Revenue"
             value={formatCurrency(summary.salesRevenue)}
             icon={DollarSign}
+            onClick={() => setSelectedView('salesDetail')}
           />
           <ClickableStatsCard
             title="Other Income"
             value={formatCurrency(summary.otherIncome)}
             icon={HandCoins}
+            onClick={() => setSelectedView('otherIncomeDetail')}
           />
           <ClickableStatsCard
             title="Total Revenue (Paid)"
@@ -175,11 +185,11 @@ const AdminDashboard = () => {
             title="Outstanding Receivables"
             value={formatCurrency(stats.outstandingReceivables)}
             icon={DollarSign}
-            onClick={() => setSelectedView('orders')}
+            onClick={() => setSelectedView('receivablesDetail')}
             className="border-red-200 bg-red-50"
           />
           <ClickableStatsCard
-            title="Total Revenue (Receivable)"
+            title="Total Revenue (Paid + Receivable)"
             value={formatCurrency(summary.salesRevenue + summary.otherIncome + stats.outstandingReceivables)}
             icon={Coins}
             className="border-blue-200 bg-blue-50"
@@ -205,6 +215,7 @@ const AdminDashboard = () => {
             title="Target to BEP"
             value={formatCurrency(summary.targetToBEP)}
             icon={Target}
+            onClick={() => setSelectedView('moneyFlow')}
             className={summary.targetToBEP >= 0 ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'}
           />
           <ClickableStatsCard
@@ -222,37 +233,11 @@ const AdminDashboard = () => {
         {showRevenue && (
           <>
             <ClickableStatsCard
-              title="Revenue (Before Tax)"
-              value={formatCurrency(stats.revenueBeforeTax)}
-              icon={DollarSign}
-              onClick={() => setSelectedView('orders')}
-            />
-            <ClickableStatsCard
-              title="Revenue (After Tax)"
-              value={formatCurrency(stats.revenueAfterTax)}
-              icon={TrendingUp}
-              onClick={() => setSelectedView('orders')}
-            />
-            <ClickableStatsCard
               title="Discount Given"
               value={formatCurrency(stats.totalDiscount)}
               icon={BadgePercent}
               onClick={() => setSelectedView('orders')}
               className="border-orange-200 bg-orange-50"
-            />
-            <ClickableStatsCard
-              title="Total Paid (Received)"
-              value={formatCurrency(stats.totalAmountPaid)}
-              icon={Wallet}
-              onClick={() => setSelectedView('orders')}
-              className="border-green-200 bg-green-50"
-            />
-            <ClickableStatsCard
-              title="Total Revenue (Paid + Payable)"
-              value={formatCurrency(stats.totalAmountPaid + stats.outstandingReceivables)}
-              icon={Coins}
-              onClick={() => setSelectedView('orders')}
-              className="border-blue-200 bg-blue-50"
             />
           </>
         )}
@@ -333,6 +318,52 @@ const AdminDashboard = () => {
             Where your money sits: inflows from sales, other income, capital, and fund transfers vs outflows from expenses per fund source.
           </p>
           <FundBalanceTable data={summary.fundBalance} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Sales Revenue Detail Dialog */}
+      <Dialog open={selectedView === 'salesDetail'} onOpenChange={handleCloseDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>🛒 Sales Revenue — Products Sold</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mb-4">
+            Summary of products sold with quantity, customer, and line total.
+          </p>
+          <SalesDetailTable data={details.sales} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Other Income Detail Dialog */}
+      <Dialog open={selectedView === 'otherIncomeDetail'} onOpenChange={handleCloseDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>💵 Other Income Records</DialogTitle>
+          </DialogHeader>
+          <OtherIncomeDetailTable data={details.otherIncome} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Outstanding Receivables Detail Dialog */}
+      <Dialog open={selectedView === 'receivablesDetail'} onOpenChange={handleCloseDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>⏳ Outstanding Receivables</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mb-4">
+            Products sold that have not been fully paid yet, with customer and child name.
+          </p>
+          <ReceivableDetailTable data={details.receivables} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Money Flow Summary (Target to BEP) Dialog */}
+      <Dialog open={selectedView === 'moneyFlow'} onOpenChange={handleCloseDialog}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>📊 Money Flow Summary</DialogTitle>
+          </DialogHeader>
+          <MoneyFlowSummary summary={summary} />
         </DialogContent>
       </Dialog>
     </div>
