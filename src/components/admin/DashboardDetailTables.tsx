@@ -4,6 +4,7 @@ import {
   SalesDetailRow,
   OtherIncomeDetailRow,
   ReceivableDetailRow,
+  DiscountDetailRow,
 } from '@/hooks/useDashboardDetails';
 import { FinancialSummary } from '@/hooks/useFinancialSummary';
 
@@ -26,7 +27,12 @@ export const SalesDetailTable = ({ data }: { data: SalesDetailRow[] }) => {
         </thead>
         <tbody>
           {data.map((row, i) => (
-            <tr key={i} className="border-b hover:bg-muted/50 transition-colors">
+            <tr
+              key={i}
+              className={`border-b hover:bg-muted/50 transition-colors ${
+                row.hasDiscount ? 'text-red-600' : ''
+              }`}
+            >
               <td className="p-3 font-medium">{row.productName}</td>
               <td className="p-3 text-right">{row.quantity}</td>
               <td className="p-3">{row.customerName}</td>
@@ -38,6 +44,43 @@ export const SalesDetailTable = ({ data }: { data: SalesDetailRow[] }) => {
             <td className="p-3 text-right">{qtySum}</td>
             <td className="p-3" />
             <td className="p-3 text-right">{formatCurrency(totalSum)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export const DiscountDetailTable = ({ data }: { data: DiscountDetailRow[] }) => {
+  if (data.length === 0) return <Empty />;
+  const normalSum = data.reduce((s, d) => s + d.normalPrice, 0);
+  const discountSum = data.reduce((s, d) => s + d.discount, 0);
+  return (
+    <div className="overflow-auto">
+      <table className="w-full text-xs sm:text-sm">
+        <thead>
+          <tr className="border-b">
+            <th className="text-left p-3 font-medium text-muted-foreground">Product</th>
+            <th className="text-left p-3 font-medium text-muted-foreground">Customer</th>
+            <th className="text-left p-3 font-medium text-muted-foreground">Child</th>
+            <th className="text-right p-3 font-medium text-muted-foreground">Normal Price</th>
+            <th className="text-right p-3 font-medium text-muted-foreground">Discount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((row, i) => (
+            <tr key={i} className="border-b hover:bg-muted/50 transition-colors">
+              <td className="p-3 font-medium">{row.productName}</td>
+              <td className="p-3">{row.customerName}</td>
+              <td className="p-3">{row.childName}</td>
+              <td className="p-3 text-right">{formatCurrency(row.normalPrice)}</td>
+              <td className="p-3 text-right text-orange-600">{formatCurrency(row.discount)}</td>
+            </tr>
+          ))}
+          <tr className="border-t-2 font-bold">
+            <td className="p-3" colSpan={3}>Total</td>
+            <td className="p-3 text-right">{formatCurrency(normalSum)}</td>
+            <td className="p-3 text-right text-orange-600">{formatCurrency(discountSum)}</td>
           </tr>
         </tbody>
       </table>
