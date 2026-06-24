@@ -13,6 +13,7 @@ import {
   OtherIncomeDetailTable,
   ReceivableDetailTable,
   MoneyFlowSummary,
+  DiscountDetailTable,
 } from '@/components/admin/DashboardDetailTables';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -236,7 +237,7 @@ const AdminDashboard = () => {
               title="Discount Given"
               value={formatCurrency(stats.totalDiscount)}
               icon={BadgePercent}
-              onClick={() => setSelectedView('orders')}
+              onClick={() => setSelectedView('discountDetail')}
               className="border-orange-200 bg-orange-50"
             />
           </>
@@ -364,6 +365,19 @@ const AdminDashboard = () => {
             <DialogTitle>📊 Money Flow Summary</DialogTitle>
           </DialogHeader>
           <MoneyFlowSummary summary={summary} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Discount Given Detail Dialog */}
+      <Dialog open={selectedView === 'discountDetail'} onOpenChange={handleCloseDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>🏷️ Discount Given — Orders</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mb-4">
+            Orders that received a discount, with product, customer, child, normal price, and discount nominal.
+          </p>
+          <DiscountDetailTable data={details.discounts} />
         </DialogContent>
       </Dialog>
     </div>
