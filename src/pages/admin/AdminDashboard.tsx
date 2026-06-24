@@ -166,6 +166,25 @@ const AdminDashboard = () => {
             icon={HandCoins}
           />
           <ClickableStatsCard
+            title="Total Revenue (Paid)"
+            value={formatCurrency(summary.salesRevenue + summary.otherIncome)}
+            icon={Wallet}
+            className="border-green-200 bg-green-50"
+          />
+          <ClickableStatsCard
+            title="Outstanding Receivables"
+            value={formatCurrency(stats.outstandingReceivables)}
+            icon={DollarSign}
+            onClick={() => setSelectedView('orders')}
+            className="border-red-200 bg-red-50"
+          />
+          <ClickableStatsCard
+            title="Total Revenue (Receivable)"
+            value={formatCurrency(summary.salesRevenue + summary.otherIncome + stats.outstandingReceivables)}
+            icon={Coins}
+            className="border-blue-200 bg-blue-50"
+          />
+          <ClickableStatsCard
             title="Capital Inflow"
             value={formatCurrency(summary.capitalInflow)}
             icon={PiggyBank}
@@ -227,13 +246,6 @@ const AdminDashboard = () => {
               icon={Wallet}
               onClick={() => setSelectedView('orders')}
               className="border-green-200 bg-green-50"
-            />
-            <ClickableStatsCard
-              title="Outstanding Receivables"
-              value={formatCurrency(stats.outstandingReceivables)}
-              icon={DollarSign}
-              onClick={() => setSelectedView('orders')}
-              className="border-red-200 bg-red-50"
             />
             <ClickableStatsCard
               title="Total Revenue (Paid + Payable)"
