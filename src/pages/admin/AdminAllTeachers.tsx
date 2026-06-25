@@ -996,8 +996,11 @@ export default function AdminAllTeachers() {
                   <Button size="sm" variant="ghost" onClick={fetchStorageUsage}>Refresh</Button>
                 </div>
                 {(() => {
-                  const totalBytes = storageUsage.reduce((s, b) => s + Number(b.total_bytes || 0), 0);
-                  const totalFiles = storageUsage.reduce((s, b) => s + Number(b.file_count || 0), 0);
+                  // "parent-documents" is a synthetic breakdown row that is a
+                  // subset of the images bucket — exclude it from the totals.
+                  const realBuckets = storageUsage.filter((b) => b.bucket_id !== "parent-documents");
+                  const totalBytes = realBuckets.reduce((s, b) => s + Number(b.total_bytes || 0), 0);
+                  const totalFiles = realBuckets.reduce((s, b) => s + Number(b.file_count || 0), 0);
                   const pct = Math.min(100, (totalBytes / FREE_TIER_BYTES) * 100);
                   const fmt = (n: number) => {
                     if (n >= 1024 * 1024 * 1024) return (n / (1024 * 1024 * 1024)).toFixed(2) + " GB";
@@ -1007,6 +1010,7 @@ export default function AdminAllTeachers() {
                   };
                   const evidence = storageUsage.find((b) => b.bucket_id === "teacher-evidence");
                   const images = storageUsage.find((b) => b.bucket_id === "images");
+                  const docs = storageUsage.find((b) => b.bucket_id === "parent-documents");
                   return (
                     <>
                       <Progress value={pct} className="h-2" />
@@ -1025,6 +1029,13 @@ export default function AdminAllTeachers() {
                           <div className="text-muted-foreground">
                             {fmt(Number(images?.total_bytes || 0))} · {Number(images?.file_count || 0)} files
                           </div>
+                        </div>
+                        <div className="rounded border p-2">
+                          <div className="font-medium">parent documents (Documents menu)</div>
+                          <div className="text-muted-foreground">
+                            {fmt(Number(docs?.total_bytes || 0))} · {Number(docs?.file_count || 0)} files
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">subset of images bucket</div>
                         </div>
                       </div>
                       <p className="text-[11px] text-muted-foreground pt-1">
