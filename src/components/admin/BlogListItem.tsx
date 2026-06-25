@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { Blog } from "@/hooks/useBlogs";
 
 interface BlogListItemProps {
+  index: number;
   blog: Blog;
   isSelected: boolean;
   onSelect: (blog: Blog) => void;
