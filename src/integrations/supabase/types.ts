@@ -235,6 +235,7 @@ export type Database = {
           id: string
           image: string
           is_ai_content: boolean
+          is_parent_reference: boolean
           meta_description: string | null
           published: boolean
           slug: string | null
@@ -251,6 +252,7 @@ export type Database = {
           id: string
           image: string
           is_ai_content?: boolean
+          is_parent_reference?: boolean
           meta_description?: string | null
           published?: boolean
           slug?: string | null
@@ -267,6 +269,7 @@ export type Database = {
           id?: string
           image?: string
           is_ai_content?: boolean
+          is_parent_reference?: boolean
           meta_description?: string | null
           published?: boolean
           slug?: string | null
@@ -846,6 +849,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      parent_documents: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_name: string | null
+          file_type: string
+          file_url: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_name?: string | null
+          file_type?: string
+          file_url: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_name?: string | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       parent_message_reads: {
         Row: {
@@ -1698,11 +1734,13 @@ export type Database = {
         Args: { p_order_id: string }
         Returns: number
       }
+      can_access_parent_portal: { Args: never; Returns: boolean }
       can_insert_order_item: { Args: { p_order_id: string }; Returns: boolean }
       can_insert_order_payment: {
         Args: { p_order_id: string }
         Returns: boolean
       }
+      can_manage_parent_documents: { Args: never; Returns: boolean }
       can_view_financials: { Args: never; Returns: boolean }
       create_mdr_expense_for_order: {
         Args: { p_order_id: string }

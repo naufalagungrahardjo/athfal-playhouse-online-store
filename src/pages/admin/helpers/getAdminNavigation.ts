@@ -1,6 +1,6 @@
 
 import {
-  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList, BookOpen, Wallet, FileCheck, Camera, Inbox
+  LayoutDashboard, Package, ShoppingCart, FileText, Settings, Image, HelpCircle, CreditCard, Users, Copy, MessageSquare, ListChecks, BarChart3, GraduationCap, ClipboardList, BookOpen, Wallet, FileCheck, Camera, Inbox, FolderOpen
 } from 'lucide-react';
 
 export type NavigationItem = {
@@ -49,6 +49,7 @@ export function getAdminNavigation(role: string | null, allowedMenus?: string[] 
         { name: 'Students', href: '/admin/students', icon: BookOpen },
         { name: 'Check-In/Out', href: '/admin/check-in-out', icon: Camera },
         { name: 'Inbox', href: '/admin/inbox', icon: Inbox },
+        { name: 'Documents', href: '/admin/documents', icon: FolderOpen },
       ],
     },
     {
@@ -169,6 +170,7 @@ export function getAllMenuItems(): { href: string; name: string }[] {
     { href: '/admin/teacher', name: 'Teacher (Personal)' },
     { href: '/admin/check-in-out', name: 'Check-In/Out' },
     { href: '/admin/inbox', name: 'Inbox' },
+    { href: '/admin/documents', name: 'Documents' },
     { href: '/admin/blogs', name: 'Blogs' },
     { href: '/admin/banners', name: 'Banners' },
     { href: '/admin/faq', name: 'FAQ' },
