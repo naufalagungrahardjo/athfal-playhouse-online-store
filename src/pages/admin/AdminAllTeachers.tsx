@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ConfirmDeleteDialog } from "@/components/admin/ConfirmDeleteDialog";
 
 const SESSION_OPTIONS = [
   { id: "session1", label: "Session 1: 8:30 - 11:30" },
@@ -587,31 +588,24 @@ export default function AdminAllTeachers() {
                 )}
                 <Button variant="outline" onClick={exportAttendanceCSV}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
                 {isSuperAdmin && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
+                  <ConfirmDeleteDialog
+                    trigger={
                       <Button variant="destructive" className="gap-1" disabled={deletingAttendance}>
                         <Trash2 className="w-4 h-4" />
                         {deletingAttendance ? "Deleting..." : "Delete Attendance History"}
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete attendance history?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will permanently delete <strong>{filteredAttendances.length}</strong> attendance record(s) for{" "}
-                          <strong>{teacherFilter === "all" ? "ALL teachers" : displayName(teacherFilter)}</strong>
-                          {(dateFrom || dateTo) ? " matching the current date filters" : ""}.
-                          This cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteAttendanceHistory} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                          Yes, Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                    }
+                    title="Delete attendance history?"
+                    description={
+                      <>
+                        This will permanently delete <strong>{filteredAttendances.length}</strong> attendance record(s) for{" "}
+                        <strong>{teacherFilter === "all" ? "ALL teachers" : displayName(teacherFilter)}</strong>
+                        {(dateFrom || dateTo) ? " matching the current date filters" : ""}.
+                        This cannot be undone.
+                      </>
+                    }
+                    onConfirm={handleDeleteAttendanceHistory}
+                  />
                 )}
               </div>
 
@@ -1092,47 +1086,28 @@ export default function AdminAllTeachers() {
                   <span className="font-semibold">{filteredCheckRecords.length}</span> record(s) match the current filters.
                 </div>
                 <div className="ml-auto flex flex-wrap gap-2">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
+                  <ConfirmDeleteDialog
+                    trigger={
                       <Button variant="outline" className="gap-2" disabled={ciBusy || filteredCheckRecords.length === 0}>
                         <ImageOff className="w-4 h-4" /> Delete Photos Only
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete photos for {filteredCheckRecords.length} record(s)?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This removes the photo files from storage and clears their links, but keeps the check-in/out log entries. This cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteCheckPhotos}>Delete Photos</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                    }
+                    title={`Delete photos for ${filteredCheckRecords.length} record(s)?`}
+                    description="This removes the photo files from storage and clears their links, but keeps the check-in/out log entries. This cannot be undone."
+                    confirmLabel="Delete Photos"
+                    onConfirm={handleDeleteCheckPhotos}
+                  />
 
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
+                  <ConfirmDeleteDialog
+                    trigger={
                       <Button variant="destructive" className="gap-2" disabled={ciBusy || filteredCheckRecords.length === 0}>
                         <Trash2 className="w-4 h-4" /> Delete Records
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete {filteredCheckRecords.length} record(s)?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This permanently deletes the selected check-in/out log entries and their photos from storage. This cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteCheckRecords} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                          Yes, Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                    }
+                    title={`Delete ${filteredCheckRecords.length} record(s)?`}
+                    description="This permanently deletes the selected check-in/out log entries and their photos from storage. This cannot be undone."
+                    onConfirm={handleDeleteCheckRecords}
+                  />
                 </div>
               </div>
 
