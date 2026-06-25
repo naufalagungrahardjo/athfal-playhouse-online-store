@@ -80,6 +80,7 @@ const AdminOtherIncome = lazyRetry(() => import("./pages/admin/AdminOtherIncome"
 const AdminCheckoutTerms = lazyRetry(() => import("./pages/admin/AdminCheckoutTerms"));
 const AdminCheckInOut = lazyRetry(() => import("./pages/admin/AdminCheckInOut"));
 const AdminInbox = lazyRetry(() => import("./pages/admin/AdminInbox"));
+const AdminDocuments = lazyRetry(() => import("./pages/admin/AdminDocuments"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -154,6 +155,7 @@ const App = () => (
                             <Route path="checkout-terms" element={<AdminCheckoutTerms />} />
                             <Route path="check-in-out" element={<AdminCheckInOut />} />
                             <Route path="inbox" element={<AdminInbox />} />
+                            <Route path="documents" element={<AdminDocuments />} />
                           </Route>
                           
                           <Route path="*" element={<NotFound />} />
