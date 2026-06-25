@@ -313,7 +313,37 @@ const AdminDocuments = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Uploaded Documents</CardTitle>
+          <CardTitle className="text-lg flex flex-wrap items-center justify-between gap-2">
+            <span>Uploaded Documents</span>
+            {docs.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="flex items-center gap-2 text-sm font-normal cursor-pointer">
+                  <Checkbox
+                    checked={selectedDocIds.length === docs.length && docs.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                  Select all
+                </label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={bulkDeleting || selectedDocIds.length === 0}
+                  onClick={handleDeleteSelected}
+                >
+                  <Trash2 className="h-4 w-4 mr-1 text-red-500" />
+                  Delete selected ({selectedDocIds.length})
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={bulkDeleting}
+                  onClick={handleDeleteAll}
+                >
+                  Delete all
+                </Button>
+              </div>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -329,6 +359,11 @@ const AdminDocuments = () => {
                     key={d.id}
                     className="flex items-center gap-3 rounded-lg border p-3"
                   >
+                    <Checkbox
+                      checked={selectedDocIds.includes(d.id)}
+                      onCheckedChange={() => toggleDoc(d.id)}
+                      className="shrink-0"
+                    />
                     <Icon className="h-5 w-5 text-athfal-pink shrink-0" />
                     <div className="min-w-0 flex-1">
                       <a
