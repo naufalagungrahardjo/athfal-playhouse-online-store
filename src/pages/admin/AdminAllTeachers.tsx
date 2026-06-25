@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ConfirmDeleteDialog } from "@/components/admin/ConfirmDeleteDialog";
 
 const SESSION_OPTIONS = [
   { id: "session1", label: "Session 1: 8:30 - 11:30" },
