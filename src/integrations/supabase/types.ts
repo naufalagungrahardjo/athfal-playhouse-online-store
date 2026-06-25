@@ -858,6 +858,7 @@ export type Database = {
           file_type: string
           file_url: string
           id: string
+          recipient_emails: string[]
           title: string
           updated_at: string
         }
@@ -868,6 +869,7 @@ export type Database = {
           file_type?: string
           file_url: string
           id?: string
+          recipient_emails?: string[]
           title: string
           updated_at?: string
         }
@@ -878,6 +880,7 @@ export type Database = {
           file_type?: string
           file_url?: string
           id?: string
+          recipient_emails?: string[]
           title?: string
           updated_at?: string
         }
@@ -1885,6 +1888,14 @@ export type Database = {
       is_product_deleter: { Args: never; Returns: boolean }
       is_product_manager: { Args: never; Returns: boolean }
       is_super_admin: { Args: { email: string }; Returns: boolean }
+      list_parent_document_recipients: {
+        Args: never
+        Returns: {
+          child_names: string
+          email: string
+          name: string
+        }[]
+      }
       list_teacher_recipients: {
         Args: never
         Returns: {
