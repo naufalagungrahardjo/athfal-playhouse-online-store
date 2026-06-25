@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { FileText, FileImage, Trash2, Upload, FilePlus, Search, Users } from "lucide-react";
 import { format } from "date-fns";
+import { compressImageFile } from "@/utils/compressImage";
 
 interface ParentDocument {
   id: string;
@@ -38,6 +39,8 @@ const AdminDocuments = () => {
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
   const [recipientSearch, setRecipientSearch] = useState("");
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const fetchDocs = async () => {
     setLoading(true);
@@ -47,6 +50,7 @@ const AdminDocuments = () => {
       .order("created_at", { ascending: false });
     if (error) toast.error("Failed to load documents");
     setDocs((data as ParentDocument[]) || []);
+    setSelectedDocIds([]);
     setLoading(false);
   };
 
@@ -97,13 +101,23 @@ const AdminDocuments = () => {
     }
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop();
+      // Compress images before upload (PDFs are already compressed and are
+      // stored as-is). This re-encodes large images to JPEG to save storage.
+      let uploadFile = file;
+      if (isImage) {
+        uploadFile = await compressImageFile(file, {
+          maxWidth: 1600,
+          maxHeight: 1600,
+          quality: 0.8,
+        });
+      }
+      const ext = uploadFile.name.split(".").pop();
       const path = `parent-documents/${Date.now()}-${Math.random()
         .toString(36)
         .slice(2)}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("images")
-        .upload(path, file, { cacheControl: "3600", upsert: false });
+        .upload(path, uploadFile, { cacheControl: "3600", upsert: false });
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from("images").getPublicUrl(path);
       const { error: insErr } = await supabase.from("parent_documents").insert({
@@ -130,15 +144,67 @@ const AdminDocuments = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this document?")) return;
-    const { error } = await supabase.from("parent_documents").delete().eq("id", id);
+  // Extract the storage object path (inside the "images" bucket) from a public URL.
+  const storagePathFromUrl = (url: string): string | null => {
+    const marker = "/images/";
+    const idx = url.indexOf(marker);
+    if (idx === -1) return null;
+    return decodeURIComponent(url.slice(idx + marker.length));
+  };
+
+  const removeDocs = async (targets: ParentDocument[]) => {
+    if (targets.length === 0) return;
+    // Remove the underlying storage files first so we don't orphan them.
+    const paths = targets
+      .map((d) => storagePathFromUrl(d.file_url))
+      .filter((p): p is string => !!p);
+    if (paths.length > 0) {
+      await supabase.storage.from("images").remove(paths);
+    }
+    const { error } = await supabase
+      .from("parent_documents")
+      .delete()
+      .in("id", targets.map((d) => d.id));
     if (error) {
       toast.error("Failed to delete");
       return;
     }
-    toast.success("Document deleted");
+    toast.success(
+      targets.length === 1 ? "Document deleted" : `${targets.length} documents deleted`
+    );
     fetchDocs();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this document?")) return;
+    const target = docs.find((d) => d.id === id);
+    if (target) await removeDocs([target]);
+  };
+
+  const toggleDoc = (id: string) => {
+    setSelectedDocIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedDocIds((prev) => (prev.length === docs.length ? [] : docs.map((d) => d.id)));
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedDocIds.length === 0) return;
+    if (!confirm(`Delete ${selectedDocIds.length} selected document(s)?`)) return;
+    setBulkDeleting(true);
+    await removeDocs(docs.filter((d) => selectedDocIds.includes(d.id)));
+    setBulkDeleting(false);
+  };
+
+  const handleDeleteAll = async () => {
+    if (docs.length === 0) return;
+    if (!confirm(`Delete ALL ${docs.length} document(s)? This cannot be undone.`)) return;
+    setBulkDeleting(true);
+    await removeDocs(docs);
+    setBulkDeleting(false);
   };
 
   return (
@@ -247,7 +313,37 @@ const AdminDocuments = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Uploaded Documents</CardTitle>
+          <CardTitle className="text-lg flex flex-wrap items-center justify-between gap-2">
+            <span>Uploaded Documents</span>
+            {docs.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="flex items-center gap-2 text-sm font-normal cursor-pointer">
+                  <Checkbox
+                    checked={selectedDocIds.length === docs.length && docs.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                  Select all
+                </label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={bulkDeleting || selectedDocIds.length === 0}
+                  onClick={handleDeleteSelected}
+                >
+                  <Trash2 className="h-4 w-4 mr-1 text-red-500" />
+                  Delete selected ({selectedDocIds.length})
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={bulkDeleting}
+                  onClick={handleDeleteAll}
+                >
+                  Delete all
+                </Button>
+              </div>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -263,6 +359,11 @@ const AdminDocuments = () => {
                     key={d.id}
                     className="flex items-center gap-3 rounded-lg border p-3"
                   >
+                    <Checkbox
+                      checked={selectedDocIds.includes(d.id)}
+                      onCheckedChange={() => toggleDoc(d.id)}
+                      className="shrink-0"
+                    />
                     <Icon className="h-5 w-5 text-athfal-pink shrink-0" />
                     <div className="min-w-0 flex-1">
                       <a
