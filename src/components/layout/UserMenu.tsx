@@ -8,12 +8,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { logger } from "@/utils/logger";
 import { useParentMessageThreads } from "@/hooks/useParentMessages";
+import { useCanAccessStudent } from "@/hooks/useCanAccessStudent";
 
 const UserMenu = () => {
   const { t, language } = useLanguage();
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { threads, reads } = useParentMessageThreads("mine");
+  const { canAccess: canAccessStudent } = useCanAccessStudent();
   const unread = user ? threads.filter(th => {
     const lr = reads[th.id];
     return !lr || new Date(th.last_activity_at) > new Date(lr);
@@ -54,12 +56,14 @@ const UserMenu = () => {
         <DropdownMenuItem onClick={handleProfileClick}>
           {t('profile')}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/student')}>
-          <span className="flex items-center justify-between w-full gap-2">
-            <span>{language === 'id' ? 'Siswa' : 'Student'}</span>
-            {unread > 0 && <Badge className="bg-athfal-pink text-white h-5 px-1.5">{unread}</Badge>}
-          </span>
-        </DropdownMenuItem>
+        {canAccessStudent && (
+          <DropdownMenuItem onClick={() => navigate('/student')}>
+            <span className="flex items-center justify-between w-full gap-2">
+              <span>{language === 'id' ? 'Siswa' : 'Student'}</span>
+              {unread > 0 && <Badge className="bg-athfal-pink text-white h-5 px-1.5">{unread}</Badge>}
+            </span>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={() => navigate('/my-orders')}>
           {language === 'id' ? 'Pesanan' : 'Orders'}
         </DropdownMenuItem>
