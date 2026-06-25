@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { FileText, FileImage, Trash2, Upload, FilePlus } from "lucide-react";
+import { FileText, FileImage, Trash2, Upload, FilePlus, Search, Users } from "lucide-react";
 import { format } from "date-fns";
 
 interface ParentDocument {
@@ -17,6 +18,13 @@ interface ParentDocument {
   file_type: string;
   file_name: string | null;
   created_at: string;
+  recipient_emails: string[] | null;
+}
+
+interface Recipient {
+  email: string;
+  name: string;
+  child_names: string | null;
 }
 
 const AdminDocuments = () => {
@@ -27,6 +35,9 @@ const AdminDocuments = () => {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [recipients, setRecipients] = useState<Recipient[]>([]);
+  const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
+  const [recipientSearch, setRecipientSearch] = useState("");
 
   const fetchDocs = async () => {
     setLoading(true);
@@ -39,9 +50,31 @@ const AdminDocuments = () => {
     setLoading(false);
   };
 
+  const fetchRecipients = async () => {
+    const { data } = await supabase.rpc("list_parent_document_recipients" as any);
+    setRecipients((data as Recipient[]) || []);
+  };
+
   useEffect(() => {
     fetchDocs();
+    fetchRecipients();
   }, []);
+
+  const toggleEmail = (email: string) => {
+    setSelectedEmails((prev) =>
+      prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email]
+    );
+  };
+
+  const filteredRecipients = recipients.filter((r) => {
+    const q = recipientSearch.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      r.email.toLowerCase().includes(q) ||
+      r.name.toLowerCase().includes(q) ||
+      (r.child_names || "").toLowerCase().includes(q)
+    );
+  });
 
   const handleUpload = async () => {
     if (!title.trim()) {
@@ -50,6 +83,10 @@ const AdminDocuments = () => {
     }
     if (!file) {
       toast.error("Please select a file (image or PDF)");
+      return;
+    }
+    if (selectedEmails.length === 0) {
+      toast.error("Please select at least one recipient");
       return;
     }
     const isPdf = file.type === "application/pdf";
@@ -75,12 +112,15 @@ const AdminDocuments = () => {
         file_url: pub.publicUrl,
         file_type: isPdf ? "pdf" : "image",
         file_name: file.name,
-      });
+        recipient_emails: selectedEmails,
+      } as any);
       if (insErr) throw insErr;
       toast.success("Document uploaded");
       setTitle("");
       setDescription("");
       setFile(null);
+      setSelectedEmails([]);
+      setRecipientSearch("");
       if (fileRef.current) fileRef.current.value = "";
       fetchDocs();
     } catch (e: any) {
@@ -145,6 +185,55 @@ const AdminDocuments = () => {
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
           </div>
+          <div>
+            <Label className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-athfal-pink" />
+              Recipients ({selectedEmails.length} selected)
+            </Label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Select which customers can see and download this document.
+            </p>
+            <div className="relative mb-2">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, email, or child..."
+                value={recipientSearch}
+                onChange={(e) => setRecipientSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <div className="max-h-56 overflow-y-auto rounded-lg border divide-y">
+              {filteredRecipients.length === 0 ? (
+                <p className="p-3 text-sm text-muted-foreground">
+                  No eligible customers found.
+                </p>
+              ) : (
+                filteredRecipients.map((r) => (
+                  <label
+                    key={r.email}
+                    className="flex items-start gap-3 p-3 cursor-pointer hover:bg-muted/50"
+                  >
+                    <Checkbox
+                      checked={selectedEmails.includes(r.email)}
+                      onCheckedChange={() => toggleEmail(r.email)}
+                      className="mt-0.5"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium break-words">{r.name}</p>
+                      <p className="text-xs text-muted-foreground break-words">
+                        {r.email}
+                      </p>
+                      {r.child_names && (
+                        <p className="text-[11px] text-muted-foreground break-words">
+                          Child: {r.child_names}
+                        </p>
+                      )}
+                    </div>
+                  </label>
+                ))
+              )}
+            </div>
+          </div>
           <Button
             onClick={handleUpload}
             disabled={uploading}
@@ -192,6 +281,11 @@ const AdminDocuments = () => {
                       <p className="text-[11px] text-muted-foreground">
                         {format(new Date(d.created_at), "MMM d, yyyy")} ·{" "}
                         {d.file_type.toUpperCase()}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground break-words">
+                        {d.recipient_emails && d.recipient_emails.length > 0
+                          ? `Recipients: ${d.recipient_emails.join(", ")}`
+                          : "Visible to all eligible customers"}
                       </p>
                     </div>
                     <Button
