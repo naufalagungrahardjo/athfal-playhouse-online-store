@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { BLOG_CATEGORIES } from "../BlogEditorTabs";
 import { Blog, generateSlug } from "@/hooks/useBlogs";
 
@@ -68,6 +69,21 @@ export const BlogSettingsPanel = ({ blog, setBlog }: BlogSettingsPanelProps) => 
       <p className="text-xs text-muted-foreground mt-1">
         {(blog.meta_description || "").length}/160 karakter
       </p>
+    </div>
+    <div className="flex items-start justify-between gap-3 rounded-lg border bg-muted/30 p-3">
+      <div>
+        <Label htmlFor="blog-parent-reference" className="text-sm font-medium">
+          Parent Reference
+        </Label>
+        <p className="text-xs text-muted-foreground mt-1">
+          Tampilkan artikel ini di menu "Parenting Guidance" untuk orang tua/pelanggan.
+        </p>
+      </div>
+      <Switch
+        id="blog-parent-reference"
+        checked={!!blog.is_parent_reference}
+        onCheckedChange={(checked) => setBlog({ ...blog, is_parent_reference: checked })}
+      />
     </div>
   </div>
 );

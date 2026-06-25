@@ -16,6 +16,7 @@ export interface Blog {
   expiry_date?: string | null;
   meta_description?: string | null;
   is_ai_content?: boolean;
+  is_parent_reference?: boolean;
 }
 
 export const generateSlug = (title: string): string => {
@@ -67,6 +68,7 @@ export const useBlogs = () => {
         expiry_date: blog.expiry_date,
         meta_description: blog.meta_description || null,
         is_ai_content: blog.is_ai_content || false,
+        is_parent_reference: blog.is_parent_reference || false,
         slug: blog.slug || null
       }));
 
@@ -105,6 +107,7 @@ export const useBlogs = () => {
         expiry_date: blog.expiry_date ?? null,
         meta_description: blog.meta_description ?? null,
         is_ai_content: blog.is_ai_content ?? false,
+        is_parent_reference: blog.is_parent_reference ?? false,
         slug: blog.slug || generateSlug(blog.title)
       };
 
