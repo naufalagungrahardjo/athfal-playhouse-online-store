@@ -1735,6 +1735,7 @@ export type Database = {
         Returns: number
       }
       can_access_parent_portal: { Args: never; Returns: boolean }
+      can_access_student_menu: { Args: never; Returns: boolean }
       can_insert_order_item: { Args: { p_order_id: string }; Returns: boolean }
       can_insert_order_payment: {
         Args: { p_order_id: string }

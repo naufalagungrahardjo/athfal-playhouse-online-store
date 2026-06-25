@@ -9,6 +9,7 @@ import ChildAttendancePanel from '@/components/profile/ChildAttendancePanel';
 import TalkToSchoolPanel from '@/components/profile/TalkToSchoolPanel';
 import DocumentPanel from '@/components/profile/DocumentPanel';
 import ParentingGuidancePanel from '@/components/profile/ParentingGuidancePanel';
+import { useCanAccessStudent } from '@/hooks/useCanAccessStudent';
 
 const StudentAttendancePage = () => {
   const { user } = useAuth();
@@ -16,6 +17,7 @@ const StudentAttendancePage = () => {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [canAccessPortal, setCanAccessPortal] = useState(false);
+  const { canAccess: canAccessStudent, loading: studentAccessLoading } = useCanAccessStudent();
 
   const validTabs = ['attendance', 'talk', 'documents', 'guidance'];
   const requestedTab = params.get('tab') || 'attendance';
@@ -24,6 +26,13 @@ const StudentAttendancePage = () => {
   useEffect(() => {
     if (!user) navigate('/auth/login');
   }, [user, navigate]);
+
+  // Block users who are not admins or verified buyers from the Student area
+  useEffect(() => {
+    if (user && !studentAccessLoading && !canAccessStudent) {
+      navigate('/');
+    }
+  }, [user, studentAccessLoading, canAccessStudent, navigate]);
 
   useEffect(() => {
     if (!user) return;
@@ -38,6 +47,7 @@ const StudentAttendancePage = () => {
   }, [user]);
 
   if (!user) return null;
+  if (studentAccessLoading || !canAccessStudent) return null;
 
   return (
     <div className="min-h-screen">
