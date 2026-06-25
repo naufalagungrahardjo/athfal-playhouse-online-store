@@ -54,9 +54,10 @@ export const BlogList = ({
         {filteredBlogs.length === 0 ? (
           <p className="text-center py-4 text-gray-500">No blogs found</p>
         ) : (
-          filteredBlogs.map(blog => (
+          filteredBlogs.map((blog, index) => (
             <BlogListItem
               key={blog.id}
+              index={index + 1}
               blog={blog}
               isSelected={editingBlog?.id === blog.id}
               onSelect={onEditBlog}

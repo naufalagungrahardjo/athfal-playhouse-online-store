@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { Blog } from "@/hooks/useBlogs";
 
 interface BlogListItemProps {
+  index: number;
   blog: Blog;
   isSelected: boolean;
   onSelect: (blog: Blog) => void;
@@ -14,6 +15,7 @@ interface BlogListItemProps {
 }
 
 export const BlogListItem = ({ 
+  index,
   blog, 
   isSelected, 
   onSelect, 
@@ -31,6 +33,7 @@ export const BlogListItem = ({
         <div className="flex items-start justify-between">
           <div>
             <h3 className={`font-medium line-clamp-1 ${blog.published ? '' : 'text-gray-500'}`}>
+              <span className="inline-block w-6 text-sm text-gray-400 mr-1">{index}.</span>
               {blog.title}
             </h3>
             <div className="flex items-center text-xs text-gray-500 mt-1">
