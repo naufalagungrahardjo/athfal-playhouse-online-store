@@ -16,7 +16,7 @@ const UserMenu = () => {
   const navigate = useNavigate();
   const { threads, reads } = useParentMessageThreads("mine");
   const { canAccess: canAccessStudent } = useCanAccessStudent();
-  const unread = user ? threads.filter(th => {
+  const unread = user && canAccessStudent ? threads.filter(th => {
     const lr = reads[th.id];
     return !lr || new Date(th.last_activity_at) > new Date(lr);
   }).length : 0;
