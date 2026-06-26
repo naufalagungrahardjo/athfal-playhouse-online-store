@@ -435,6 +435,7 @@ const AdminExpense = () => {
 
         {/* Tab 2: Expense Data */}
         <TabsContent value="expenses">
+          <ExpenseShareLinkCard />
           <Card className="mb-6" ref={expenseFormRef}>
             <CardHeader><CardTitle>{editingExpense ? '✏️ Edit Expense' : 'Add New Expense'}</CardTitle></CardHeader>
             <CardContent>
