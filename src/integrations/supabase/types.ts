@@ -517,6 +517,33 @@ export type Database = {
         }
         Relationships: []
       }
+      expense_share_links: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       expenses: {
         Row: {
           amount: number
@@ -1724,6 +1751,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_expense_via_share: {
+        Args: {
+          p_amount: number
+          p_category_id?: string
+          p_date?: string
+          p_description: string
+          p_discount?: number
+          p_fund_source_id?: string
+          p_token: string
+        }
+        Returns: string
+      }
       add_program_session_date: {
         Args: { p_program_id: string; p_session_date: string }
         Returns: string
@@ -1759,6 +1798,14 @@ export type Database = {
         Args: { p_child_name: string }
         Returns: string
       }
+      get_active_expense_share_link: {
+        Args: never
+        Returns: {
+          created_at: string
+          is_active: boolean
+          token: string
+        }[]
+      }
       get_admin_payment_methods: {
         Args: never
         Returns: {
@@ -1780,6 +1827,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_expense_share_data: { Args: { p_token: string }; Returns: Json }
       get_my_child_attendance: {
         Args: never
         Returns: {
@@ -1888,6 +1936,10 @@ export type Database = {
       is_product_deleter: { Args: never; Returns: boolean }
       is_product_manager: { Args: never; Returns: boolean }
       is_super_admin: { Args: { email: string }; Returns: boolean }
+      is_valid_expense_share_token: {
+        Args: { p_token: string }
+        Returns: boolean
+      }
       list_parent_document_recipients: {
         Args: never
         Returns: {
@@ -1921,10 +1973,12 @@ export type Database = {
         Args: { p_product_name: string; p_source_product_names: string[] }
         Returns: boolean
       }
+      regenerate_expense_share_link: { Args: never; Returns: string }
       restore_stock_for_order: {
         Args: { p_order_id: string }
         Returns: boolean
       }
+      revoke_expense_share_link: { Args: never; Returns: boolean }
       setup_order_payments_for_order: {
         Args: { p_order_id: string }
         Returns: boolean

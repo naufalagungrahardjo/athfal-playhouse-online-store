@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
-import { Trash2, Plus, Pencil, Search, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { Trash2, Plus, Pencil, Search, ArrowUp, ArrowDown, ArrowUpDown, Link2, Copy, RefreshCw, ShieldOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 
@@ -96,6 +96,91 @@ const FilterCell = ({
     />
   </TableHead>
 );
+
+const ExpenseShareLinkCard = () => {
+  const [token, setToken] = useState<string | null>(null);
+  const [loadingLink, setLoadingLink] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  const shareUrl = token ? `${window.location.origin}/expense-share/${token}` : '';
+
+  const loadLink = async () => {
+    setLoadingLink(true);
+    const { data, error } = await supabase.rpc('get_active_expense_share_link' as any);
+    if (!error && data && (data as any[]).length > 0) {
+      setToken((data as any[])[0].token);
+    } else {
+      setToken(null);
+    }
+    setLoadingLink(false);
+  };
+
+  useEffect(() => { loadLink(); }, []);
+
+  const generate = async () => {
+    setBusy(true);
+    const { data, error } = await supabase.rpc('regenerate_expense_share_link' as any);
+    setBusy(false);
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
+    setToken(data as any);
+    toast({ title: token ? 'New link generated — old link disabled' : 'Link generated' });
+  };
+
+  const revoke = async () => {
+    setBusy(true);
+    const { error } = await supabase.rpc('revoke_expense_share_link' as any);
+    setBusy(false);
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
+    setToken(null);
+    toast({ title: 'Link deleted — it can no longer be used' });
+  };
+
+  const copy = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({ title: 'Link copied to clipboard' });
+    } catch {
+      toast({ title: 'Could not copy', description: shareUrl, variant: 'destructive' });
+    }
+  };
+
+  return (
+    <Card className="mb-6 border-primary/40">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><Link2 className="h-5 w-5" /> Shareable Expense Link</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          Share this confidential link so others can add expenses and view records without logging in.
+          If the link is ever leaked, delete it and generate a new one — the old link stops working immediately.
+        </p>
+        {loadingLink ? (
+          <p className="text-sm text-muted-foreground">Loading link...</p>
+        ) : token ? (
+          <>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input readOnly value={shareUrl} className="font-mono text-xs" onFocus={e => e.currentTarget.select()} />
+              <Button variant="outline" onClick={copy} className="shrink-0"><Copy className="h-4 w-4 mr-1" /> Copy</Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={generate} disabled={busy}>
+                <RefreshCw className="h-4 w-4 mr-1" /> Generate New Link
+              </Button>
+              <Button variant="destructive" onClick={revoke} disabled={busy}>
+                <ShieldOff className="h-4 w-4 mr-1" /> Delete Link
+              </Button>
+            </div>
+          </>
+        ) : (
+          <Button onClick={generate} disabled={busy}>
+            <Plus className="h-4 w-4 mr-1" /> Generate Shareable Link
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
 const AdminExpense = () => {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
@@ -435,6 +520,7 @@ const AdminExpense = () => {
 
         {/* Tab 2: Expense Data */}
         <TabsContent value="expenses">
+          <ExpenseShareLinkCard />
           <Card className="mb-6" ref={expenseFormRef}>
             <CardHeader><CardTitle>{editingExpense ? '✏️ Edit Expense' : 'Add New Expense'}</CardTitle></CardHeader>
             <CardContent>
