@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BookOpen, Search, ArrowLeft } from "lucide-react";
+import { BookOpen, Search, ArrowLeft, X } from "lucide-react";
 import { format } from "date-fns";
 import DOMPurify from "dompurify";
 
@@ -27,6 +27,8 @@ const ParentingGuidancePanel = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [active, setActive] = useState<ParentBlog | null>(null);
+  const [lightbox, setLightbox] = useState<string | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -49,6 +51,26 @@ const ParentingGuidancePanel = () => {
 
   const stripHtml = (html: string) =>
     (html || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+
+  // Convert bare/old YouTube links and blockquote embeds into responsive iframes
+  const processContent = (content: string): string => {
+    if (!content) return content;
+    let html = content.replace(
+      /<div[^>]*class="instagram-embed[^"]*"[^>]*>[\s\S]*?<blockquote[^>]*data-instgrm-permalink="https?:\/\/(?:www\.)?instagram\.com\/(?:[\w.]+\/)?(?:p|reel|tv)\/([\w-]+)\/[^"]*"[^>]*>[\s\S]*?<\/blockquote>[\s\S]*?<\/div>/gi,
+      (_, postId) =>
+        `<div class="instagram-embed my-4" style="display:flex;justify-content:center;"><iframe src="https://www.instagram.com/p/${postId}/embed" width="400" height="500" frameborder="0" scrolling="no" allowtransparency="true" style="border:none;overflow:hidden;max-width:100%;border-radius:8px;"></iframe></div>`
+    );
+    return html;
+  };
+
+  // When an image inside the rendered content is clicked, open it in the lightbox
+  const handleContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === "IMG") {
+      const src = (target as HTMLImageElement).src;
+      if (src) setLightbox(src);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -140,13 +162,21 @@ const ParentingGuidancePanel = () => {
                 <img
                   src={active.image}
                   alt={active.title}
-                  className="w-full max-h-64 object-cover rounded-md"
+                  onClick={() => setLightbox(active.image!)}
+                  className="w-full max-h-80 object-contain rounded-md bg-accent cursor-zoom-in"
                 />
               )}
               <div
-                className="prose prose-sm max-w-none"
+                ref={contentRef}
+                onClick={handleContentClick}
+                className="prose prose-sm max-w-none [&_img]:cursor-zoom-in [&_iframe]:w-full [&_iframe]:aspect-video [&_iframe]:rounded-md"
                 dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(active.content || ""),
+                  __html: DOMPurify.sanitize(processContent(active.content || ""), {
+                    ADD_TAGS: ["iframe"],
+                    ADD_ATTR: ["allowfullscreen", "frameborder", "allow", "scrolling", "allowtransparency"],
+                    ALLOWED_TAGS: ["p", "br", "strong", "em", "b", "i", "u", "ul", "ol", "li", "h1", "h2", "h3", "h4", "h5", "h6", "img", "a", "div", "span", "blockquote", "pre", "code", "table", "thead", "tbody", "tr", "th", "td", "hr", "sub", "sup", "iframe"],
+                    ALLOWED_ATTR: ["href", "src", "alt", "class", "style", "target", "rel", "width", "height", "frameborder", "allowfullscreen", "allow", "scrolling", "allowtransparency"],
+                  }),
                 }}
               />
               <Button variant="outline" onClick={() => setActive(null)}>
@@ -154,6 +184,27 @@ const ParentingGuidancePanel = () => {
                 {language === "id" ? "Kembali" : "Back"}
               </Button>
             </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Full-image lightbox */}
+      <Dialog open={!!lightbox} onOpenChange={(open) => !open && setLightbox(null)}>
+        <DialogContent className="max-w-4xl bg-transparent border-0 shadow-none p-0 flex items-center justify-center">
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            className="absolute right-2 top-2 z-10 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          {lightbox && (
+            <img
+              src={lightbox}
+              alt=""
+              className="max-h-[85vh] max-w-full object-contain rounded-md"
+            />
           )}
         </DialogContent>
       </Dialog>
