@@ -52,6 +52,26 @@ const ParentingGuidancePanel = () => {
   const stripHtml = (html: string) =>
     (html || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 
+  // Convert bare/old YouTube links and blockquote embeds into responsive iframes
+  const processContent = (content: string): string => {
+    if (!content) return content;
+    let html = content.replace(
+      /<div[^>]*class="instagram-embed[^"]*"[^>]*>[\s\S]*?<blockquote[^>]*data-instgrm-permalink="https?:\/\/(?:www\.)?instagram\.com\/(?:[\w.]+\/)?(?:p|reel|tv)\/([\w-]+)\/[^"]*"[^>]*>[\s\S]*?<\/blockquote>[\s\S]*?<\/div>/gi,
+      (_, postId) =>
+        `<div class="instagram-embed my-4" style="display:flex;justify-content:center;"><iframe src="https://www.instagram.com/p/${postId}/embed" width="400" height="500" frameborder="0" scrolling="no" allowtransparency="true" style="border:none;overflow:hidden;max-width:100%;border-radius:8px;"></iframe></div>`
+    );
+    return html;
+  };
+
+  // When an image inside the rendered content is clicked, open it in the lightbox
+  const handleContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === "IMG") {
+      const src = (target as HTMLImageElement).src;
+      if (src) setLightbox(src);
+    }
+  };
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     if (!q) return blogs;
