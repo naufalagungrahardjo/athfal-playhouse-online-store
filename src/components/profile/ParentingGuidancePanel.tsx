@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BookOpen, Search, ArrowLeft } from "lucide-react";
+import { BookOpen, Search, ArrowLeft, X } from "lucide-react";
 import { format } from "date-fns";
 import DOMPurify from "dompurify";
 
@@ -27,6 +27,8 @@ const ParentingGuidancePanel = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [active, setActive] = useState<ParentBlog | null>(null);
+  const [lightbox, setLightbox] = useState<string | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const load = async () => {
