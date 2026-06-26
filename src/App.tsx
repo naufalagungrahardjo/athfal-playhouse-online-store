@@ -53,6 +53,7 @@ const ProfilePage = lazyRetry(() => import("./pages/ProfilePage"));
 const StudentAttendancePage = lazyRetry(() => import("./pages/StudentAttendancePage"));
 const MyOrdersPage = lazyRetry(() => import("./pages/MyOrdersPage"));
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
+const ExpenseSharePage = lazyRetry(() => import("./pages/ExpenseSharePage"));
 
 // Admin components
 const AdminLayout = lazyRetry(() => import("./pages/admin/AdminLayout"));
@@ -127,6 +128,7 @@ const App = () => (
                           <Route path="/profile" element={<ProfilePage />} />
                           <Route path="/student" element={<StudentAttendancePage />} />
                           <Route path="/my-orders" element={<MyOrdersPage />} />
+                          <Route path="/expense-share/:token" element={<ExpenseSharePage />} />
                           
                           {/* Admin Routes */}
                           <Route path="/admin" element={<AdminLayout />}>
