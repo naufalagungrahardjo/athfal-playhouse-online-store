@@ -162,13 +162,21 @@ const ParentingGuidancePanel = () => {
                 <img
                   src={active.image}
                   alt={active.title}
-                  className="w-full max-h-64 object-cover rounded-md"
+                  onClick={() => setLightbox(active.image!)}
+                  className="w-full max-h-80 object-contain rounded-md bg-accent cursor-zoom-in"
                 />
               )}
               <div
-                className="prose prose-sm max-w-none"
+                ref={contentRef}
+                onClick={handleContentClick}
+                className="prose prose-sm max-w-none [&_img]:cursor-zoom-in [&_iframe]:w-full [&_iframe]:aspect-video [&_iframe]:rounded-md"
                 dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(active.content || ""),
+                  __html: DOMPurify.sanitize(processContent(active.content || ""), {
+                    ADD_TAGS: ["iframe"],
+                    ADD_ATTR: ["allowfullscreen", "frameborder", "allow", "scrolling", "allowtransparency"],
+                    ALLOWED_TAGS: ["p", "br", "strong", "em", "b", "i", "u", "ul", "ol", "li", "h1", "h2", "h3", "h4", "h5", "h6", "img", "a", "div", "span", "blockquote", "pre", "code", "table", "thead", "tbody", "tr", "th", "td", "hr", "sub", "sup", "iframe"],
+                    ALLOWED_ATTR: ["href", "src", "alt", "class", "style", "target", "rel", "width", "height", "frameborder", "allowfullscreen", "allow", "scrolling", "allowtransparency"],
+                  }),
                 }}
               />
               <Button variant="outline" onClick={() => setActive(null)}>
@@ -176,6 +184,27 @@ const ParentingGuidancePanel = () => {
                 {language === "id" ? "Kembali" : "Back"}
               </Button>
             </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Full-image lightbox */}
+      <Dialog open={!!lightbox} onOpenChange={(open) => !open && setLightbox(null)}>
+        <DialogContent className="max-w-4xl bg-transparent border-0 shadow-none p-0 flex items-center justify-center">
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            className="absolute right-2 top-2 z-10 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          {lightbox && (
+            <img
+              src={lightbox}
+              alt=""
+              className="max-h-[85vh] max-w-full object-contain rounded-md"
+            />
           )}
         </DialogContent>
       </Dialog>
