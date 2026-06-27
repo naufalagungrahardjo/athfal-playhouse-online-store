@@ -1545,6 +1545,44 @@ export type Database = {
           },
         ]
       }
+      student_report_assets: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          page_key: string | null
+          scope: string
+          student_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          page_key?: string | null
+          scope: string
+          student_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          page_key?: string | null
+          scope?: string
+          student_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_report_assets_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           created_at: string | null
