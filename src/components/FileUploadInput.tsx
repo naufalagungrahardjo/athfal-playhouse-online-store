@@ -19,9 +19,12 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
       setUploading(true);
       console.log('Starting upload for file:', file.name);
 
+      await rejectUnsupportedImage(file);
+
       // Compress before upload to reduce storage + egress.
       const original = file;
       file = await compressImageFile(file, { maxWidth: 1600, maxHeight: 1600, quality: 0.8 });
+      await rejectUnsupportedImage(file);
       if (file !== original) {
         console.log(`Compressed ${original.size} -> ${file.size} bytes`);
       }
@@ -102,6 +105,28 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
       }
 
       await uploadImage(file);
+    }
+  };
+
+  const rejectUnsupportedImage = async (file: File) => {
+    const head = await file.slice(0, 24).arrayBuffer();
+    const signature = new TextDecoder().decode(head);
+    const isHeic = file.type.includes('heic') || file.type.includes('heif') || /ftyp(heic|heix|hevc|hevx|mif1|msf1)/.test(signature);
+
+    if (isHeic) {
+      throw new Error('This photo is HEIC/HEIF even if the filename says JPG/PNG. Please export or convert it to a real JPG/PNG, then upload again.');
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('This image cannot be read by the browser. Please upload a real JPG or PNG file.'));
+        img.src = objectUrl;
+      });
+    } finally {
+      URL.revokeObjectURL(objectUrl);
     }
   };
 
