@@ -135,7 +135,7 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
       <Input
         key={inputKey}
         type="file"
-        accept="image/*"
+        accept="image/png,image/jpeg,image/jpg,image/webp"
         onChange={handleFileChange}
         disabled={uploading}
         className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600"
