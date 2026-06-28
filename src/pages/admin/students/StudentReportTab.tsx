@@ -11,6 +11,7 @@ import { useProgramSessionDates } from "@/hooks/useProgramSessionDates";
 import { format, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import StudentReportPdfPanel from "./StudentReportPdfPanel";
 
 const DESCRIPTIVE_FIELDS = [
   { key: "motorik_halus", label: "Motorik Halus" },
