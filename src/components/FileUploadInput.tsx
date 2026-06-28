@@ -6,11 +6,12 @@ import { useToast } from '@/hooks/use-toast';
 import { compressImageFile } from '@/utils/compressImage';
 
 interface FileUploadInputProps {
-  onUpload: (url: string) => void;
+  onUpload: (url: string) => void | Promise<void>;
 }
 
 export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
   const [uploading, setUploading] = useState(false);
+  const [inputKey, setInputKey] = useState(0);
   const { toast } = useToast();
 
   const uploadImage = async (file: File) => {
@@ -37,6 +38,7 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
         .from('images')
         .upload(filePath, file, {
           cacheControl: '3600',
+          contentType: file.type,
           upsert: false
         });
 
@@ -57,7 +59,8 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
 
       console.log('Public URL:', urlWithCacheBust);
 
-      onUpload(urlWithCacheBust);
+      await onUpload(urlWithCacheBust);
+      setInputKey(prev => prev + 1);
       
       toast({
         title: "Success",
@@ -75,7 +78,7 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // Check file size (max 5MB)
@@ -98,13 +101,14 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
         return;
       }
 
-      uploadImage(file);
+      await uploadImage(file);
     }
   };
 
   return (
     <div>
       <Input
+        key={inputKey}
         type="file"
         accept="image/*"
         onChange={handleFileChange}
