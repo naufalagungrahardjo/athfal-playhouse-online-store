@@ -117,7 +117,9 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
       try {
         const pad = 5;
         doc.addImage(photo, detectFormat(photo), x + pad, y + pad, w - pad * 2, h - pad * 2, undefined, "FAST");
-      } catch { /* noop */ }
+      } catch {
+        throw new Error("Student photo could not be added to the PDF. Please re-upload the photo and try again.");
+      }
     } else {
       doc.setFont("helvetica", "italic");
       doc.setFontSize(8);

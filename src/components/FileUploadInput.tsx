@@ -6,11 +6,12 @@ import { useToast } from '@/hooks/use-toast';
 import { compressImageFile } from '@/utils/compressImage';
 
 interface FileUploadInputProps {
-  onUpload: (url: string) => void;
+  onUpload: (url: string) => void | Promise<void>;
 }
 
 export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
   const [uploading, setUploading] = useState(false);
+  const [inputKey, setInputKey] = useState(0);
   const { toast } = useToast();
 
   const uploadImage = async (file: File) => {
@@ -18,9 +19,12 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
       setUploading(true);
       console.log('Starting upload for file:', file.name);
 
+      await rejectUnsupportedImage(file);
+
       // Compress before upload to reduce storage + egress.
       const original = file;
       file = await compressImageFile(file, { maxWidth: 1600, maxHeight: 1600, quality: 0.8 });
+      await rejectUnsupportedImage(file);
       if (file !== original) {
         console.log(`Compressed ${original.size} -> ${file.size} bytes`);
       }
@@ -37,6 +41,7 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
         .from('images')
         .upload(filePath, file, {
           cacheControl: '3600',
+          contentType: file.type,
           upsert: false
         });
 
@@ -57,7 +62,8 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
 
       console.log('Public URL:', urlWithCacheBust);
 
-      onUpload(urlWithCacheBust);
+      await onUpload(urlWithCacheBust);
+      setInputKey(prev => prev + 1);
       
       toast({
         title: "Success",
@@ -75,7 +81,7 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // Check file size (max 5MB)
@@ -89,24 +95,48 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
       }
 
       // Check file type
-      if (!file.type.startsWith('image/')) {
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
         toast({
           variant: "destructive",
           title: "Invalid file type",
-          description: "Please select an image file"
+          description: "Please select a PNG, JPG, or WebP image"
         });
         return;
       }
 
-      uploadImage(file);
+      await uploadImage(file);
+    }
+  };
+
+  const rejectUnsupportedImage = async (file: File) => {
+    const head = await file.slice(0, 24).arrayBuffer();
+    const signature = new TextDecoder().decode(head);
+    const isHeic = file.type.includes('heic') || file.type.includes('heif') || /ftyp(heic|heix|hevc|hevx|mif1|msf1)/.test(signature);
+
+    if (isHeic) {
+      throw new Error('This photo is HEIC/HEIF even if the filename says JPG/PNG. Please export or convert it to a real JPG/PNG, then upload again.');
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('This image cannot be read by the browser. Please upload a real JPG or PNG file.'));
+        img.src = objectUrl;
+      });
+    } finally {
+      URL.revokeObjectURL(objectUrl);
     }
   };
 
   return (
     <div>
       <Input
+        key={inputKey}
         type="file"
-        accept="image/*"
+        accept="image/png,image/jpeg,image/jpg,image/webp"
         onChange={handleFileChange}
         disabled={uploading}
         className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600"
