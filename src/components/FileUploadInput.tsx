@@ -95,11 +95,12 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
       }
 
       // Check file type
-      if (!file.type.startsWith('image/')) {
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
         toast({
           variant: "destructive",
           title: "Invalid file type",
-          description: "Please select an image file"
+          description: "Please select a PNG, JPG, or WebP image"
         });
         return;
       }
