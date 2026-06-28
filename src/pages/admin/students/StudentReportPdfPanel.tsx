@@ -103,23 +103,23 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
 
   const saveTheme = useCallback(async (url: string) => {
     const cleanUrl = stripCacheBuster(url);
-    setThemeUrl(url);
     await supabase.from("student_report_assets").delete().eq("scope", "theme");
     if (cleanUrl) {
       const { error } = await supabase.from("student_report_assets").insert({ scope: "theme", image_url: cleanUrl });
-      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      if (error) throw error;
     }
+    setThemeUrl(url);
     toast({ title: "Saved", description: url ? "Background theme updated." : "Background theme removed." });
   }, [toast]);
 
   const savePhoto = useCallback(async (pageKey: string, url: string) => {
     const cleanUrl = stripCacheBuster(url);
-    setPhotos(prev => ({ ...prev, [pageKey]: url }));
     await supabase.from("student_report_assets").delete().eq("scope", "photo").eq("student_id", studentId).eq("page_key", pageKey);
     if (cleanUrl) {
       const { error } = await supabase.from("student_report_assets").insert({ scope: "photo", student_id: studentId, page_key: pageKey, image_url: cleanUrl });
-      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      if (error) throw error;
     }
+    setPhotos(prev => ({ ...prev, [pageKey]: url }));
     toast({ title: "Saved", description: url ? "Student photo updated." : "Student photo removed." });
   }, [studentId, toast]);
 
