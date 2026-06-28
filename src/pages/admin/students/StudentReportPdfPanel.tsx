@@ -148,7 +148,7 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
                 step={0.05}
               />
               <p className="text-xs text-muted-foreground">
-                Drag right to make the white panel more transparent so your uploaded design shows through. Set to fully transparent to remove it entirely.
+                Drag left to make the white panel more transparent so your uploaded design shows through. Drag fully left to remove it entirely.
               </p>
             </div>
             <div className="rounded-lg border p-4 bg-muted/30">
