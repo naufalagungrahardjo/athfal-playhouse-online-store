@@ -7,23 +7,23 @@ import { ImagePlaceholder } from '@/components/ImagePlaceholder';
 
 interface ImageUploadProps {
   value: string;
-  onChange: (url: string) => void;
+  onChange: (url: string) => void | Promise<void>;
   label?: string;
   className?: string;
   hint?: string;
 }
 
 export const ImageUpload = ({ value, onChange, label = "Image", className = "", hint }: ImageUploadProps) => {
-  const handleRemoveImage = () => {
-    onChange('');
+  const handleRemoveImage = async () => {
+    await onChange('');
   };
 
-  const handleFileUpload = (url: string) => {
-    onChange(url);
+  const handleFileUpload = async (url: string) => {
+    await onChange(url);
   };
 
-  const handleUrlSubmit = (url: string) => {
-    onChange(url);
+  const handleUrlSubmit = async (url: string) => {
+    await onChange(url);
   };
 
   return (
