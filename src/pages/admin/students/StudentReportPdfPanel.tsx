@@ -22,17 +22,20 @@ type Props = {
 // Page 1 uses the "summary" key; each descriptive field is its own page.
 const SUMMARY_KEY = "summary";
 
+const stripCacheBuster = (url: string) => url.split("?")[0];
+
 // Re-encode any image URL into a clean baseline PNG data URL via a canvas.
 // jsPDF's addImage silently fails on progressive JPEGs, WebP, or CMYK images,
 // which is why "successful" uploads showed up blank in the PDF. Drawing onto a
 // canvas normalizes every source to a format jsPDF can always embed.
-const urlToDataUrl = async (url: string): Promise<string | null> => {
+const urlToDataUrl = async (url: string): Promise<string> => {
   try {
     const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`Image request failed (${res.status})`);
     const blob = await res.blob();
     const objectUrl = URL.createObjectURL(blob);
     try {
-      const dataUrl = await new Promise<string | null>((resolve) => {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.onload = () => {
@@ -40,7 +43,7 @@ const urlToDataUrl = async (url: string): Promise<string | null> => {
             // Cap dimensions so the PDF stays a reasonable size.
             const maxDim = 1600;
             let { naturalWidth: w, naturalHeight: h } = img;
-            if (!w || !h) { resolve(null); return; }
+            if (!w || !h) { reject(new Error("Image has invalid dimensions")); return; }
             const scale = Math.min(1, maxDim / Math.max(w, h));
             w = Math.round(w * scale);
             h = Math.round(h * scale);
@@ -48,25 +51,25 @@ const urlToDataUrl = async (url: string): Promise<string | null> => {
             canvas.width = w;
             canvas.height = h;
             const ctx = canvas.getContext("2d");
-            if (!ctx) { resolve(null); return; }
+            if (!ctx) { reject(new Error("Could not prepare image for PDF")); return; }
             // White matte so transparent PNGs don't turn black in the PDF.
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, w, h);
             ctx.drawImage(img, 0, 0, w, h);
             resolve(canvas.toDataURL("image/jpeg", 0.92));
           } catch {
-            resolve(null);
+            reject(new Error("Could not convert image for PDF"));
           }
         };
-        img.onerror = () => resolve(null);
+        img.onerror = () => reject(new Error("Uploaded image could not be loaded"));
         img.src = objectUrl;
       });
       return dataUrl;
     } finally {
       URL.revokeObjectURL(objectUrl);
     }
-  } catch {
-    return null;
+  } catch (err: any) {
+    throw new Error(err?.message || "Uploaded image could not be prepared for PDF");
   }
 };
 
@@ -90,31 +93,34 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
         supabase.from("student_report_assets").select("page_key,image_url").eq("scope", "photo").eq("student_id", studentId),
       ]);
       if (cancelled) return;
-      setThemeUrl(theme?.image_url || "");
+      setThemeUrl(theme?.image_url ? `${stripCacheBuster(theme.image_url)}?t=${Date.now()}` : "");
       const map: Record<string, string> = {};
-      (studentPhotos || []).forEach((r: any) => { if (r.page_key) map[r.page_key] = r.image_url; });
+      (studentPhotos || []).forEach((r: any) => { if (r.page_key) map[r.page_key] = `${stripCacheBuster(r.image_url)}?t=${Date.now()}`; });
       setPhotos(map);
     })();
     return () => { cancelled = true; };
   }, [studentId]);
 
   const saveTheme = useCallback(async (url: string) => {
+    const cleanUrl = stripCacheBuster(url);
     setThemeUrl(url);
     await supabase.from("student_report_assets").delete().eq("scope", "theme");
-    if (url) {
-      const { error } = await supabase.from("student_report_assets").insert({ scope: "theme", image_url: url });
+    if (cleanUrl) {
+      const { error } = await supabase.from("student_report_assets").insert({ scope: "theme", image_url: cleanUrl });
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     }
     toast({ title: "Saved", description: url ? "Background theme updated." : "Background theme removed." });
   }, [toast]);
 
   const savePhoto = useCallback(async (pageKey: string, url: string) => {
+    const cleanUrl = stripCacheBuster(url);
     setPhotos(prev => ({ ...prev, [pageKey]: url }));
     await supabase.from("student_report_assets").delete().eq("scope", "photo").eq("student_id", studentId).eq("page_key", pageKey);
-    if (url) {
-      const { error } = await supabase.from("student_report_assets").insert({ scope: "photo", student_id: studentId, page_key: pageKey, image_url: url });
+    if (cleanUrl) {
+      const { error } = await supabase.from("student_report_assets").insert({ scope: "photo", student_id: studentId, page_key: pageKey, image_url: cleanUrl });
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     }
+    toast({ title: "Saved", description: url ? "Student photo updated." : "Student photo removed." });
   }, [studentId, toast]);
 
   const downloadPdf = async () => {
