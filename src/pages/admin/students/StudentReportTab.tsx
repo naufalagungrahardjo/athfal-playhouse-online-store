@@ -333,6 +333,12 @@ export default function StudentReportTab({ programs, students, enrollments, atte
       {selectedStudent && (
         <>
           {/* Enrollment & Attendance Summary */}
+          <StudentReportPdfPanel
+            studentId={selectedStudent.id}
+            studentName={selectedStudent.name}
+            summary={pdfSummary}
+            fields={pdfFields}
+          />
           <Card>
             <CardContent className="pt-4">
               <h3 className="font-semibold mb-3">Program Summary — {selectedStudent.name}</h3>
