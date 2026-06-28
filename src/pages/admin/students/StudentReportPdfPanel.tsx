@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ImageUpload } from "@/components/ImageUpload";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 import { Download, Loader2, ChevronDown, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +43,8 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
   const [themeUrl, setThemeUrl] = useState("");
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [generating, setGenerating] = useState(false);
+  // White reading-panel opacity (0 = fully transparent, 1 = solid white). Default 90%.
+  const [cardOpacity, setCardOpacity] = useState(0.9);
 
   const photoPages: PageDef[] = [{ key: SUMMARY_KEY, label: "Halaman 1 — Ringkasan" }, ...fields];
 
@@ -97,6 +101,7 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
         fields,
         themeDataUrl,
         photosByPage,
+        cardOpacity,
       });
       toast({ title: "Report ready", description: "PDF downloaded." });
     } catch (err: any) {
@@ -128,6 +133,24 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-4 space-y-6">
+            <div className="rounded-lg border p-4 bg-muted/30 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">White background transparency</Label>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {Math.round((1 - cardOpacity) * 100)}% transparent
+                </span>
+              </div>
+              <Slider
+                value={[cardOpacity]}
+                onValueChange={(v) => setCardOpacity(v[0])}
+                min={0}
+                max={1}
+                step={0.05}
+              />
+              <p className="text-xs text-muted-foreground">
+                Drag left to make the white panel more transparent so your uploaded design shows through. Drag fully left to remove it entirely.
+              </p>
+            </div>
             <div className="rounded-lg border p-4 bg-muted/30">
               <ImageUpload
                 value={themeUrl}

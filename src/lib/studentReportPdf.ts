@@ -38,6 +38,8 @@ export interface StudentReportPdfInput {
   photosByPage: Record<string, string | null | undefined>;
   businessName?: string;
   logoDataUrl?: string | null;
+  /** Opacity of the white reading panel behind content (0 = fully transparent, 1 = solid white). Default 0.9. */
+  cardOpacity?: number;
 }
 
 const detectFormat = (dataUrl: string): "PNG" | "JPEG" => {
@@ -63,6 +65,7 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     photosByPage,
     businessName = "Athfal Playhouse",
     logoDataUrl,
+    cardOpacity = 0.9,
   } = input;
 
   const doc = new jsPDF({ unit: "pt", format: "a4" });
@@ -83,16 +86,19 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
       doc.rect(0, 0, pageW, pageH, "F");
     }
     // Translucent white card so text stays legible over any theme.
-    try {
-      // @ts-ignore - GState exists at runtime in jsPDF
-      doc.setGState(new (doc as any).GState({ opacity: 0.9 }));
-    } catch { /* noop */ }
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(cardInset, cardInset, pageW - cardInset * 2, pageH - cardInset * 2, 14, 14, "F");
-    try {
-      // @ts-ignore
-      doc.setGState(new (doc as any).GState({ opacity: 1 }));
-    } catch { /* noop */ }
+    // Skip entirely when opacity is 0 so the uploaded design shows through fully.
+    if (cardOpacity > 0) {
+      try {
+        // @ts-ignore - GState exists at runtime in jsPDF
+        doc.setGState(new (doc as any).GState({ opacity: Math.min(1, cardOpacity) }));
+      } catch { /* noop */ }
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(cardInset, cardInset, pageW - cardInset * 2, pageH - cardInset * 2, 14, 14, "F");
+      try {
+        // @ts-ignore
+        doc.setGState(new (doc as any).GState({ opacity: 1 }));
+      } catch { /* noop */ }
+    }
     // Decorative top band inside the card
     doc.setFillColor(...BRAND.peach);
     doc.roundedRect(cardInset, cardInset, pageW - cardInset * 2, 10, 14, 14, "F");
