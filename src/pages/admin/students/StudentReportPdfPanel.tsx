@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ImageUpload } from "@/components/ImageUpload";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 import { Download, Loader2, ChevronDown, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +43,8 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
   const [themeUrl, setThemeUrl] = useState("");
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [generating, setGenerating] = useState(false);
+  // White reading-panel opacity (0 = fully transparent, 1 = solid white). Default 90%.
+  const [cardOpacity, setCardOpacity] = useState(0.9);
 
   const photoPages: PageDef[] = [{ key: SUMMARY_KEY, label: "Halaman 1 — Ringkasan" }, ...fields];
 
@@ -97,6 +101,7 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
         fields,
         themeDataUrl,
         photosByPage,
+        cardOpacity,
       });
       toast({ title: "Report ready", description: "PDF downloaded." });
     } catch (err: any) {
