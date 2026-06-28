@@ -133,6 +133,24 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-4 space-y-6">
+            <div className="rounded-lg border p-4 bg-muted/30 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">White background transparency</Label>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {Math.round((1 - cardOpacity) * 100)}% transparent
+                </span>
+              </div>
+              <Slider
+                value={[cardOpacity]}
+                onValueChange={(v) => setCardOpacity(v[0])}
+                min={0}
+                max={1}
+                step={0.05}
+              />
+              <p className="text-xs text-muted-foreground">
+                Drag right to make the white panel more transparent so your uploaded design shows through. Set to fully transparent to remove it entirely.
+              </p>
+            </div>
             <div className="rounded-lg border p-4 bg-muted/30">
               <ImageUpload
                 value={themeUrl}
