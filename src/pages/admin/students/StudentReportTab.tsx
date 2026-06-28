@@ -11,6 +11,7 @@ import { useProgramSessionDates } from "@/hooks/useProgramSessionDates";
 import { format, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import StudentReportPdfPanel from "./StudentReportPdfPanel";
 
 const DESCRIPTIVE_FIELDS = [
   { key: "motorik_halus", label: "Motorik Halus" },
@@ -256,6 +257,22 @@ export default function StudentReportTab({ programs, students, enrollments, atte
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   };
 
+  // Build inputs for the A4 PDF report.
+  const pdfSummary = useMemo(() => programSummaries.map(ps => ({
+    programName: ps.program?.name || "—",
+    period: ps.program ? `${format(new Date(ps.program.start_date), "d MMM yyyy")} — ${format(new Date(ps.program.end_date), "d MMM yyyy")}` : "—",
+    present: ps.present,
+    absent: ps.absent,
+    sick_leave: ps.sick_leave,
+    other_leave: ps.other_leave,
+  })), [programSummaries]);
+
+  const pdfFields = useMemo(() =>
+    DESCRIPTIVE_FIELDS
+      .map(f => ({ key: f.key, label: f.label, content: savedReports[f.key] || "" }))
+      .filter(f => f.content.trim() !== ""),
+  [savedReports]);
+
   return (
     <div className="space-y-4">
       <Card>
@@ -316,6 +333,12 @@ export default function StudentReportTab({ programs, students, enrollments, atte
       {selectedStudent && (
         <>
           {/* Enrollment & Attendance Summary */}
+          <StudentReportPdfPanel
+            studentId={selectedStudent.id}
+            studentName={selectedStudent.name}
+            summary={pdfSummary}
+            fields={pdfFields}
+          />
           <Card>
             <CardContent className="pt-4">
               <h3 className="font-semibold mb-3">Program Summary — {selectedStudent.name}</h3>
