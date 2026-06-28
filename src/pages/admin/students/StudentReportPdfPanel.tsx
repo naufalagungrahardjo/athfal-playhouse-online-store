@@ -103,7 +103,8 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
 
   const saveTheme = useCallback(async (url: string) => {
     const cleanUrl = stripCacheBuster(url);
-    await supabase.from("student_report_assets").delete().eq("scope", "theme");
+    const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "theme");
+    if (deleteError) throw deleteError;
     if (cleanUrl) {
       const { error } = await supabase.from("student_report_assets").insert({ scope: "theme", image_url: cleanUrl });
       if (error) throw error;
@@ -114,7 +115,8 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
 
   const savePhoto = useCallback(async (pageKey: string, url: string) => {
     const cleanUrl = stripCacheBuster(url);
-    await supabase.from("student_report_assets").delete().eq("scope", "photo").eq("student_id", studentId).eq("page_key", pageKey);
+    const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "photo").eq("student_id", studentId).eq("page_key", pageKey);
+    if (deleteError) throw deleteError;
     if (cleanUrl) {
       const { error } = await supabase.from("student_report_assets").insert({ scope: "photo", student_id: studentId, page_key: pageKey, image_url: cleanUrl });
       if (error) throw error;
