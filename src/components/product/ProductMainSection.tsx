@@ -201,14 +201,20 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
                         disabled={soldOut}
                         className={`flex flex-col items-center justify-center text-center px-3 py-2.5 min-h-[64px] rounded-lg border-2 text-sm font-medium transition-colors ${
                           soldOut
-                            ? 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed opacity-60'
+                            ? 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed opacity-60'
                             : selectedVariant?.id === variant.id
                               ? 'border-athfal-pink bg-athfal-pink/10 text-athfal-pink'
                               : 'border-gray-200 text-gray-600 hover:border-athfal-pink/50'
                         }`}
                       >
-                        <span className="block leading-tight break-words">{variant.name}</span>
-                        <span className="block text-xs mt-1 opacity-80">{formatCurrency(variant.price)}</span>
+                        <span className={`block leading-tight break-words ${soldOut ? 'line-through' : ''}`}>{variant.name}</span>
+                        {soldOut ? (
+                          <span className="block text-xs mt-1 font-bold text-red-500">
+                            {language === 'id' ? 'Habis' : 'Sold Out'}
+                          </span>
+                        ) : (
+                          <span className="block text-xs mt-1 opacity-80">{formatCurrency(variant.price)}</span>
+                        )}
                       </button>
                     );
                   })}
