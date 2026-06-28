@@ -22,16 +22,49 @@ type Props = {
 // Page 1 uses the "summary" key; each descriptive field is its own page.
 const SUMMARY_KEY = "summary";
 
+// Re-encode any image URL into a clean baseline PNG data URL via a canvas.
+// jsPDF's addImage silently fails on progressive JPEGs, WebP, or CMYK images,
+// which is why "successful" uploads showed up blank in the PDF. Drawing onto a
+// canvas normalizes every source to a format jsPDF can always embed.
 const urlToDataUrl = async (url: string): Promise<string | null> => {
   try {
     const res = await fetch(url, { cache: "no-store" });
     const blob = await res.blob();
-    return await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(blob);
-    });
+    const objectUrl = URL.createObjectURL(blob);
+    try {
+      const dataUrl = await new Promise<string | null>((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          try {
+            // Cap dimensions so the PDF stays a reasonable size.
+            const maxDim = 1600;
+            let { naturalWidth: w, naturalHeight: h } = img;
+            if (!w || !h) { resolve(null); return; }
+            const scale = Math.min(1, maxDim / Math.max(w, h));
+            w = Math.round(w * scale);
+            h = Math.round(h * scale);
+            const canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) { resolve(null); return; }
+            // White matte so transparent PNGs don't turn black in the PDF.
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL("image/jpeg", 0.92));
+          } catch {
+            resolve(null);
+          }
+        };
+        img.onerror = () => resolve(null);
+        img.src = objectUrl;
+      });
+      return dataUrl;
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
   } catch {
     return null;
   }
