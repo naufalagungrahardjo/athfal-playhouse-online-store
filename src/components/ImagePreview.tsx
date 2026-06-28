@@ -1,6 +1,7 @@
 
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
+import { useState } from 'react';
 
 interface ImagePreviewProps {
   imageUrl: string;
@@ -8,18 +9,23 @@ interface ImagePreviewProps {
 }
 
 export const ImagePreview = ({ imageUrl, onRemove }: ImagePreviewProps) => {
+  const [failed, setFailed] = useState(false);
+
   return (
     <div className="mt-2">
-      <div className="relative inline-block">
-        <img
-          src={imageUrl}
-          alt="Preview"
-          className="w-32 h-32 object-cover rounded border"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop';
-          }}
-        />
+      <div className="relative inline-block align-top">
+        {failed ? (
+          <div className="flex h-32 w-32 items-center justify-center rounded border border-destructive/40 bg-destructive/10 p-2 text-center text-xs text-destructive">
+            Image could not load. Please upload again.
+          </div>
+        ) : (
+          <img
+            src={imageUrl}
+            alt="Preview"
+            className="h-32 w-32 rounded border object-cover"
+            onError={() => setFailed(true)}
+          />
+        )}
         <Button
           type="button"
           variant="destructive"
