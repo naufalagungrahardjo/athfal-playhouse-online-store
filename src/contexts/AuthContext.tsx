@@ -74,10 +74,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       logger.error('Signup error:', error);
+      // Avoid leaking whether an email is already registered (account enumeration).
+      const rawMessage = error instanceof Error ? error.message.toLowerCase() : '';
+      const isEnumerationLeak =
+        rawMessage.includes('already registered') ||
+        rawMessage.includes('already been registered') ||
+        rawMessage.includes('user already exists') ||
+        rawMessage.includes('email address is already');
+      const safeDescription = isEnumerationLeak
+        ? "Jika email belum terdaftar, akun akan dibuat dan link konfirmasi dikirim. Periksa email Anda."
+        : (error instanceof Error ? error.message : "Terjadi kesalahan saat membuat akun");
       toast({
         variant: "destructive",
         title: "Pendaftaran gagal",
-        description: error instanceof Error ? error.message : "Terjadi kesalahan saat membuat akun",
+        description: safeDescription,
       });
       throw error;
     }
@@ -107,17 +117,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await resetPasswordForEmail(email);
       
       toast({
-        title: "Reset password berhasil",
-        description: "Cek email Anda untuk instruksi selanjutnya",
+        title: "Permintaan reset password diterima",
+        description: "Jika email tersebut terdaftar, Anda akan menerima link reset password.",
       });
     } catch (error) {
       logger.error('Reset password error:', error);
+      // Do not reveal whether the email exists; show the same neutral message.
       toast({
-        variant: "destructive",
-        title: "Reset password gagal",
-        description: error instanceof Error ? error.message : "Terjadi kesalahan saat reset password",
+        title: "Permintaan reset password diterima",
+        description: "Jika email tersebut terdaftar, Anda akan menerima link reset password.",
       });
-      throw error;
     }
   };
 
