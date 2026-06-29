@@ -1,59 +1,52 @@
-# Multi-Division Sub-Product Pricing
 
-## Goal
-Let each product (e.g. "Bumi Class X") have unlimited sub-products (Lunas, Cicilan 2x, Cicilan 3x…), and each sub-product have unlimited **price divisions** (Price 1, Price 2 … Price n). The sum of divisions is the sub-product's total. Customers see/pay the **first** division; admins see and toggle the rest, and toggled-paid divisions count as revenue immediately. Buying any sub-product reduces the product's quantity.
+# Security audit: the 5 prompts vs. your actual app
 
-This **extends the existing variant system** (`product_variants` = sub-products) rather than building a new one.
+The most important fact: **your app already uses Supabase Auth** (a managed authentication provider). Sign-in, sign-up, password reset, and Google login all go straight to Supabase's secure servers — your app has no custom "login route" or password-handling code of its own. That changes the answer to almost every prompt.
 
-## How it maps to what exists
-- Sub-products = `product_variants` (already wired into product page, cart, checkout).
-- Installment tracking = `order_payments` (already exists: `payment_number`, `amount`, `status`, `paid_at`; `sync_order_amount_paid` trigger keeps `orders.amount_paid` in sync).
-- Revenue = dashboard already scales by `amount_paid / total_amount`, so paid divisions automatically become revenue. **No analytics change needed.**
+Below is each prompt, whether it applies, and the impact on how you use the site.
 
-## Data model
-Add one column:
-- `product_variants.price_divisions jsonb default '[]'` — ordered array of integer amounts `[500000, 2500000]`. `price_divisions[0]` is the customer-facing first division; `product_variants.price` is kept equal to it for backward compatibility. The variant total = sum of the array.
+## Prompt 1 — Server-side input validation
+**Status: Already handled by Supabase. No action needed.**
+There are no custom server login/signup routes in this app — those requests are processed by Supabase, which validates email format, password rules, and rejects malformed input on its servers. The prompt also asks to "strip special characters from passwords," which is actually *harmful* (it weakens passwords), so we would not do that part.
+**Effect on you: none.**
 
-## Behavior
+## Prompt 2 — Rate limiting & account lockout
+**Status: Mostly already handled by Supabase. Custom lockout not recommended.**
+Supabase already rate-limits auth requests on its side to block brute-force attempts. Building a *custom* 5-strike lockout + Redis + lockout emails would require infrastructure this app doesn't have, and a poorly-built lockout can be abused to lock out your real customers. My standing guidance is not to bolt on ad-hoc rate limiting.
+**Effect on you: none. (Adding custom lockout could risk locking out real users — not advised.)**
 
-### 1. Admin product editor (`ProductVariantManager`)
-- Each sub-product row gets a **Price Divisions** editor: add/remove rows of amounts (Price 1, Price 2, …). A live "Total" shows the sum.
-- On save: store the full array in `price_divisions` and set `price` = first division.
-- Existing single-price variants keep working (treated as a one-division `[price]`).
-- Product `stock` field stays the single shared quantity for the whole product (matches the screenshot where qty 12 is at the product level).
+## Prompt 3 — Secure password hashing (bcrypt/Argon2)
+**Status: Already handled by Supabase. No action needed.**
+Your app never sees, stores, or logs passwords — Supabase hashes them with industry-standard algorithms on its servers. There is no plain-text or MD5/SHA-1 storage anywhere to fix, and no migration script needed.
+**Effect on you: none.**
 
-### 2. Storefront (`ProductMainSection`, cart)
-- Sub-product buttons keep showing the **first division** as the price (unchanged), with a small "Total Rp 3.000.000 · n pembayaran" hint underneath.
-- Cart line shows the first division (the amount due now). Unchanged logic.
+## Prompt 4 — Auth error messages that leak information
+**Status: Largely fine; a few small wording improvements possible. This is the only actionable item.**
+What I found in your code:
+- **Login** already shows a generic "Email atau password salah" (correct behaviour). ✅
+- **Password reset** always shows a success message regardless of whether the email exists, so it does not leak. ✅ (wording could be made clearer: "If that email is registered, you'll receive a reset link")
+- **Signup** currently surfaces Supabase's raw error, which can say "User already registered" — this slightly reveals which emails have accounts.
 
-### 3. Checkout (`useOrderProcessing`, `OrderSummary`)
-- The created order's `subtotal`/`total_amount` = the **full** sub-product value (sum of all divisions) so outstanding amounts and revenue work.
-- The order summary shows two lines: **Total** (e.g. 3,000,000) and **First payment due now** (e.g. 500,000).
-- After inserting the order + items, call a new RPC `setup_order_payments_for_order(order_id)`.
+The only change worth making: soften the signup/reset wording so it never confirms whether an email is already registered.
 
-### 4. New RPC `setup_order_payments_for_order` (SECURITY DEFINER)
-- Removes any auto-created payment for the order, then for each ordered sub-product inserts one `order_payments` row per division: division 1 = `status 'paid'` (paid now), divisions 2…n = `status 'unpaid'`, with `notes` labeling the division. Non-variant / "Lunas" single-division items become a single fully-paid payment (same as today). `sync_order_amount_paid` then sets `amount_paid` to the first-division sum.
+## Prompt 5 — Replace custom auth with a provider
+**Status: Already done. No action needed.**
+You are already on Supabase Auth — the exact thing this prompt asks you to migrate to. Ripping it out and re-integrating would be pure risk with zero benefit.
 
-### 5. Stock RPC change
-- Update `deduct_stock_for_order` / `restore_stock_for_order` so sub-product (variant) line items decrement/restore the **parent product's** `stock` (shared pool), matching "choosing a sub-product reduces the product quantity."
+---
 
-### 6. Admin order details (`OrderDetailsDialog`)
-- Add a **Payment Divisions** panel listing each `order_payments` row: label, amount, and a **paid/unpaid toggle (Switch)**.
-- Toggling updates `status` + `paid_at`; `amount_paid` and dashboard/analytics revenue update automatically (immediately, refunds/cancelled stay at 0 per existing rule).
+# What I propose to actually do (optional, low-risk)
+
+Only the small wording fixes from Prompt 4, all frontend-only:
+
+1. In `src/contexts/AuthContext.tsx` — when signup fails with an "already registered" type error, show a neutral message instead of Supabase's raw text (so the site never confirms an email exists).
+2. In `src/contexts/AuthContext.tsx` / reset flow — standardize the reset-password message to "If that email is registered, you'll receive a reset link."
+3. Keep the login message generic as it already is (no change needed).
+
+No database changes, no edge functions, no impact on how you or your customers log in — the only visible difference is slightly safer wording on a couple of error/confirmation messages.
 
 ## Technical notes
-- Division amounts are treated as the exact rupiah the customer transfers (tax-inclusive); for division-based variant items the order's `tax_amount` is 0 so `total = subtotal` and `validate_order_totals` passes. Ordinary non-variant products keep their current tax behavior.
-- `auto_mark_order_paid` stays for plain products; the new RPC overrides payments only for variant orders.
-- Types file (`src/integrations/supabase/types.ts`) refreshes automatically after the migration.
+- These are presentation-layer string changes in `AuthContext.tsx`; no schema, RLS, or auth-flow logic changes.
+- Supabase enforces its own enumeration protections too, so this is a small defense-in-depth polish rather than a critical fix.
 
-## Files
-- Migration: add `price_divisions`; create `setup_order_payments_for_order`; update `deduct_stock_for_order` & `restore_stock_for_order`.
-- `src/components/admin/ProductVariantManager.tsx` — divisions editor.
-- `src/hooks/useProductVariants.ts` — include `price_divisions`.
-- `src/components/product/ProductMainSection.tsx` — total/first-payment hint.
-- `src/hooks/useOrderProcessing.ts` — full-value order totals + RPC call.
-- `src/components/checkout/OrderSummary.tsx` (+ CheckoutPage wiring) — show Total vs First payment due now.
-- `src/components/admin/OrderDetailsDialog.tsx` — payment-division toggles.
-
-## Out of scope
-- No changes to analytics math, billing-notice emails, or the legacy `product_installment_plans` table.
+If you'd rather I change nothing at all, that's a completely valid choice — your auth is already in good shape. Approve this plan if you want the minor wording improvements, or tell me to skip them.
