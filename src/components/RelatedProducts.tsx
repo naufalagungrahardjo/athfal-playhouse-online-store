@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useProducts } from '@/hooks/useProducts';
 import { useAllProductVariants } from '@/hooks/useProductVariants';
 import { ProductCategory } from '@/contexts/CartContext';
+import { getThumbnailUrl } from '@/utils/imageThumbnail';
 
 interface RelatedProductsProps {
   currentProductId: string;
