@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import { useCollaborators } from '@/hooks/useCollaborators';
-import { getOptimizedImageUrl } from '@/utils/imageOptimizer';
+import { getThumbnailUrl } from '@/utils/imageThumbnail';
 
 export default function CollaboratorsSlider() {
   const { collaborators, loading } = useCollaborators();
@@ -65,7 +65,7 @@ export default function CollaboratorsSlider() {
                 }}
               >
                 <img
-                  src={getOptimizedImageUrl(c.logo, { width: 220, quality: 75 })}
+                  src={getThumbnailUrl(c.logo)}
                   alt={c.name}
                   title={c.name}
                   className="object-contain transition-all h-[35px] w-[210px] sm:h-[38px] sm:w-[220px] bg-white rounded-lg shadow border border-gray-100 hover:scale-105"
@@ -75,6 +75,15 @@ export default function CollaboratorsSlider() {
                   style={{
                     minWidth: 120,
                     minHeight: 25,
+                  }}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (c.logo && target.src !== c.logo) {
+                      target.src = c.logo;
+                    } else {
+                      target.onerror = null;
+                      target.src = '/placeholder.svg';
+                    }
                   }}
                 />
               </CarouselItem>

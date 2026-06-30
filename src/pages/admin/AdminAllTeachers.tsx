@@ -144,6 +144,51 @@ export default function AdminAllTeachers() {
     if (!error && data) setStorageUsage(data as any);
   };
 
+  // One-time cache optimization: re-stamp existing images with a 1-year
+  // cache header so the CDN stops re-downloading unchanged files (lowers egress).
+  const [cacheBusy, setCacheBusy] = useState(false);
+  const [cacheProgress, setCacheProgress] = useState<string>("");
+  const optimizeImageCache = async () => {
+    setCacheBusy(true);
+    setCacheProgress("Starting…");
+    const prefixes = ["uploads", "panoramas", "documents"];
+    let totalProcessed = 0;
+    try {
+      for (const prefix of prefixes) {
+        let offset = 0;
+        // Paginate until the function reports it is done for this prefix.
+        // Safety cap to avoid an infinite loop.
+        for (let page = 0; page < 100; page++) {
+          const { data, error } = await supabase.functions.invoke(
+            "backfill-image-cache",
+            { body: { prefix, offset, limit: 50 } }
+          );
+          if (error) throw error;
+          const res = data as any;
+          totalProcessed += Number(res?.processed || 0);
+          setCacheProgress(
+            `Folder "${prefix}": ${totalProcessed} files optimized…`
+          );
+          if (res?.done) break;
+          offset = Number(res?.nextOffset ?? offset + 50);
+        }
+      }
+      toast({
+        title: "Image cache optimized",
+        description: `${totalProcessed} files re-cached for 1 year. Future visits will reuse cached copies instead of re-downloading.`,
+      });
+      setCacheProgress("");
+    } catch (e: any) {
+      toast({
+        title: "Optimization failed",
+        description: e?.message || "Could not optimize image cache.",
+        variant: "destructive",
+      });
+    } finally {
+      setCacheBusy(false);
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     const [attRes, leaveRes, settingsRes, teacherAccRes, ciRes, stuRes, progRes] = await Promise.all([
@@ -1038,6 +1083,22 @@ export default function AdminAllTeachers() {
                         below to free space, or set a Google Drive folder per teacher to offload
                         photos off Supabase.
                       </p>
+                      <div className="rounded border bg-background p-2 mt-2 space-y-1">
+                        <div className="text-xs font-medium">Reduce data egress (bandwidth)</div>
+                        <p className="text-[11px] text-muted-foreground">
+                          New uploads are already cached for 1 year. Run this once to also
+                          re-cache the older images so the CDN serves them from cache instead
+                          of re-downloading every hour. This can take a few minutes.
+                        </p>
+                        <div className="flex items-center gap-2 pt-1">
+                          <Button size="sm" variant="outline" onClick={optimizeImageCache} disabled={cacheBusy}>
+                            {cacheBusy ? "Optimizing…" : "Optimize image cache"}
+                          </Button>
+                          {cacheProgress && (
+                            <span className="text-[11px] text-muted-foreground">{cacheProgress}</span>
+                          )}
+                        </div>
+                      </div>
                     </>
                   );
                 })()}

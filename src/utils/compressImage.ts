@@ -77,3 +77,57 @@ export async function compressImageFile(
     return file;
   }
 }
+
+/**
+ * Generate a small WebP thumbnail (default max 400px, quality 0.7) from an
+ * image File. Used for listing/grid views so visitors download a few KB
+ * instead of the multi-MB original. Returns null if generation fails or the
+ * source isn't a rasterizable image.
+ */
+export async function generateThumbnailFile(
+  file: File,
+  opts: { maxSize?: number; quality?: number } = {}
+): Promise<File | null> {
+  const { maxSize = 400, quality = 0.7 } = opts;
+  if (!file.type.startsWith("image/")) return null;
+  if (file.type === "image/svg+xml" || file.type === "image/gif") return null;
+
+  try {
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result as string);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = dataUrl;
+    });
+
+    const ratio = Math.min(maxSize / img.width, maxSize / img.height, 1);
+    const width = Math.max(1, Math.round(img.width * ratio));
+    const height = Math.max(1, Math.round(img.height * ratio));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/webp", quality)
+    );
+    if (!blob) return null;
+
+    const baseName = file.name.replace(/\.[^.]+$/, "");
+    return new File([blob], `${baseName}.webp`, {
+      type: "image/webp",
+      lastModified: Date.now(),
+    });
+  } catch {
+    return null;
+  }
+}

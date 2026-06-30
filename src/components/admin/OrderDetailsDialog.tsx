@@ -280,7 +280,7 @@ export const OrderDetailsDialog = ({ order, isOpen, onClose, onOrderUpdated }: O
       const path = `payment-evidence/${order.id}/${paymentId}-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from('images')
-        .upload(path, file, { upsert: true, contentType: file.type || undefined });
+        .upload(path, file, { upsert: true, cacheControl: '31536000', contentType: file.type || undefined });
       if (upErr) throw upErr;
       const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(path);
       await applyPaymentDivision(paymentId, 'paid', publicUrl);

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { getOptimizedImageUrl } from '@/utils/imageOptimizer';
+import { getThumbnailUrl } from '@/utils/imageThumbnail';
 
 interface CategoryCardProps {
   title: string;
@@ -21,12 +21,21 @@ export const CategoryCard = ({ title, href, image, bgColor }: CategoryCardProps)
       >
         {/* Category image */}
         <img
-          src={getOptimizedImageUrl(image, { width: 300, quality: 80 })}
+          src={getThumbnailUrl(image)}
           alt={title}
           className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
           width={300}
           height={300}
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            if (image && target.src !== image) {
+              target.src = image;
+            } else {
+              target.onerror = null;
+              target.src = '/placeholder.svg';
+            }
+          }}
         />
         {/* Title overlay */}
         <div className="relative z-10 w-full bg-gradient-to-t from-black/60 to-transparent p-3 pt-8">

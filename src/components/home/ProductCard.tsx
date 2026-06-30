@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import { getOptimizedImageUrl } from '@/utils/imageOptimizer';
+import { getThumbnailUrl } from '@/utils/imageThumbnail';
 
 interface Product {
   id: string;
@@ -37,15 +37,22 @@ export const ProductCard = ({ product, lowestPrice }: ProductCardProps) => {
       <Card className={`athfal-card overflow-hidden h-full hover:scale-[1.02] transition-all ${isSoldOut ? 'grayscale opacity-70' : ''}`}>
         <div className="aspect-square overflow-hidden relative">
           <img 
-            src={getOptimizedImageUrl(product.image, { width: 400, quality: 75 })} 
+            src={getThumbnailUrl(product.image)} 
             alt={product.name} 
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             loading="lazy"
             width={400}
             height={400}
             onError={(e) => {
+              // Fall back to the full-size original if no thumbnail exists
+              // (older uploads), then to a neutral placeholder.
               const target = e.target as HTMLImageElement;
-              target.src = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop';
+              if (product.image && target.src !== product.image) {
+                target.src = product.image;
+              } else {
+                target.onerror = null;
+                target.src = '/placeholder.svg';
+              }
             }}
           />
           {isSoldOut && (
