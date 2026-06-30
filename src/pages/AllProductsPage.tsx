@@ -99,12 +99,18 @@ const AllProductsPage = () => {
                 <Card className={`athfal-card overflow-hidden h-full hover:scale-[1.02] transition-all ${isSoldOut ? 'grayscale opacity-70' : ''}`}>
                   <div className="aspect-square overflow-hidden relative">
                     <img 
-                      src={product.image} 
+                      src={getThumbnailUrl(product.image)} 
                       alt={product.name} 
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop';
+                        if (product.image && target.src !== product.image) {
+                          target.src = product.image;
+                        } else {
+                          target.onerror = null;
+                          target.src = '/placeholder.svg';
+                        }
                       }}
                     />
                     {isSoldOut && (
