@@ -139,11 +139,18 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
           photosByPage[p.key] = photos[p.key] ? await urlToDataUrl(photos[p.key]) : null;
         })
       );
+      // Include a PDF page for any field that has saved text OR an uploaded photo,
+      // so a photo attached to a text-less field still appears in the report.
+      const fieldsWithText = new Set(fields.map((f) => f.key));
+      const extraPhotoFields: ReportFieldPage[] = allFields
+        .filter((f) => !fieldsWithText.has(f.key) && photos[f.key])
+        .map((f) => ({ key: f.key, label: f.label, content: "" }));
+      const pdfFields = [...fields, ...extraPhotoFields];
       await generateStudentReportPdf({
         studentName,
         generatedDate: new Date().toISOString(),
         summary,
-        fields,
+        fields: pdfFields,
         themeDataUrl,
         photosByPage,
         cardOpacity,
