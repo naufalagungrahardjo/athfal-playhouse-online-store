@@ -117,7 +117,7 @@ const AdminDocuments = () => {
         .slice(2)}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("images")
-        .upload(path, uploadFile, { cacheControl: "3600", upsert: false });
+        .upload(path, uploadFile, { cacheControl: "31536000", upsert: false });
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from("images").getPublicUrl(path);
       const { error: insErr } = await supabase.from("parent_documents").insert({

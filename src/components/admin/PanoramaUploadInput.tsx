@@ -47,7 +47,7 @@ export const PanoramaUploadInput = ({
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `panoramas/${fileName}`;
         const { error } = await supabase.storage.from('images').upload(filePath, prepared, {
-          cacheControl: '3600',
+          cacheControl: '31536000',
           upsert: false,
         });
         if (error) throw error;
