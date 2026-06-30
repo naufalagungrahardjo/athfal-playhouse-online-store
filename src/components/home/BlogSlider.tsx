@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import { useBlogs } from '@/hooks/useBlogs';
 import { Calendar, User } from 'lucide-react';
-import { getOptimizedImageUrl } from '@/utils/imageOptimizer';
+import { getThumbnailUrl } from '@/utils/imageThumbnail';
 
 export default function BlogSlider() {
   const { blogs, loading } = useBlogs();
@@ -78,7 +78,7 @@ export default function BlogSlider() {
                   <div className="bg-white border border-athfal-pink/15 rounded-2xl shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300 h-full flex flex-col overflow-hidden">
                     <div className="w-full relative" style={{ paddingBottom: '56.25%' }}>
                       <img
-                        src={getOptimizedImageUrl(blog.image, { width: 400, quality: 75 })}
+                        src={getThumbnailUrl(blog.image)}
                         alt={blog.title}
                         className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
                         loading={idx < 2 ? "eager" : "lazy"}
@@ -86,7 +86,12 @@ export default function BlogSlider() {
                         height={225}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = 'https://images.unsplash.com/photo-1516733968668-dbdce39c4651?w=400&h=225&fit=crop';
+                          if (blog.image && target.src !== blog.image) {
+                            target.src = blog.image;
+                          } else {
+                            target.onerror = null;
+                            target.src = '/placeholder.svg';
+                          }
                         }}
                       />
                     </div>
