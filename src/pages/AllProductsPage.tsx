@@ -7,6 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Search } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
 import { useAllProductVariants } from '@/hooks/useProductVariants';
+import { getThumbnailUrl } from '@/utils/imageThumbnail';
 
 // Format currency
 const formatCurrency = (amount: number) => {
