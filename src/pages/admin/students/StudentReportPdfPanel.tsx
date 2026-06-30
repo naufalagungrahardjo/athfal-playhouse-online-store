@@ -17,6 +17,8 @@ type Props = {
   studentName: string;
   summary: ProgramSummaryRow[];
   fields: ReportFieldPage[];
+  /** All report fields (key + label), regardless of whether text was written — used to render a photo upload slot for every page. */
+  allFields: { key: string; label: string }[];
 };
 
 // Page 1 uses the "summary" key; each descriptive field is its own page.
@@ -73,7 +75,7 @@ const urlToDataUrl = async (url: string): Promise<string> => {
   }
 };
 
-export default function StudentReportPdfPanel({ studentId, studentName, summary, fields }: Props) {
+export default function StudentReportPdfPanel({ studentId, studentName, summary, fields, allFields }: Props) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [themeUrl, setThemeUrl] = useState("");
@@ -82,7 +84,9 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
   // White reading-panel opacity (0 = fully transparent, 1 = solid white). Default 90%.
   const [cardOpacity, setCardOpacity] = useState(0.9);
 
-  const photoPages: PageDef[] = [{ key: SUMMARY_KEY, label: "Halaman 1 — Ringkasan" }, ...fields];
+  // Always render a photo upload slot for Page 1 plus every report field,
+  // regardless of whether final-report text has been written yet.
+  const photoPages: PageDef[] = [{ key: SUMMARY_KEY, label: "Halaman 1 — Ringkasan" }, ...allFields];
 
   // Load the global theme + this student's photos.
   useEffect(() => {
@@ -135,11 +139,18 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
           photosByPage[p.key] = photos[p.key] ? await urlToDataUrl(photos[p.key]) : null;
         })
       );
+      // Include a PDF page for any field that has saved text OR an uploaded photo,
+      // so a photo attached to a text-less field still appears in the report.
+      const fieldsWithText = new Set(fields.map((f) => f.key));
+      const extraPhotoFields: ReportFieldPage[] = allFields
+        .filter((f) => !fieldsWithText.has(f.key) && photos[f.key])
+        .map((f) => ({ key: f.key, label: f.label, content: "" }));
+      const pdfFields = [...fields, ...extraPhotoFields];
       await generateStudentReportPdf({
         studentName,
         generatedDate: new Date().toISOString(),
         summary,
-        fields,
+        fields: pdfFields,
         themeDataUrl,
         photosByPage,
         cardOpacity,

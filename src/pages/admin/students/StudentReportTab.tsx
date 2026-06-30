@@ -338,6 +338,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
             studentName={selectedStudent.name}
             summary={pdfSummary}
             fields={pdfFields}
+            allFields={DESCRIPTIVE_FIELDS.map(f => ({ key: f.key, label: f.label }))}
           />
           <Card>
             <CardContent className="pt-4">
