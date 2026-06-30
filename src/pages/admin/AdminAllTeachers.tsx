@@ -1083,6 +1083,22 @@ export default function AdminAllTeachers() {
                         below to free space, or set a Google Drive folder per teacher to offload
                         photos off Supabase.
                       </p>
+                      <div className="rounded border bg-background p-2 mt-2 space-y-1">
+                        <div className="text-xs font-medium">Reduce data egress (bandwidth)</div>
+                        <p className="text-[11px] text-muted-foreground">
+                          New uploads are already cached for 1 year. Run this once to also
+                          re-cache the older images so the CDN serves them from cache instead
+                          of re-downloading every hour. This can take a few minutes.
+                        </p>
+                        <div className="flex items-center gap-2 pt-1">
+                          <Button size="sm" variant="outline" onClick={optimizeImageCache} disabled={cacheBusy}>
+                            {cacheBusy ? "Optimizing…" : "Optimize image cache"}
+                          </Button>
+                          {cacheProgress && (
+                            <span className="text-[11px] text-muted-foreground">{cacheProgress}</span>
+                          )}
+                        </div>
+                      </div>
                     </>
                   );
                 })()}
