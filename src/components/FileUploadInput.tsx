@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { compressImageFile } from '@/utils/compressImage';
+import { compressImageFile, generateThumbnailFile } from '@/utils/compressImage';
+import { thumbnailPathForUpload } from '@/utils/imageThumbnail';
 
 interface FileUploadInputProps {
   onUpload: (url: string) => void | Promise<void>;
@@ -36,11 +37,12 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
 
       console.log('Uploading to path:', filePath);
 
-      // Upload the file
+      // Upload the file with a long-lived cache header. Filenames are unique,
+      // so the image at this URL never changes and is safe to cache for a year.
       const { error: uploadError, data } = await supabase.storage
         .from('images')
         .upload(filePath, file, {
-          cacheControl: '3600',
+          cacheControl: '31536000',
           contentType: file.type,
           upsert: false
         });
@@ -52,17 +54,30 @@ export const FileUploadInput = ({ onUpload }: FileUploadInputProps) => {
 
       console.log('Upload successful, data:', data);
 
-      // Get the public URL
+      // Generate and upload a small WebP thumbnail for listing/grid views.
+      try {
+        const thumb = await generateThumbnailFile(file, { maxSize: 400, quality: 0.7 });
+        if (thumb) {
+          await supabase.storage
+            .from('images')
+            .upload(thumbnailPathForUpload(filePath), thumb, {
+              cacheControl: '31536000',
+              contentType: 'image/webp',
+              upsert: true,
+            });
+        }
+      } catch (thumbErr) {
+        console.warn('Thumbnail generation failed (non-fatal):', thumbErr);
+      }
+
+      // Get the public URL (no cache-buster: the filename is already unique).
       const { data: { publicUrl } } = supabase.storage
         .from('images')
         .getPublicUrl(filePath);
 
-      // Add cache-busting parameter to ensure fresh image loads
-      const urlWithCacheBust = `${publicUrl}?t=${Date.now()}`;
+      console.log('Public URL:', publicUrl);
 
-      console.log('Public URL:', urlWithCacheBust);
-
-      await onUpload(urlWithCacheBust);
+      await onUpload(publicUrl);
       setInputKey(prev => prev + 1);
       
       toast({
