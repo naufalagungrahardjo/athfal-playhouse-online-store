@@ -47,6 +47,20 @@ const detectFormat = (dataUrl: string): "PNG" | "JPEG" => {
   return "PNG";
 };
 
+// Measure the natural pixel dimensions of an image data URL so photos can be
+// drawn with their real aspect ratio (contain-fit) instead of being stretched.
+const measureImage = (dataUrl: string): Promise<{ w: number; h: number }> =>
+  new Promise((resolve) => {
+    try {
+      const img = new Image();
+      img.onload = () => resolve({ w: img.naturalWidth || 1, h: img.naturalHeight || 1 });
+      img.onerror = () => resolve({ w: 1, h: 1 });
+      img.src = dataUrl;
+    } catch {
+      resolve({ w: 1, h: 1 });
+    }
+  });
+
 const formatDate = (d: string) => {
   try {
     return new Date(d).toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
@@ -73,6 +87,15 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
   const pageH = doc.internal.pageSize.getHeight();
   const margin = 36;
   const cardInset = 22;
+
+  // Pre-measure every photo's natural dimensions so we can draw them with the
+  // correct aspect ratio (contain-fit) inside their frames.
+  const photoDims: Record<string, { w: number; h: number }> = {};
+  await Promise.all(
+    Object.entries(photosByPage).map(async ([key, url]) => {
+      if (url) photoDims[key] = await measureImage(url);
+    })
+  );
 
   // Draws the full-page theme background + a translucent white reading panel.
   const paintBackground = () => {
@@ -106,8 +129,17 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     doc.rect(cardInset, cardInset + 8, pageW - cardInset * 2, 6, "F");
   };
 
-  // Draws a framed student photo box. Returns the bottom Y of the frame.
-  const drawPhoto = (photo: string | null | undefined, x: number, y: number, w: number, h: number) => {
+  // Draws a framed student photo box. The photo is scaled to fit inside the
+  // frame while preserving its aspect ratio (contain-fit) and centered, so it
+  // is never stretched. Returns the bottom Y of the frame.
+  const drawPhoto = (
+    photo: string | null | undefined,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    dims?: { w: number; h: number }
+  ) => {
     // Frame
     doc.setFillColor(...BRAND.lightPeach);
     doc.setDrawColor(...BRAND.pink);
@@ -116,7 +148,16 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     if (photo) {
       try {
         const pad = 5;
-        doc.addImage(photo, detectFormat(photo), x + pad, y + pad, w - pad * 2, h - pad * 2, undefined, "FAST");
+        const boxW = w - pad * 2;
+        const boxH = h - pad * 2;
+        const nat = dims && dims.w > 0 && dims.h > 0 ? dims : { w: boxW, h: boxH };
+        // Contain-fit: scale so the whole image fits, keeping aspect ratio.
+        const scale = Math.min(boxW / nat.w, boxH / nat.h);
+        const drawW = nat.w * scale;
+        const drawH = nat.h * scale;
+        const dx = x + pad + (boxW - drawW) / 2;
+        const dy = y + pad + (boxH - drawH) / 2;
+        doc.addImage(photo, detectFormat(photo), dx, dy, drawW, drawH, undefined, "FAST");
       } catch {
         throw new Error("Student photo could not be added to the PDF. Please re-upload the photo and try again.");
       }
@@ -156,7 +197,7 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
   // Photo (top-right)
   const photoW = 110;
   const photoH = 130;
-  drawPhoto(photosByPage["summary"], contentRight - photoW, y, photoW, photoH);
+  drawPhoto(photosByPage["summary"], contentRight - photoW, y, photoW, photoH, photoDims["summary"]);
 
   // Student name + date (left)
   doc.setFont("helvetica", "bold");
@@ -277,7 +318,7 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     // Photo (left) + paragraph (right, justified)
     const fpW = 120;
     const fpH = 150;
-    drawPhoto(photosByPage[field.key], contentLeft, sy, fpW, fpH);
+    drawPhoto(photosByPage[field.key], contentLeft, sy, fpW, fpH, photoDims[field.key]);
 
     const textX = contentLeft + fpW + 18;
     const textW = contentRight - textX;
@@ -291,12 +332,27 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     const maxLines = Math.max(0, Math.floor(availTextH / lineH));
     const shown = lines.slice(0, maxLines);
     let ty = sy + 10;
+    const spaceW = doc.getTextWidth(" ");
     shown.forEach((ln, i) => {
       const isLast = i === shown.length - 1;
-      if (isLast) {
-        doc.text(ln, textX, ty);
+      const words = ln.split(" ").filter((w) => w.length > 0);
+      // Manually justify: distribute the leftover width evenly between words.
+      // The last line (and single-word lines) stay left-aligned.
+      if (!isLast && words.length > 1) {
+        const wordsW = words.reduce((s, w) => s + doc.getTextWidth(w), 0);
+        const gap = (textW - wordsW) / (words.length - 1);
+        // Guard against overly wide gaps from anomalous short lines.
+        if (gap > 0 && gap < spaceW * 6) {
+          let wx = textX;
+          words.forEach((w) => {
+            doc.text(w, wx, ty);
+            wx += doc.getTextWidth(w) + gap;
+          });
+        } else {
+          doc.text(ln, textX, ty);
+        }
       } else {
-        doc.text(ln, textX, ty, { align: "justify", maxWidth: textW });
+        doc.text(ln, textX, ty);
       }
       ty += lineH;
     });
