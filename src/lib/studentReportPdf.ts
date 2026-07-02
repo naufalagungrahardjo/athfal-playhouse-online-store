@@ -88,6 +88,15 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
   const margin = 36;
   const cardInset = 22;
 
+  // Pre-measure every photo's natural dimensions so we can draw them with the
+  // correct aspect ratio (contain-fit) inside their frames.
+  const photoDims: Record<string, { w: number; h: number }> = {};
+  await Promise.all(
+    Object.entries(photosByPage).map(async ([key, url]) => {
+      if (url) photoDims[key] = await measureImage(url);
+    })
+  );
+
   // Draws the full-page theme background + a translucent white reading panel.
   const paintBackground = () => {
     if (themeDataUrl) {
