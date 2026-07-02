@@ -197,7 +197,7 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
   // Photo (top-right)
   const photoW = 110;
   const photoH = 130;
-  drawPhoto(photosByPage["summary"], contentRight - photoW, y, photoW, photoH);
+  drawPhoto(photosByPage["summary"], contentRight - photoW, y, photoW, photoH, photoDims["summary"]);
 
   // Student name + date (left)
   doc.setFont("helvetica", "bold");
