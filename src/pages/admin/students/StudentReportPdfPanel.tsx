@@ -19,6 +19,8 @@ type Props = {
   fields: ReportFieldPage[];
   /** All report fields (key + label), regardless of whether text was written — used to render a photo upload slot for every page. */
   allFields: { key: string; label: string }[];
+  /** Class / program name shown on the default cover page. */
+  className?: string;
 };
 
 // Page 1 uses the "summary" key; each descriptive field is its own page.
@@ -75,10 +77,11 @@ const urlToDataUrl = async (url: string): Promise<string> => {
   }
 };
 
-export default function StudentReportPdfPanel({ studentId, studentName, summary, fields, allFields }: Props) {
+export default function StudentReportPdfPanel({ studentId, studentName, summary, fields, allFields, className }: Props) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [themeUrl, setThemeUrl] = useState("");
+  const [coverUrl, setCoverUrl] = useState("");
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [generating, setGenerating] = useState(false);
   // White reading-panel opacity (0 = fully transparent, 1 = solid white). Default 90%.
@@ -92,12 +95,14 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [{ data: theme }, { data: studentPhotos }] = await Promise.all([
+      const [{ data: theme }, { data: cover }, { data: studentPhotos }] = await Promise.all([
         supabase.from("student_report_assets").select("image_url").eq("scope", "theme").maybeSingle(),
+        supabase.from("student_report_assets").select("image_url").eq("scope", "cover").maybeSingle(),
         supabase.from("student_report_assets").select("page_key,image_url").eq("scope", "photo").eq("student_id", studentId),
       ]);
       if (cancelled) return;
       setThemeUrl(theme?.image_url ? `${stripCacheBuster(theme.image_url)}?t=${Date.now()}` : "");
+      setCoverUrl(cover?.image_url ? `${stripCacheBuster(cover.image_url)}?t=${Date.now()}` : "");
       const map: Record<string, string> = {};
       (studentPhotos || []).forEach((r: any) => { if (r.page_key) map[r.page_key] = `${stripCacheBuster(r.image_url)}?t=${Date.now()}`; });
       setPhotos(map);
@@ -117,6 +122,18 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
     toast({ title: "Saved", description: url ? "Background theme updated." : "Background theme removed." });
   }, [toast]);
 
+  const saveCover = useCallback(async (url: string) => {
+    const cleanUrl = stripCacheBuster(url);
+    const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "cover");
+    if (deleteError) throw deleteError;
+    if (cleanUrl) {
+      const { error } = await supabase.from("student_report_assets").insert({ scope: "cover", image_url: cleanUrl });
+      if (error) throw error;
+    }
+    setCoverUrl(url);
+    toast({ title: "Saved", description: url ? "Custom cover updated — it now fully replaces the default cover." : "Custom cover removed — using the default cover design." });
+  }, [toast]);
+
   const savePhoto = useCallback(async (pageKey: string, url: string) => {
     const cleanUrl = stripCacheBuster(url);
     const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "photo").eq("student_id", studentId).eq("page_key", pageKey);
@@ -133,6 +150,7 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
     setGenerating(true);
     try {
       const themeDataUrl = themeUrl ? await urlToDataUrl(themeUrl) : null;
+      const coverDataUrl = coverUrl ? await urlToDataUrl(coverUrl) : null;
       const photosByPage: Record<string, string | null> = {};
       await Promise.all(
         photoPages.map(async (p) => {
@@ -152,6 +170,8 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
         summary,
         fields: pdfFields,
         themeDataUrl,
+        coverDataUrl,
+        className,
         photosByPage,
         cardOpacity,
       });
@@ -209,6 +229,14 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
                 onChange={saveTheme}
                 label="Background Theme (applies to every page & every student)"
                 hint="Upload a kid-friendly PNG/JPG. Recommended A4 portrait ratio (e.g. 1240×1754). Leave empty for the default theme."
+              />
+            </div>
+            <div className="rounded-lg border p-4 bg-muted/30">
+              <ImageUpload
+                value={coverUrl}
+                onChange={saveCover}
+                label="Custom Front Cover (applies to every student)"
+                hint="Optional. Upload a full A4 portrait design (e.g. 1240×1754). When set, it FULLY replaces the default cover — the default class name / 'Student Report' design will not be used. Leave empty to keep the default kid-friendly cover."
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
