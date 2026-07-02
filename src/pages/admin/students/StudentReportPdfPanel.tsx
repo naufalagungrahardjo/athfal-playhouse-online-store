@@ -19,6 +19,8 @@ type Props = {
   fields: ReportFieldPage[];
   /** All report fields (key + label), regardless of whether text was written — used to render a photo upload slot for every page. */
   allFields: { key: string; label: string }[];
+  /** Class / program name shown on the default cover page. */
+  className?: string;
 };
 
 // Page 1 uses the "summary" key; each descriptive field is its own page.
