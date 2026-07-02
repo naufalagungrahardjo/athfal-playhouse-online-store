@@ -318,7 +318,7 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     // Photo (left) + paragraph (right, justified)
     const fpW = 120;
     const fpH = 150;
-    drawPhoto(photosByPage[field.key], contentLeft, sy, fpW, fpH);
+    drawPhoto(photosByPage[field.key], contentLeft, sy, fpW, fpH, photoDims[field.key]);
 
     const textX = contentLeft + fpW + 18;
     const textW = contentRight - textX;
@@ -332,12 +332,27 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     const maxLines = Math.max(0, Math.floor(availTextH / lineH));
     const shown = lines.slice(0, maxLines);
     let ty = sy + 10;
+    const spaceW = doc.getTextWidth(" ");
     shown.forEach((ln, i) => {
       const isLast = i === shown.length - 1;
-      if (isLast) {
-        doc.text(ln, textX, ty);
+      const words = ln.split(" ").filter((w) => w.length > 0);
+      // Manually justify: distribute the leftover width evenly between words.
+      // The last line (and single-word lines) stay left-aligned.
+      if (!isLast && words.length > 1) {
+        const wordsW = words.reduce((s, w) => s + doc.getTextWidth(w), 0);
+        const gap = (textW - wordsW) / (words.length - 1);
+        // Guard against overly wide gaps from anomalous short lines.
+        if (gap > 0 && gap < spaceW * 6) {
+          let wx = textX;
+          words.forEach((w) => {
+            doc.text(w, wx, ty);
+            wx += doc.getTextWidth(w) + gap;
+          });
+        } else {
+          doc.text(ln, textX, ty);
+        }
       } else {
-        doc.text(ln, textX, ty, { align: "justify", maxWidth: textW });
+        doc.text(ln, textX, ty);
       }
       ty += lineH;
     });
