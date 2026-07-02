@@ -47,6 +47,20 @@ const detectFormat = (dataUrl: string): "PNG" | "JPEG" => {
   return "PNG";
 };
 
+// Measure the natural pixel dimensions of an image data URL so photos can be
+// drawn with their real aspect ratio (contain-fit) instead of being stretched.
+const measureImage = (dataUrl: string): Promise<{ w: number; h: number }> =>
+  new Promise((resolve) => {
+    try {
+      const img = new Image();
+      img.onload = () => resolve({ w: img.naturalWidth || 1, h: img.naturalHeight || 1 });
+      img.onerror = () => resolve({ w: 1, h: 1 });
+      img.src = dataUrl;
+    } catch {
+      resolve({ w: 1, h: 1 });
+    }
+  });
+
 const formatDate = (d: string) => {
   try {
     return new Date(d).toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
