@@ -255,49 +255,80 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
   doc.setTextColor(...BRAND.muted);
   doc.text(`${businessName} — athfalplayhouse.com`, pageW / 2, pageH - cardInset - 10, { align: "center" });
 
-  // ============ FIELD PAGES ============
-  fields.forEach((field) => {
-    doc.addPage();
-    paintBackground();
-    let fy = cardInset + 44;
+  // ============ FIELD PAGES (two report fields per page) ============
+  // Draws a single report field (title bar + photo on the left + justified
+  // paragraph on the right) inside a vertical segment.
+  const drawFieldSegment = (field: ReportFieldPage, segTop: number, segHeight: number) => {
+    let sy = segTop;
 
     // Field title bar
+    const titleH = 30;
     doc.setFillColor(...BRAND.pink);
-    doc.roundedRect(contentLeft, fy, contentWidth, 36, 8, 8, "F");
+    doc.roundedRect(contentLeft, sy, contentWidth, titleH, 8, 8, "F");
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(15);
+    doc.setFontSize(13);
     doc.setTextColor(255, 255, 255);
-    doc.text(field.label, contentLeft + 16, fy + 23);
+    doc.text(field.label, contentLeft + 14, sy + 20);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8.5);
-    doc.text(studentName, contentRight - 16, fy + 23, { align: "right" });
-    fy += 36 + 24;
+    doc.setFontSize(8);
+    doc.text(studentName, contentRight - 14, sy + 20, { align: "right" });
+    sy += titleH + 16;
 
-    // Photo (centered)
-    const fpW = 130;
+    // Photo (left) + paragraph (right, justified)
+    const fpW = 120;
     const fpH = 150;
-    drawPhoto(photosByPage[field.key], pageW / 2 - fpW / 2, fy, fpW, fpH);
-    fy += fpH + 28;
+    drawPhoto(photosByPage[field.key], contentLeft, sy, fpW, fpH);
 
-    // Report content
+    const textX = contentLeft + fpW + 18;
+    const textW = contentRight - textX;
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setTextColor(...BRAND.text);
-    const lines = doc.splitTextToSize(field.content || "—", contentWidth);
-    const lineH = 17;
-    const maxY = pageH - cardInset - 30;
-    lines.forEach((ln: string) => {
-      if (fy > maxY) return; // avoid overflow off the card
-      doc.text(ln, contentLeft, fy);
-      fy += lineH;
+    const lines: string[] = doc.splitTextToSize(field.content || "—", textW);
+    const lineH = 14;
+    // Text may run taller than the photo; clamp to the segment's usable height.
+    const availTextH = segTop + segHeight - sy;
+    const maxLines = Math.max(0, Math.floor(availTextH / lineH));
+    const shown = lines.slice(0, maxLines);
+    let ty = sy + 10;
+    shown.forEach((ln, i) => {
+      const isLast = i === shown.length - 1;
+      if (isLast) {
+        doc.text(ln, textX, ty);
+      } else {
+        doc.text(ln, textX, ty, { align: "justify", maxWidth: textW });
+      }
+      ty += lineH;
     });
+  };
 
-    // Footer
+  const drawPageFooter = () => {
     doc.setFont("helvetica", "italic");
     doc.setFontSize(8);
     doc.setTextColor(...BRAND.muted);
     doc.text(`${businessName} — athfalplayhouse.com`, pageW / 2, pageH - cardInset - 10, { align: "center" });
-  });
+  };
+
+  // Group fields into pairs (top + bottom segment per page).
+  const regionTop = cardInset + 36;
+  const regionBottom = pageH - cardInset - 26;
+  const regionGap = 18;
+  const segH = (regionBottom - regionTop - regionGap) / 2;
+
+  for (let i = 0; i < fields.length; i += 2) {
+    doc.addPage();
+    paintBackground();
+    drawFieldSegment(fields[i], regionTop, segH);
+    if (fields[i + 1]) {
+      // Divider between the two segments.
+      doc.setDrawColor(...BRAND.peach);
+      doc.setLineWidth(1);
+      const midY = regionTop + segH + regionGap / 2;
+      doc.line(contentLeft, midY, contentRight, midY);
+      drawFieldSegment(fields[i + 1], regionTop + segH + regionGap, segH);
+    }
+    drawPageFooter();
+  }
 
   doc.save(`Laporan_${studentName.replace(/\s+/g, "_")}.pdf`);
 };
