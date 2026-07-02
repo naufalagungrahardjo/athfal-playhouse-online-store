@@ -129,8 +129,17 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     doc.rect(cardInset, cardInset + 8, pageW - cardInset * 2, 6, "F");
   };
 
-  // Draws a framed student photo box. Returns the bottom Y of the frame.
-  const drawPhoto = (photo: string | null | undefined, x: number, y: number, w: number, h: number) => {
+  // Draws a framed student photo box. The photo is scaled to fit inside the
+  // frame while preserving its aspect ratio (contain-fit) and centered, so it
+  // is never stretched. Returns the bottom Y of the frame.
+  const drawPhoto = (
+    photo: string | null | undefined,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    dims?: { w: number; h: number }
+  ) => {
     // Frame
     doc.setFillColor(...BRAND.lightPeach);
     doc.setDrawColor(...BRAND.pink);
@@ -139,7 +148,16 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     if (photo) {
       try {
         const pad = 5;
-        doc.addImage(photo, detectFormat(photo), x + pad, y + pad, w - pad * 2, h - pad * 2, undefined, "FAST");
+        const boxW = w - pad * 2;
+        const boxH = h - pad * 2;
+        const nat = dims && dims.w > 0 && dims.h > 0 ? dims : { w: boxW, h: boxH };
+        // Contain-fit: scale so the whole image fits, keeping aspect ratio.
+        const scale = Math.min(boxW / nat.w, boxH / nat.h);
+        const drawW = nat.w * scale;
+        const drawH = nat.h * scale;
+        const dx = x + pad + (boxW - drawW) / 2;
+        const dy = y + pad + (boxH - drawH) / 2;
+        doc.addImage(photo, detectFormat(photo), dx, dy, drawW, drawH, undefined, "FAST");
       } catch {
         throw new Error("Student photo could not be added to the PDF. Please re-upload the photo and try again.");
       }
