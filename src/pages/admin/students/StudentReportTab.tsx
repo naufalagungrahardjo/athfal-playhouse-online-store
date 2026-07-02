@@ -339,6 +339,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
             summary={pdfSummary}
             fields={pdfFields}
             allFields={DESCRIPTIVE_FIELDS.map(f => ({ key: f.key, label: f.label }))}
+            className={Array.from(new Set(pdfSummary.map(s => s.programName).filter(n => n && n !== "—"))).join(" • ") || undefined}
           />
           <Card>
             <CardContent className="pt-4">
