@@ -34,6 +34,10 @@ export interface StudentReportPdfInput {
   fields: ReportFieldPage[];
   /** Full-page background theme image (data URL). */
   themeDataUrl?: string | null;
+  /** Full-page custom cover image (data URL). When set, it fully replaces the default cover design. */
+  coverDataUrl?: string | null;
+  /** Class / program name shown on the default cover page. */
+  className?: string;
   /** Map of page key -> student photo (data URL). Page 1 uses key "summary". */
   photosByPage: Record<string, string | null | undefined>;
   businessName?: string;
@@ -76,6 +80,8 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     summary,
     fields,
     themeDataUrl,
+    coverDataUrl,
+    className,
     photosByPage,
     businessName = "Athfal Playhouse",
     logoDataUrl,
@@ -173,6 +179,147 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
   const contentLeft = cardInset + 24;
   const contentRight = pageW - cardInset - 24;
   const contentWidth = contentRight - contentLeft;
+
+  // ============ COVER PAGE ============
+  // If a custom cover image is uploaded, it fully replaces the default design.
+  const drawCoverPage = () => {
+    if (coverDataUrl) {
+      try {
+        doc.addImage(coverDataUrl, detectFormat(coverDataUrl), 0, 0, pageW, pageH, undefined, "FAST");
+        return;
+      } catch { /* fall through to default cover */ }
+    }
+
+    // --- Default kid-friendly, faceless cover ---
+    // Soft sky background
+    doc.setFillColor(...BRAND.lightPeach);
+    doc.rect(0, 0, pageW, pageH, "F");
+    doc.setFillColor(210, 231, 233); // pale sky
+    doc.rect(0, 0, pageW, pageH * 0.62, "F");
+
+    // Fluffy clouds (faceless, just overlapping circles)
+    const cloud = (cx: number, cy: number, s: number) => {
+      doc.setFillColor(255, 255, 255);
+      doc.circle(cx, cy, 16 * s, "F");
+      doc.circle(cx + 20 * s, cy + 4 * s, 20 * s, "F");
+      doc.circle(cx + 45 * s, cy, 15 * s, "F");
+      doc.rect(cx, cy, 45 * s, 14 * s, "F");
+    };
+    cloud(pageW * 0.12, pageH * 0.12, 1.1);
+    cloud(pageW * 0.62, pageH * 0.08, 0.9);
+    cloud(pageW * 0.72, pageH * 0.24, 1.3);
+
+    // Sun (faceless)
+    doc.setFillColor(...BRAND.yellow);
+    doc.circle(pageW * 0.85, pageH * 0.14, 26, "F");
+
+    // Scattered stars
+    const star = (cx: number, cy: number, r: number, col: [number, number, number]) => {
+      doc.setFillColor(...col);
+      for (let i = 0; i < 5; i++) {
+        const a = (Math.PI * 2 * i) / 5 - Math.PI / 2;
+        const a2 = a + Math.PI / 5;
+        doc.triangle(
+          cx, cy,
+          cx + Math.cos(a) * r, cy + Math.sin(a) * r,
+          cx + Math.cos(a2) * r * 0.45, cy + Math.sin(a2) * r * 0.45,
+          "F"
+        );
+      }
+    };
+    star(pageW * 0.2, pageH * 0.32, 10, BRAND.yellow);
+    star(pageW * 0.9, pageH * 0.4, 8, BRAND.pink);
+    star(pageW * 0.08, pageH * 0.5, 7, BRAND.teal);
+
+    // Rolling grass hills at the bottom
+    doc.setFillColor(...BRAND.teal);
+    doc.roundedRect(-40, pageH * 0.66, pageW * 0.7, pageH, 120, 120, "F");
+    doc.setFillColor(...BRAND.green);
+    doc.roundedRect(pageW * 0.35, pageH * 0.72, pageW * 0.8, pageH, 140, 140, "F");
+
+    // Faceless kid balloons (round heads, triangle bodies — no faces)
+    const kid = (cx: number, baseY: number, bodyCol: [number, number, number], skin: [number, number, number]) => {
+      // body
+      doc.setFillColor(...bodyCol);
+      doc.triangle(cx, baseY - 46, cx - 22, baseY, cx + 22, baseY, "F");
+      // head
+      doc.setFillColor(...skin);
+      doc.circle(cx, baseY - 56, 15, "F");
+    };
+    kid(pageW * 0.28, pageH * 0.9, BRAND.pink, [244, 214, 190]);
+    kid(pageW * 0.7, pageH * 0.93, BRAND.yellow, [232, 200, 170]);
+
+    // Central title card
+    const cardW = pageW - 120;
+    const cardX = 60;
+    const cardY = pageH * 0.34;
+    const cardH = 210;
+    try {
+      // @ts-ignore - GState exists at runtime
+      doc.setGState(new (doc as any).GState({ opacity: 0.92 }));
+    } catch { /* noop */ }
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(cardX, cardY, cardW, cardH, 20, 20, "F");
+    try {
+      // @ts-ignore
+      doc.setGState(new (doc as any).GState({ opacity: 1 }));
+    } catch { /* noop */ }
+    // top accent band
+    doc.setFillColor(...BRAND.pink);
+    doc.roundedRect(cardX, cardY, cardW, 12, 20, 20, "F");
+    doc.setFillColor(255, 255, 255);
+    doc.rect(cardX, cardY + 8, cardW, 8, "F");
+
+    const cxCenter = pageW / 2;
+    let cy = cardY + 56;
+
+    // Logo
+    if (logoDataUrl) {
+      try {
+        doc.addImage(logoDataUrl, detectFormat(logoDataUrl), cxCenter - 20, cardY + 18, 40, 40);
+        cy = cardY + 74;
+      } catch { /* noop */ }
+    }
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(34);
+    doc.setTextColor(...BRAND.pink);
+    doc.text("STUDENT REPORT", cxCenter, cy, { align: "center" });
+    cy += 22;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.setTextColor(...BRAND.green);
+    doc.text("Laporan Perkembangan Siswa", cxCenter, cy, { align: "center" });
+    cy += 34;
+
+    // Class name pill
+    if (className) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      const label = className;
+      const pillW = Math.min(cardW - 60, doc.getTextWidth(label) + 44);
+      doc.setFillColor(...BRAND.peach);
+      doc.roundedRect(cxCenter - pillW / 2, cy - 15, pillW, 26, 13, 13, "F");
+      doc.setTextColor(...BRAND.text);
+      doc.text(label, cxCenter, cy + 3, { align: "center" });
+      cy += 40;
+    }
+
+    // Student name
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.setTextColor(...BRAND.green);
+    doc.text(studentName, cxCenter, cy, { align: "center" });
+
+    // Date + business at the very bottom
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(255, 255, 255);
+    doc.text(`${businessName} — ${formatDate(generatedDate)}`, cxCenter, pageH - 30, { align: "center" });
+  };
+
+  drawCoverPage();
+  doc.addPage();
 
   // ============ PAGE 1 — Attendance Summary ============
   paintBackground();
