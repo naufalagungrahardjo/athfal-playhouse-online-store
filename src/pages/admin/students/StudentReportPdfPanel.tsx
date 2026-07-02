@@ -150,6 +150,7 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
     setGenerating(true);
     try {
       const themeDataUrl = themeUrl ? await urlToDataUrl(themeUrl) : null;
+      const coverDataUrl = coverUrl ? await urlToDataUrl(coverUrl) : null;
       const photosByPage: Record<string, string | null> = {};
       await Promise.all(
         photoPages.map(async (p) => {
@@ -169,6 +170,8 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
         summary,
         fields: pdfFields,
         themeDataUrl,
+        coverDataUrl,
+        className,
         photosByPage,
         cardOpacity,
       });
