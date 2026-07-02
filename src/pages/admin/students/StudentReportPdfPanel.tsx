@@ -231,6 +231,14 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
                 hint="Upload a kid-friendly PNG/JPG. Recommended A4 portrait ratio (e.g. 1240×1754). Leave empty for the default theme."
               />
             </div>
+            <div className="rounded-lg border p-4 bg-muted/30">
+              <ImageUpload
+                value={coverUrl}
+                onChange={saveCover}
+                label="Custom Front Cover (applies to every student)"
+                hint="Optional. Upload a full A4 portrait design (e.g. 1240×1754). When set, it FULLY replaces the default cover — the default class name / 'Student Report' design will not be used. Leave empty to keep the default kid-friendly cover."
+              />
+            </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {photoPages.map((p) => (
                 <div key={p.key} className="rounded-lg border p-4">
