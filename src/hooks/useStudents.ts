@@ -105,7 +105,13 @@ export function useStudents() {
 
   // Student CRUD
   const updateStudent = async (id: string, name: string) => {
-    const { error } = await supabase.from("students" as any).update({ name, updated_at: new Date().toISOString() } as any).eq("id", id);
+    // Use the rename RPC so the student's name is also synced onto the matching
+    // order child names. This prevents auto-enrollment/sync from re-creating a
+    // duplicate student under the old name.
+    const { error } = await supabase.rpc("rename_student" as any, {
+      p_student_id: id,
+      p_new_name: name,
+    });
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Student updated" });
     fetchAll();
