@@ -50,6 +50,8 @@ export default function StudentReportTab({ programs, students, enrollments, atte
   const [finalReports, setFinalReports] = useState<Record<string, string>>({});
   const [savedReports, setSavedReports] = useState<Record<string, string>>({});
   const [savingField, setSavingField] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [savingAll, setSavingAll] = useState(false);
   const { toast } = useToast();
   const { datesForProgram } = useProgramSessionDates();
 
@@ -90,6 +92,40 @@ export default function StudentReportTab({ programs, students, enrollments, atte
       setSavingField(null);
     }
   }, [selectedStudentId, finalReports, toast]);
+
+  // Save every changed final-report field at once (used by the full-page editor).
+  const saveAllFinalReports = useCallback(async () => {
+    if (!selectedStudentId) return;
+    setSavingAll(true);
+    try {
+      const changed = DESCRIPTIVE_FIELDS.filter(
+        f => (finalReports[f.key] ?? "") !== (savedReports[f.key] ?? "")
+      );
+      if (changed.length === 0) {
+        toast({ title: "No changes", description: "Everything is already saved." });
+        return;
+      }
+      const rows = changed.map(f => ({
+        student_id: selectedStudentId,
+        field_key: f.key,
+        content: finalReports[f.key] ?? "",
+      }));
+      const { error } = await supabase
+        .from("student_final_reports")
+        .upsert(rows, { onConflict: "student_id,field_key" });
+      if (error) throw error;
+      setSavedReports(prev => {
+        const next = { ...prev };
+        changed.forEach(f => { next[f.key] = finalReports[f.key] ?? ""; });
+        return next;
+      });
+      toast({ title: "Saved", description: `Saved ${changed.length} report field(s).` });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to save", variant: "destructive" });
+    } finally {
+      setSavingAll(false);
+    }
+  }, [selectedStudentId, finalReports, savedReports, toast]);
 
   // Map teacher email -> display name (from public.users table)
   const [teacherNames, setTeacherNames] = useState<Record<string, string>>({});
