@@ -103,6 +103,10 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     })
   );
 
+  // Measure the logo so it can be drawn with its real aspect ratio (contain-fit)
+  // instead of being squashed into a square.
+  const logoDims = logoDataUrl ? await measureImage(logoDataUrl) : null;
+
   // Draws the full-page theme background + a translucent white reading panel.
   const paintBackground = () => {
     if (themeDataUrl) {
