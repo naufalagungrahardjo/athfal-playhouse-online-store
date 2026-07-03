@@ -1725,6 +1725,7 @@ export type Database = {
           id: string
           image_url: string
           page_key: string | null
+          program_id: string | null
           scope: string
           student_id: string | null
           updated_at: string
@@ -1734,6 +1735,7 @@ export type Database = {
           id?: string
           image_url: string
           page_key?: string | null
+          program_id?: string | null
           scope: string
           student_id?: string | null
           updated_at?: string
@@ -1743,11 +1745,19 @@ export type Database = {
           id?: string
           image_url?: string
           page_key?: string | null
+          program_id?: string | null
           scope?: string
           student_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "student_report_assets_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "class_programs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "student_report_assets_student_id_fkey"
             columns: ["student_id"]
