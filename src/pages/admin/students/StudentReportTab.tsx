@@ -418,10 +418,16 @@ export default function StudentReportTab({ programs, students, enrollments, atte
             <CardContent className="pt-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold">Descriptive Report</h3>
-                <Button variant="outline" size="sm" onClick={generateSummary} disabled={summaryLoading}>
-                  {summaryLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-                  AI Summary
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="default" size="sm" onClick={() => setEditorOpen(true)}>
+                    <Maximize2 className="h-4 w-4 mr-1" />
+                    Edit Final Report
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={generateSummary} disabled={summaryLoading}>
+                    {summaryLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                    AI Summary
+                  </Button>
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <Table>
