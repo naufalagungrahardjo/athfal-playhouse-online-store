@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { registerReportFonts } from "./reportFonts";
 
 // Athfal brand colors (RGB)
 const BRAND = {
