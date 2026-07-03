@@ -457,6 +457,24 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     doc.text(String((totals as any)[k]), cx + c.w / 2 - 6, y + 14, { align: "center" });
     cx += c.w;
   });
+  y += rowH;
+
+  // ---- A5-landscape documentation photo (below the attendance summary) ----
+  // A5 landscape aspect ratio is 210mm : 148mm ≈ 1.4189.
+  const A5_RATIO = 210 / 148;
+  const landTop = y + 26;
+  const footerY = pageH - cardInset - 10;
+  const availLandH = footerY - 14 - landTop;
+  if (availLandH > 60) {
+    let landW = contentWidth;
+    let landH = landW / A5_RATIO;
+    if (landH > availLandH) {
+      landH = availLandH;
+      landW = landH * A5_RATIO;
+    }
+    const landX = contentLeft + (contentWidth - landW) / 2;
+    drawPhoto(photosByPage["summary_landscape"], landX, landTop, landW, landH, photoDims["summary_landscape"]);
+  }
 
   // Footer
   doc.setFont("helvetica", "italic");
