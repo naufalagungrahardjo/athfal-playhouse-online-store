@@ -84,6 +84,16 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
     );
   };
 
+  // The record that is actually displayed / counted for a (enrollment, date):
+  // the one with the highest id across ALL teachers. Editing must target this
+  // same record, otherwise the change lands on a different teacher's row and
+  // never shows in the table or summary.
+  const findDisplayRecord = (enrollmentId: string, dateStr: string) => {
+    return attendance
+      .filter(a => a.enrollment_id === enrollmentId && (((a as any).session_date === dateStr) || a.date === dateStr))
+      .sort((a, b) => (b.id > a.id ? 1 : -1))[0];
+  };
+
   const getFieldValue = (enrollmentId: string, dateStr: string, field: string) => {
     const key = getKey(enrollmentId, dateStr);
     if (edits[key] && field in edits[key]) return (edits[key] as any)[field];
@@ -133,36 +143,47 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
     const progEnrollments = enrollments.filter(e => e.program_id === programId);
     let hadError = false;
     for (const enr of progEnrollments) {
+      const key = getKey(enr.id, dateStr);
+      const edited = edits[key];
+      // Only persist rows the user actually changed. This avoids creating
+      // duplicate per-teacher records for untouched students on every save.
+      if (!edited || Object.keys(edited).length === 0) continue;
+
       const status = getFieldValue(enr.id, dateStr, "attendance_status");
       const hasDescriptive = DESCRIPTIVE_FIELDS.some(d => {
         const v = getFieldValue(enr.id, dateStr, d.key);
         return v && String(v).trim() !== "";
       });
       if (status === "none" && !hasDescriptive) {
+        // Clear the attendance for this student+session across all teachers so
+        // the displayed record is actually removed.
         await supabase
           .from("student_attendance" as any)
           .delete()
           .eq("enrollment_id", enr.id)
-          .eq("session_date", dateStr)
-          .eq("teacher_email", teacherEmail);
+          .or(`session_date.eq.${dateStr},date.eq.${dateStr}`);
         continue;
       }
-      // Manual upsert keyed by (enrollment, session_date, teacher).
-      // CRITICAL: preserve existing meeting_number to avoid violating the
-      // unique (enrollment_id, meeting_number, teacher_email) constraint.
-      const existing = findAttendance(enr.id, dateStr, true);
-      const meetingNumber = existing?.meeting_number ?? getSessionNumber(programId, dateStr) ?? 0;
-      const record = buildRecord(enr.id, dateStr, meetingNumber) as any;
-      if (existing) {
+      // Apply the edit to the SAME record that is displayed/counted (highest id
+      // across all teachers). Falls back to inserting a new record only when no
+      // record exists yet for this student+session.
+      const display = findDisplayRecord(enr.id, dateStr);
+      if (display) {
+        // Patch only the fields the admin actually edited so we don't clobber
+        // other fields on another teacher's record. meeting_number is left
+        // untouched to avoid the unique (enrollment, meeting, teacher) conflict.
+        const patch: any = { ...edited, updated_at: new Date().toISOString() };
         const { error } = await supabase
           .from("student_attendance" as any)
-          .update({ ...record, updated_at: new Date().toISOString() })
-          .eq("id", existing.id);
+          .update(patch)
+          .eq("id", display.id);
         if (error) {
           hadError = true;
           toast({ title: "Save failed", description: error.message, variant: "destructive" });
         }
       } else {
+        const meetingNumber = getSessionNumber(programId, dateStr) ?? 0;
+        const record = buildRecord(enr.id, dateStr, meetingNumber) as any;
         const { error } = await supabase.from("student_attendance" as any).insert(record);
         if (error) {
           hadError = true;
