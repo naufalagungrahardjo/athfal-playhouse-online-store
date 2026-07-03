@@ -90,6 +90,8 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
   } = input;
 
   const doc = new jsPDF({ unit: "pt", format: "a4" });
+  // Register custom brand fonts: Fredoka for the cover, Quicksand for content.
+  registerReportFonts(doc);
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const margin = 36;
