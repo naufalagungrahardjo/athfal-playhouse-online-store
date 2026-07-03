@@ -201,6 +201,11 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
   const downloadPdf = async () => {
     setGenerating(true);
     try {
+      // Restrict the attendance summary to the selected program so each
+      // program produces its own distinct report.
+      const programSummary = selectedProgram
+        ? summary.filter((s) => s.programName === selectedProgram.name)
+        : summary;
       const themeDataUrl = themeUrl ? await urlToDataUrl(themeUrl) : null;
       const coverDataUrl = coverUrl ? await urlToDataUrl(coverUrl) : null;
       const logoDataUrl = logoUrl ? await urlToDataUrl(logoUrl) : null;
@@ -222,12 +227,12 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
       await generateStudentReportPdf({
         studentName,
         generatedDate: new Date().toISOString(),
-        summary,
+        summary: programSummary.length ? programSummary : summary,
         fields: pdfFields,
         themeDataUrl,
         coverDataUrl,
         logoDataUrl,
-        className,
+        className: selectedProgram?.name,
         photosByPage,
         cardOpacity,
       });
