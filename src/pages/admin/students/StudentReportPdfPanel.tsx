@@ -306,32 +306,32 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
               <ImageUpload
                 value={themeUrl}
                 onChange={saveTheme}
-                label="Background Theme (applies to every page & every student)"
-                hint="Upload a kid-friendly PNG/JPG. Recommended A4 portrait ratio (e.g. 1240×1754). Leave empty for the default theme."
+                label={`Background Theme — applies to every student in ${programLabel}`}
+                hint="Upload a kid-friendly PNG/JPG. Recommended A4 portrait ratio (e.g. 1240×1754). Only affects reports for the selected program."
               />
             </div>
             <div className="rounded-lg border p-4 bg-muted/30">
               <ImageUpload
                 value={logoUrl}
                 onChange={saveLogo}
-                label="Business Logo (shown centered above the title on the default cover)"
-                hint="Upload your business logo (PNG with transparent background works best). It is centered and scaled proportionally above the 'Student Report' title. Applies to every student. Only used on the default cover (not when a custom front cover is set)."
+                label={`Business Logo — applies to ${programLabel}`}
+                hint="Shown centered above the title on the default cover. PNG with transparent background works best. Only affects reports for the selected program (not when a custom front cover is set)."
               />
             </div>
             <div className="rounded-lg border p-4 bg-muted/30">
               <ImageUpload
                 value={coverUrl}
                 onChange={saveCover}
-                label="Custom Front Cover (applies to every student)"
-                hint="Optional. Upload a full A4 portrait design (e.g. 1240×1754). When set, it FULLY replaces the default cover — the default class name / 'Student Report' design will not be used. Leave empty to keep the default kid-friendly cover."
+                label={`Custom Front Cover — applies to ${programLabel}`}
+                hint="Optional. Upload a full A4 portrait design (e.g. 1240×1754). When set, it FULLY replaces the default cover. Only affects reports for the selected program."
               />
             </div>
             <div className="rounded-lg border p-4 bg-muted/30">
               <ImageUpload
                 value={landscapeUrl}
                 onChange={saveLandscape}
-                label="Page 1 Documentation Photo (A5 landscape) — applies to every student"
-                hint="Shown on page 1 below the attendance summary. Best as an A5 landscape image (e.g. 1748×1240, ratio ~1.42:1). Upload once and it is used on every student's report."
+                label={`Page 1 Documentation Photo (A5 landscape) — applies to ${programLabel}`}
+                hint="Shown on page 1 below the attendance summary. Best as an A5 landscape image (e.g. 1748×1240, ratio ~1.42:1). Only affects reports for the selected program."
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
