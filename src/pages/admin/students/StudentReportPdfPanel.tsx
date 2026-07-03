@@ -5,6 +5,7 @@ import { ImageUpload } from "@/components/ImageUpload";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, Loader2, ChevronDown, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -19,8 +20,8 @@ type Props = {
   fields: ReportFieldPage[];
   /** All report fields (key + label), regardless of whether text was written — used to render a photo upload slot for every page. */
   allFields: { key: string; label: string }[];
-  /** Class / program name shown on the default cover page. */
-  className?: string;
+  /** Programs the student is enrolled in. The report design (theme/cover/logo/landscape) is scoped per program. */
+  enrolledPrograms: { id: string; name: string }[];
 };
 
 // Page 1 uses the "summary" key; each descriptive field is its own page.
