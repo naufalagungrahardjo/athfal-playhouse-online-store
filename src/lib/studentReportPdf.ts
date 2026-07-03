@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { registerReportFonts } from "./reportFonts";
 
 // Athfal brand colors (RGB)
 const BRAND = {
@@ -89,6 +90,8 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
   } = input;
 
   const doc = new jsPDF({ unit: "pt", format: "a4" });
+  // Register custom brand fonts: Fredoka for the cover, Quicksand for content.
+  registerReportFonts(doc);
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const margin = 36;
@@ -172,7 +175,7 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
         throw new Error("Student photo could not be added to the PDF. Please re-upload the photo and try again.");
       }
     } else {
-      doc.setFont("helvetica", "italic");
+      doc.setFont("Quicksand", "normal");
       doc.setFontSize(8);
       doc.setTextColor(...BRAND.muted);
       doc.text("Foto Siswa", x + w / 2, y + h / 2, { align: "center" });
@@ -302,12 +305,12 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
       } catch { /* noop */ }
     }
 
-    doc.setFont("helvetica", "bold");
+    doc.setFont("Fredoka", "bold");
     doc.setFontSize(34);
     doc.setTextColor(...BRAND.pink);
     doc.text("STUDENT REPORT", cxCenter, cy, { align: "center" });
     cy += 22;
-    doc.setFont("helvetica", "normal");
+    doc.setFont("Fredoka", "normal");
     doc.setFontSize(12);
     doc.setTextColor(...BRAND.green);
     doc.text("Laporan Perkembangan Siswa", cxCenter, cy, { align: "center" });
@@ -315,7 +318,7 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
 
     // Class name pill
     if (className) {
-      doc.setFont("helvetica", "bold");
+      doc.setFont("Fredoka", "bold");
       doc.setFontSize(13);
       const label = className;
       const pillW = Math.min(cardW - 60, doc.getTextWidth(label) + 44);
@@ -327,13 +330,13 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     }
 
     // Student name
-    doc.setFont("helvetica", "bold");
+    doc.setFont("Fredoka", "bold");
     doc.setFontSize(20);
     doc.setTextColor(...BRAND.green);
     doc.text(studentName, cxCenter, cy, { align: "center" });
 
     // Date + business at the very bottom
-    doc.setFont("helvetica", "normal");
+    doc.setFont("Fredoka", "normal");
     doc.setFontSize(10);
     doc.setTextColor(255, 255, 255);
     doc.text(`${businessName} — ${formatDate(generatedDate)}`, cxCenter, pageH - 30, { align: "center" });
@@ -352,11 +355,11 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
       doc.addImage(logoDataUrl, detectFormat(logoDataUrl), contentLeft, y, 40, 40);
     } catch { /* noop */ }
   }
-  doc.setFont("helvetica", "bold");
+  doc.setFont("Quicksand", "bold");
   doc.setFontSize(15);
   doc.setTextColor(...BRAND.green);
   doc.text(businessName, contentLeft + (logoDataUrl ? 52 : 0), y + 18);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("Quicksand", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...BRAND.muted);
   doc.text("Laporan Perkembangan Siswa", contentLeft + (logoDataUrl ? 52 : 0), y + 33);
@@ -368,11 +371,11 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
   drawPhoto(photosByPage["summary"], contentRight - photoW, y, photoW, photoH, photoDims["summary"]);
 
   // Student name + date (left)
-  doc.setFont("helvetica", "bold");
+  doc.setFont("Quicksand", "bold");
   doc.setFontSize(22);
   doc.setTextColor(...BRAND.pink);
   doc.text(studentName, contentLeft, y + 24);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("Quicksand", "normal");
   doc.setFontSize(10);
   doc.setTextColor(...BRAND.text);
   doc.text(`Tanggal Laporan: ${formatDate(generatedDate)}`, contentLeft, y + 46);
@@ -380,7 +383,7 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
   y += photoH + 30;
 
   // Section title
-  doc.setFont("helvetica", "bold");
+  doc.setFont("Quicksand", "bold");
   doc.setFontSize(13);
   doc.setTextColor(...BRAND.green);
   doc.text("Ringkasan Kehadiran", contentLeft, y);
@@ -399,7 +402,7 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
   // Header
   doc.setFillColor(...BRAND.green);
   doc.roundedRect(contentLeft, y, contentWidth, rowH, 4, 4, "F");
-  doc.setFont("helvetica", "bold");
+  doc.setFont("Quicksand", "bold");
   doc.setFontSize(9);
   doc.setTextColor(255, 255, 255);
   let cx = contentLeft + 6;
@@ -411,7 +414,7 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
   y += rowH;
 
   // Rows
-  doc.setFont("helvetica", "normal");
+  doc.setFont("Quicksand", "normal");
   doc.setTextColor(...BRAND.text);
   const rows = summary.length ? summary : [{ programName: "—", period: "—", present: 0, absent: 0, sick_leave: 0, other_leave: 0 }];
   rows.forEach((r, i) => {
@@ -446,7 +449,7 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
   );
   doc.setFillColor(...BRAND.peach);
   doc.rect(contentLeft, y, contentWidth, rowH, "F");
-  doc.setFont("helvetica", "bold");
+  doc.setFont("Quicksand", "bold");
   doc.setFontSize(8.5);
   doc.setTextColor(...BRAND.text);
   cx = contentLeft + 6;
@@ -477,7 +480,7 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
   }
 
   // Footer
-  doc.setFont("helvetica", "italic");
+  doc.setFont("Quicksand", "normal");
   doc.setFontSize(8);
   doc.setTextColor(...BRAND.muted);
   doc.text(`${businessName} — athfalplayhouse.com`, pageW / 2, pageH - cardInset - 10, { align: "center" });
@@ -492,11 +495,11 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     const titleH = 30;
     doc.setFillColor(...BRAND.pink);
     doc.roundedRect(contentLeft, sy, contentWidth, titleH, 8, 8, "F");
-    doc.setFont("helvetica", "bold");
+    doc.setFont("Quicksand", "bold");
     doc.setFontSize(13);
     doc.setTextColor(255, 255, 255);
     doc.text(field.label, contentLeft + 14, sy + 20);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("Quicksand", "normal");
     doc.setFontSize(8);
     doc.text(studentName, contentRight - 14, sy + 20, { align: "right" });
     sy += titleH + 16;
@@ -508,7 +511,7 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
 
     const textX = contentLeft + fpW + 18;
     const textW = contentRight - textX;
-    doc.setFont("helvetica", "normal");
+    doc.setFont("Quicksand", "normal");
     doc.setTextColor(...BRAND.text);
 
     const belowGap = 12;
@@ -595,7 +598,7 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
   };
 
   const drawPageFooter = () => {
-    doc.setFont("helvetica", "italic");
+    doc.setFont("Quicksand", "normal");
     doc.setFontSize(8);
     doc.setTextColor(...BRAND.muted);
     doc.text(`${businessName} — athfalplayhouse.com`, pageW / 2, pageH - cardInset - 10, { align: "center" });
