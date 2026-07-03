@@ -250,12 +250,30 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
             <h3 className="font-semibold">A4 PDF Report</h3>
-            <p className="text-xs text-muted-foreground">Page 1 = attendance summary, then one page per report field.</p>
+            <p className="text-xs text-muted-foreground">Page 1 = attendance summary, then one page per report field. The design is set per program.</p>
           </div>
           <Button onClick={downloadPdf} disabled={generating}>
             {generating ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
             Download PDF
           </Button>
+        </div>
+
+        <div className="mt-3">
+          <Label className="text-sm">Report program (design applies to this program)</Label>
+          {enrolledPrograms.length > 0 ? (
+            <Select value={selectedProgramId} onValueChange={setSelectedProgramId}>
+              <SelectTrigger className="mt-1 max-w-md">
+                <SelectValue placeholder="Select a program" />
+              </SelectTrigger>
+              <SelectContent>
+                {enrolledPrograms.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <p className="text-xs text-muted-foreground mt-1">This student is not enrolled in any program yet.</p>
+          )}
         </div>
 
         <Collapsible open={open} onOpenChange={setOpen} className="mt-4">
