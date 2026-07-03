@@ -84,6 +84,13 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
     );
   };
 
+  // Prefer the current teacher's own row, but fall back to any teacher's row for
+  // this (enrollment, date) so descriptive content stays visible to admins and
+  // other teachers — matching how the Student Report tab reads all records.
+  const findAttendancePreferTeacher = (enrollmentId: string, dateStr: string) => {
+    return findAttendance(enrollmentId, dateStr, true) || findAttendance(enrollmentId, dateStr, false);
+  };
+
   const getFieldValue = (enrollmentId: string, dateStr: string, field: string) => {
     const key = getKey(enrollmentId, dateStr);
     if (edits[key] && field in edits[key]) return (edits[key] as any)[field];
@@ -94,7 +101,7 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
         .sort((a, b) => (b.id > a.id ? 1 : -1));
       return records.length > 0 ? records[0].attendance_status : "none";
     }
-    const existing = findAttendance(enrollmentId, dateStr, true);
+    const existing = findAttendancePreferTeacher(enrollmentId, dateStr);
     return existing ? (existing as any)[field] : "";
   };
 
@@ -150,10 +157,16 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
       // Manual upsert keyed by (enrollment, session_date, teacher).
       // CRITICAL: preserve existing meeting_number to avoid violating the
       // unique (enrollment_id, meeting_number, teacher_email) constraint.
-      const existing = findAttendance(enr.id, dateStr, true);
+      // Prefer this teacher's own row; otherwise update whichever row already
+      // holds this session's content so we don't create a duplicate row and lose
+      // the original author's attribution.
+      const existing = findAttendancePreferTeacher(enr.id, dateStr);
       const meetingNumber = existing?.meeting_number ?? getSessionNumber(programId, dateStr) ?? 0;
       const record = buildRecord(enr.id, dateStr, meetingNumber) as any;
       if (existing) {
+        // Keep the original row's teacher_email so we edit in place instead of
+        // spawning a duplicate under the current user.
+        record.teacher_email = existing.teacher_email;
         const { error } = await supabase
           .from("student_attendance" as any)
           .update({ ...record, updated_at: new Date().toISOString() })
