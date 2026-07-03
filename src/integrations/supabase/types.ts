@@ -98,6 +98,180 @@ export type Database = {
         }
         Relationships: []
       }
+      backup_attendance_20260703: {
+        Row: {
+          attendance_status: string | null
+          bahasa: string | null
+          created_at: string | null
+          date: string | null
+          enrollment_id: string | null
+          id: string | null
+          kemandirian: string | null
+          kognisi: string | null
+          meeting_number: number | null
+          motorik_halus: string | null
+          motorik_kasar: string | null
+          session_date: string | null
+          sosial_emosional: string | null
+          tahfidz: string | null
+          tahsin: string | null
+          teacher_email: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          attendance_status?: string | null
+          bahasa?: string | null
+          created_at?: string | null
+          date?: string | null
+          enrollment_id?: string | null
+          id?: string | null
+          kemandirian?: string | null
+          kognisi?: string | null
+          meeting_number?: number | null
+          motorik_halus?: string | null
+          motorik_kasar?: string | null
+          session_date?: string | null
+          sosial_emosional?: string | null
+          tahfidz?: string | null
+          tahsin?: string | null
+          teacher_email?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          attendance_status?: string | null
+          bahasa?: string | null
+          created_at?: string | null
+          date?: string | null
+          enrollment_id?: string | null
+          id?: string | null
+          kemandirian?: string | null
+          kognisi?: string | null
+          meeting_number?: number | null
+          motorik_halus?: string | null
+          motorik_kasar?: string | null
+          session_date?: string | null
+          sosial_emosional?: string | null
+          tahfidz?: string | null
+          tahsin?: string | null
+          teacher_email?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      backup_checkinout_20260703: {
+        Row: {
+          created_at: string | null
+          enrollment_id: string | null
+          event_time: string | null
+          event_type: string | null
+          id: string | null
+          meeting_number: number | null
+          photo_storage: string | null
+          photo_url: string | null
+          program_id: string | null
+          session_date: string | null
+          student_id: string | null
+          teacher_email: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          enrollment_id?: string | null
+          event_time?: string | null
+          event_type?: string | null
+          id?: string | null
+          meeting_number?: number | null
+          photo_storage?: string | null
+          photo_url?: string | null
+          program_id?: string | null
+          session_date?: string | null
+          student_id?: string | null
+          teacher_email?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          enrollment_id?: string | null
+          event_time?: string | null
+          event_type?: string | null
+          id?: string | null
+          meeting_number?: number | null
+          photo_storage?: string | null
+          photo_url?: string | null
+          program_id?: string | null
+          session_date?: string | null
+          student_id?: string | null
+          teacher_email?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      backup_enrollments_20260703: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          program_id: string | null
+          student_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          program_id?: string | null
+          student_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          program_id?: string | null
+          student_id?: string | null
+        }
+        Relationships: []
+      }
+      backup_final_reports_20260703: {
+        Row: {
+          content: string | null
+          field_key: string | null
+          id: string | null
+          student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          content?: string | null
+          field_key?: string | null
+          id?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string | null
+          field_key?: string | null
+          id?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      backup_students_20260703: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           active: boolean
