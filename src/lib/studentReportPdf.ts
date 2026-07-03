@@ -509,38 +509,88 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     const textX = contentLeft + fpW + 18;
     const textW = contentRight - textX;
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
     doc.setTextColor(...BRAND.text);
-    const lines: string[] = doc.splitTextToSize(field.content || "—", textW);
-    const lineH = 14;
-    // Text may run taller than the photo; clamp to the segment's usable height.
-    const availTextH = segTop + segHeight - sy;
-    const maxLines = Math.max(0, Math.floor(availTextH / lineH));
-    const shown = lines.slice(0, maxLines);
-    let ty = sy + 10;
-    const spaceW = doc.getTextWidth(" ");
-    shown.forEach((ln, i) => {
+
+    const belowGap = 12;
+    const belowTop = sy + fpH + belowGap;
+    const segBottom = segTop + segHeight;
+    const content = field.content && field.content.trim() ? field.content.trim() : "—";
+
+    type LaidLine = { words: string[]; width: number };
+    // Break the paragraph into justified lines for a given font size. Text
+    // flows in the narrow column beside the photo first, then across the full
+    // width in the empty area below the photo. Returns whether it all fit.
+    const layoutForSize = (fs: number) => {
+      doc.setFontSize(fs);
+      const lineH = fs * 1.4;
+      const spaceW = doc.getTextWidth(" ");
+      const words = content.split(/\s+/).filter((w) => w.length > 0);
+      const linesBesidePhoto = Math.max(0, Math.floor((fpH - 10) / lineH));
+      const linesBelow = Math.max(0, Math.floor((segBottom - (belowTop + 10)) / lineH));
+      const capacity = linesBesidePhoto + linesBelow;
+      const lines: LaidLine[] = [];
+      let i = 0;
+      while (i < words.length) {
+        const width = lines.length < linesBesidePhoto ? textW : contentWidth;
+        const cur: string[] = [];
+        let curW = 0;
+        while (i < words.length) {
+          const ww = doc.getTextWidth(words[i]);
+          const projected = cur.length === 0 ? ww : curW + spaceW + ww;
+          if (cur.length > 0 && projected > width) break;
+          cur.push(words[i]);
+          curW = projected;
+          i++;
+        }
+        // Force-place a single word wider than the line to avoid a stall.
+        if (cur.length === 0) {
+          cur.push(words[i]);
+          i++;
+        }
+        lines.push({ words: cur, width });
+      }
+      return { lines, lineH, spaceW, linesBesidePhoto, capacity, fits: lines.length <= capacity };
+    };
+
+    // Auto-fit: start at the default size and shrink until the full paragraph
+    // fits within the segment, so no content is ever clipped.
+    const MAX_FS = 10;
+    const MIN_FS = 6;
+    let fs = MAX_FS;
+    let layout = layoutForSize(fs);
+    while (!layout.fits && fs > MIN_FS) {
+      fs = Math.max(MIN_FS, fs - 0.5);
+      layout = layoutForSize(fs);
+    }
+
+    doc.setFontSize(fs);
+    const { lines, lineH, spaceW, linesBesidePhoto, capacity } = layout;
+    const shown = lines.slice(0, capacity);
+    shown.forEach((line, i) => {
+      const beside = i < linesBesidePhoto;
+      const x = beside ? textX : contentLeft;
+      const ty = beside
+        ? sy + 10 + i * lineH
+        : belowTop + 10 + (i - linesBesidePhoto) * lineH;
       const isLast = i === shown.length - 1;
-      const words = ln.split(" ").filter((w) => w.length > 0);
+      const words = line.words;
       // Manually justify: distribute the leftover width evenly between words.
       // The last line (and single-word lines) stay left-aligned.
       if (!isLast && words.length > 1) {
         const wordsW = words.reduce((s, w) => s + doc.getTextWidth(w), 0);
-        const gap = (textW - wordsW) / (words.length - 1);
-        // Guard against overly wide gaps from anomalous short lines.
+        const gap = (line.width - wordsW) / (words.length - 1);
         if (gap > 0 && gap < spaceW * 6) {
-          let wx = textX;
+          let wx = x;
           words.forEach((w) => {
             doc.text(w, wx, ty);
             wx += doc.getTextWidth(w) + gap;
           });
         } else {
-          doc.text(ln, textX, ty);
+          doc.text(words.join(" "), x, ty);
         }
       } else {
-        doc.text(ln, textX, ty);
+        doc.text(words.join(" "), x, ty);
       }
-      ty += lineH;
     });
   };
 
