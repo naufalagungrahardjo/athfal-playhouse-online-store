@@ -256,8 +256,18 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     // Central title card
     const cardW = pageW - 120;
     const cardX = 60;
-    const cardY = pageH * 0.34;
-    const cardH = 210;
+    // Measure the logo up front so we can reserve room for it above the title.
+    const logoMaxW = cardW * 0.55;
+    const logoMaxH = 66;
+    let logoDrawW = 0;
+    let logoDrawH = 0;
+    if (logoDataUrl && logoDims && logoDims.w > 0 && logoDims.h > 0) {
+      const s = Math.min(logoMaxW / logoDims.w, logoMaxH / logoDims.h);
+      logoDrawW = logoDims.w * s;
+      logoDrawH = logoDims.h * s;
+    }
+    const cardY = pageH * 0.32;
+    const cardH = 210 + (logoDrawH ? logoDrawH + 20 : 0);
     try {
       // @ts-ignore - GState exists at runtime
       doc.setGState(new (doc as any).GState({ opacity: 0.92 }));
@@ -277,11 +287,18 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     const cxCenter = pageW / 2;
     let cy = cardY + 56;
 
-    // Logo
-    if (logoDataUrl) {
+    // Business logo — centered above the title, proportional (contain-fit).
+    if (logoDataUrl && logoDrawH) {
       try {
-        doc.addImage(logoDataUrl, detectFormat(logoDataUrl), cxCenter - 20, cardY + 18, 40, 40);
-        cy = cardY + 74;
+        doc.addImage(
+          logoDataUrl,
+          detectFormat(logoDataUrl),
+          cxCenter - logoDrawW / 2,
+          cardY + 22,
+          logoDrawW,
+          logoDrawH
+        );
+        cy = cardY + 22 + logoDrawH + 40;
       } catch { /* noop */ }
     }
 
