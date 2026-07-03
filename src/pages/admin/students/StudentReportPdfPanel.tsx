@@ -5,6 +5,7 @@ import { ImageUpload } from "@/components/ImageUpload";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, Loader2, ChevronDown, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -19,8 +20,8 @@ type Props = {
   fields: ReportFieldPage[];
   /** All report fields (key + label), regardless of whether text was written — used to render a photo upload slot for every page. */
   allFields: { key: string; label: string }[];
-  /** Class / program name shown on the default cover page. */
-  className?: string;
+  /** Programs the student is enrolled in. The report design (theme/cover/logo/landscape) is scoped per program. */
+  enrolledPrograms: { id: string; name: string }[];
 };
 
 // Page 1 uses the "summary" key; each descriptive field is its own page.
@@ -79,7 +80,7 @@ const urlToDataUrl = async (url: string): Promise<string> => {
   }
 };
 
-export default function StudentReportPdfPanel({ studentId, studentName, summary, fields, allFields, className }: Props) {
+export default function StudentReportPdfPanel({ studentId, studentName, summary, fields, allFields, enrolledPrograms }: Props) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [themeUrl, setThemeUrl] = useState("");
@@ -91,80 +92,99 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
   // White reading-panel opacity (0 = fully transparent, 1 = solid white). Default 90%.
   const [cardOpacity, setCardOpacity] = useState(0.9);
 
+  // Which program's report design is being edited/generated. The design assets
+  // (theme, cover, logo, landscape) are scoped per program so each class can
+  // have its own look. Default to the first program the student is enrolled in.
+  const [selectedProgramId, setSelectedProgramId] = useState<string>("");
+
+  useEffect(() => {
+    setSelectedProgramId(prev => {
+      if (prev && enrolledPrograms.some(p => p.id === prev)) return prev;
+      return enrolledPrograms[0]?.id || "";
+    });
+  }, [enrolledPrograms]);
+
+  const selectedProgram = enrolledPrograms.find(p => p.id === selectedProgramId);
+
   // Always render a photo upload slot for Page 1 plus every report field,
   // regardless of whether final-report text has been written yet.
   const photoPages: PageDef[] = [{ key: SUMMARY_KEY, label: "Halaman 1 — Ringkasan" }, ...allFields];
 
-  // Load the global theme + this student's photos.
+  // Load the selected program's design assets + this student's photos.
+  // Design assets are scoped per program; a global (no-program) asset is used
+  // as a fallback when the program has not been given its own design yet.
   useEffect(() => {
     let cancelled = false;
+    const pid = selectedProgramId || null;
+    const pickForProgram = (rows: any[] | null) => {
+      if (!rows || rows.length === 0) return "";
+      const specific = pid ? rows.find(r => r.program_id === pid) : null;
+      const fallback = rows.find(r => r.program_id === null);
+      const chosen = specific || fallback;
+      return chosen?.image_url ? `${stripCacheBuster(chosen.image_url)}?t=${Date.now()}` : "";
+    };
     (async () => {
       const [{ data: theme }, { data: cover }, { data: logo }, { data: landscape }, { data: studentPhotos }] = await Promise.all([
-        supabase.from("student_report_assets").select("image_url").eq("scope", "theme").maybeSingle(),
-        supabase.from("student_report_assets").select("image_url").eq("scope", "cover").maybeSingle(),
-        supabase.from("student_report_assets").select("image_url").eq("scope", "logo").maybeSingle(),
-        supabase.from("student_report_assets").select("image_url").eq("scope", "landscape").maybeSingle(),
+        supabase.from("student_report_assets").select("image_url,program_id").eq("scope", "theme"),
+        supabase.from("student_report_assets").select("image_url,program_id").eq("scope", "cover"),
+        supabase.from("student_report_assets").select("image_url,program_id").eq("scope", "logo"),
+        supabase.from("student_report_assets").select("image_url,program_id").eq("scope", "landscape"),
         supabase.from("student_report_assets").select("page_key,image_url").eq("scope", "photo").eq("student_id", studentId),
       ]);
       if (cancelled) return;
-      setThemeUrl(theme?.image_url ? `${stripCacheBuster(theme.image_url)}?t=${Date.now()}` : "");
-      setCoverUrl(cover?.image_url ? `${stripCacheBuster(cover.image_url)}?t=${Date.now()}` : "");
-      setLogoUrl(logo?.image_url ? `${stripCacheBuster(logo.image_url)}?t=${Date.now()}` : "");
-      setLandscapeUrl(landscape?.image_url ? `${stripCacheBuster(landscape.image_url)}?t=${Date.now()}` : "");
+      setThemeUrl(pickForProgram(theme));
+      setCoverUrl(pickForProgram(cover));
+      setLogoUrl(pickForProgram(logo));
+      setLandscapeUrl(pickForProgram(landscape));
       const map: Record<string, string> = {};
       (studentPhotos || []).forEach((r: any) => { if (r.page_key) map[r.page_key] = `${stripCacheBuster(r.image_url)}?t=${Date.now()}`; });
       setPhotos(map);
     })();
     return () => { cancelled = true; };
-  }, [studentId]);
+  }, [studentId, selectedProgramId]);
 
-  const saveTheme = useCallback(async (url: string) => {
+  // Save a program-scoped design asset (theme/cover/logo/landscape).
+  const saveProgramAsset = useCallback(async (
+    scope: "theme" | "cover" | "logo" | "landscape",
+    url: string,
+    setLocal: (u: string) => void,
+    savedMsg: string,
+    removedMsg: string,
+  ) => {
+    if (!selectedProgramId) {
+      toast({ title: "Select a program", description: "This student has no program to attach the design to.", variant: "destructive" });
+      return;
+    }
     const cleanUrl = stripCacheBuster(url);
-    const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "theme");
+    const { error: deleteError } = await supabase
+      .from("student_report_assets")
+      .delete()
+      .eq("scope", scope)
+      .eq("program_id", selectedProgramId);
     if (deleteError) throw deleteError;
     if (cleanUrl) {
-      const { error } = await supabase.from("student_report_assets").insert({ scope: "theme", image_url: cleanUrl });
+      const { error } = await supabase
+        .from("student_report_assets")
+        .insert({ scope, image_url: cleanUrl, program_id: selectedProgramId });
       if (error) throw error;
     }
-    setThemeUrl(url);
-    toast({ title: "Saved", description: url ? "Background theme updated." : "Background theme removed." });
-  }, [toast]);
+    setLocal(url);
+    toast({ title: "Saved", description: url ? savedMsg : removedMsg });
+  }, [selectedProgramId, toast]);
 
-  const saveCover = useCallback(async (url: string) => {
-    const cleanUrl = stripCacheBuster(url);
-    const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "cover");
-    if (deleteError) throw deleteError;
-    if (cleanUrl) {
-      const { error } = await supabase.from("student_report_assets").insert({ scope: "cover", image_url: cleanUrl });
-      if (error) throw error;
-    }
-    setCoverUrl(url);
-    toast({ title: "Saved", description: url ? "Custom cover updated — it now fully replaces the default cover." : "Custom cover removed — using the default cover design." });
-  }, [toast]);
-
-  const saveLogo = useCallback(async (url: string) => {
-    const cleanUrl = stripCacheBuster(url);
-    const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "logo");
-    if (deleteError) throw deleteError;
-    if (cleanUrl) {
-      const { error } = await supabase.from("student_report_assets").insert({ scope: "logo", image_url: cleanUrl });
-      if (error) throw error;
-    }
-    setLogoUrl(url);
-    toast({ title: "Saved", description: url ? "Business logo updated — it now appears on every student report cover." : "Business logo removed." });
-  }, [toast]);
-
-  const saveLandscape = useCallback(async (url: string) => {
-    const cleanUrl = stripCacheBuster(url);
-    const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "landscape");
-    if (deleteError) throw deleteError;
-    if (cleanUrl) {
-      const { error } = await supabase.from("student_report_assets").insert({ scope: "landscape", image_url: cleanUrl });
-      if (error) throw error;
-    }
-    setLandscapeUrl(url);
-    toast({ title: "Saved", description: url ? "Page 1 documentation photo updated — it now appears on every student report." : "Page 1 documentation photo removed." });
-  }, [toast]);
+  const programLabel = selectedProgram?.name ? `“${selectedProgram.name}”` : "this program";
+  const saveTheme = useCallback((url: string) =>
+    saveProgramAsset("theme", url, setThemeUrl, `Background theme updated for ${programLabel}.`, `Background theme removed for ${programLabel}.`),
+  [saveProgramAsset, programLabel]);
+  const saveCover = useCallback((url: string) =>
+    saveProgramAsset("cover", url, setCoverUrl, `Custom cover updated for ${programLabel} — it now fully replaces the default cover.`, `Custom cover removed for ${programLabel}.`),
+  [saveProgramAsset, programLabel]);
+  const saveLogo = useCallback((url: string) =>
+    saveProgramAsset("logo", url, setLogoUrl, `Business logo updated for ${programLabel}.`, `Business logo removed for ${programLabel}.`),
+  [saveProgramAsset, programLabel]);
+  const saveLandscape = useCallback((url: string) =>
+    saveProgramAsset("landscape", url, setLandscapeUrl, `Page 1 documentation photo updated for ${programLabel}.`, `Page 1 documentation photo removed for ${programLabel}.`),
+  [saveProgramAsset, programLabel]);
 
   const savePhoto = useCallback(async (pageKey: string, url: string) => {
     const cleanUrl = stripCacheBuster(url);
@@ -181,6 +201,11 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
   const downloadPdf = async () => {
     setGenerating(true);
     try {
+      // Restrict the attendance summary to the selected program so each
+      // program produces its own distinct report.
+      const programSummary = selectedProgram
+        ? summary.filter((s) => s.programName === selectedProgram.name)
+        : summary;
       const themeDataUrl = themeUrl ? await urlToDataUrl(themeUrl) : null;
       const coverDataUrl = coverUrl ? await urlToDataUrl(coverUrl) : null;
       const logoDataUrl = logoUrl ? await urlToDataUrl(logoUrl) : null;
@@ -202,12 +227,12 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
       await generateStudentReportPdf({
         studentName,
         generatedDate: new Date().toISOString(),
-        summary,
+        summary: programSummary.length ? programSummary : summary,
         fields: pdfFields,
         themeDataUrl,
         coverDataUrl,
         logoDataUrl,
-        className,
+        className: selectedProgram?.name,
         photosByPage,
         cardOpacity,
       });
@@ -225,12 +250,30 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
             <h3 className="font-semibold">A4 PDF Report</h3>
-            <p className="text-xs text-muted-foreground">Page 1 = attendance summary, then one page per report field.</p>
+            <p className="text-xs text-muted-foreground">Page 1 = attendance summary, then one page per report field. The design is set per program.</p>
           </div>
           <Button onClick={downloadPdf} disabled={generating}>
             {generating ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
             Download PDF
           </Button>
+        </div>
+
+        <div className="mt-3">
+          <Label className="text-sm">Report program (design applies to this program)</Label>
+          {enrolledPrograms.length > 0 ? (
+            <Select value={selectedProgramId} onValueChange={setSelectedProgramId}>
+              <SelectTrigger className="mt-1 max-w-md">
+                <SelectValue placeholder="Select a program" />
+              </SelectTrigger>
+              <SelectContent>
+                {enrolledPrograms.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <p className="text-xs text-muted-foreground mt-1">This student is not enrolled in any program yet.</p>
+          )}
         </div>
 
         <Collapsible open={open} onOpenChange={setOpen} className="mt-4">
@@ -263,32 +306,32 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
               <ImageUpload
                 value={themeUrl}
                 onChange={saveTheme}
-                label="Background Theme (applies to every page & every student)"
-                hint="Upload a kid-friendly PNG/JPG. Recommended A4 portrait ratio (e.g. 1240×1754). Leave empty for the default theme."
+                label={`Background Theme — applies to every student in ${programLabel}`}
+                hint="Upload a kid-friendly PNG/JPG. Recommended A4 portrait ratio (e.g. 1240×1754). Only affects reports for the selected program."
               />
             </div>
             <div className="rounded-lg border p-4 bg-muted/30">
               <ImageUpload
                 value={logoUrl}
                 onChange={saveLogo}
-                label="Business Logo (shown centered above the title on the default cover)"
-                hint="Upload your business logo (PNG with transparent background works best). It is centered and scaled proportionally above the 'Student Report' title. Applies to every student. Only used on the default cover (not when a custom front cover is set)."
+                label={`Business Logo — applies to ${programLabel}`}
+                hint="Shown centered above the title on the default cover. PNG with transparent background works best. Only affects reports for the selected program (not when a custom front cover is set)."
               />
             </div>
             <div className="rounded-lg border p-4 bg-muted/30">
               <ImageUpload
                 value={coverUrl}
                 onChange={saveCover}
-                label="Custom Front Cover (applies to every student)"
-                hint="Optional. Upload a full A4 portrait design (e.g. 1240×1754). When set, it FULLY replaces the default cover — the default class name / 'Student Report' design will not be used. Leave empty to keep the default kid-friendly cover."
+                label={`Custom Front Cover — applies to ${programLabel}`}
+                hint="Optional. Upload a full A4 portrait design (e.g. 1240×1754). When set, it FULLY replaces the default cover. Only affects reports for the selected program."
               />
             </div>
             <div className="rounded-lg border p-4 bg-muted/30">
               <ImageUpload
                 value={landscapeUrl}
                 onChange={saveLandscape}
-                label="Page 1 Documentation Photo (A5 landscape) — applies to every student"
-                hint="Shown on page 1 below the attendance summary. Best as an A5 landscape image (e.g. 1748×1240, ratio ~1.42:1). Upload once and it is used on every student's report."
+                label={`Page 1 Documentation Photo (A5 landscape) — applies to ${programLabel}`}
+                hint="Shown on page 1 below the attendance summary. Best as an A5 landscape image (e.g. 1748×1240, ratio ~1.42:1). Only affects reports for the selected program."
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
