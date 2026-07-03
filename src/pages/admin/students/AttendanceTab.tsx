@@ -84,6 +84,13 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
     );
   };
 
+  // Prefer the current teacher's own row, but fall back to any teacher's row for
+  // this (enrollment, date) so descriptive content stays visible to admins and
+  // other teachers — matching how the Student Report tab reads all records.
+  const findAttendancePreferTeacher = (enrollmentId: string, dateStr: string) => {
+    return findAttendance(enrollmentId, dateStr, true) || findAttendance(enrollmentId, dateStr, false);
+  };
+
   const getFieldValue = (enrollmentId: string, dateStr: string, field: string) => {
     const key = getKey(enrollmentId, dateStr);
     if (edits[key] && field in edits[key]) return (edits[key] as any)[field];
@@ -94,7 +101,7 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
         .sort((a, b) => (b.id > a.id ? 1 : -1));
       return records.length > 0 ? records[0].attendance_status : "none";
     }
-    const existing = findAttendance(enrollmentId, dateStr, true);
+    const existing = findAttendancePreferTeacher(enrollmentId, dateStr);
     return existing ? (existing as any)[field] : "";
   };
 
