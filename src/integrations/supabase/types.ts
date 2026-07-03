@@ -2012,6 +2012,10 @@ export type Database = {
         Returns: boolean
       }
       regenerate_expense_share_link: { Args: never; Returns: string }
+      rename_student: {
+        Args: { p_new_name: string; p_student_id: string }
+        Returns: boolean
+      }
       restore_stock_for_order: {
         Args: { p_order_id: string }
         Returns: boolean
