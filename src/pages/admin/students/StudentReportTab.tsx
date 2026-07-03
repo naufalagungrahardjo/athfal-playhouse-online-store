@@ -535,8 +535,8 @@ export default function StudentReportTab({ programs, students, enrollments, atte
 
           {/* Full-page Final Report editor (Google-Docs style) */}
           <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
-            <DialogContent className="max-w-5xl w-[96vw] h-[92vh] flex flex-col p-0 gap-0">
-              <DialogHeader className="px-6 py-4 border-b shrink-0">
+            <DialogContent className="max-w-none w-screen h-screen sm:max-w-5xl sm:w-[96vw] sm:h-[92vh] flex flex-col p-0 gap-0 rounded-none sm:rounded-lg border-0 sm:border">
+              <DialogHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b shrink-0">
                 <DialogTitle>Final Report — {selectedStudent.name}</DialogTitle>
                 <DialogDescription>
                   Edit every section of the final report in one place. Each section shows the teachers'
@@ -544,13 +544,13 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-8 bg-muted/30">
-                <div className="max-w-3xl mx-auto space-y-8">
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-6 bg-muted/30">
+                <div className="w-full space-y-6">
                   {DESCRIPTIVE_FIELDS.map(field => {
                     const compilation = getCompilation(field.key);
                     const dirty = (finalReports[field.key] ?? "") !== (savedReports[field.key] ?? "");
                     return (
-                      <section key={field.key} className="bg-background rounded-lg border shadow-sm p-5">
+                      <section key={field.key} className="bg-background rounded-lg border shadow-sm p-4 sm:p-6">
                         <div className="flex items-center justify-between mb-3">
                           <h4 className="text-lg font-semibold">{field.label}</h4>
                           {dirty
@@ -569,7 +569,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                           value={finalReports[field.key] ?? ""}
                           onChange={(e) => setFinalReports(prev => ({ ...prev, [field.key]: e.target.value }))}
                           placeholder={`Write the ${field.label} final report...`}
-                          className="min-h-[200px] text-sm leading-relaxed bg-background resize-y"
+                          className="min-h-[60vh] sm:min-h-[400px] text-sm leading-relaxed bg-background resize-y"
                         />
                       </section>
                     );
@@ -577,7 +577,7 @@ export default function StudentReportTab({ programs, students, enrollments, atte
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 px-6 py-4 border-t shrink-0 bg-background">
+              <div className="flex items-center justify-end gap-2 px-4 sm:px-6 py-3 sm:py-4 border-t shrink-0 bg-background">
                 <Button variant="outline" onClick={() => setEditorOpen(false)}>
                   <X className="h-4 w-4 mr-1" /> Close
                 </Button>
