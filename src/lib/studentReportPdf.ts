@@ -103,6 +103,10 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     })
   );
 
+  // Measure the logo so it can be drawn with its real aspect ratio (contain-fit)
+  // instead of being squashed into a square.
+  const logoDims = logoDataUrl ? await measureImage(logoDataUrl) : null;
+
   // Draws the full-page theme background + a translucent white reading panel.
   const paintBackground = () => {
     if (themeDataUrl) {
@@ -252,8 +256,18 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     // Central title card
     const cardW = pageW - 120;
     const cardX = 60;
-    const cardY = pageH * 0.34;
-    const cardH = 210;
+    // Measure the logo up front so we can reserve room for it above the title.
+    const logoMaxW = cardW * 0.55;
+    const logoMaxH = 66;
+    let logoDrawW = 0;
+    let logoDrawH = 0;
+    if (logoDataUrl && logoDims && logoDims.w > 0 && logoDims.h > 0) {
+      const s = Math.min(logoMaxW / logoDims.w, logoMaxH / logoDims.h);
+      logoDrawW = logoDims.w * s;
+      logoDrawH = logoDims.h * s;
+    }
+    const cardY = pageH * 0.32;
+    const cardH = 210 + (logoDrawH ? logoDrawH + 20 : 0);
     try {
       // @ts-ignore - GState exists at runtime
       doc.setGState(new (doc as any).GState({ opacity: 0.92 }));
@@ -273,11 +287,18 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     const cxCenter = pageW / 2;
     let cy = cardY + 56;
 
-    // Logo
-    if (logoDataUrl) {
+    // Business logo — centered above the title, proportional (contain-fit).
+    if (logoDataUrl && logoDrawH) {
       try {
-        doc.addImage(logoDataUrl, detectFormat(logoDataUrl), cxCenter - 20, cardY + 18, 40, 40);
-        cy = cardY + 74;
+        doc.addImage(
+          logoDataUrl,
+          detectFormat(logoDataUrl),
+          cxCenter - logoDrawW / 2,
+          cardY + 22,
+          logoDrawW,
+          logoDrawH
+        );
+        cy = cardY + 22 + logoDrawH + 40;
       } catch { /* noop */ }
     }
 
@@ -436,6 +457,24 @@ export const generateStudentReportPdf = async (input: StudentReportPdfInput) => 
     doc.text(String((totals as any)[k]), cx + c.w / 2 - 6, y + 14, { align: "center" });
     cx += c.w;
   });
+  y += rowH;
+
+  // ---- A5-landscape documentation photo (below the attendance summary) ----
+  // A5 landscape aspect ratio is 210mm : 148mm ≈ 1.4189.
+  const A5_RATIO = 210 / 148;
+  const landTop = y + 26;
+  const footerY = pageH - cardInset - 10;
+  const availLandH = footerY - 14 - landTop;
+  if (availLandH > 60) {
+    let landW = contentWidth;
+    let landH = landW / A5_RATIO;
+    if (landH > availLandH) {
+      landH = availLandH;
+      landW = landH * A5_RATIO;
+    }
+    const landX = contentLeft + (contentWidth - landW) / 2;
+    drawPhoto(photosByPage["summary_landscape"], landX, landTop, landW, landH, photoDims["summary_landscape"]);
+  }
 
   // Footer
   doc.setFont("helvetica", "italic");

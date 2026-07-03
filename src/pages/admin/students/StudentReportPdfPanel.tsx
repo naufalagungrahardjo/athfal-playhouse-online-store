@@ -25,6 +25,8 @@ type Props = {
 
 // Page 1 uses the "summary" key; each descriptive field is its own page.
 const SUMMARY_KEY = "summary";
+// Big A5-landscape documentation photo shown on page 1, below the attendance summary.
+const LANDSCAPE_KEY = "summary_landscape";
 
 const stripCacheBuster = (url: string) => url.split("?")[0];
 
@@ -82,6 +84,7 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
   const [open, setOpen] = useState(false);
   const [themeUrl, setThemeUrl] = useState("");
   const [coverUrl, setCoverUrl] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [generating, setGenerating] = useState(false);
   // White reading-panel opacity (0 = fully transparent, 1 = solid white). Default 90%.
@@ -95,14 +98,16 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [{ data: theme }, { data: cover }, { data: studentPhotos }] = await Promise.all([
+      const [{ data: theme }, { data: cover }, { data: logo }, { data: studentPhotos }] = await Promise.all([
         supabase.from("student_report_assets").select("image_url").eq("scope", "theme").maybeSingle(),
         supabase.from("student_report_assets").select("image_url").eq("scope", "cover").maybeSingle(),
+        supabase.from("student_report_assets").select("image_url").eq("scope", "logo").maybeSingle(),
         supabase.from("student_report_assets").select("page_key,image_url").eq("scope", "photo").eq("student_id", studentId),
       ]);
       if (cancelled) return;
       setThemeUrl(theme?.image_url ? `${stripCacheBuster(theme.image_url)}?t=${Date.now()}` : "");
       setCoverUrl(cover?.image_url ? `${stripCacheBuster(cover.image_url)}?t=${Date.now()}` : "");
+      setLogoUrl(logo?.image_url ? `${stripCacheBuster(logo.image_url)}?t=${Date.now()}` : "");
       const map: Record<string, string> = {};
       (studentPhotos || []).forEach((r: any) => { if (r.page_key) map[r.page_key] = `${stripCacheBuster(r.image_url)}?t=${Date.now()}`; });
       setPhotos(map);
@@ -134,6 +139,18 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
     toast({ title: "Saved", description: url ? "Custom cover updated — it now fully replaces the default cover." : "Custom cover removed — using the default cover design." });
   }, [toast]);
 
+  const saveLogo = useCallback(async (url: string) => {
+    const cleanUrl = stripCacheBuster(url);
+    const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "logo");
+    if (deleteError) throw deleteError;
+    if (cleanUrl) {
+      const { error } = await supabase.from("student_report_assets").insert({ scope: "logo", image_url: cleanUrl });
+      if (error) throw error;
+    }
+    setLogoUrl(url);
+    toast({ title: "Saved", description: url ? "Business logo updated — it now appears on every student report cover." : "Business logo removed." });
+  }, [toast]);
+
   const savePhoto = useCallback(async (pageKey: string, url: string) => {
     const cleanUrl = stripCacheBuster(url);
     const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "photo").eq("student_id", studentId).eq("page_key", pageKey);
@@ -151,12 +168,15 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
     try {
       const themeDataUrl = themeUrl ? await urlToDataUrl(themeUrl) : null;
       const coverDataUrl = coverUrl ? await urlToDataUrl(coverUrl) : null;
+      const logoDataUrl = logoUrl ? await urlToDataUrl(logoUrl) : null;
       const photosByPage: Record<string, string | null> = {};
       await Promise.all(
         photoPages.map(async (p) => {
           photosByPage[p.key] = photos[p.key] ? await urlToDataUrl(photos[p.key]) : null;
         })
       );
+      // Big landscape documentation photo for page 1.
+      photosByPage[LANDSCAPE_KEY] = photos[LANDSCAPE_KEY] ? await urlToDataUrl(photos[LANDSCAPE_KEY]) : null;
       // Include a PDF page for any field that has saved text OR an uploaded photo,
       // so a photo attached to a text-less field still appears in the report.
       const fieldsWithText = new Set(fields.map((f) => f.key));
@@ -171,6 +191,7 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
         fields: pdfFields,
         themeDataUrl,
         coverDataUrl,
+        logoDataUrl,
         className,
         photosByPage,
         cardOpacity,
@@ -233,10 +254,26 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
             </div>
             <div className="rounded-lg border p-4 bg-muted/30">
               <ImageUpload
+                value={logoUrl}
+                onChange={saveLogo}
+                label="Business Logo (shown centered above the title on the default cover)"
+                hint="Upload your business logo (PNG with transparent background works best). It is centered and scaled proportionally above the 'Student Report' title. Applies to every student. Only used on the default cover (not when a custom front cover is set)."
+              />
+            </div>
+            <div className="rounded-lg border p-4 bg-muted/30">
+              <ImageUpload
                 value={coverUrl}
                 onChange={saveCover}
                 label="Custom Front Cover (applies to every student)"
                 hint="Optional. Upload a full A4 portrait design (e.g. 1240×1754). When set, it FULLY replaces the default cover — the default class name / 'Student Report' design will not be used. Leave empty to keep the default kid-friendly cover."
+              />
+            </div>
+            <div className="rounded-lg border p-4 bg-muted/30">
+              <ImageUpload
+                value={photos[LANDSCAPE_KEY] || ""}
+                onChange={(url) => savePhoto(LANDSCAPE_KEY, url)}
+                label="Page 1 Documentation Photo (A5 landscape)"
+                hint="Shown on page 1 below the attendance summary. Best as an A5 landscape image (e.g. 1748×1240, ratio ~1.42:1). Per student."
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
