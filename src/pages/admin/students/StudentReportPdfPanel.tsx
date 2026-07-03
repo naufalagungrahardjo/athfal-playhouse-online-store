@@ -254,10 +254,26 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
             </div>
             <div className="rounded-lg border p-4 bg-muted/30">
               <ImageUpload
+                value={logoUrl}
+                onChange={saveLogo}
+                label="Business Logo (shown centered above the title on the default cover)"
+                hint="Upload your business logo (PNG with transparent background works best). It is centered and scaled proportionally above the 'Student Report' title. Applies to every student. Only used on the default cover (not when a custom front cover is set)."
+              />
+            </div>
+            <div className="rounded-lg border p-4 bg-muted/30">
+              <ImageUpload
                 value={coverUrl}
                 onChange={saveCover}
                 label="Custom Front Cover (applies to every student)"
                 hint="Optional. Upload a full A4 portrait design (e.g. 1240×1754). When set, it FULLY replaces the default cover — the default class name / 'Student Report' design will not be used. Leave empty to keep the default kid-friendly cover."
+              />
+            </div>
+            <div className="rounded-lg border p-4 bg-muted/30">
+              <ImageUpload
+                value={photos[LANDSCAPE_KEY] || ""}
+                onChange={(url) => savePhoto(LANDSCAPE_KEY, url)}
+                label="Page 1 Documentation Photo (A5 landscape)"
+                hint="Shown on page 1 below the attendance summary. Best as an A5 landscape image (e.g. 1748×1240, ratio ~1.42:1). Per student."
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
