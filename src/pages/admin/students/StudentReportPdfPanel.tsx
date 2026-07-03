@@ -80,7 +80,7 @@ const urlToDataUrl = async (url: string): Promise<string> => {
   }
 };
 
-export default function StudentReportPdfPanel({ studentId, studentName, summary, fields, allFields, className }: Props) {
+export default function StudentReportPdfPanel({ studentId, studentName, summary, fields, allFields, enrolledPrograms }: Props) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [themeUrl, setThemeUrl] = useState("");
@@ -92,80 +92,99 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
   // White reading-panel opacity (0 = fully transparent, 1 = solid white). Default 90%.
   const [cardOpacity, setCardOpacity] = useState(0.9);
 
+  // Which program's report design is being edited/generated. The design assets
+  // (theme, cover, logo, landscape) are scoped per program so each class can
+  // have its own look. Default to the first program the student is enrolled in.
+  const [selectedProgramId, setSelectedProgramId] = useState<string>("");
+
+  useEffect(() => {
+    setSelectedProgramId(prev => {
+      if (prev && enrolledPrograms.some(p => p.id === prev)) return prev;
+      return enrolledPrograms[0]?.id || "";
+    });
+  }, [enrolledPrograms]);
+
+  const selectedProgram = enrolledPrograms.find(p => p.id === selectedProgramId);
+
   // Always render a photo upload slot for Page 1 plus every report field,
   // regardless of whether final-report text has been written yet.
   const photoPages: PageDef[] = [{ key: SUMMARY_KEY, label: "Halaman 1 — Ringkasan" }, ...allFields];
 
-  // Load the global theme + this student's photos.
+  // Load the selected program's design assets + this student's photos.
+  // Design assets are scoped per program; a global (no-program) asset is used
+  // as a fallback when the program has not been given its own design yet.
   useEffect(() => {
     let cancelled = false;
+    const pid = selectedProgramId || null;
+    const pickForProgram = (rows: any[] | null) => {
+      if (!rows || rows.length === 0) return "";
+      const specific = pid ? rows.find(r => r.program_id === pid) : null;
+      const fallback = rows.find(r => r.program_id === null);
+      const chosen = specific || fallback;
+      return chosen?.image_url ? `${stripCacheBuster(chosen.image_url)}?t=${Date.now()}` : "";
+    };
     (async () => {
       const [{ data: theme }, { data: cover }, { data: logo }, { data: landscape }, { data: studentPhotos }] = await Promise.all([
-        supabase.from("student_report_assets").select("image_url").eq("scope", "theme").maybeSingle(),
-        supabase.from("student_report_assets").select("image_url").eq("scope", "cover").maybeSingle(),
-        supabase.from("student_report_assets").select("image_url").eq("scope", "logo").maybeSingle(),
-        supabase.from("student_report_assets").select("image_url").eq("scope", "landscape").maybeSingle(),
+        supabase.from("student_report_assets").select("image_url,program_id").eq("scope", "theme"),
+        supabase.from("student_report_assets").select("image_url,program_id").eq("scope", "cover"),
+        supabase.from("student_report_assets").select("image_url,program_id").eq("scope", "logo"),
+        supabase.from("student_report_assets").select("image_url,program_id").eq("scope", "landscape"),
         supabase.from("student_report_assets").select("page_key,image_url").eq("scope", "photo").eq("student_id", studentId),
       ]);
       if (cancelled) return;
-      setThemeUrl(theme?.image_url ? `${stripCacheBuster(theme.image_url)}?t=${Date.now()}` : "");
-      setCoverUrl(cover?.image_url ? `${stripCacheBuster(cover.image_url)}?t=${Date.now()}` : "");
-      setLogoUrl(logo?.image_url ? `${stripCacheBuster(logo.image_url)}?t=${Date.now()}` : "");
-      setLandscapeUrl(landscape?.image_url ? `${stripCacheBuster(landscape.image_url)}?t=${Date.now()}` : "");
+      setThemeUrl(pickForProgram(theme));
+      setCoverUrl(pickForProgram(cover));
+      setLogoUrl(pickForProgram(logo));
+      setLandscapeUrl(pickForProgram(landscape));
       const map: Record<string, string> = {};
       (studentPhotos || []).forEach((r: any) => { if (r.page_key) map[r.page_key] = `${stripCacheBuster(r.image_url)}?t=${Date.now()}`; });
       setPhotos(map);
     })();
     return () => { cancelled = true; };
-  }, [studentId]);
+  }, [studentId, selectedProgramId]);
 
-  const saveTheme = useCallback(async (url: string) => {
+  // Save a program-scoped design asset (theme/cover/logo/landscape).
+  const saveProgramAsset = useCallback(async (
+    scope: "theme" | "cover" | "logo" | "landscape",
+    url: string,
+    setLocal: (u: string) => void,
+    savedMsg: string,
+    removedMsg: string,
+  ) => {
+    if (!selectedProgramId) {
+      toast({ title: "Select a program", description: "This student has no program to attach the design to.", variant: "destructive" });
+      return;
+    }
     const cleanUrl = stripCacheBuster(url);
-    const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "theme");
+    const { error: deleteError } = await supabase
+      .from("student_report_assets")
+      .delete()
+      .eq("scope", scope)
+      .eq("program_id", selectedProgramId);
     if (deleteError) throw deleteError;
     if (cleanUrl) {
-      const { error } = await supabase.from("student_report_assets").insert({ scope: "theme", image_url: cleanUrl });
+      const { error } = await supabase
+        .from("student_report_assets")
+        .insert({ scope, image_url: cleanUrl, program_id: selectedProgramId });
       if (error) throw error;
     }
-    setThemeUrl(url);
-    toast({ title: "Saved", description: url ? "Background theme updated." : "Background theme removed." });
-  }, [toast]);
+    setLocal(url);
+    toast({ title: "Saved", description: url ? savedMsg : removedMsg });
+  }, [selectedProgramId, toast]);
 
-  const saveCover = useCallback(async (url: string) => {
-    const cleanUrl = stripCacheBuster(url);
-    const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "cover");
-    if (deleteError) throw deleteError;
-    if (cleanUrl) {
-      const { error } = await supabase.from("student_report_assets").insert({ scope: "cover", image_url: cleanUrl });
-      if (error) throw error;
-    }
-    setCoverUrl(url);
-    toast({ title: "Saved", description: url ? "Custom cover updated — it now fully replaces the default cover." : "Custom cover removed — using the default cover design." });
-  }, [toast]);
-
-  const saveLogo = useCallback(async (url: string) => {
-    const cleanUrl = stripCacheBuster(url);
-    const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "logo");
-    if (deleteError) throw deleteError;
-    if (cleanUrl) {
-      const { error } = await supabase.from("student_report_assets").insert({ scope: "logo", image_url: cleanUrl });
-      if (error) throw error;
-    }
-    setLogoUrl(url);
-    toast({ title: "Saved", description: url ? "Business logo updated — it now appears on every student report cover." : "Business logo removed." });
-  }, [toast]);
-
-  const saveLandscape = useCallback(async (url: string) => {
-    const cleanUrl = stripCacheBuster(url);
-    const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "landscape");
-    if (deleteError) throw deleteError;
-    if (cleanUrl) {
-      const { error } = await supabase.from("student_report_assets").insert({ scope: "landscape", image_url: cleanUrl });
-      if (error) throw error;
-    }
-    setLandscapeUrl(url);
-    toast({ title: "Saved", description: url ? "Page 1 documentation photo updated — it now appears on every student report." : "Page 1 documentation photo removed." });
-  }, [toast]);
+  const programLabel = selectedProgram?.name ? `“${selectedProgram.name}”` : "this program";
+  const saveTheme = useCallback((url: string) =>
+    saveProgramAsset("theme", url, setThemeUrl, `Background theme updated for ${programLabel}.`, `Background theme removed for ${programLabel}.`),
+  [saveProgramAsset, programLabel]);
+  const saveCover = useCallback((url: string) =>
+    saveProgramAsset("cover", url, setCoverUrl, `Custom cover updated for ${programLabel} — it now fully replaces the default cover.`, `Custom cover removed for ${programLabel}.`),
+  [saveProgramAsset, programLabel]);
+  const saveLogo = useCallback((url: string) =>
+    saveProgramAsset("logo", url, setLogoUrl, `Business logo updated for ${programLabel}.`, `Business logo removed for ${programLabel}.`),
+  [saveProgramAsset, programLabel]);
+  const saveLandscape = useCallback((url: string) =>
+    saveProgramAsset("landscape", url, setLandscapeUrl, `Page 1 documentation photo updated for ${programLabel}.`, `Page 1 documentation photo removed for ${programLabel}.`),
+  [saveProgramAsset, programLabel]);
 
   const savePhoto = useCallback(async (pageKey: string, url: string) => {
     const cleanUrl = stripCacheBuster(url);
