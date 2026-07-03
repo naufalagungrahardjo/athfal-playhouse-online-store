@@ -25,6 +25,8 @@ type Props = {
 
 // Page 1 uses the "summary" key; each descriptive field is its own page.
 const SUMMARY_KEY = "summary";
+// Big A5-landscape documentation photo shown on page 1, below the attendance summary.
+const LANDSCAPE_KEY = "summary_landscape";
 
 const stripCacheBuster = (url: string) => url.split("?")[0];
 
@@ -82,6 +84,7 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
   const [open, setOpen] = useState(false);
   const [themeUrl, setThemeUrl] = useState("");
   const [coverUrl, setCoverUrl] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [generating, setGenerating] = useState(false);
   // White reading-panel opacity (0 = fully transparent, 1 = solid white). Default 90%.
@@ -95,14 +98,16 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [{ data: theme }, { data: cover }, { data: studentPhotos }] = await Promise.all([
+      const [{ data: theme }, { data: cover }, { data: logo }, { data: studentPhotos }] = await Promise.all([
         supabase.from("student_report_assets").select("image_url").eq("scope", "theme").maybeSingle(),
         supabase.from("student_report_assets").select("image_url").eq("scope", "cover").maybeSingle(),
+        supabase.from("student_report_assets").select("image_url").eq("scope", "logo").maybeSingle(),
         supabase.from("student_report_assets").select("page_key,image_url").eq("scope", "photo").eq("student_id", studentId),
       ]);
       if (cancelled) return;
       setThemeUrl(theme?.image_url ? `${stripCacheBuster(theme.image_url)}?t=${Date.now()}` : "");
       setCoverUrl(cover?.image_url ? `${stripCacheBuster(cover.image_url)}?t=${Date.now()}` : "");
+      setLogoUrl(logo?.image_url ? `${stripCacheBuster(logo.image_url)}?t=${Date.now()}` : "");
       const map: Record<string, string> = {};
       (studentPhotos || []).forEach((r: any) => { if (r.page_key) map[r.page_key] = `${stripCacheBuster(r.image_url)}?t=${Date.now()}`; });
       setPhotos(map);
@@ -132,6 +137,18 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
     }
     setCoverUrl(url);
     toast({ title: "Saved", description: url ? "Custom cover updated — it now fully replaces the default cover." : "Custom cover removed — using the default cover design." });
+  }, [toast]);
+
+  const saveLogo = useCallback(async (url: string) => {
+    const cleanUrl = stripCacheBuster(url);
+    const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "logo");
+    if (deleteError) throw deleteError;
+    if (cleanUrl) {
+      const { error } = await supabase.from("student_report_assets").insert({ scope: "logo", image_url: cleanUrl });
+      if (error) throw error;
+    }
+    setLogoUrl(url);
+    toast({ title: "Saved", description: url ? "Business logo updated — it now appears on every student report cover." : "Business logo removed." });
   }, [toast]);
 
   const savePhoto = useCallback(async (pageKey: string, url: string) => {
