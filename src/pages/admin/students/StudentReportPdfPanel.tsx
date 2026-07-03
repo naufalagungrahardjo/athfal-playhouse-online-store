@@ -85,6 +85,7 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
   const [themeUrl, setThemeUrl] = useState("");
   const [coverUrl, setCoverUrl] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+  const [landscapeUrl, setLandscapeUrl] = useState("");
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [generating, setGenerating] = useState(false);
   // White reading-panel opacity (0 = fully transparent, 1 = solid white). Default 90%.
@@ -98,16 +99,18 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [{ data: theme }, { data: cover }, { data: logo }, { data: studentPhotos }] = await Promise.all([
+      const [{ data: theme }, { data: cover }, { data: logo }, { data: landscape }, { data: studentPhotos }] = await Promise.all([
         supabase.from("student_report_assets").select("image_url").eq("scope", "theme").maybeSingle(),
         supabase.from("student_report_assets").select("image_url").eq("scope", "cover").maybeSingle(),
         supabase.from("student_report_assets").select("image_url").eq("scope", "logo").maybeSingle(),
+        supabase.from("student_report_assets").select("image_url").eq("scope", "landscape").maybeSingle(),
         supabase.from("student_report_assets").select("page_key,image_url").eq("scope", "photo").eq("student_id", studentId),
       ]);
       if (cancelled) return;
       setThemeUrl(theme?.image_url ? `${stripCacheBuster(theme.image_url)}?t=${Date.now()}` : "");
       setCoverUrl(cover?.image_url ? `${stripCacheBuster(cover.image_url)}?t=${Date.now()}` : "");
       setLogoUrl(logo?.image_url ? `${stripCacheBuster(logo.image_url)}?t=${Date.now()}` : "");
+      setLandscapeUrl(landscape?.image_url ? `${stripCacheBuster(landscape.image_url)}?t=${Date.now()}` : "");
       const map: Record<string, string> = {};
       (studentPhotos || []).forEach((r: any) => { if (r.page_key) map[r.page_key] = `${stripCacheBuster(r.image_url)}?t=${Date.now()}`; });
       setPhotos(map);
@@ -151,6 +154,18 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
     toast({ title: "Saved", description: url ? "Business logo updated — it now appears on every student report cover." : "Business logo removed." });
   }, [toast]);
 
+  const saveLandscape = useCallback(async (url: string) => {
+    const cleanUrl = stripCacheBuster(url);
+    const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "landscape");
+    if (deleteError) throw deleteError;
+    if (cleanUrl) {
+      const { error } = await supabase.from("student_report_assets").insert({ scope: "landscape", image_url: cleanUrl });
+      if (error) throw error;
+    }
+    setLandscapeUrl(url);
+    toast({ title: "Saved", description: url ? "Page 1 documentation photo updated — it now appears on every student report." : "Page 1 documentation photo removed." });
+  }, [toast]);
+
   const savePhoto = useCallback(async (pageKey: string, url: string) => {
     const cleanUrl = stripCacheBuster(url);
     const { error: deleteError } = await supabase.from("student_report_assets").delete().eq("scope", "photo").eq("student_id", studentId).eq("page_key", pageKey);
@@ -176,7 +191,7 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
         })
       );
       // Big landscape documentation photo for page 1.
-      photosByPage[LANDSCAPE_KEY] = photos[LANDSCAPE_KEY] ? await urlToDataUrl(photos[LANDSCAPE_KEY]) : null;
+      photosByPage[LANDSCAPE_KEY] = landscapeUrl ? await urlToDataUrl(landscapeUrl) : null;
       // Include a PDF page for any field that has saved text OR an uploaded photo,
       // so a photo attached to a text-less field still appears in the report.
       const fieldsWithText = new Set(fields.map((f) => f.key));
@@ -270,10 +285,10 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
             </div>
             <div className="rounded-lg border p-4 bg-muted/30">
               <ImageUpload
-                value={photos[LANDSCAPE_KEY] || ""}
-                onChange={(url) => savePhoto(LANDSCAPE_KEY, url)}
-                label="Page 1 Documentation Photo (A5 landscape)"
-                hint="Shown on page 1 below the attendance summary. Best as an A5 landscape image (e.g. 1748×1240, ratio ~1.42:1). Per student."
+                value={landscapeUrl}
+                onChange={saveLandscape}
+                label="Page 1 Documentation Photo (A5 landscape) — applies to every student"
+                hint="Shown on page 1 below the attendance summary. Best as an A5 landscape image (e.g. 1748×1240, ratio ~1.42:1). Upload once and it is used on every student's report."
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
