@@ -168,12 +168,15 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
     try {
       const themeDataUrl = themeUrl ? await urlToDataUrl(themeUrl) : null;
       const coverDataUrl = coverUrl ? await urlToDataUrl(coverUrl) : null;
+      const logoDataUrl = logoUrl ? await urlToDataUrl(logoUrl) : null;
       const photosByPage: Record<string, string | null> = {};
       await Promise.all(
         photoPages.map(async (p) => {
           photosByPage[p.key] = photos[p.key] ? await urlToDataUrl(photos[p.key]) : null;
         })
       );
+      // Big landscape documentation photo for page 1.
+      photosByPage[LANDSCAPE_KEY] = photos[LANDSCAPE_KEY] ? await urlToDataUrl(photos[LANDSCAPE_KEY]) : null;
       // Include a PDF page for any field that has saved text OR an uploaded photo,
       // so a photo attached to a text-less field still appears in the report.
       const fieldsWithText = new Set(fields.map((f) => f.key));
@@ -188,6 +191,7 @@ export default function StudentReportPdfPanel({ studentId, studentName, summary,
         fields: pdfFields,
         themeDataUrl,
         coverDataUrl,
+        logoDataUrl,
         className,
         photosByPage,
         cardOpacity,
