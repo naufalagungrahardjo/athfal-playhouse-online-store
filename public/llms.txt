@@ -1,0 +1,18 @@
+# Athfal Playhouse
+
+> Pusat edukasi dan bermain anak dengan pendekatan Islami — kelas, mainan edukatif, dan play kit untuk anak-anak Muslim sesuai Sunnah. Islamic children's education and play center offering classes, educational toys, and play kits.
+
+Athfal Playhouse is an Indonesian children's education brand that combines play-based learning with Islamic values. The site offers educational classes, Islamic educational toys, and play kits, along with a blog, gallery, and FAQ. Content is available in Indonesian (id) and English (en).
+
+## Pages
+
+- [Home](https://athfalplayhouse.com/): Overview of Athfal Playhouse — featured products, classes, and about the brand.
+- [About Us](https://athfalplayhouse.com/about): The story, mission, and Islamic play-based learning approach of Athfal Playhouse.
+- [Products](https://athfalplayhouse.com/products): Full catalog of classes, educational toys, and play kits.
+- [Blog](https://athfalplayhouse.com/blog): Articles on parenting, Islamic education, and child development.
+- [Gallery](https://athfalplayhouse.com/gallery): Photos and reels of activities and events.
+- [FAQ](https://athfalplayhouse.com/faq): Frequently asked questions about products, classes, and ordering.
+
+## Optional
+
+- [Instagram](https://www.instagram.com/athfalplayhouse): Latest updates and activities.
