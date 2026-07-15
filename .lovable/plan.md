@@ -1,46 +1,62 @@
-# Reduce Egress (Cached Egress) — Findings & Plan
+# Security Scan Results & Fix Plan
 
-## What I found (the real numbers)
-I inspected your storage and code. Egress = data shipped out to visitors. "Cached egress" = the same files being shipped over and over from the CDN. Two concrete problems are driving it:
+**Scan date:** 2026-07-15  •  **Total findings:** 118  •  **Severity:** all `warn` (no `critical` / `error`)
 
-1. **Your images expire from cache after just 1 hour.** Every uploaded image is saved with `Cache-Control: max-age=3600` (1 hour). After an hour, every visitor's browser and the CDN throw the image away and download it again — even though the image never changes. This is the single biggest cause of *repeated/cached* egress.
-2. **Images are big and served at full size everywhere.** The `images` bucket holds **603 files = 343 MB**, averaging **583 KB each**, with many **3–4.7 MB** originals. Your "optimizer" is currently a no-op, so the same huge file is sent for tiny product thumbnails, listing grids, and full-screen views alike.
-
-Smaller, secondary contributors: ~12 live "real-time" subscriptions that re-pull whole tables on any change (database egress), and a `?t=timestamp` tag added to image URLs that slightly weakens caching.
-
-## Where the highest egress comes from
-- **Public pages everyone visits** (home, product listing, product detail, gallery, blog) loading full-size images → multiplied by the 1-hour cache expiry = the bulk of egress.
-- **Largest single files:** product/upload photos and 360° panoramas (3–4.7 MB each).
-- **Admin/data refreshes** from real-time subscriptions (smaller, but constant).
-
-## The plan (ordered by impact vs. effort)
-
-### Phase 1 — Cache images for a year (biggest win, lowest effort)
-Image filenames are already unique timestamps, so an image at a given URL never changes — it's safe to cache "forever."
-- Change all upload code to save `Cache-Control: max-age=31536000, immutable` (1 year) instead of `3600`.
-- Run a **one-time backfill script** that re-applies the 1-year cache header to the 603 existing files.
-- Remove the `?t=timestamp` cache-buster appended to new image URLs (it's unnecessary since filenames are already unique).
-
-Result: returning visitors and the CDN stop re-downloading unchanged images — this directly collapses *cached* egress.
-
-### Phase 2 — Make images smaller (high win)
-- **Generate a small thumbnail on upload** (e.g. 400px WebP) and store it next to the original. Use the thumbnail on listing grids, cards, related-products, and gallery previews; load the full image only on the detail/lightbox view. This makes the no-op optimizer actually do its job.
-- **Compress on every upload path.** Compression already runs in product/document/check-in uploads; extend the same WebP compression (quality ~0.8, max 1600px) to any upload path still missing it. (360° panoramas stay full-size by design.)
-- **Optional one-time cleanup:** re-compress existing oversized originals (the 3–4.7 MB files) down to ~web size. This shrinks both storage and egress but rewrites stored images, so I'd do it carefully and only with your go-ahead.
-
-### Phase 3 — Trim repeated data fetches (smaller win)
-- Narrow the real-time subscriptions so they don't re-pull entire tables on every change (use the change payload or fetch only what's needed), and drop subscriptions on pages that don't need live updates.
-- Replace the broken-image fallback that points to an external Unsplash photo with a local placeholder (avoids wasted external fetches).
-
-## What you'll be able to see / control
-Nothing visually changes for your visitors — images look the same, just load faster and re-download far less. After Phase 1+2, repeated/cached egress should drop substantially because the same images are no longer re-shipped hourly and listing pages send small thumbnails instead of multi-MB originals.
+Good news first: there are **no critical vulnerabilities**. Passwords are stored bcrypt-hashed by Supabase Auth (not plain text). No RLS-disabled tables, no leaked service keys, no exposed PII endpoints. The findings are mostly hardening warnings.
 
 ---
 
-## Technical section (for reference)
-- **Cache header:** set `cacheControl: '31536000'` (+ rely on immutable) in `FileUploadInput.tsx`, `PanoramaUploadInput.tsx`, `AdminDocuments.tsx`, `AdminCheckInOut.tsx`, `OrderDetailsDialog.tsx`, and any other `.upload(...)` calls. Backfill existing objects via a service-role Node script using the Storage API (`copy`/re-upload with the new `cacheControl`) — not by editing the reserved `storage` schema directly.
-- **Buckets:** `images` is public (good for CDN). Current headers confirmed as `max-age=3600` on stored objects.
-- **Thumbnails:** on upload, produce a derived WebP (~400px) via the existing `compressImageFile` (`mimeType: 'image/webp'`), store as `uploads/thumb/<name>.webp`; update `getOptimizedImageUrl`/`ProductCard`/home + gallery cards to use it, falling back to the original if no thumb exists.
-- **Cache-buster:** remove `?t=${Date.now()}` from the returned URL in `FileUploadInput.tsx`.
-- **Realtime:** in hooks under `src/hooks/*` and `CartContext`, scope channels and avoid full `fetchData()` refetch on every `postgres_changes` event where a payload-based update suffices.
-- **No DB schema changes required** for Phases 1 and 3; Phase 2 thumbnails are additive files only.
+## Finding breakdown
+
+| # | Finding | Count | Priority |
+|---|---|---|---|
+| 1 | Leaked Password Protection Disabled | 1 | **HIGH** — 1-click fix |
+| 2 | Postgres has security patches available | 1 | **HIGH** — 1-click fix |
+| 3 | Parent portal access uses fuzzy name matching | 1 | **MEDIUM** — real logic risk |
+| 4 | Public storage bucket allows listing | 1 | **MEDIUM** — review |
+| 5 | SECURITY DEFINER functions callable by anon | ~40 | **LOW** — mostly intentional |
+| 6 | SECURITY DEFINER functions callable by authenticated | ~74 | **LOW** — mostly intentional |
+
+---
+
+## Priority 1 — Do these now (no code required)
+
+These are toggles in the Supabase dashboard, not code changes. I'll give you the exact links after you approve.
+
+- **1a. Enable "Leaked Password Protection"** — blocks passwords found in known breaches (HaveIBeenPwned). Free, one toggle in Auth settings.
+- **1b. Upgrade Postgres** — Supabase has security patches waiting. One click in Database → Infrastructure. May cause ~1 min of downtime; do it at a quiet hour.
+
+## Priority 2 — Code / config fix (I'll implement)
+
+- **2. Harden parent-portal access (`can_access_parent_portal`)**
+  Today the RPC lets a parent see documents when their `orders.child_name` fuzzy-matches any `students.name`. If two students happen to share a normalized name, one family could see the other's documents.
+  **Fix:** rewrite `can_access_parent_portal()` and `list_parent_document_recipients()` to gate access on the real `order_id → student_enrollments` relationship (which already exists via `auto_enroll_order_to_active_programs`), not on name comparison. Migration only — no UI changes.
+
+- **3. Review the `images` bucket listing policy**
+  The scanner flags that the `images` bucket policy allows anyone to *list* file paths (not read private content, since files themselves are still individually referenced). We use this bucket for product photos, banners, blog images, AND parent documents / student report photos.
+  **Fix:** tighten the `storage.objects` SELECT policy on `images` so listing is admin-only, while individual public files remain reachable by direct URL. I'll audit any code that relies on `storage.list()` first (the `AdminDocuments` bulk-delete flow does).
+
+## Priority 3 — Bulk cleanup (mark as accepted risk)
+
+The ~114 "SECURITY DEFINER function executable" warnings are **by design** for this app. Every one of these functions is a Lovable-standard pattern: RPCs like `validate_promo_code`, `get_order_by_token`, `has_role`, `is_admin_account`, `can_access_student_menu`, `get_my_child_attendance`, etc. They MUST be callable by anon/authenticated to work — that's the whole point of `SECURITY DEFINER` RPCs with internal authorization checks (which yours have).
+
+**Plan:** review the list, then bulk-`ignore` these findings with an explanation in security memory ("SECURITY DEFINER RPCs are the intended pattern; each function performs its own auth check via `auth.email()` / `auth.uid()` / lookup_token"). This stops the noise so future scans surface real issues.
+
+## Extra recommendations (not scanner findings, but worth doing before scaling)
+
+- **Raise auth rate limits sensibly** (`rate_limit_email_sent`) once real signup volume is known — currently at Supabase defaults.
+- **Enable MFA (TOTP)** on your super-admin account in Supabase Auth.
+- **Rotate the Lovable API key** and any old Supabase keys periodically.
+- **Set up Google Search Console + Supabase log alerts** for suspicious login spikes.
+
+---
+
+## Technical execution steps (for the build phase)
+
+1. Migration: rewrite `public.can_access_parent_portal()` to `EXISTS (SELECT 1 FROM orders o JOIN student_enrollments se … JOIN students s ON s.id = se.student_id WHERE lower(o.customer_email)=lower(auth.email()) AND o.status IN ('processing','completed'))` — join on the real enrollment chain, not `normalize_student_program_text` string equality. Same treatment for `list_parent_document_recipients()`.
+2. Audit `src/pages/admin/AdminDocuments.tsx` and any hook using `supabase.storage.from('images').list(...)`. Update RLS on `storage.objects` for bucket `images` so SELECT (list) requires `is_admin_account(auth.email())`, but keep public read on individual file paths where needed (product/banner/blog assets already exposed via public URLs).
+3. Batch `security--manage_security_finding` with `operation: ignore` for every `SUPA_anon_security_definer_function_executable` and `SUPA_authenticated_security_definer_function_executable` finding, one shared explanation.
+4. Call `security--update_memory` to record: (a) parent-portal fix done, (b) SECURITY DEFINER RPC pattern is accepted, (c) `images` bucket listing is admin-only.
+5. Tell you to do the two dashboard toggles (Priority 1a, 1b).
+
+Approve this plan and I'll switch to build mode and start with the parent-portal migration.
