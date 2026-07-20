@@ -85,13 +85,18 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
   };
 
   // The record that is actually displayed / counted for a (enrollment, date):
-  // the one with the highest id across ALL teachers. Editing must target this
-  // same record, otherwise the change lands on a different teacher's row and
-  // never shows in the table or summary.
+  // prefer THIS teacher's own record so their edits always round-trip. Fall
+  // back to the most recently updated record from any teacher when this
+  // teacher has not yet written a row for that session. Sorting by
+  // updated_at (not UUID) makes "most recent" deterministic.
   const findDisplayRecord = (enrollmentId: string, dateStr: string) => {
-    return attendance
-      .filter(a => a.enrollment_id === enrollmentId && (((a as any).session_date === dateStr) || a.date === dateStr))
-      .sort((a, b) => (b.id > a.id ? 1 : -1))[0];
+    const rows = attendance
+      .filter(a => a.enrollment_id === enrollmentId && (((a as any).session_date === dateStr) || a.date === dateStr));
+    const own = rows.find(a => a.teacher_email === teacherEmail);
+    if (own) return own;
+    return rows
+      .slice()
+      .sort((a, b) => String((b as any).updated_at || "").localeCompare(String((a as any).updated_at || "")))[0];
   };
 
   const getFieldValue = (enrollmentId: string, dateStr: string, field: string) => {
@@ -99,13 +104,15 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
     if (edits[key] && field in edits[key]) return (edits[key] as any)[field];
 
     if (field === "attendance_status") {
-      const records = attendance
-        .filter(a => a.enrollment_id === enrollmentId && (((a as any).session_date === dateStr) || a.date === dateStr))
-        .sort((a, b) => (b.id > a.id ? 1 : -1));
-      return records.length > 0 ? records[0].attendance_status : "none";
+      const rec = findDisplayRecord(enrollmentId, dateStr);
+      return rec ? rec.attendance_status : "none";
     }
-    const existing = findAttendance(enrollmentId, dateStr, true);
-    return existing ? (existing as any)[field] : "";
+    // For descriptive fields, prefer this teacher's own record; fall back to
+    // whatever record is currently displayed so text isn't hidden.
+    const own = findAttendance(enrollmentId, dateStr, true);
+    if (own && (own as any)[field]) return (own as any)[field];
+    const rec = findDisplayRecord(enrollmentId, dateStr);
+    return rec ? ((rec as any)[field] || "") : "";
   };
 
   const setField = (enrollmentId: string, dateStr: string, field: string, value: string) => {
@@ -164,19 +171,21 @@ export default function AttendanceTab({ programs, students, enrollments, attenda
           .or(`session_date.eq.${dateStr},date.eq.${dateStr}`);
         continue;
       }
-      // Apply the edit to the SAME record that is displayed/counted (highest id
-      // across all teachers). Falls back to inserting a new record only when no
-      // record exists yet for this student+session.
-      const display = findDisplayRecord(enr.id, dateStr);
-      if (display) {
-        // Patch only the fields the admin actually edited so we don't clobber
-        // other fields on another teacher's record. meeting_number is left
-        // untouched to avoid the unique (enrollment, meeting, teacher) conflict.
+      // Always write to THIS teacher's own record for this session. Update
+      // if it exists, otherwise insert. This keeps RLS predictable (teachers
+      // reliably own the row they edit) and guarantees the change round-trips
+      // to the UI via findDisplayRecord.
+      const ownRecord = attendance.find(
+        a => a.enrollment_id === enr.id
+          && (((a as any).session_date === dateStr) || a.date === dateStr)
+          && a.teacher_email === teacherEmail
+      );
+      if (ownRecord) {
         const patch: any = { ...edited, updated_at: new Date().toISOString() };
         const { error } = await supabase
           .from("student_attendance" as any)
           .update(patch)
-          .eq("id", display.id);
+          .eq("id", ownRecord.id);
         if (error) {
           hadError = true;
           toast({ title: "Save failed", description: error.message, variant: "destructive" });

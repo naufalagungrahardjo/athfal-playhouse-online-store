@@ -30,32 +30,51 @@ type CheckRecord = {
 // Compress check-in/out photo aggressively while keeping faces recognizable.
 // Target: ~800x600, JPEG q=0.75 → typically 60–150 KB per photo.
 async function compressImage(file: File): Promise<Blob> {
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result as string);
-    r.onerror = reject;
-    r.readAsDataURL(file);
-  });
-  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const i = new Image();
-    i.onload = () => resolve(i);
-    i.onerror = reject;
-    i.src = dataUrl;
-  });
-  const MAX_W = 800;
-  const MAX_H = 600;
-  let { width, height } = img;
-  const ratio = Math.min(MAX_W / width, MAX_H / height, 1);
-  width = Math.round(width * ratio);
-  height = Math.round(height * ratio);
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(img, 0, 0, width, height);
-  return await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("compress failed"))), "image/jpeg", 0.75);
-  });
+  // HEIC/HEIF from iPhone Photos can't be decoded by <img> in most browsers.
+  // Fall back to uploading the original bytes so check-in never silently fails.
+  const nameLower = (file.name || "").toLowerCase();
+  const typeLower = (file.type || "").toLowerCase();
+  const isHeic = nameLower.endsWith(".heic") || nameLower.endsWith(".heif")
+    || typeLower.includes("heic") || typeLower.includes("heif");
+  if (isHeic) return file;
+
+  try {
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result as string);
+      r.onerror = () => reject(new Error("Could not read the selected photo"));
+      r.readAsDataURL(file);
+    });
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error("Photo format not supported by this browser"));
+      i.src = dataUrl;
+    });
+    const MAX_W = 800;
+    const MAX_H = 600;
+    let { width, height } = img;
+    const ratio = Math.min(MAX_W / width, MAX_H / height, 1);
+    width = Math.round(width * ratio);
+    height = Math.round(height * ratio);
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(img, 0, 0, width, height);
+    return await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("Compression failed"))),
+        "image/jpeg",
+        0.75,
+      );
+    });
+  } catch (err) {
+    // If anything goes wrong compressing, upload the original file rather
+    // than blocking the check-in entirely.
+    console.warn("compressImage fallback: using original file", err);
+    return file;
+  }
 }
 
 export default function AdminCheckInOut() {
