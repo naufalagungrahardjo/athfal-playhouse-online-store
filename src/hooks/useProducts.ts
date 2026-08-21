@@ -90,7 +90,10 @@ export const useProducts = () => {
       const soldA = isSoldOut(a) ? 1 : 0;
       const soldB = isSoldOut(b) ? 1 : 0;
       if (soldA !== soldB) return soldA - soldB;
-      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+      // Newest products first
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return dateB - dateA;
     });
 
   return {
