@@ -25,6 +25,7 @@ export interface Product {
   admission_date?: string | null;
   active_from?: string | null;
   active_until?: string | null;
+  created_at?: string | null;
   // For sub-product (variant) installment pricing: ordered list of payment divisions.
   // priceDivisions[0] is the first payment (what the customer pays now); the sum is the full price.
   priceDivisions?: number[];
