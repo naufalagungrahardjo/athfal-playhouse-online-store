@@ -32,6 +32,7 @@ async function fetchProductsFromDb(): Promise<Product[]> {
     admission_date: product.admission_date ?? null,
     active_from: product.active_from ?? null,
     active_until: product.active_until ?? null,
+    created_at: product.created_at ?? null,
   }));
 }
 
