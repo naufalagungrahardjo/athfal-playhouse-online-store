@@ -28,24 +28,42 @@ export interface BillingNoticeAssignment {
   generated_order_id?: string | null;
 }
 
+export interface BillingReminderLog {
+  id: string;
+  assignment_id: string | null;
+  notice_id: string | null;
+  order_id: string | null;
+  recipient_email: string | null;
+  status: string;
+  error_message: string | null;
+  sent_at: string;
+}
+
 type BillingNoticeAssignmentUpdate = Database["public"]["Tables"]["billing_notice_assignments"]["Update"];
 
 export const useBillingNotices = () => {
   const [notices, setNotices] = useState<BillingNotice[]>([]);
   const [assignments, setAssignments] = useState<BillingNoticeAssignment[]>([]);
+  const [reminderLogs, setReminderLogs] = useState<BillingReminderLog[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [{ data: n, error: ne }, { data: a, error: ae }] = await Promise.all([
+    const [{ data: n, error: ne }, { data: a, error: ae }, { data: l }] = await Promise.all([
       supabase.from("billing_notices").select("*").order("created_at", { ascending: false }),
       supabase.from("billing_notice_assignments").select("*"),
+      (supabase as any)
+        .from("billing_reminder_logs")
+        .select("*")
+        .order("sent_at", { ascending: false })
+        .limit(2000),
     ]);
     if (ne) toast({ title: "Failed to load notices", description: ne.message, variant: "destructive" });
     if (ae) toast({ title: "Failed to load assignments", description: ae.message, variant: "destructive" });
     setNotices((n as BillingNotice[]) || []);
     setAssignments((a as BillingNoticeAssignment[]) || []);
+    setReminderLogs((l as BillingReminderLog[]) || []);
     setLoading(false);
   }, [toast]);
 
