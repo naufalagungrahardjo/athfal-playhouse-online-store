@@ -16,7 +16,7 @@ interface Props {
 }
 
 export const BillingNoticesTab = ({ orders }: Props) => {
-  const { notices, assignments, loading, createNotice, updateNotice, deleteNotice, assignToOrders, unassign, setEmailReminder } = useBillingNotices();
+  const { notices, assignments, reminderLogs, loading, createNotice, updateNotice, deleteNotice, assignToOrders, unassign, setEmailReminder } = useBillingNotices();
   const { user } = useAuth();
   const role = getAdminRole(user);
   const canDelete = role === "super_admin" || role === "orders_manager";
@@ -26,6 +26,7 @@ export const BillingNoticesTab = ({ orders }: Props) => {
   const [assignOpen, setAssignOpen] = useState<BillingNotice | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState<string | null>(null);
 
   const ordersById = useMemo(() => {
     const m = new Map<string, any>();
@@ -41,6 +42,16 @@ export const BillingNoticesTab = ({ orders }: Props) => {
     });
     return m;
   }, [assignments]);
+
+  const logsByAssignment = useMemo(() => {
+    const m = new Map<string, typeof reminderLogs>();
+    (reminderLogs || []).forEach((l) => {
+      if (!l.assignment_id) return;
+      if (!m.has(l.assignment_id)) m.set(l.assignment_id, []);
+      m.get(l.assignment_id)!.push(l);
+    });
+    return m;
+  }, [reminderLogs]);
 
   const handleDownload = (notice: BillingNotice, orderId: string) => {
     const order = ordersById.get(orderId);
