@@ -121,38 +121,84 @@ export const BillingNoticesTab = ({ orders }: Props) => {
                         <ul className="divide-y">
                           {list.map((a) => {
                             const order = ordersById.get(a.order_id);
+                            const logs = logsByAssignment.get(a.id) || [];
+                            const lastSent = logs.find((l) => l.status === "sent")?.sent_at || a.email_reminder_sent_at || null;
+                            const showHistory = historyOpen === a.id;
                             return (
-                              <li key={a.id} className="flex items-center justify-between py-2 gap-2 flex-wrap">
-                                <div className="text-sm">
-                                  <div className="font-medium">{order?.customer_name || "(unknown order)"}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {order?.customer_email} · Order {a.order_id.slice(0, 8)}
+                              <li key={a.id} className="py-2 space-y-2">
+                                <div className="flex items-center justify-between gap-2 flex-wrap">
+                                  <div className="text-sm">
+                                    <div className="font-medium">{order?.customer_name || "(unknown order)"}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {order?.customer_email} · Order {a.order_id.slice(0, 8)}
+                                    </div>
+                                    <div className="text-xs mt-1">
+                                      {lastSent ? (
+                                        <span className="text-green-700">Last email sent: {new Date(lastSent).toLocaleString()}</span>
+                                      ) : (
+                                        <span className="text-muted-foreground">No email sent yet</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2 flex-wrap">
+                                    <Button size="sm" variant="outline" disabled={!order} onClick={() => order && handleDownload(n, a.order_id)}>
+                                      <Download className="h-4 w-4 mr-1" /> PDF
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant={a.email_reminder_enabled ? "default" : "outline"}
+                                      disabled={togglingId === a.id}
+                                      onClick={async () => {
+                                        setTogglingId(a.id);
+                                        await setEmailReminder(a.id, !a.email_reminder_enabled);
+                                        setTogglingId(null);
+                                      }}
+                                      title={a.email_reminder_enabled
+                                        ? `Reminder email will be sent to ${order?.customer_email || "the customer"} at the due date/time${a.email_reminder_sent_at ? ` (sent ${new Date(a.email_reminder_sent_at).toLocaleString()})` : ""}`
+                                        : `Enable: send a reminder email to ${order?.customer_email || "the customer"} at the due date/time`}
+                                    >
+                                      {a.email_reminder_sent_at ? <MailCheck className="h-4 w-4 mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
+                                      {a.email_reminder_enabled ? (a.email_reminder_sent_at ? "Sent" : "Reminder On") : "Email on Due"}
+                                    </Button>
+                                    <Button size="sm" variant="ghost" onClick={() => setHistoryOpen(showHistory ? null : a.id)}>
+                                      <History className="h-4 w-4 mr-1" /> {showHistory ? "Hide" : "History"}
+                                      {logs.length > 0 && <span className="ml-1">({logs.length})</span>}
+                                    </Button>
+                                    <Button size="sm" variant="ghost" onClick={() => unassign(a.id)}>
+                                      <X className="h-4 w-4" />
+                                    </Button>
                                   </div>
                                 </div>
-                                <div className="flex gap-2">
-                                  <Button size="sm" variant="outline" disabled={!order} onClick={() => order && handleDownload(n, a.order_id)}>
-                                    <Download className="h-4 w-4 mr-1" /> PDF
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant={a.email_reminder_enabled ? "default" : "outline"}
-                                    disabled={togglingId === a.id}
-                                    onClick={async () => {
-                                      setTogglingId(a.id);
-                                      await setEmailReminder(a.id, !a.email_reminder_enabled);
-                                      setTogglingId(null);
-                                    }}
-                                    title={a.email_reminder_enabled
-                                      ? `Reminder email will be sent to ${order?.customer_email || "the customer"} at the due date/time${a.email_reminder_sent_at ? ` (sent ${new Date(a.email_reminder_sent_at).toLocaleString()})` : ""}`
-                                      : `Enable: send a reminder email to ${order?.customer_email || "the customer"} at the due date/time`}
-                                  >
-                                    {a.email_reminder_sent_at ? <MailCheck className="h-4 w-4 mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
-                                    {a.email_reminder_enabled ? (a.email_reminder_sent_at ? "Sent" : "Reminder On") : "Email on Due"}
-                                  </Button>
-                                  <Button size="sm" variant="ghost" onClick={() => unassign(a.id)}>
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
+
+                                {showHistory && (
+                                  <div className="rounded-md border bg-muted/30 p-3">
+                                    {logs.length === 0 ? (
+                                      <p className="text-xs text-muted-foreground">
+                                        No email delivery history recorded for this customer yet.
+                                        {a.email_reminder_sent_at && ` (Legacy record: sent ${new Date(a.email_reminder_sent_at).toLocaleString()})`}
+                                      </p>
+                                    ) : (
+                                      <ul className="space-y-1 text-xs">
+                                        {logs.map((l) => (
+                                          <li key={l.id} className="flex items-start justify-between gap-2">
+                                            <span>
+                                              <Badge variant={l.status === "sent" ? "default" : "destructive"} className="mr-2">
+                                                {l.status === "sent" ? "Sent" : "Failed"}
+                                              </Badge>
+                                              {new Date(l.sent_at).toLocaleString()}
+                                              {l.recipient_email && <span className="text-muted-foreground"> · {l.recipient_email}</span>}
+                                            </span>
+                                            {l.error_message && (
+                                              <span className="text-destructive max-w-[50%] truncate" title={l.error_message}>
+                                                {l.error_message}
+                                              </span>
+                                            )}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    )}
+                                  </div>
+                                )}
                               </li>
                             );
                           })}
