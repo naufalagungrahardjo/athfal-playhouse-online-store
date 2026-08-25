@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Download, Plus, X, Mail, MailCheck } from "lucide-react";
+import { Download, Plus, X, Mail, MailCheck, History as HistoryIcon } from "lucide-react";
 import { useBillingNotices } from "@/hooks/useBillingNotices";
 import { useDatabase } from "@/hooks/useDatabase";
 import { supabase } from "@/integrations/supabase/client";
