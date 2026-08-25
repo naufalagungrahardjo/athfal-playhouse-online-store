@@ -176,6 +176,7 @@ export const useBillingNotices = () => {
   return {
     notices,
     assignments,
+    reminderLogs,
     loading,
     refetch: fetchAll,
     createNotice,
