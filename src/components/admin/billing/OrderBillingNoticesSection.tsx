@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Download, Plus, X, Mail, MailCheck } from "lucide-react";
+import { Download, Plus, X, Mail, MailCheck, History as HistoryIcon } from "lucide-react";
 import { useBillingNotices } from "@/hooks/useBillingNotices";
 import { useDatabase } from "@/hooks/useDatabase";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,12 +24,13 @@ interface OrderShape {
 }
 
 export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => {
-  const { notices, assignments, loading, assignToOrders, unassignByOrderAndNotice, setEmailReminder } = useBillingNotices();
+  const { notices, assignments, reminderLogs, loading, assignToOrders, unassignByOrderAndNotice, setEmailReminder } = useBillingNotices();
   const { paymentMethods } = useDatabase();
   const [selected, setSelected] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState<string | null>(null);
 
   const assigned = useMemo(
     () => assignments.filter((a) => a.order_id === order.id),
@@ -42,6 +43,16 @@ export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => 
     const m = new Map(notices.map((n) => [n.id, n]));
     return m;
   }, [notices]);
+
+  const logsByAssignment = useMemo(() => {
+    const m = new Map<string, typeof reminderLogs>();
+    (reminderLogs || []).forEach((l) => {
+      if (!l.assignment_id) return;
+      if (!m.has(l.assignment_id)) m.set(l.assignment_id, []);
+      m.get(l.assignment_id)!.push(l);
+    });
+    return m;
+  }, [reminderLogs]);
 
   const handleAssign = async () => {
     if (!selected) return;
@@ -186,6 +197,8 @@ export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => 
           {assigned.map((a) => {
             const n = noticeById.get(a.notice_id);
             if (!n) return null;
+            const logs = logsByAssignment.get(a.id) || [];
+            const showHistory = historyOpen === a.id;
             return (
               <li key={a.id} className="border rounded p-3 bg-white flex items-center justify-between gap-2 flex-wrap">
                 <div className="text-sm">
@@ -252,10 +265,42 @@ export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => 
                     {a.email_reminder_sent_at ? <MailCheck className="h-4 w-4 mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
                     {a.email_reminder_enabled ? (a.email_reminder_sent_at ? "Sent" : "Reminder On") : "Email on Due"}
                   </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setHistoryOpen(showHistory ? null : a.id)}>
+                    <HistoryIcon className="h-4 w-4 mr-1" /> {showHistory ? "Hide" : "History"}
+                  </Button>
                   <Button size="sm" variant="ghost" onClick={() => unassignByOrderAndNotice(n.id, order.id)}>
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
+                {showHistory && (
+                  <div className="w-full rounded-md border bg-muted/30 p-3 mt-2">
+                    {logs.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">
+                        No email delivery history recorded for this customer yet.
+                        {a.email_reminder_sent_at && ` (Legacy record: sent ${new Date(a.email_reminder_sent_at).toLocaleString()})`}
+                      </p>
+                    ) : (
+                      <ul className="space-y-1 text-xs">
+                        {logs.map((l) => (
+                          <li key={l.id} className="flex items-start justify-between gap-2">
+                            <span>
+                              <Badge variant={l.status === "sent" ? "default" : "destructive"} className="mr-2">
+                                {l.status === "sent" ? "Sent" : "Failed"}
+                              </Badge>
+                              {new Date(l.sent_at).toLocaleString()}
+                              {l.recipient_email && <span className="text-muted-foreground"> · {l.recipient_email}</span>}
+                            </span>
+                            {l.error_message && (
+                              <span className="text-destructive max-w-[50%] truncate" title={l.error_message}>
+                                {l.error_message}
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </li>
             );
           })}
