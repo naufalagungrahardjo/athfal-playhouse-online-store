@@ -363,20 +363,39 @@ Deno.serve(async (req) => {
         }),
       });
 
+      const logBase = {
+        assignment_id: assignment.id,
+        notice_id: assignment.notice_id,
+        order_id: assignment.order_id,
+        recipient_email: order.customer_email,
+      };
+
       if (!response.ok) {
-        errors.push({ assignment: assignment.id, status: response.status, body: await response.text() });
+        const body = await response.text();
+        errors.push({ assignment: assignment.id, status: response.status, body });
+        await supabase.from("billing_reminder_logs").insert({
+          ...logBase,
+          status: "failed",
+          error_message: `Resend ${response.status}: ${body}`.slice(0, 1000),
+        });
         continue;
       }
 
+      const sentAt = new Date().toISOString();
       const { error: updateError } = await supabase
         .from("billing_notice_assignments")
-        .update({ email_reminder_sent_at: new Date().toISOString() })
+        .update({ email_reminder_sent_at: sentAt })
         .eq("id", assignment.id);
 
       if (updateError) {
         errors.push({ assignment: assignment.id, status: 500, body: updateError.message });
-        continue;
       }
+
+      await supabase.from("billing_reminder_logs").insert({
+        ...logBase,
+        status: "sent",
+        sent_at: sentAt,
+      });
 
       sent += 1;
     }
