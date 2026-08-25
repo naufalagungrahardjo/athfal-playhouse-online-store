@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Plus, UserPlus, Download, X, Mail, MailCheck } from "lucide-react";
+import { Pencil, Trash2, Plus, UserPlus, Download, X, Mail, MailCheck, History as HistoryIcon } from "lucide-react";
 import { useBillingNotices, BillingNotice } from "@/hooks/useBillingNotices";
 import { BillingNoticeFormDialog } from "./BillingNoticeFormDialog";
 import { AssignOrdersDialog } from "./AssignOrdersDialog";
