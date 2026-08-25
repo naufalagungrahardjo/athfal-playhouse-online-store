@@ -398,6 +398,42 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_reminder_logs: {
+        Row: {
+          assignment_id: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          notice_id: string | null
+          order_id: string | null
+          recipient_email: string | null
+          sent_at: string
+          status: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          notice_id?: string | null
+          order_id?: string | null
+          recipient_email?: string | null
+          sent_at?: string
+          status?: string
+        }
+        Update: {
+          assignment_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          notice_id?: string | null
+          order_id?: string | null
+          recipient_email?: string | null
+          sent_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       blogs: {
         Row: {
           author: string
