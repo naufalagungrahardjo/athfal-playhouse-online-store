@@ -197,6 +197,8 @@ export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => 
           {assigned.map((a) => {
             const n = noticeById.get(a.notice_id);
             if (!n) return null;
+            const logs = logsByAssignment.get(a.id) || [];
+            const showHistory = historyOpen === a.id;
             return (
               <li key={a.id} className="border rounded p-3 bg-white flex items-center justify-between gap-2 flex-wrap">
                 <div className="text-sm">
