@@ -265,10 +265,42 @@ export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => 
                     {a.email_reminder_sent_at ? <MailCheck className="h-4 w-4 mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
                     {a.email_reminder_enabled ? (a.email_reminder_sent_at ? "Sent" : "Reminder On") : "Email on Due"}
                   </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setHistoryOpen(showHistory ? null : a.id)}>
+                    <HistoryIcon className="h-4 w-4 mr-1" /> {showHistory ? "Hide" : "History"}
+                  </Button>
                   <Button size="sm" variant="ghost" onClick={() => unassignByOrderAndNotice(n.id, order.id)}>
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
+                {showHistory && (
+                  <div className="w-full rounded-md border bg-muted/30 p-3 mt-2">
+                    {logs.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">
+                        No email delivery history recorded for this customer yet.
+                        {a.email_reminder_sent_at && ` (Legacy record: sent ${new Date(a.email_reminder_sent_at).toLocaleString()})`}
+                      </p>
+                    ) : (
+                      <ul className="space-y-1 text-xs">
+                        {logs.map((l) => (
+                          <li key={l.id} className="flex items-start justify-between gap-2">
+                            <span>
+                              <Badge variant={l.status === "sent" ? "default" : "destructive"} className="mr-2">
+                                {l.status === "sent" ? "Sent" : "Failed"}
+                              </Badge>
+                              {new Date(l.sent_at).toLocaleString()}
+                              {l.recipient_email && <span className="text-muted-foreground"> · {l.recipient_email}</span>}
+                            </span>
+                            {l.error_message && (
+                              <span className="text-destructive max-w-[50%] truncate" title={l.error_message}>
+                                {l.error_message}
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </li>
             );
           })}
