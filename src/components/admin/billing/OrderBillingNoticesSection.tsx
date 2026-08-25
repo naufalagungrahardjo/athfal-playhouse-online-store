@@ -24,12 +24,13 @@ interface OrderShape {
 }
 
 export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => {
-  const { notices, assignments, loading, assignToOrders, unassignByOrderAndNotice, setEmailReminder } = useBillingNotices();
+  const { notices, assignments, reminderLogs, loading, assignToOrders, unassignByOrderAndNotice, setEmailReminder } = useBillingNotices();
   const { paymentMethods } = useDatabase();
   const [selected, setSelected] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState<string | null>(null);
 
   const assigned = useMemo(
     () => assignments.filter((a) => a.order_id === order.id),
@@ -42,6 +43,16 @@ export const OrderBillingNoticesSection = ({ order }: { order: OrderShape }) => 
     const m = new Map(notices.map((n) => [n.id, n]));
     return m;
   }, [notices]);
+
+  const logsByAssignment = useMemo(() => {
+    const m = new Map<string, typeof reminderLogs>();
+    (reminderLogs || []).forEach((l) => {
+      if (!l.assignment_id) return;
+      if (!m.has(l.assignment_id)) m.set(l.assignment_id, []);
+      m.get(l.assignment_id)!.push(l);
+    });
+    return m;
+  }, [reminderLogs]);
 
   const handleAssign = async () => {
     if (!selected) return;
