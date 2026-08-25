@@ -161,7 +161,7 @@ export const BillingNoticesTab = ({ orders }: Props) => {
                                       {a.email_reminder_enabled ? (a.email_reminder_sent_at ? "Sent" : "Reminder On") : "Email on Due"}
                                     </Button>
                                     <Button size="sm" variant="ghost" onClick={() => setHistoryOpen(showHistory ? null : a.id)}>
-                                      <History className="h-4 w-4 mr-1" /> {showHistory ? "Hide" : "History"}
+                                      <HistoryIcon className="h-4 w-4 mr-1" /> {showHistory ? "Hide" : "History"}
                                       {logs.length > 0 && <span className="ml-1">({logs.length})</span>}
                                     </Button>
                                     <Button size="sm" variant="ghost" onClick={() => unassign(a.id)}>
