@@ -1,0 +1,1 @@
+ALTER TABLE public.billing_notice_assignments ALTER COLUMN email_reminder_enabled SET DEFAULT true;
