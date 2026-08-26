@@ -108,7 +108,7 @@ export const useBillingNotices = () => {
 
   const assignToOrders = async (noticeId: string, orderIds: string[]) => {
     if (!orderIds.length) return true;
-    const rows = orderIds.map((order_id) => ({ notice_id: noticeId, order_id }));
+    const rows = orderIds.map((order_id) => ({ notice_id: noticeId, order_id, email_reminder_enabled: true }));
     const { error } = await supabase
       .from("billing_notice_assignments")
       .upsert(rows, { onConflict: "notice_id,order_id", ignoreDuplicates: true });
