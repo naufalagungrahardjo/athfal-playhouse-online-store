@@ -76,7 +76,7 @@ export const ListOfPayableTab = ({ orders, onViewDetails, refreshKey = 0, onChan
           paymentId: p.id,
           orderId: p.order_id,
           paymentNumber: p.payment_number,
-          amount: Number(p.amount) || 0,
+          amount,
           divisionLabel: p.notes || `Pembayaran ${p.payment_number}`,
           productName,
           customerName: order.customer_name || '-',
