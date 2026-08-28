@@ -61,13 +61,22 @@ export const ListOfPayableTab = ({ orders, onViewDetails, refreshKey = 0, onChan
         const order = orderMap.get(p.order_id);
         if (!order) return null;
         if (order.status === 'cancelled' || order.status === 'refund') return null;
+        const amount = Number(p.amount) || 0;
+        // Skip zero/negative adjustment rows — nothing is actually owed.
+        if (amount <= 0) return null;
+        // Skip orders that are already settled in full (leftover legacy rows
+        // can stay "unpaid" even though the money was received).
+        const total = Number(order.total_amount) || 0;
+        const paid = Number(order.amount_paid) || 0;
+        if (total > 0 && paid >= total) return null;
         const productName =
           order.items?.map((i: any) => i.product_name).filter(Boolean).join(', ') || '-';
         return {
+
           paymentId: p.id,
           orderId: p.order_id,
           paymentNumber: p.payment_number,
-          amount: Number(p.amount) || 0,
+          amount,
           divisionLabel: p.notes || `Pembayaran ${p.payment_number}`,
           productName,
           customerName: order.customer_name || '-',
