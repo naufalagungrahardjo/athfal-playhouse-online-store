@@ -16,6 +16,7 @@ import { getAdminRole } from './helpers/getAdminRole';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OrderListByProductTab } from "@/components/admin/orders/OrderListByProductTab";
 import { BillingNoticesTab } from "@/components/admin/billing/BillingNoticesTab";
+import { ListOfPayableTab } from "@/components/admin/orders/ListOfPayableTab";
 
 const AdminOrders = () => {
   const { orders, loading, fetchOrders, deleteOrder } = useOrders();
