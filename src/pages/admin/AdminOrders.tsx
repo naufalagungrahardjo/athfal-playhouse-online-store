@@ -29,6 +29,12 @@ const AdminOrders = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
+  const [payableRefreshKey, setPayableRefreshKey] = useState(0);
+
+  const handleOrdersChanged = () => {
+    fetchOrders();
+    setPayableRefreshKey((k) => k + 1);
+  };
 
   const getPaymentStatus = (order: any): 'paid_full' | 'paid_partial' | 'unpaid' => {
     const total = Number(order?.total_amount) || 0;
