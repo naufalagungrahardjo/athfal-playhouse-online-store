@@ -16,6 +16,7 @@ import { getAdminRole } from './helpers/getAdminRole';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OrderListByProductTab } from "@/components/admin/orders/OrderListByProductTab";
 import { BillingNoticesTab } from "@/components/admin/billing/BillingNoticesTab";
+import { ListOfPayableTab } from "@/components/admin/orders/ListOfPayableTab";
 
 const AdminOrders = () => {
   const { orders, loading, fetchOrders, deleteOrder } = useOrders();
@@ -28,6 +29,12 @@ const AdminOrders = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
+  const [payableRefreshKey, setPayableRefreshKey] = useState(0);
+
+  const handleOrdersChanged = () => {
+    fetchOrders();
+    setPayableRefreshKey((k) => k + 1);
+  };
 
   const getPaymentStatus = (order: any): 'paid_full' | 'paid_partial' | 'unpaid' => {
     const total = Number(order?.total_amount) || 0;
@@ -131,6 +138,7 @@ const AdminOrders = () => {
         <TabsList className="flex w-full overflow-x-auto justify-start">
           <TabsTrigger value="management">Order Management</TabsTrigger>
           <TabsTrigger value="by-product">Order List</TabsTrigger>
+          <TabsTrigger value="payable">List of Payable</TabsTrigger>
           <TabsTrigger value="billing">Billing Notice</TabsTrigger>
         </TabsList>
         <TabsContent value="management" className="space-y-6 mt-4">
@@ -180,6 +188,14 @@ const AdminOrders = () => {
         <TabsContent value="by-product" className="mt-4">
           <OrderListByProductTab orders={orders} onViewDetails={handleViewDetails} />
         </TabsContent>
+        <TabsContent value="payable" className="mt-4">
+          <ListOfPayableTab
+            orders={orders}
+            onViewDetails={handleViewDetails}
+            refreshKey={payableRefreshKey}
+            onChanged={handleOrdersChanged}
+          />
+        </TabsContent>
         <TabsContent value="billing" className="mt-4">
           <BillingNoticesTab orders={orders} />
         </TabsContent>
@@ -189,7 +205,7 @@ const AdminOrders = () => {
           order={selectedOrder}
           isOpen={isDetailsOpen}
           onClose={handleCloseDetails}
-          onOrderUpdated={fetchOrders}
+          onOrderUpdated={handleOrdersChanged}
         />
       )}
     </div>
