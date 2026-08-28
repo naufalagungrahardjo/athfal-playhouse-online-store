@@ -188,6 +188,14 @@ const AdminOrders = () => {
         <TabsContent value="by-product" className="mt-4">
           <OrderListByProductTab orders={orders} onViewDetails={handleViewDetails} />
         </TabsContent>
+        <TabsContent value="payable" className="mt-4">
+          <ListOfPayableTab
+            orders={orders}
+            onViewDetails={handleViewDetails}
+            refreshKey={payableRefreshKey}
+            onChanged={handleOrdersChanged}
+          />
+        </TabsContent>
         <TabsContent value="billing" className="mt-4">
           <BillingNoticesTab orders={orders} />
         </TabsContent>
@@ -197,7 +205,7 @@ const AdminOrders = () => {
           order={selectedOrder}
           isOpen={isDetailsOpen}
           onClose={handleCloseDetails}
-          onOrderUpdated={fetchOrders}
+          onOrderUpdated={handleOrdersChanged}
         />
       )}
     </div>
