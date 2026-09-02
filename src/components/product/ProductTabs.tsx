@@ -67,7 +67,11 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ product, language, formatCurr
               </li>
               <li className="flex items-start">
                 <span className="font-medium text-gray-700 w-32">{language === 'id' ? 'Stok' : 'Stock'}:</span>
-                <span className="text-gray-600">{product.stock}</span>
+                <span className={`${(product.stock ?? 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {(product.stock ?? 0) > 0
+                    ? (language === 'id' ? 'Tersedia' : 'Available')
+                    : (language === 'id' ? 'Habis' : 'Out of stock')}
+                </span>
               </li>
             </ul>
           </div>
