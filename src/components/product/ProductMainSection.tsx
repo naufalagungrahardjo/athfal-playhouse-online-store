@@ -146,7 +146,7 @@ const ProductMainSection: React.FC<ProductMainSectionProps> = ({ product, langua
             <span className="font-medium text-gray-700 w-24">{language === 'id' ? 'Stok' : 'Stock'}:</span>
             <span className={`${baseStock > 0 ? 'text-green-600' : 'text-red-600'}`}>
               {baseStock > 0
-                ? (language === 'id' ? `${baseStock} tersedia` : `${baseStock} available`)
+                ? (language === 'id' ? 'Tersedia' : 'Available')
                 : (language === 'id' ? 'Habis' : 'Out of stock')}
             </span>
           </div>
