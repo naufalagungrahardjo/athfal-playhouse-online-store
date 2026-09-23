@@ -84,10 +84,8 @@ export const useProducts = () => {
     return !!p.is_sold_out || (p.stock !== undefined && p.stock <= 0);
   };
 
-  const visibleProducts = products
-    .filter(isProductActive)
-    .slice()
-    .sort((a, b) => {
+  const sortProducts = (list: Product[]) =>
+    list.slice().sort((a, b) => {
       const soldA = isSoldOut(a) ? 1 : 0;
       const soldB = isSoldOut(b) ? 1 : 0;
       if (soldA !== soldB) return soldA - soldB;
@@ -97,9 +95,15 @@ export const useProducts = () => {
       return dateB - dateA;
     });
 
+  // Products reachable via direct link (includes unlisted ones)
+  const accessibleProducts = sortProducts(products.filter(isProductActive));
+  // Products shown in public listings (unlisted products excluded)
+  const visibleProducts = accessibleProducts.filter(p => !p.is_unlisted);
+
   return {
     products,
     visibleProducts,
+    accessibleProducts,
     loading,
     error: queryError ? 'Failed to fetch products' : null,
     fetchProducts: () => queryClient.invalidateQueries({ queryKey: ['products'] }),
