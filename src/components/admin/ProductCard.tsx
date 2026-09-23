@@ -48,12 +48,28 @@ export const ProductCard = ({ product, onEdit, onDelete, onDuplicate, onToggleUp
   
   const [isHidden, setIsHidden] = useState(product.is_hidden ?? false);
   const [isSoldOut, setIsSoldOut] = useState(product.is_sold_out ?? false);
+  const [isUnlisted, setIsUnlisted] = useState(product.is_unlisted ?? false);
   const [toggling, setToggling] = useState(false);
+
+  const productUrl = `${window.location.origin}/product/${product.product_id}`;
+
+  const copyProductLink = async () => {
+    try {
+      await navigator.clipboard.writeText(productUrl);
+      toast({ title: 'Link copied', description: productUrl });
+    } catch {
+      toast({ variant: 'destructive', title: 'Could not copy link', description: productUrl });
+    }
+  };
 
   // Sync hide state when scheduling makes product inactive
   useEffect(() => {
     setIsHidden(product.is_hidden ?? false);
   }, [product.is_hidden]);
+
+  useEffect(() => {
+    setIsUnlisted(product.is_unlisted ?? false);
+  }, [product.is_unlisted]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
