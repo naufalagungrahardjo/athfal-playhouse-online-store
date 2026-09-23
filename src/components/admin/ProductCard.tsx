@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Edit, Trash2, Eye, EyeOff, ShoppingBag, Copy } from 'lucide-react';
+import { Edit, Trash2, Eye, EyeOff, ShoppingBag, Copy, Link2 } from 'lucide-react';
 import { ProductCategory } from '@/contexts/CartContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';

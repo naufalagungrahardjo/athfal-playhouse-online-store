@@ -32,11 +32,11 @@ const ProductDetailPage = () => {
 
   useEffect(() => {
     if (!productsLoading && id) {
-      const foundProduct = visibleProducts.find(p => p.id === id);
+      const foundProduct = accessibleProducts.find(p => p.id === id);
       setProduct(foundProduct || null);
       setLoading(false);
     }
-  }, [id, visibleProducts, productsLoading]);
+  }, [id, accessibleProducts, productsLoading]);
 
   const handleAddToCart = () => {
     if (product) {
