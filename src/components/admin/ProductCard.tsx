@@ -79,7 +79,7 @@ export const ProductCard = ({ product, onEdit, onDelete, onDuplicate, onToggleUp
     }).format(amount);
   };
 
-  const handleToggle = async (field: 'is_hidden' | 'is_sold_out', value: boolean) => {
+  const handleToggle = async (field: 'is_hidden' | 'is_sold_out' | 'is_unlisted', value: boolean) => {
     setToggling(true);
     try {
       const { error } = await supabase
@@ -89,12 +89,17 @@ export const ProductCard = ({ product, onEdit, onDelete, onDuplicate, onToggleUp
       if (error) throw error;
 
       if (field === 'is_hidden') setIsHidden(value);
+      else if (field === 'is_unlisted') setIsUnlisted(value);
       else setIsSoldOut(value);
 
-      toast({
-        title: "Updated",
-        description: `Product ${field === 'is_hidden' ? (value ? 'hidden' : 'visible') : (value ? 'marked sold out' : 'marked available')}`,
-      });
+      const description =
+        field === 'is_hidden'
+          ? `Product ${value ? 'hidden' : 'visible'}`
+          : field === 'is_unlisted'
+            ? `Product ${value ? 'unlisted (link only)' : 'listed publicly'}`
+            : `Product ${value ? 'marked sold out' : 'marked available'}`;
+
+      toast({ title: "Updated", description });
       onToggleUpdated?.();
     } catch (err: any) {
       toast({ variant: "destructive", title: "Error", description: err.message });
