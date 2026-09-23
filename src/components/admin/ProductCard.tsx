@@ -162,7 +162,25 @@ export const ProductCard = ({ product, onEdit, onDelete, onDuplicate, onToggleUp
                     disabled={toggling}
                   />
                 </label>
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <Link2 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Unlisted</span>
+                  <Switch
+                    checked={isUnlisted}
+                    onCheckedChange={(v) => handleToggle('is_unlisted', v)}
+                    disabled={toggling}
+                  />
+                </label>
               </div>
+              {isUnlisted && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Badge variant="outline" className="text-xs">🔒 Link only</Badge>
+                  <code className="text-xs bg-muted px-2 py-1 rounded break-all">{productUrl}</code>
+                  <Button variant="outline" size="sm" onClick={copyProductLink}>
+                    <Copy className="h-3 w-3 mr-1" /> Copy link
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex space-x-2 flex-shrink-0">
