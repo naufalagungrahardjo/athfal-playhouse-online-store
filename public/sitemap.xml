@@ -79,8 +79,14 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://athfalplayhouse.com/product/Playroom&bookcorner</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://athfalplayhouse.com/product/PopUp_Sep2026</loc>
-    <lastmod>2026-09-02</lastmod>
+    <lastmod>2026-09-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -224,7 +230,7 @@
   </url>
   <url>
     <loc>https://athfalplayhouse.com/product/PsikologAndin</loc>
-    <lastmod>2026-06-09</lastmod>
+    <lastmod>2026-09-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

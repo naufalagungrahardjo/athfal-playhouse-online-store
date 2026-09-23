@@ -40,6 +40,7 @@ const AdminProducts = () => {
       installment_months: p.installment_months ?? 0,
       is_hidden: p.is_hidden ?? false,
       is_sold_out: p.is_sold_out ?? false,
+      is_unlisted: p.is_unlisted ?? false,
       admission_date: p.admission_date ?? '',
       active_from: p.active_from ?? '',
       active_until: p.active_until ?? '',

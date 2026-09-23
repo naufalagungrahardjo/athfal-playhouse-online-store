@@ -1428,6 +1428,7 @@ export type Database = {
           installment_months: number
           is_hidden: boolean
           is_sold_out: boolean
+          is_unlisted: boolean
           media: Json | null
           name: string
           payment_reminders_enabled: boolean
@@ -1454,6 +1455,7 @@ export type Database = {
           installment_months?: number
           is_hidden?: boolean
           is_sold_out?: boolean
+          is_unlisted?: boolean
           media?: Json | null
           name: string
           payment_reminders_enabled?: boolean
@@ -1480,6 +1482,7 @@ export type Database = {
           installment_months?: number
           is_hidden?: boolean
           is_sold_out?: boolean
+          is_unlisted?: boolean
           media?: Json | null
           name?: string
           payment_reminders_enabled?: boolean

@@ -18,6 +18,7 @@ interface ProductListData {
   installment_months: number;
   is_hidden?: boolean;
   is_sold_out?: boolean;
+  is_unlisted?: boolean;
   active_from?: string;
   active_until?: string;
 }

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Edit, Trash2, Eye, EyeOff, ShoppingBag, Copy } from 'lucide-react';
+import { Edit, Trash2, Eye, EyeOff, ShoppingBag, Copy, Link2 } from 'lucide-react';
 import { ProductCategory } from '@/contexts/CartContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +24,7 @@ interface ProductCardData {
   installment_months: number;
   is_hidden?: boolean;
   is_sold_out?: boolean;
+  is_unlisted?: boolean;
   active_from?: string;
   active_until?: string;
 }
@@ -47,12 +48,28 @@ export const ProductCard = ({ product, onEdit, onDelete, onDuplicate, onToggleUp
   
   const [isHidden, setIsHidden] = useState(product.is_hidden ?? false);
   const [isSoldOut, setIsSoldOut] = useState(product.is_sold_out ?? false);
+  const [isUnlisted, setIsUnlisted] = useState(product.is_unlisted ?? false);
   const [toggling, setToggling] = useState(false);
+
+  const productUrl = `${window.location.origin}/product/${product.product_id}`;
+
+  const copyProductLink = async () => {
+    try {
+      await navigator.clipboard.writeText(productUrl);
+      toast({ title: 'Link copied', description: productUrl });
+    } catch {
+      toast({ variant: 'destructive', title: 'Could not copy link', description: productUrl });
+    }
+  };
 
   // Sync hide state when scheduling makes product inactive
   useEffect(() => {
     setIsHidden(product.is_hidden ?? false);
   }, [product.is_hidden]);
+
+  useEffect(() => {
+    setIsUnlisted(product.is_unlisted ?? false);
+  }, [product.is_unlisted]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -62,7 +79,7 @@ export const ProductCard = ({ product, onEdit, onDelete, onDuplicate, onToggleUp
     }).format(amount);
   };
 
-  const handleToggle = async (field: 'is_hidden' | 'is_sold_out', value: boolean) => {
+  const handleToggle = async (field: 'is_hidden' | 'is_sold_out' | 'is_unlisted', value: boolean) => {
     setToggling(true);
     try {
       const { error } = await supabase
@@ -72,12 +89,17 @@ export const ProductCard = ({ product, onEdit, onDelete, onDuplicate, onToggleUp
       if (error) throw error;
 
       if (field === 'is_hidden') setIsHidden(value);
+      else if (field === 'is_unlisted') setIsUnlisted(value);
       else setIsSoldOut(value);
 
-      toast({
-        title: "Updated",
-        description: `Product ${field === 'is_hidden' ? (value ? 'hidden' : 'visible') : (value ? 'marked sold out' : 'marked available')}`,
-      });
+      const description =
+        field === 'is_hidden'
+          ? `Product ${value ? 'hidden' : 'visible'}`
+          : field === 'is_unlisted'
+            ? `Product ${value ? 'unlisted (link only)' : 'listed publicly'}`
+            : `Product ${value ? 'marked sold out' : 'marked available'}`;
+
+      toast({ title: "Updated", description });
       onToggleUpdated?.();
     } catch (err: any) {
       toast({ variant: "destructive", title: "Error", description: err.message });
@@ -140,7 +162,25 @@ export const ProductCard = ({ product, onEdit, onDelete, onDuplicate, onToggleUp
                     disabled={toggling}
                   />
                 </label>
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <Link2 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Unlisted</span>
+                  <Switch
+                    checked={isUnlisted}
+                    onCheckedChange={(v) => handleToggle('is_unlisted', v)}
+                    disabled={toggling}
+                  />
+                </label>
               </div>
+              {isUnlisted && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Badge variant="outline" className="text-xs">🔒 Link only</Badge>
+                  <code className="text-xs bg-muted px-2 py-1 rounded break-all">{productUrl}</code>
+                  <Button variant="outline" size="sm" onClick={copyProductLink}>
+                    <Copy className="h-3 w-3 mr-1" /> Copy link
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex space-x-2 flex-shrink-0">
