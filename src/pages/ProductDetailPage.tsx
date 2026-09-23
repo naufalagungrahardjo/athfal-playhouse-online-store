@@ -25,7 +25,7 @@ const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { addItem } = useCart();
   const { language } = useLanguage();
-  const { visibleProducts, loading: productsLoading } = useProducts();
+  const { accessibleProducts, loading: productsLoading } = useProducts();
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
