@@ -53,11 +53,24 @@ export function useStudents() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
+      // Supabase caps responses at 1000 rows — page through to load everything.
+      const fetchAllRows = async (table: string, orderCol: string, ascending = true) => {
+        const pageSize = 1000;
+        const all: any[] = [];
+        for (let from = 0; ; from += pageSize) {
+          const { data, error } = await supabase.from(table as any).select("*")
+            .order(orderCol, { ascending }).order("id").range(from, from + pageSize - 1);
+          if (error) return { data: all.length ? all : null, error };
+          all.push(...((data as any[]) || []));
+          if (!data || data.length < pageSize) break;
+        }
+        return { data: all, error: null };
+      };
       const [pRes, sRes, eRes, aRes] = await Promise.all([
         supabase.from("class_programs" as any).select("*").order("start_date", { ascending: false }),
-        supabase.from("students" as any).select("*").order("name"),
-        supabase.from("student_enrollments" as any).select("*"),
-        supabase.from("student_attendance" as any).select("*").order("meeting_number"),
+        fetchAllRows("students", "name"),
+        fetchAllRows("student_enrollments", "created_at"),
+        fetchAllRows("student_attendance", "meeting_number"),
       ]);
 
       if (pRes.data) setPrograms(pRes.data as any);
