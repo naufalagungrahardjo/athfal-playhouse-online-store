@@ -210,23 +210,41 @@ export const generateBillingNoticePdf = async ({
 
   // Notice details box
   y += 24;
+  const boxW = pageWidth - margin * 2;
+  const boxPad = 18;
+
+  // Measure the amount first so the title wraps clear of it
+  const amountText = formatCurrency(notice.amount);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  const amountW = doc.getTextWidth(amountText);
+
+  // Wrap the title within the space left of the amount
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  const titleMaxW = boxW - boxPad * 2 - amountW - 24;
+  const titleLines = doc.splitTextToSize(notice.title, titleMaxW) as string[];
+  const titleLineH = 15;
+  const dueOffset = 26 + (titleLines.length - 1) * titleLineH + 14;
+  const boxH = Math.max(80, dueOffset + 22);
+
   doc.setDrawColor(...BRAND.peach);
   doc.setFillColor(...BRAND.lightPeach);
-  doc.roundedRect(margin, y, pageWidth - margin * 2, 80, 10, 10, "FD");
+  doc.roundedRect(margin, y, boxW, boxH, 10, 10, "FD");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   doc.setTextColor(...BRAND.green);
-  doc.text(notice.title, margin + 18, y + 26);
+  doc.text(titleLines, margin + boxPad, y + 26);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(...BRAND.muted);
-  doc.text(`Due ${formatDate(notice.due_date)}`, margin + 18, y + 46);
+  doc.text(`Due ${formatDate(notice.due_date)}`, margin + boxPad, y + dueOffset);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
   doc.setTextColor(...BRAND.pink);
-  doc.text(formatCurrency(notice.amount), pageWidth - margin - 18, y + 42, { align: "right" });
+  doc.text(amountText, margin + boxW - boxPad, y + boxH / 2 + 6, { align: "right" });
 
-  y += 80 + 22;
+  y += boxH + 22;
 
   // Description
   if (notice.description && notice.description.trim()) {
